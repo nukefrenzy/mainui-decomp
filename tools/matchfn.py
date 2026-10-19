@@ -10,6 +10,8 @@ using the flags recovered from MainUI, finds <function_name> in the object (plai
 mangled name), and compares it byte for byte with the original at <orig_address>.
 Words the linker fills in (relocations: calls to other functions, string/global addresses,
 MOVW/MOVT immediates) and BL calls are ignored, since they depend on final layout.
+The original must also end where ours does: its end is the next function start listed in
+--names (default ghidra/names.tsv), so a rewrite that only matches a prefix is reported as SIZE.
 
 --quiet prints one line per function and cuts the diff to 2 words of context.
 
@@ -35,6 +37,8 @@ ap.add_argument("--toolchain", default=os.environ.get("MIYOO_TC", ""),
 ap.add_argument("--flags", default="-O0 -fsigned-char")
 ap.add_argument("--context", type=int, default=6)
 ap.add_argument("--quiet", action="store_true")
+ap.add_argument("--names", default=os.path.join(os.path.dirname(HERE), "ghidra", "names.tsv"),
+                help="function starts used to find where the original function ends")
 a = ap.parse_args()
 if a.quiet:
     a.context = min(a.context, 2)
@@ -97,11 +101,25 @@ diffs = [i for i in range(0, size, 4) if not any(mask[i:i + 4]) and orig[i:i + 4
 masked = sum(1 for i in range(0, size, 4) if any(mask[i:i + 4]))
 name = f"{a.function} @ {hex(addr)}"
 if not diffs:
-    # Also check the original function doesn't continue past our end (size mismatch)
-    nxt = None
-    for seg in e.iter_segments():
-        if seg["p_type"] == "PT_LOAD" and seg["p_vaddr"] <= addr < seg["p_vaddr"] + seg["p_filesz"]:
-            nxt = seg.data()[addr - seg["p_vaddr"] + size - 4:addr - seg["p_vaddr"] + size]
+    # The original must not continue past our end: find its end from the next known function start
+    text = e.get_section_by_name(".text")
+    orig_end = text["sh_addr"] + text["sh_size"]
+    if os.path.exists(a.names):
+        with open(a.names) as fh:
+            for line in fh:
+                try:
+                    v = int(line.split("\t", 1)[0], 16)
+                except ValueError:
+                    continue
+                if addr < v < orig_end:
+                    orig_end = v
+    else:
+        print(f"warning: {a.names} not found; the original's end is not checked")
+        orig_end = addr + size
+    if addr + size != orig_end:
+        print(f"SIZE   {name}: ours is {size} bytes and matches, but the original is {orig_end - addr} bytes "
+              f"(next known function at {orig_end:#x})")
+        sys.exit(1)
     print(f"MATCH  {name}: {size} bytes, {size // 4 - masked} words exact, {masked} link-time words ignored")
     sys.exit(0)
 
