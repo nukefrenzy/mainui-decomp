@@ -36,6 +36,9 @@ jobs:
       - name: Byte-match every rewrite in src/
         run: scripts/run_matches.sh
 
+      - name: Check every whole unit (body + template tail) in src/tu_*.cpp
+        run: scripts/run_units.sh
+
       - name: Progress summary
         run: python3 tools/progress.py --md "$GITHUB_STEP_SUMMARY"
 

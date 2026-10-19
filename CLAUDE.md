@@ -39,7 +39,7 @@ Ghidra 12.1.4: import with defaults, auto-analyze, run `ghidra/ApplyMainUINames.
 
 Work file by file: `docs/tu-map.tsv` (from `tools/tusplit.py`) gives each unit's range, `src/tu_<lo>.cpp` holds its
 functions in address order, and `tools/unitcheck.py src/tu_<lo>.cpp` checks the whole unit as the linker lays it out
-(body, then template/inline tail). Briefs: `tools/packet.py --tu <unit>`; patterns: `tools/autoderive.py --tu <unit>`.
+(body, then template/inline tail; CI runs it on every unit via `scripts/run_units.sh`). Briefs: `tools/packet.py --tu <unit>`; patterns: `tools/autoderive.py --tu <unit>`.
 
 At `-O0` the code mirrors the source closely: keep statement order, redundant assignments and member order exactly
 as the disassembly shows. Externs (calls, globals, strings) are link-time words and are ignored by the checker.
