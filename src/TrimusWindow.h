@@ -1,0 +1,28 @@
+// TrimusWindow: base of every window on MainUI's window stack.
+// Layout and virtual order verified byte-exact against MainUI-354-clean (see MATCHES.txt).
+#pragma once
+
+struct SDL_Surface;
+typedef void (*FlipFn)();
+struct cJSON;
+
+class TrimusWindow {
+public:
+    TrimusWindow(int titleLabelId, int id);           // 0x1d7dc
+    virtual ~TrimusWindow();                          // slots 0-1, body 0x1d830
+    virtual int  handleInput() = 0;                   // slot 2: result code (-1 none, 1/4 close, 3 close+exit, 2 quit)
+    virtual void draw(SDL_Surface *dst) = 0;          // slot 3
+    virtual void onHide() = 0;                        // slot 4: before the window is deleted
+    virtual void onShow() = 0;                        // slot 5: when it becomes the top window
+    virtual void saveState(cJSON *obj) = 0;           // slot 6: called by saveWindowState (/tmp/state.json)
+    virtual void restoreState(cJSON *obj) = 0;        // slot 7: called by restoreWindowState
+    virtual void update() = 0;                        // slot 8: every frame, before draw
+    virtual void animateIn(SDL_Surface *dst, FlipFn flip);   // slot 9, default empty (0x39478)
+    virtual void animateOut(SDL_Surface *dst, FlipFn flip);  // slot 10, default empty (0x394a0)
+
+    int getId();                                      // 0x394c8
+
+protected:
+    int titleLabelId;   // +0x04  language string id for the title (e.g. 0x83 = Wi-Fi)
+    int id;             // +0x08  window/menu id (MenuWindow: the createMenu id)
+};

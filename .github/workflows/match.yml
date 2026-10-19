@@ -1,0 +1,40 @@
+name: byte-match
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  match:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pyelftools
+        run: pip install pyelftools
+
+      - name: Cache toolchain
+        uses: actions/cache@v4
+        with:
+          path: toolchain/gcc-arm-8.2-2018.08-x86_64-arm-linux-gnueabihf.tar.xz
+          key: arm-gnu-8.2-2018.08-5b3f20e1327edc30
+
+      - name: Fetch and verify toolchain (Arm GNU 8.2-2018.08)
+        run: echo "MIYOO_TC=$(scripts/fetch-toolchain.sh)" >> "$GITHUB_ENV"
+
+      - name: Fetch and verify MainUI-354-clean (Onion commit 07505ea)
+        run: scripts/fetch-mainui.sh
+
+      - name: Verify environment
+        run: scripts/verify.sh
+
+      - name: Byte-match every rewrite in src/
+        run: scripts/run_matches.sh
+
+      - name: Rebuild embedded SQLite and cJSON, compare byte for byte
+        run: scripts/verify-libs.sh

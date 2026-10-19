@@ -1,0 +1,21 @@
+addr	name	comment
+00181924	g_screen	SDL_Surface* from SDL_SetVideoMode(640,480,32)
+00181928	g_backBuffer	SDL_Surface* 640x480 ARGB; everything draws here, flipScreen() blits to g_screen
+00181968	g_keyShm	libshmvar shared-memory settings block (InitKeyShm/GetKeyShm/SetKeyShm)
+00181970	g_themePath	char* current theme folder (default "./")
+0018195c	g_themeList	themes under /mnt/SDCARD/Themes
+00181974	g_skin	loaded skin resources
+00181b0c	g_running	atomic<bool>; cleared by SIGTERM, ends runWindowLoop
+0017ff38	g_windowStack	std::vector<TrimusWindow*>* (set by runWindowLoop); top = back()
+0017ff3c	g_pendingWindows	std::vector<TrimusWindow*> queued by pushWindow()
+00181918	g_statusThreadRun	1 while statusPollThread should run
+0018191c	g_statusMutex	SDL_mutex for statusPollThread
+00181920	g_statusCond	SDL_cond for statusPollThread
+00181b00	g_romListPositions	per-list selection, /appconfigs/romwinidx.json
+0018192c	g_recentList	Recent games, loaded from /mnt/SDCARD/Roms/recentlist.json
+00181944	g_emuFolder	/mnt/SDCARD/Emu
+00181938	g_appFolder	/mnt/SDCARD/App
+00181950	g_rappFolder	/mnt/SDCARD/RApp
+00180907	g_statusIndicatorFlag	enables statusBar_drawIndicatorC
+00181908	g_searchBusy	set while global search builds results
+00151a48	g_skinSubdir	second argument of every loadSkinImage call

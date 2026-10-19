@@ -1,0 +1,23 @@
+# Never commit Miyoo's binaries or anything generated from them
+MainUI*
+!MainUI*.md
+*.pak
+*.so
+*.o
+*.elf
+*.bin
+# Decompiler output is machine-generated from the proprietary binary
+*_named.c
+decomp*.c
+# Third-party downloads
+toolchain/
+ghidra_*/
+*.tar.xz
+*.7z*
+*.zip
+# Ghidra projects
+*.gpr
+*.rep/
+# Python
+__pycache__/
+.match_failures
