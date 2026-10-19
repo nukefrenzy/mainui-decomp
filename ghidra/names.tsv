@@ -112,7 +112,6 @@ addr	name	subsystem	confidence	comment
 00022d90	database_lang_22d90	database	inferred	
 00023318	database_cache6_23318	database	inferred	
 00023548	DBCacheWorker::vfunc2	database	confirmed-class	
-00023af0	loadSkinImage	render	inferred	(themePath, g_skinSubdir, file, fmtSurface, flags) -> SDL_Surface*
 0002407c	DBCacheWorker::vfunc3	games	confirmed-class	
 000240b4	DBCachedTextMenu::vfunc16	games	confirmed-class	
 000240ec	DBCachedTextMenu::vfunc17	games	confirmed-class	
@@ -222,8 +221,6 @@ addr	name	subsystem	confidence	comment
 000310ac	render_SDL_FreeSurface_310ac	render	inferred	
 000311f4	render_snprintf_311f4	render	inferred	
 00031398	MenuWindow::draw	files	confirmed	
-00031e34	MenuHelper80::MenuHelper80	ui_framework	confirmed	24-byte MenuWindow member at +0x80, takes a surface-free callback.
-00031e94	MenuHelper80::~MenuHelper80	ui_framework	confirmed	
 00031ed4	render_SDL_FreeSurface_31ed4	render	inferred	
 00032040	FloatWindow::ctor_or_dtor_32040	ui_framework	likely	
 00032094	FloatWindow::dtor	render	confirmed	
@@ -231,9 +228,7 @@ addr	name	subsystem	confidence	comment
 00032124	FloatWindow::draw	render	confirmed	
 00032160	FloatWindow::onShow	render	confirmed	
 0003225c	PopUpWindow::ctor_or_dtor_3225c	ui_framework	likely	
-000323e0	MenuHelper60::MenuHelper60	ui_framework	confirmed	32-byte MenuWindow member at +0x60, constructed with 2.
 0003247c	PopUpWindow::dtor	render	confirmed	
-0003249c	MenuHelper60::~MenuHelper60	ui_framework	confirmed	
 00032534	PopUpWindow::deletingDtor	ui_framework	confirmed	
 00032568	PopUpWindow::onHide	ui_framework	inferred	
 00032588	PopUpWindow::draw	render	confirmed	
@@ -3584,7 +3579,7 @@ addr	name	subsystem	confidence	comment
 001238ac	files_gettimeofday_238ac	files	guess	
 00123908	render_flags_23908	render	guess	
 00123a38	render_format_23a38	render	inferred	
-00123af0	render_open_23af0	render	guess	
+00123af0	loadSkinImage	render	inferred	(themePath, g_skinSubdir, file, fmtSurface, flags) -> SDL_Surface*
 00123c8c	files_read_23c8c	files	guess	
 00123d28	files_proc_23d28	files	inferred	
 00123f94	ui_framework___aeabi_atexit_23f94	ui_framework	guess	
@@ -3997,15 +3992,15 @@ addr	name	subsystem	confidence	comment
 00131a68	misc_malloc_31a68	misc	guess	
 00131b64	misc_31b64	misc	guess	
 00131ce8	misc_stbi_31ce8	misc	guess	
-00131e34	render_SDL_CreateMutex_31e34	render	guess	
-00131e94	games_SDL_DestroyMutex_31e94	games	guess	
+00131e34	MenuHelper80::MenuHelper80	ui_framework	confirmed	24-byte MenuWindow member at +0x80, takes a surface-free callback.
+00131e94	MenuHelper80::~MenuHelper80	ui_framework	confirmed	
 00131ed8	database_SDL_mutexP_31ed8	database	guess	
 00131fb0	threads_SDL_mutexP_31fb0	threads	guess	
 001320dc	games_SDL_mutexP_320dc	games	guess	
 0013225c	misc_3225c	misc	guess	
 00132288	misc_SDL_mutexP_32288	misc	guess	
-001323e0	render_SDL_CreateMutex_323e0	render	guess	
-0013249c	games_SDL_CondSignal_3249c	games	guess	
+001323e0	MenuHelper60::MenuHelper60	ui_framework	confirmed	32-byte MenuWindow member at +0x60, constructed with 2.
+0013249c	MenuHelper60::~MenuHelper60	ui_framework	confirmed	
 001325d0	games_SDL_CondSignal_325d0	games	guess	
 001326c0	misc_SDL_mutexP_326c0	misc	guess	
 00132760	misc_32760	misc	guess	

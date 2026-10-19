@@ -9,13 +9,13 @@ class ListMenu;   // IconMenu, TextMenu, FileBrowserMenu, ... (+0x0c current ite
 // Two helper members whose purpose isn't traced yet; only their sizes and
 // constructor/destructor signatures are known.
 struct MenuHelper60 {                       // 32 bytes
-    MenuHelper60(int n);                    // 0x323e0, called with 2
-    ~MenuHelper60();                        // 0x3249c
+    MenuHelper60(int n);                    // 0x1323e0, called with 2
+    ~MenuHelper60();                        // 0x13249c
     char raw[0x20];
 };
 struct MenuHelper80 {                       // 24 bytes
-    MenuHelper80(void (*freeFn)(SDL_Surface *));  // 0x31e34, called with a SDL_FreeSurface wrapper (0x2e318)
-    ~MenuHelper80();                        // 0x31e94
+    MenuHelper80(void (*freeFn)(SDL_Surface *));  // 0x131e34, called with a SDL_FreeSurface wrapper (0x2e318)
+    ~MenuHelper80();                        // 0x131e94
     char raw[0x18];
 };
 
