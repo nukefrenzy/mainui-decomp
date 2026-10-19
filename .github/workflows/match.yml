@@ -7,11 +7,11 @@ on:
 
 jobs:
   match:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04   # pinned so the runner image doesn't change underneath the checks
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -19,7 +19,7 @@ jobs:
         run: pip install pyelftools
 
       - name: Cache toolchain
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: toolchain/gcc-arm-8.2-2018.08-x86_64-arm-linux-gnueabihf.tar.xz
           key: arm-gnu-8.2-2018.08-5b3f20e1327edc30
