@@ -63,6 +63,8 @@ CUT_DROP = {
 }
 # Units proven as one file (tools/unitcheck.py): both ends are cuts, nothing inside is.
 UNIT_FIXED = {
+    (0x129f9c, 0x12ce28): "unitcheck --end 12ce28: src/tu_129f9c.cpp fills exactly "
+                          "0x129f9c-0x12ce28; seven theme/font/image/sound functions, no tail",
     (0x12ce28, 0x1302cc): "unitcheck --end 1302cc: src/tu_12ce28.cpp body + 105 template/inline functions "
                           "fill exactly 0x12ce28-0x1302cc; file-browser directory cache and traversal",
     (0x1302cc, 0x131e34): "unitcheck --end 131e34: src/tu_1302cc.cpp fills exactly "

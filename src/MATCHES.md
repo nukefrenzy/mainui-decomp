@@ -16,6 +16,13 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `TrimusWindow::animateIn(SDL_Surface*, FlipFn)` | 0x39478 | 40 | TrimusWindow.cpp |
 | `TrimusWindow::animateOut(SDL_Surface*, FlipFn)` | 0x394a0 | 40 | TrimusWindow.cpp |
 | `TrimusWindow::getId()` | 0x394c8 | 40 | TrimusWindow.cpp |
+| `openThemeFont(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, char const*, char const*, int)` | 0x129f9c | 420 | tu_129f9c.cpp |
+| `loadImeImage(char const*, char const*, char const*)` | 0x12a140 | 316 | tu_129f9c.cpp |
+| `changeLanguageFonts(Theme*, int*)` | 0x12a27c | 1640 | tu_129f9c.cpp |
+| `compositeThemeImage(SDL_Surface*, SDL_Surface*)` | 0x12a8e4 | 384 | tu_129f9c.cpp |
+| `setDefaultTheme(Theme*)` | 0x12aa64 | 456 | tu_129f9c.cpp |
+| `loadTheme(Theme*, int*)` | 0x12ac2c | 6864 | tu_129f9c.cpp |
+| `freeTheme()` | 0x12c6fc | 1836 | tu_129f9c.cpp |
 | `FileBrowserCache::FileBrowserCache(bool (*)(char const*, char const*))` | 0x12ce28 | 76 | tu_12ce28.cpp |
 | `FileBrowserCache::~FileBrowserCache()` | 0x12ce74 | 68 | tu_12ce28.cpp |
 | `FileBrowserCache::clear()` | 0x12ceb8 | 256 | tu_12ce28.cpp |

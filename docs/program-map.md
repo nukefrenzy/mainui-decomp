@@ -234,6 +234,15 @@ directory. Recursive counts include a nonempty subdirectory as an extra entry. `
 is 0x24 bytes: the base action, path string at +8, and operation kind at +0x20 (0x65 file,
 0x66 directory). Its base result remains -1.
 
+The theme loader is proven at 0x129f9c–0x12ce28. `Theme` is 0x18c bytes, including the
+name/root, separate English and multilingual font paths, font sizes, and aligned four-byte
+colors. `openThemeFont` accepts an absolute override or appends a relative path to the theme
+root, then retries the built-in file under `./`. `changeLanguageFonts` selects fonts based on
+font availability and the configured language. `loadTheme` loads five fonts, theme images,
+21 volume icons, two WAV effects and MP3 background music; it converts/composites image
+surfaces and preserves the per-resource fallback paths. `freeTheme` frees those resources in
+the original order without clearing the globals.
+
 ## Threads, events and launching
 
 - **statusPollThread** (0x4a050) wakes every second, polls shared settings and battery/Wi-Fi

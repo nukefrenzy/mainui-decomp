@@ -132,6 +132,12 @@ literal words; no additional masking is needed.
 - Nested file-type and Boolean filter tests preserve direct branches in the browser loader;
   combining them with `&&` materializes an extra Boolean block and adds 20 bytes.
 
+- Four-byte aggregate alignment can decide copy instructions and evaluation order. Theme
+  defaults match with whole aligned `ThemeColor` union copies from external constants. Scalar
+  member assignment reverses the loads; a byte-aligned `SDL_Color` copy adds address setup.
+  Defining the color constants in this same file also folds their values at -O0 and removes
+  36 bytes, so retain the external declarations seen by the original compiler.
+
 ## Tail order
 
 GCC 8 at `-O0` emits COMDAT functions in call-graph node order:
