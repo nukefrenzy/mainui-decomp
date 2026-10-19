@@ -10,8 +10,8 @@ lo	hi	name	confidence	evidence	label
 126c60	127210	tu_126c60	review	after template run 0x1267d4-0x126c60 (10 fns); 13 fns, 9 template	
 127210	1297a8	tu_127210	review	after template run 0x127150-0x127210 (3 fns); 115 fns, 77 template	
 1297a8	129f9c	tu_1297a8	review	after template run 0x1296a0-0x1297a8 (3 fns); 24 fns, 18 template	
-129f9c	12ef8c	tu_129f9c	review	after template run 0x129ca8-0x129f9c (14 fns); string spans 0x12a27c-0x12ac2c 0x12d18c-0x12d4b4; 63 fns, 25 template	FileAction
-12ef8c	1302cc	tu_12ef8c	review	after template run 0x12ee04-0x12ef8c (6 fns); 64 fns, 48 template	
+129f9c	12ce28	tu_129f9c	review	after template run 0x129ca8-0x129f9c (14 fns); string spans 0x12a27c-0x12ac2c; 7 fns, 0 template	render_open_29f9c, render_open_2a140, render_change_2a27c
+12ce28	1302cc	tu_12ce28	proven	unitcheck --end 1302cc: src/tu_12ce28.cpp body + 105 template/inline functions fill exactly 0x12ce28-0x1302cc; file-browser directory cache and traversal; string spans 0x12d18c-0x12d4b4; 120 fns, 73 template	FileAction
 1302cc	131e34	tu_1302cc	proven	unitcheck --end 131e34: src/tu_1302cc.cpp fills exactly 0x1302cc-0x131e34; streaming stb_zlib.cpp decoder, 19 functions, no tail; string spans 0x1303b0-0x131ce8; 19 fns, 0 template	
 131e34	134080	tu_131e34	proven	unitcheck --end 134080: src/tu_131e34.cpp body + 110 template/inline functions fill exactly 0x131e34-0x134080; keyed cache and background worker queue; 121 fns, 49 template	MenuHelper80, MenuHelper60
 134080	1376fc	tu_134080	proven	unitcheck --end 1376fc: src/tu_134080.cpp body + 110 template/inline functions fill exactly 0x134080-0x1376fc; language loading, choices and lookup; string spans 0x134080-0x134f34 0x1359a8-0x136010; 118 fns, 76 template, static init at 0x135308	language_genShortLangFile_34080, language_customer_343c4, language_have_34568

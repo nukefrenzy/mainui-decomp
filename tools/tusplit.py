@@ -51,6 +51,8 @@ CUT_ADD = {
               "Wi-Fi code and its string span start here",
 }
 CUT_DROP = {
+    0x12ef8c: "reviewed: 0x12ef8c-0x1302cc is FileBrowserCache's template tail; "
+              "its proven body starts at 0x12ce28",
     0x12fe90: "reviewed: 0x12fe90-0x1302cc is the preceding file's template tail; "
               "stb_zlib.cpp starts at 0x1302cc, then menu helpers at 0x131e34",
     0x133f60: "reviewed: four allocator helpers at 0x133f60-0x134080 are called by the preceding "
@@ -61,6 +63,8 @@ CUT_DROP = {
 }
 # Units proven as one file (tools/unitcheck.py): both ends are cuts, nothing inside is.
 UNIT_FIXED = {
+    (0x12ce28, 0x1302cc): "unitcheck --end 1302cc: src/tu_12ce28.cpp body + 105 template/inline functions "
+                          "fill exactly 0x12ce28-0x1302cc; file-browser directory cache and traversal",
     (0x1302cc, 0x131e34): "unitcheck --end 131e34: src/tu_1302cc.cpp fills exactly "
                           "0x1302cc-0x131e34; streaming stb_zlib.cpp decoder, 19 functions, no tail",
     (0x131e34, 0x134080): "unitcheck --end 134080: src/tu_131e34.cpp body + 110 template/inline functions "

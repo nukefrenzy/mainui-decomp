@@ -225,6 +225,15 @@ The custom streaming zlib decoder is proven at 0x1302cc–0x131e34. Its state is
 including two 0x7e4-byte Huffman tables, plus a separately allocated 32 KB history ring. It can
 read memory or a `FILE*`; input/output bytes have different signed types under the proven flags.
 
+The file-browser helper is proven at 0x12ce28–0x1302cc. `FileBrowserCache` is 0x1c bytes:
+a path-stack vector at +0, cached-directory vector at +0x0c, and Boolean filter callback at +0x18.
+Each cached directory is a string path plus a pointer to a vector of `TextItem*` (28 bytes).
+Loads stop at 20,000 items; navigation reuses cached vectors and moves hits to the front. Old
+vectors are removed from the back when cached items exceed 40,000 before loading another
+directory. Recursive counts include a nonempty subdirectory as an extra entry. `FileAction`
+is 0x24 bytes: the base action, path string at +8, and operation kind at +0x20 (0x65 file,
+0x66 directory). Its base result remains -1.
+
 ## Threads, events and launching
 
 - **statusPollThread** (0x4a050) wakes every second, polls shared settings and battery/Wi-Fi

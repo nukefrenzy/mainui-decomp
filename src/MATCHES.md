@@ -16,6 +16,22 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `TrimusWindow::animateIn(SDL_Surface*, FlipFn)` | 0x39478 | 40 | TrimusWindow.cpp |
 | `TrimusWindow::animateOut(SDL_Surface*, FlipFn)` | 0x394a0 | 40 | TrimusWindow.cpp |
 | `TrimusWindow::getId()` | 0x394c8 | 40 | TrimusWindow.cpp |
+| `FileBrowserCache::FileBrowserCache(bool (*)(char const*, char const*))` | 0x12ce28 | 76 | tu_12ce28.cpp |
+| `FileBrowserCache::~FileBrowserCache()` | 0x12ce74 | 68 | tu_12ce28.cpp |
+| `FileBrowserCache::clear()` | 0x12ceb8 | 256 | tu_12ce28.cpp |
+| `compareFileItems(TextItem*, TextItem*)` | 0x12cfb8 | 148 | tu_12ce28.cpp |
+| `insertFileItem(std::vector<TextItem*, std::allocator<TextItem*> >*, TextItem*)` | 0x12d04c | 320 | tu_12ce28.cpp |
+| `countDirectory(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, bool (*)(char const*, char const*), bool, char*)` | 0x12d18c | 628 | tu_12ce28.cpp |
+| `countDirectoryItems(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, bool (*)(char const*, char const*))` | 0x12d400 | 180 | tu_12ce28.cpp |
+| `loadDirectory(std::vector<TextItem*, std::allocator<TextItem*> >*, char const*, bool (*)(char const*, char const*), int, int)` | 0x12d4b4 | 792 | tu_12ce28.cpp |
+| `FileBrowserCache::freeItems(std::vector<TextItem*, std::allocator<TextItem*> >*)` | 0x12d7cc | 164 | tu_12ce28.cpp |
+| `FileBrowserCache::totalItems()` | 0x12d870 | 168 | tu_12ce28.cpp |
+| `FileBrowserCache::trim()` | 0x12d918 | 272 | tu_12ce28.cpp |
+| `FileBrowserCache::find(char const*)` | 0x12da28 | 464 | tu_12ce28.cpp |
+| `FileBrowserCache::open(char const*)` | 0x12dbf8 | 320 | tu_12ce28.cpp |
+| `FileBrowserCache::parent()` | 0x12dd38 | 504 | tu_12ce28.cpp |
+| `FileBrowserCache::child(char const*)` | 0x12df30 | 420 | tu_12ce28.cpp |
+| `FileAction::FileAction(char const*, int)` | 0x12e0d4 | 156 | tu_12ce28.cpp |
 | `zerror(char const*)` | 0x1302cc | 40 | tu_1302cc.cpp |
 | `bit_reverse16(int)` | 0x1302f4 | 188 | tu_1302cc.cpp |
 | `bit_reverse(int, int)` | 0x1303b0 | 100 | tu_1302cc.cpp |

@@ -123,6 +123,15 @@ literal words; no additional masking is needed.
   reach the end without returning. Its ignored result and compiler warning are documented in
   source; adding a return changes bytes.
 
+- Pointer value categories affect vector calls: `insert(pos, (TextItem*)item)` and
+  `push_back((TextItem*)item)` create pointer temporaries and select rvalue overloads. Passing
+  the pointer variable directly changes the caller frame and generated tail.
+- GCC still folds some C string builtins at -O0. The browser's `strlen(name) != 0` becomes
+  a first-byte test through the array address; `strncmp(name, ".", 1)` becomes a difference of
+  unsigned bytes, including a load from the literal. Replacing either with `name[0]` changes code.
+- Nested file-type and Boolean filter tests preserve direct branches in the browser loader;
+  combining them with `&&` materializes an extra Boolean block and adds 20 bytes.
+
 ## Tail order
 
 GCC 8 at `-O0` emits COMDAT functions in call-graph node order:

@@ -7,14 +7,15 @@ method: `docs/unit-workflow.md`. Update this file when a unit is proven or the p
 
 - **Goal:** complete MainUI source that rebuilds byte-exact with Arm GNU 8.2-2018.08, `-O0 -fsigned-char`,
   worked file by file (one translation unit per `src/tu_<lo>.cpp` or `.c`).
-- **Progress:** 15 whole units proven by `tools/unitcheck.py`, plus 9 single functions in
-  `tu_015b20`: 873 of 2,605 Miyoo functions, 134,520 of 457,584 bytes (29.40%). CI checks every match
+- **Progress:** 16 whole units proven by `tools/unitcheck.py`, plus 9 single functions in
+  `tu_015b20`: 993 of 2,605 Miyoo functions, 147,996 of 457,584 bytes (32.34%). CI checks every match
   and every unit on each push.
 - **Embedded libraries:** SQLite 3.30.1 and cJSON 1.7.10 rebuild byte-exact (`scripts/verify-libs.sh`);
   tiny-utf8 4.4.x is header-only and appears in the template tails of the files that use it.
 
 | Proven unit | Range | What it is |
 | --- | --- | --- |
+| tu_12ce28 (C++) | 0x12ce28–0x1302cc | File-browser directory cache and traversal: 15 body functions plus 105 inline/template functions |
 | tu_1302cc (C++) | 0x1302cc–0x131e34 | Streaming stb_zlib decoder: 19 functions, no tail |
 | tu_131e34 (C++) | 0x131e34–0x134080 | Keyed cache and worker queue: 11 body functions plus 110 inline/template functions |
 | tu_134080 (C++) | 0x134080–0x1376fc | Languages: six body functions, compiler init pair, 110 inline/template functions |
@@ -63,13 +64,20 @@ helper has one thread; its constructor argument limits pending work, with a defa
 The old `tu_12fe90` draft combined these two files with 1,084 bytes of the preceding file's
 template tail. Its corrected preceding neighbour is `tu_12ef8c`, ending at 0x1302cc.
 
+`tu_12ce28` matches with the default flags: 4,780 body bytes to 0x12e0d4 and 8,696 tail
+bytes. The old `tu_12ef8c` draft was entirely part of this tail. The 0x1c-byte file-browser
+helper holds a path stack, cached directory vectors, and a Boolean file-filter callback.
+It bounds a directory load at 20,000 entries and trims old cached directories before navigation.
+The inline `FileAction` constructor also matches; theme code before 0x12ce28 remains separate.
+
 ## Next units, in order
 
 Work outward from proven units: a proven neighbour fixes one boundary for free. One fresh session per
 unit, each in its own worktree; merge their branches into `main` one at a time.
 
-1. **tu_12ef8c** (draft 0x12ef8c–0x1302cc, 4,928 bytes): its end is now fixed by the
-   decoder. Confirm its start and continue backward toward 0x11cdc8.
+1. **tu_129f9c** (draft 0x129f9c–0x12ce28, 11,916 bytes): seven theme/font/image-loading
+   functions, ending at the proven file-browser helper. Confirm its start and continue backward
+   toward 0x11cdc8.
 2. **Small units with draft boundaries** (tu_126c60 1.5 KB, tu_1297a8 2 KB) are
    cheap but unbounded; take them when a neighbour is proven.
 3. **tu_049c3c** (main program: main, signal handler, status poll) and **tu_04c12c** (hardware test
