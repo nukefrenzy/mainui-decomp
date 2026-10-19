@@ -106,6 +106,12 @@ literal words; no additional masking is needed.
   storing `touchX`; two independent assignments do not match. Conversely, the input-device
   name buffers each require their own zero assignment, rather than a chained byte assignment.
 
+- Separate `continue` statements can have separate trailing `nop` blocks. In the language
+  loader, combining the English-file and `.short` filters into one condition preserves most
+  instructions but changes branch targets. Keep the two filters and the enclosing file-type test.
+- Assignment in a pointer condition also matters: `DIR *d; if ((d = opendir(...)) != NULL)`
+  materializes a Boolean test; initializing `d` first and testing it separately removes 16 bytes.
+
 ## Tail order
 
 GCC 8 at `-O0` emits COMDAT functions in call-graph node order:

@@ -205,6 +205,14 @@ RetroArch icon (not yet checked against stock).
 Clean replaces the RetroArch item's constructor call and its add-to-menu call with NOPs
 (`e1a00000`), hiding the RetroArch icon. Nothing else differs.
 
+The language unit is proven at 0x134080–0x1376fc. `loadLanguages` reads `./lang/` relative
+to its supplied root, builds an English fallback from 156 built-in strings, and inserts other
+languages in filename order. `languageString(id)` uses the configured language when available,
+then the built-in string; negative IDs return an empty string and IDs ≥156 return `wrongbeef`.
+Language choices are restricted to English when neither font path exists. `.short` files under
+`/customer/app/lang` contain IDs 88–155. `Language.h` records the 60-byte language and 48-byte
+menu-choice layouts.
+
 ## Threads, events and launching
 
 - **statusPollThread** (0x4a050) wakes every second, polls shared settings and battery/Wi-Fi

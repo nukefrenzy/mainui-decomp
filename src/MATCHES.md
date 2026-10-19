@@ -16,6 +16,12 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `TrimusWindow::animateIn(SDL_Surface*, FlipFn)` | 0x39478 | 40 | TrimusWindow.cpp |
 | `TrimusWindow::animateOut(SDL_Surface*, FlipFn)` | 0x394a0 | 40 | TrimusWindow.cpp |
 | `TrimusWindow::getId()` | 0x394c8 | 40 | TrimusWindow.cpp |
+| `genShortLangFile(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)` | 0x134080 | 836 | tu_134080.cpp |
+| `createEnglishLangFile()` | 0x1343c4 | 420 | tu_134080.cpp |
+| `readLanguageFile(char const*, Language&)` | 0x134568 | 664 | tu_134080.cpp |
+| `loadLanguages(char const*)` | 0x134800 | 1844 | tu_134080.cpp |
+| `languageChoices()` | 0x134f34 | 540 | tu_134080.cpp |
+| `languageString(int)` | 0x135150 | 300 | tu_134080.cpp |
 | `openInputDevice(char const*)` | 0x1376fc | 744 | tu_1376fc.cpp |
 | `touchInputThread(void*)` | 0x1379e4 | 988 | tu_1376fc.cpp |
 | `startTouchInput()` | 0x137dc0 | 64 | tu_1376fc.cpp |

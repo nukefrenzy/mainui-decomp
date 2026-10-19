@@ -51,12 +51,16 @@ CUT_ADD = {
               "Wi-Fi code and its string span start here",
 }
 CUT_DROP = {
+    0x133f60: "reviewed: four allocator helpers at 0x133f60-0x134080 are called by the preceding "
+              "file's tail; the proven language body starts at 0x134080",
     0x1424e8: "reviewed: 0x1424e8-0x143720 is ImeWindow's template tail (vector<100-byte T> etc.); all 51 "
               "functions are reached only via 0x142084-0x142460 from the ImeWindow body at 0x13edfc",
     0x049b14: "reviewed: std::__copy_move<..>::__copy_m for a 1-byte type, still the first file's tail",
 }
 # Units proven as one file (tools/unitcheck.py): both ends are cuts, nothing inside is.
 UNIT_FIXED = {
+    (0x134080, 0x1376fc): "unitcheck --end 1376fc: src/tu_134080.cpp body + 110 template/inline functions "
+                          "fill exactly 0x134080-0x1376fc; language loading, choices and lookup",
     (0x1376fc, 0x138c50): "unitcheck --end 138c50: src/tu_1376fc.cpp body + five inline virtuals "
                           "fill exactly 0x1376fc-0x138c50; KeySettingWindow and touch-input worker",
     (0x138c50, 0x13edfc): "unitcheck --end 13edfc: src/tu_138c50.cpp body + 122 inline/template functions "

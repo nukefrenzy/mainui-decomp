@@ -12,8 +12,8 @@ lo	hi	name	confidence	evidence	label
 1297a8	129f9c	tu_1297a8	review	after template run 0x1296a0-0x1297a8 (3 fns); 24 fns, 18 template	
 129f9c	12ef8c	tu_129f9c	review	after template run 0x129ca8-0x129f9c (14 fns); string spans 0x12a27c-0x12ac2c 0x12d18c-0x12d4b4; 63 fns, 25 template	FileAction
 12ef8c	12fe90	tu_12ef8c	review	after template run 0x12ee04-0x12ef8c (6 fns); 51 fns, 42 template	
-12fe90	133f60	tu_12fe90	review	after template run 0x12fb58-0x12fe90 (17 fns); string spans 0x1303b0-0x131ce8; 149 fns, 55 template	MenuHelper80, MenuHelper60
-133f60	1376fc	tu_133f60	review	after template run 0x133e90-0x133f60 (4 fns); string spans 0x134080-0x134f34 0x1359a8-0x136010; 122 fns, 76 template, static init at 0x135308	language_genShortLangFile_34080, language_customer_343c4, language_have_34568
+12fe90	134080	tu_12fe90	review	after template run 0x12fb58-0x12fe90 (17 fns); string spans 0x1303b0-0x131ce8; 153 fns, 55 template	MenuHelper80, MenuHelper60
+134080	1376fc	tu_134080	proven	unitcheck --end 1376fc: src/tu_134080.cpp body + 110 template/inline functions fill exactly 0x134080-0x1376fc; language loading, choices and lookup; string spans 0x134080-0x134f34 0x1359a8-0x136010; 118 fns, 76 template, static init at 0x135308	language_genShortLangFile_34080, language_customer_343c4, language_have_34568
 1376fc	138c50	tu_1376fc	proven	unitcheck --end 138c50: src/tu_1376fc.cpp body + five inline virtuals fill exactly 0x1376fc-0x138c50; KeySettingWindow and touch-input worker; 19 fns, 2 template, static init at 0x138b8c	KeySettingWindow
 138c50	13edfc	tu_138c50	proven	unitcheck --end 13edfc: src/tu_138c50.cpp body + 122 inline/template functions fill exactly 0x138c50-0x13edfc; Wi-Fi/Hotspot menus; ImeWindow follows; string spans 0x138c50-0x13e368; 166 fns, 57 template	HotspotMenu, WifiItem, WifiConnectAction
 13edfc	143720	tu_13edfc	proven	unitcheck: src/tu_13edfc.cpp body + 67 template/inline functions fill exactly 0x13edfc-0x143720; ImeWindow keyboard; 0x143720 starts the pinyin unit; string spans 0x1425e4-0x142990; 85 fns, 51 template	ImeWindow
