@@ -33,9 +33,13 @@ Ghidra 12.1.4: import with defaults, auto-analyze, run `ghidra/ApplyMainUINames.
 1. Write it in `src/` against the existing headers (`TrimusWindow.h`, `MenuWindow.h`).
 2. `python3 tools/matchfn.py src/File.cpp <name|mangled> <hexaddr> --orig MainUI-354-clean` must print `MATCH`.
    Use mangled names to pick a specific ctor/dtor variant (C2/D2 = base, D0 = deleting).
-3. Add one line to `src/matches.tsv` (file, symbol, addr, size, signature), then run
+3. Add one line to `src/matches.tsv` (file, symbol, addr, size, deps, signature; deps is `-` or `tinyutf8`), then run
    `python3 tools/progress.py --matches-md src/MATCHES.md`. CI (`.github/workflows/match.yml`) re-checks all of them
    and posts the progress summary.
+
+Work file by file: `docs/tu-map.tsv` (from `tools/tusplit.py`) gives each unit's range, `src/tu_<lo>.cpp` holds its
+functions in address order, and `tools/unitcheck.py src/tu_<lo>.cpp` checks the whole unit as the linker lays it out
+(body, then template/inline tail). Briefs: `tools/packet.py --tu <unit>`; patterns: `tools/autoderive.py --tu <unit>`.
 
 At `-O0` the code mirrors the source closely: keep statement order, redundant assignments and member order exactly
 as the disassembly shows. Externs (calls, globals, strings) are link-time words and are ignored by the checker.
@@ -53,7 +57,8 @@ export scripts in `tools/ghidra/`). Never downgrade a confirmed name to a guess.
 - Window stack: `runWindowLoop` 0x36ee8, `pushWindow` 0x36d88, `createMenu(id, path)` 0x37784, `IconMenu::onSelect` 0x27724.
 - `TrimusWindow` (12 bytes): vtable, `titleLabelId` +4, `id` +8; 11 virtual slots, all identified.
 - `MenuWindow` 0x11c bytes, fully laid out in `src/MenuWindow.h`.
-- Libraries inside the binary: cJSON 0x51b60–0x57920, SQLite 0x57920–0x11cdc8 (names in `ghidra/libnames.tsv`).
+- Libraries inside the binary: cJSON 0x51b60–0x57920, SQLite 0x57920–0x11cdc8 (names in `ghidra/libnames.tsv`),
+  and header-only tiny-utf8 4.4.x (`scripts/fetch-tinyutf8.sh`), whose code sits in each user file's template tail.
 - Launch path: `AppAction::execute` → `launchApp_buildCommand` 0x18560 → `writeCmdToRun` 0x17fc0 (`/tmp/cmd_to_run.sh`), then MainUI exits.
 - Clean vs Expert: two NOPs in `createMenu` at 0x37994 and 0x379a0 (hide the RetroArch icon).
 

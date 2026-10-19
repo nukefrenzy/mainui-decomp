@@ -28,7 +28,7 @@ byte-identical from their public sources: SQLite 3.30.1 (808,104 bytes) and cJSO
 | [`docs/program-map.md`](docs/program-map.md) | How MainUI works: startup, the window loop, classes and menus, threads, launching, files, and where to hook in |
 | `ghidra/` | `ApplyMainUINames.java` plus names for 4,800+ functions (with confidence tags), 69 classes and their vtables, globals, and exact library names |
 | `src/` | Byte-exact C++: `TrimusWindow.h` and `MenuWindow.h` (exact layouts and virtual order), plus the rewritten functions |
-| `tools/` | `matchfn.py` (checks a function against the original), library matchers, and the analysis scripts that produced the names |
+| `tools/` | `matchfn.py` (one function) and `unitcheck.py` (a whole file) against the original; `tusplit.py` (source-file map), `packet.py` (per-function briefs), `autoderive.py` (patterns), `progress.py`; library matchers and the analysis scripts that produced the names |
 | `scripts/` | Fetch and verify MainUI and the toolchain; run all matches; rebuild and compare the embedded libraries |
 
 ## Quick start (Linux or WSL)
@@ -59,8 +59,11 @@ Confidence tags: `library-exact`, `confirmed`, `inferred` and `likely` are relia
 2. Write it in `src/` using the existing headers.
 3. Check it: `python3 tools/matchfn.py src/YourFile.cpp functionName <hex address> --orig MainUI-354-clean`.
    It prints `MATCH`, or a side-by-side disassembly at the first difference.
-4. Add one line to `src/matches.tsv`, then regenerate the table in `src/MATCHES.md` with
+4. Add one line to `src/matches.tsv` (its `deps` column names third-party headers such as
+   `tinyutf8`), then regenerate the table in `src/MATCHES.md` with
    `python3 tools/progress.py --matches-md src/MATCHES.md`.
+5. Once a whole file is written (`src/tu_<lo>.cpp`, ranges in `docs/tu-map.tsv`), check it as a unit with
+   `python3 tools/unitcheck.py src/tu_<lo>.cpp`.
 
 Only words the linker fills in (call targets, string and global addresses) are ignored when
 comparing; every other byte must be identical.
