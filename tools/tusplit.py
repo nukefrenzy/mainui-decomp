@@ -51,6 +51,8 @@ CUT_ADD = {
               "Wi-Fi code and its string span start here",
 }
 CUT_DROP = {
+    0x1424e8: "reviewed: 0x1424e8-0x143720 is ImeWindow's template tail (vector<100-byte T> etc.); all 51 "
+              "functions are reached only via 0x142084-0x142460 from the ImeWindow body at 0x13edfc",
     0x049b14: "reviewed: std::__copy_move<..>::__copy_m for a 1-byte type, still the first file's tail",
 }
 # Units proven as one file (tools/unitcheck.py): both ends are cuts, nothing inside is.

@@ -1,7 +1,8 @@
 # CLAUDE.md — mainui-decomp
 
 Reverse engineering and byte-matching decompilation of the Miyoo Mini Plus **MainUI** launcher
-(Onion OS build). Read `README.md` and `docs/program-map.md` before starting work.
+(Onion OS build). Read `README.md`, `docs/program-map.md` and `docs/status.md` (progress, next units) before
+starting work.
 
 ## Working agreement
 
