@@ -112,6 +112,17 @@ literal words; no additional masking is needed.
 - Assignment in a pointer condition also matters: `DIR *d; if ((d = opendir(...)) != NULL)`
   materializes a Boolean test; initializing `d` first and testing it separately removes 16 bytes.
 
+- Operand order can keep an extra saved register across a call. The worker queue needs
+  `workers.size() >= limit`; `limit <= workers.size()` saves `limit` across `size()` and changes
+  the prologue and stack frame.
+- Byte pointer types matter even when every value is ultimately stored with `strb`. The zlib
+  decoder uses unsigned input/history bytes and signed output bytes; its unsigned byte locals
+  produce sign-extending loads when stored through the signed output pointer.
+- Preserve original fallthrough from a non-void function when the evidence establishes it.
+  The decoder's assertions identify `int parse_header(zbuf*)`, but successful switch cases
+  reach the end without returning. Its ignored result and compiler warning are documented in
+  source; adding a return changes bytes.
+
 ## Tail order
 
 GCC 8 at `-O0` emits COMDAT functions in call-graph node order:

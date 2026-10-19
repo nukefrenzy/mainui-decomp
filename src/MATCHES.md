@@ -16,6 +16,36 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `TrimusWindow::animateIn(SDL_Surface*, FlipFn)` | 0x39478 | 40 | TrimusWindow.cpp |
 | `TrimusWindow::animateOut(SDL_Surface*, FlipFn)` | 0x394a0 | 40 | TrimusWindow.cpp |
 | `TrimusWindow::getId()` | 0x394c8 | 40 | TrimusWindow.cpp |
+| `zerror(char const*)` | 0x1302cc | 40 | tu_1302cc.cpp |
+| `bit_reverse16(int)` | 0x1302f4 | 188 | tu_1302cc.cpp |
+| `bit_reverse(int, int)` | 0x1303b0 | 100 | tu_1302cc.cpp |
+| `zbuild_huffman(zhuffman*, unsigned char*, int)` | 0x130414 | 1016 | tu_1302cc.cpp |
+| `zget8(zbuf*)` | 0x13080c | 172 | tu_1302cc.cpp |
+| `fill_bits(zbuf*)` | 0x1308b8 | 172 | tu_1302cc.cpp |
+| `zreceive(zbuf*, int)` | 0x130964 | 144 | tu_1302cc.cpp |
+| `zhuffman_decode(zbuf*, zhuffman*)` | 0x1309f4 | 540 | tu_1302cc.cpp |
+| `compute_huffman_codes(zbuf*)` | 0x130c10 | 992 | tu_1302cc.cpp |
+| `init_default_huffman()` | 0x130ff0 | 304 | tu_1302cc.cpp |
+| `historyWrite(zbuf*, unsigned char)` | 0x131120 | 108 | tu_1302cc.cpp |
+| `historyRead(zbuf*, int)` | 0x13118c | 100 | tu_1302cc.cpp |
+| `parse_zlib_header(zbuf*)` | 0x1311f0 | 232 | tu_1302cc.cpp |
+| `parse_huffman_block(zbuf*, int)` | 0x1312d8 | 876 | tu_1302cc.cpp |
+| `parse_uncompressed_block(zbuf*, int)` | 0x131644 | 352 | tu_1302cc.cpp |
+| `parse_header(zbuf*)` | 0x1317a4 | 708 | tu_1302cc.cpp |
+| `openZlib(unsigned char*, _IO_FILE*, int)` | 0x131a68 | 252 | tu_1302cc.cpp |
+| `readZlib(zbuf*, void*, int)` | 0x131b64 | 388 | tu_1302cc.cpp |
+| `stbi_zlib_decode_malloc(unsigned char*, int, int*)` | 0x131ce8 | 332 | tu_1302cc.cpp |
+| `MenuHelper80::MenuHelper80(void (*)(SDL_Surface*))` | 0x131e34 | 96 | tu_131e34.cpp |
+| `MenuHelper80::~MenuHelper80()` | 0x131e94 | 68 | tu_131e34.cpp |
+| `MenuHelper80::clear()` | 0x131ed8 | 216 | tu_131e34.cpp |
+| `MenuHelper80::put(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, void*)` | 0x131fb0 | 300 | tu_131e34.cpp |
+| `MenuHelper80::get(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)` | 0x1320dc | 384 | tu_131e34.cpp |
+| `MenuHelper80::count()` | 0x13225c | 44 | tu_131e34.cpp |
+| `workerThread(void*)` | 0x132288 | 344 | tu_131e34.cpp |
+| `MenuHelper60::MenuHelper60(int)` | 0x1323e0 | 188 | tu_131e34.cpp |
+| `MenuHelper60::~MenuHelper60()` | 0x13249c | 308 | tu_131e34.cpp |
+| `MenuHelper60::addWorker(BGWorker*)` | 0x1325d0 | 240 | tu_131e34.cpp |
+| `MenuHelper60::takeWorker()` | 0x1326c0 | 160 | tu_131e34.cpp |
 | `genShortLangFile(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)` | 0x134080 | 836 | tu_134080.cpp |
 | `createEnglishLangFile()` | 0x1343c4 | 420 | tu_134080.cpp |
 | `readLanguageFile(char const*, Language&)` | 0x134568 | 664 | tu_134080.cpp |

@@ -213,6 +213,18 @@ Language choices are restricted to English when neither font path exists. `.shor
 `/customer/app/lang` contain IDs 88–155. `Language.h` records the 60-byte language and 48-byte
 menu-choice layouts.
 
+The cache/worker unit is proven at 0x131e34–0x134080. `MenuHelper80` contains a 12-byte
+`std::list<CacheEntry>`, free callback at +0x0c, and mutex at +0x10. Entries contain a string key
+and pointer value. Hits move to the back; insertion removes entries from the back while the
+existing count exceeds 1,000. `MenuHelper60` contains a pending-work limit, mutex, condition,
+12-byte worker list, one SDL thread, and running flag. It inserts and takes work at the front,
+and drops the oldest pending work from the back when the limit is reached. `BGWorker` slots
+2 and 3 are run and completion callbacks; the worker is deleted afterward.
+
+The custom streaming zlib decoder is proven at 0x1302cc–0x131e34. Its state is 0x100c bytes,
+including two 0x7e4-byte Huffman tables, plus a separately allocated 32 KB history ring. It can
+read memory or a `FILE*`; input/output bytes have different signed types under the proven flags.
+
 ## Threads, events and launching
 
 - **statusPollThread** (0x4a050) wakes every second, polls shared settings and battery/Wi-Fi

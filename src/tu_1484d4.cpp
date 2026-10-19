@@ -241,13 +241,13 @@ void MultiDBCachedTextMenu::prepareBGWorkers(int index, int len)
             if (len <= end - index) {
                 worker = new DBCacheWorker(dbs[i].db, dbs[i].name, table, index - start, len, 24,
                                            &items, &data, dbs[i].emu, &dir, &str18, true);
-                workers.addWorker(worker);
+                workers.addWorker((BGWorker *)worker);
                 len = 0;
             } else {
                 take = end - index;
                 worker = new DBCacheWorker(dbs[i].db, dbs[i].name, table, index - start, take, 24,
                                            &items, &data, dbs[i].emu, &dir, &str18, true);
-                workers.addWorker(worker);
+                workers.addWorker((BGWorker *)worker);
                 index += take;
                 len -= take;
             }

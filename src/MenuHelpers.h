@@ -1,21 +1,41 @@
-// Two helpers shared by MenuWindow and the DB-backed text menus.
+// Cache and background worker queue shared by the menu classes.
 #pragma once
 #include <string>
-
+#include <list>
 struct SDL_Surface;
-
-// Background worker pool: MenuWindow builds it with 2, MultiDBCachedTextMenu with 10.
-struct MenuHelper60 {                       // 32 bytes
-    MenuHelper60(int n);                    // 0x1323e0
-    ~MenuHelper60();                        // 0x13249c
-    void addWorker(void *worker);           // 0x1325d0, queues a BGWorker (DBCacheWorker)
-    char raw[0x20];
+struct SDL_mutex;
+struct SDL_cond;
+struct SDL_Thread;
+class BGWorker {
+public:
+    virtual ~BGWorker();
+    virtual void run() = 0;
+    virtual void finished() = 0;
 };
-
-// Keyed cache; the callback frees an entry (SDL_FreeSurface wrapper, operator delete, free).
-struct MenuHelper80 {                       // 0x14 bytes (MultiDBCachedTextMenu has two back to back)
-    MenuHelper80(void (*freeFn)(SDL_Surface *));  // 0x131e34
-    ~MenuHelper80();                        // 0x131e94
-    void *get(std::string key);             // 0x1320dc, NULL until a worker has filled the entry
-    char raw[0x14];
+struct CacheEntry {
+    std::string key;
+    void *value;
+};
+struct MenuHelper80 { // 0x14 bytes
+    MenuHelper80(void (*freeFn)(SDL_Surface *));
+    ~MenuHelper80();
+    void clear();
+    int put(std::string key, void *value);
+    void *get(std::string key);
+    unsigned int count();
+    std::list<CacheEntry> entries;
+    void (*freeFn)(SDL_Surface *);
+    SDL_mutex *mutex;
+};
+struct MenuHelper60 { // 0x20 bytes
+    MenuHelper60(int n);
+    ~MenuHelper60();
+    int addWorker(BGWorker *worker);
+    BGWorker *takeWorker();
+    int limit;
+    SDL_mutex *mutex;
+    SDL_cond *condition;
+    std::list<BGWorker *> workers;
+    SDL_Thread *thread;
+    bool running;
 };

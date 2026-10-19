@@ -51,6 +51,8 @@ CUT_ADD = {
               "Wi-Fi code and its string span start here",
 }
 CUT_DROP = {
+    0x12fe90: "reviewed: 0x12fe90-0x1302cc is the preceding file's template tail; "
+              "stb_zlib.cpp starts at 0x1302cc, then menu helpers at 0x131e34",
     0x133f60: "reviewed: four allocator helpers at 0x133f60-0x134080 are called by the preceding "
               "file's tail; the proven language body starts at 0x134080",
     0x1424e8: "reviewed: 0x1424e8-0x143720 is ImeWindow's template tail (vector<100-byte T> etc.); all 51 "
@@ -59,6 +61,10 @@ CUT_DROP = {
 }
 # Units proven as one file (tools/unitcheck.py): both ends are cuts, nothing inside is.
 UNIT_FIXED = {
+    (0x1302cc, 0x131e34): "unitcheck --end 131e34: src/tu_1302cc.cpp fills exactly "
+                          "0x1302cc-0x131e34; streaming stb_zlib.cpp decoder, 19 functions, no tail",
+    (0x131e34, 0x134080): "unitcheck --end 134080: src/tu_131e34.cpp body + 110 template/inline functions "
+                          "fill exactly 0x131e34-0x134080; keyed cache and background worker queue",
     (0x134080, 0x1376fc): "unitcheck --end 1376fc: src/tu_134080.cpp body + 110 template/inline functions "
                           "fill exactly 0x134080-0x1376fc; language loading, choices and lookup",
     (0x1376fc, 0x138c50): "unitcheck --end 138c50: src/tu_1376fc.cpp body + five inline virtuals "

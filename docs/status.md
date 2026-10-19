@@ -7,14 +7,16 @@ method: `docs/unit-workflow.md`. Update this file when a unit is proven or the p
 
 - **Goal:** complete MainUI source that rebuilds byte-exact with Arm GNU 8.2-2018.08, `-O0 -fsigned-char`,
   worked file by file (one translation unit per `src/tu_<lo>.cpp` or `.c`).
-- **Progress:** 13 whole units proven by `tools/unitcheck.py`, plus 9 single functions in
-  `tu_015b20`: 733 of 2,605 Miyoo functions, 118,724 of 457,584 bytes (25.95%). CI checks every match
+- **Progress:** 15 whole units proven by `tools/unitcheck.py`, plus 9 single functions in
+  `tu_015b20`: 873 of 2,605 Miyoo functions, 134,520 of 457,584 bytes (29.40%). CI checks every match
   and every unit on each push.
 - **Embedded libraries:** SQLite 3.30.1 and cJSON 1.7.10 rebuild byte-exact (`scripts/verify-libs.sh`);
   tiny-utf8 4.4.x is header-only and appears in the template tails of the files that use it.
 
 | Proven unit | Range | What it is |
 | --- | --- | --- |
+| tu_1302cc (C++) | 0x1302cc–0x131e34 | Streaming stb_zlib decoder: 19 functions, no tail |
+| tu_131e34 (C++) | 0x131e34–0x134080 | Keyed cache and worker queue: 11 body functions plus 110 inline/template functions |
 | tu_134080 (C++) | 0x134080–0x1376fc | Languages: six body functions, compiler init pair, 110 inline/template functions |
 | tu_1376fc (C++) | 0x1376fc–0x138c50 | KeySettingWindow and touch-input worker: 12 written functions, compiler init pair, five inline virtuals |
 | tu_138c50 (C++) | 0x138c50–0x13edfc | Wi-Fi/Hotspot menus: 44 body functions plus 122 inline/template functions |
@@ -50,15 +52,25 @@ to the preceding file. Language records are 60 bytes (two strings plus a string 
 choices are 48 bytes (filename and display name). The loader sorts by filename, creates English
 fallback data, and writes `.short` files containing label IDs 88–155.
 
+`tu_1302cc` matches with the default flags: 7,016 bytes, no tail. It is a streaming adaptation
+of stb's zlib decoder, identified by its own `stb_zlib.cpp` assertions and `GNZLIB` messages.
+`parse_header` retains the original missing return on successful blocks (its caller ignores the
+result); the compiler warning is expected.
+
+`tu_131e34` matches with the default flags: 2,348 body bytes and 6,432 tail bytes. It defines the
+0x14-byte cache and 0x20-byte worker queue used by previously proven menu classes. The worker
+helper has one thread; its constructor argument limits pending work, with a default of five.
+The old `tu_12fe90` draft combined these two files with 1,084 bytes of the preceding file's
+template tail. Its corrected preceding neighbour is `tu_12ef8c`, ending at 0x1302cc.
+
 ## Next units, in order
 
 Work outward from proven units: a proven neighbour fixes one boundary for free. One fresh session per
 unit, each in its own worktree; merge their branches into `main` one at a time.
 
-1. **tu_12fe90** (draft 0x12fe90–0x134080, 16,880 bytes): menu helpers and image/zlib
-   decoding code. Its end is fixed by the language unit; confirm the draft start while proving it.
-   Continue backward toward 0x11cdc8.
-2. **Small units with draft boundaries** (tu_126c60 1.5 KB, tu_1297a8 2 KB, tu_12ef8c 3.8 KB) are
+1. **tu_12ef8c** (draft 0x12ef8c–0x1302cc, 4,928 bytes): its end is now fixed by the
+   decoder. Confirm its start and continue backward toward 0x11cdc8.
+2. **Small units with draft boundaries** (tu_126c60 1.5 KB, tu_1297a8 2 KB) are
    cheap but unbounded; take them when a neighbour is proven.
 3. **tu_049c3c** (main program: main, signal handler, status poll) and **tu_04c12c** (hardware test
    windows) after the 0x11cdc8+ region.
