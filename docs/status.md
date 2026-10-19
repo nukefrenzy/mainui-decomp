@@ -7,14 +7,15 @@ method: `docs/unit-workflow.md`. Update this file when a unit is proven or the p
 
 - **Goal:** complete MainUI source that rebuilds byte-exact with Arm GNU 8.2-2018.08, `-O0 -fsigned-char`,
   worked file by file (one translation unit per `src/tu_<lo>.cpp` or `.c`).
-- **Progress:** 10 whole units proven by `tools/unitcheck.py`, plus 9 single functions in
-  `tu_015b20`: 432 of 2,605 Miyoo functions, 74,312 of 457,584 bytes (16.24%). CI checks every match
+- **Progress:** 11 whole units proven by `tools/unitcheck.py`, plus 9 single functions in
+  `tu_015b20`: 598 of 2,605 Miyoo functions, 99,316 of 457,584 bytes (21.70%). CI checks every match
   and every unit on each push.
 - **Embedded libraries:** SQLite 3.30.1 and cJSON 1.7.10 rebuild byte-exact (`scripts/verify-libs.sh`);
   tiny-utf8 4.4.x is header-only and appears in the template tails of the files that use it.
 
 | Proven unit | Range | What it is |
 | --- | --- | --- |
+| tu_138c50 (C++) | 0x138c50–0x13edfc | Wi-Fi/Hotspot menus: 44 body functions plus 122 inline/template functions |
 | tu_13edfc (C++) | 0x13edfc–0x143720 | ImeWindow keyboard: 18 body functions plus 67 generated template/inline functions |
 | tu_143720 (C++) | 0x143720–0x1484d4 | pinyin search table (tiny-utf8, `std::map`); the pilot |
 | tu_1484d4 (C++) | 0x1484d4–0x14acfc | MultiDBCachedTextMenu, global ROM search |
@@ -30,13 +31,19 @@ three functions and truncated the block-transform function.
 then 5,788 tail bytes. Both boundaries are now proven. `ImeKey` is 100 bytes and `ImeWindow`
 is 0xf0 bytes; `draw` and `restoreState` return `int` (shared window headers corrected).
 
+`tu_138c50` matches with the default flags: 14,368 body bytes to 0x13c470, then 10,636 tail
+bytes. Its proof requires the full 0x13edfc end: byte-identical pointer templates otherwise allow
+a shorter layout. `unitcheck` now enforces recorded ends for proven units and supports `--end`
+for a known neighbour when proving a draft. Shared `Action`, SDL prefixes, and the 0x48-byte
+`ListMenu` base are laid out; `TextMenuDrawer` keeps its existing 0xf8-byte layout.
+
 ## Next units, in order
 
 Work outward from proven units: a proven neighbour fixes one boundary for free. One fresh session per
 unit, each in its own worktree; merge their branches into `main` one at a time.
 
-1. **tu_138c50, Wi-Fi/Hotspot menus** (0x138c50–0x13edfc, 25 KB), then going down through
-   tu_1376fc (KeySettingWindow), tu_133f60 (language) and so on toward 0x11cdc8.
+1. **tu_1376fc, KeySettingWindow** (0x1376fc–0x138c50, 5,460 bytes): key mapping settings. Its
+   end is fixed by the Wi-Fi unit. Then continue through tu_133f60 (language) toward 0x11cdc8.
 2. **Small units with draft boundaries** (tu_126c60 1.5 KB, tu_1297a8 2 KB, tu_12ef8c 3.8 KB) are
    cheap but unbounded; take them when a neighbour is proven.
 3. **tu_049c3c** (main program: main, signal handler, status poll) and **tu_04c12c** (hardware test

@@ -16,7 +16,51 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `TrimusWindow::animateIn(SDL_Surface*, FlipFn)` | 0x39478 | 40 | TrimusWindow.cpp |
 | `TrimusWindow::animateOut(SDL_Surface*, FlipFn)` | 0x394a0 | 40 | TrimusWindow.cpp |
 | `TrimusWindow::getId()` | 0x394c8 | 40 | TrimusWindow.cpp |
-| `ImeWindow::ImeWindow(int title, ImeCallback *callback, int label)` | 0x13edfc | 1060 | tu_13edfc.cpp |
+| `wifiMode()` | 0x138c50 | 116 | tu_138c50.cpp |
+| `wlanAddress(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)` | 0x138cc4 | 304 | tu_138c50.cpp |
+| `switch2WpaMode(int)` | 0x138df4 | 288 | tu_138c50.cpp |
+| `swicth2ApMode()` | 0x138f14 | 320 | tu_138c50.cpp |
+| `WifiOnOffLabel::WifiOnOffLabel(Action*, bool)` | 0x139054 | 204 | tu_138c50.cpp |
+| `WifiOnOffLabel::~WifiOnOffLabel()` | 0x139120 | 124 | tu_138c50.cpp |
+| `WifiOnOffLabel::~WifiOnOffLabel()` | 0x13919c | 52 | tu_138c50.cpp |
+| `WifiOnOffLabel::draw(SDL_Surface*, SDL_Rect*, bool)` | 0x1391d0 | 936 | tu_138c50.cpp |
+| `WifiLabel::WifiLabel(Action*)` | 0x139578 | 68 | tu_138c50.cpp |
+| `WifiLabel::~WifiLabel()` | 0x1395bc | 60 | tu_138c50.cpp |
+| `WifiLabel::~WifiLabel()` | 0x1395f8 | 52 | tu_138c50.cpp |
+| `WifiLabel::draw(SDL_Surface*, SDL_Rect*, bool)` | 0x13962c | 224 | tu_138c50.cpp |
+| `WifiItem::draw(SDL_Surface*, SDL_Rect*, bool)` | 0x13970c | 904 | tu_138c50.cpp |
+| `WifiConnectAction::execute(void*)` | 0x139a94 | 544 | tu_138c50.cpp |
+| `WifiConnectDialogAction::execute(void*)` | 0x139cb4 | 160 | tu_138c50.cpp |
+| `WifiItemAction::execute(void*)` | 0x139d54 | 428 | tu_138c50.cpp |
+| `toggleWifi()` | 0x139f00 | 428 | tu_138c50.cpp |
+| `WifiOnOffAction::execute(void*)` | 0x13a0ac | 448 | tu_138c50.cpp |
+| `WifiOnOffDialogAction::execute(void*)` | 0x13a26c | 140 | tu_138c50.cpp |
+| `WifiMenuDrawer::WifiMenuDrawer()` | 0x13a2f8 | 224 | tu_138c50.cpp |
+| `WifiMenuDrawer::~WifiMenuDrawer()` | 0x13a3d8 | 116 | tu_138c50.cpp |
+| `WifiMenuDrawer::~WifiMenuDrawer()` | 0x13a44c | 52 | tu_138c50.cpp |
+| `WifiMenuDrawer::vfunc3()` | 0x13a480 | 300 | tu_138c50.cpp |
+| `WifiMenuDrawer::vfunc4()` | 0x13a5ac | 184 | tu_138c50.cpp |
+| `WifiMenuDrawer::getItem(int)` | 0x13a664 | 136 | tu_138c50.cpp |
+| `WifiMenuDrawer::drawItems(SDL_Surface*)` | 0x13a6ec | 1256 | tu_138c50.cpp |
+| `WifiMenuDrawer::count()` | 0x13abd4 | 48 | tu_138c50.cpp |
+| `WifiMenuDrawer::vfunc13()` | 0x13ac04 | 308 | tu_138c50.cpp |
+| `WifiMenu::WifiMenu()` | 0x13ad38 | 832 | tu_138c50.cpp |
+| `WifiMenu::~WifiMenu()` | 0x13b078 | 260 | tu_138c50.cpp |
+| `WifiMenu::~WifiMenu()` | 0x13b17c | 52 | tu_138c50.cpp |
+| `WifiMenu::vfunc7(SDL_Surface*)` | 0x13b1b0 | 160 | tu_138c50.cpp |
+| `WifiMenu::vfunc4()` | 0x13b250 | 112 | tu_138c50.cpp |
+| `WifiMenu::vfunc15(int)` | 0x13b2c0 | 2212 | tu_138c50.cpp |
+| `HotspotSwitchAction::execute(void*)` | 0x13bb64 | 348 | tu_138c50.cpp |
+| `writeConfigValue(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)` | 0x13bcc0 | 488 | tu_138c50.cpp |
+| `readConfigValue(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)` | 0x13bea8 | 524 | tu_138c50.cpp |
+| `HotspotWriteAction::execute(void*)` | 0x13c0b4 | 232 | tu_138c50.cpp |
+| `HotspotImePopupAction::execute(void*)` | 0x13c19c | 200 | tu_138c50.cpp |
+| `HotspotMenu::HotspotMenu()` | 0x13c264 | 284 | tu_138c50.cpp |
+| `HotspotMenu::~HotspotMenu()` | 0x13c380 | 100 | tu_138c50.cpp |
+| `HotspotMenu::~HotspotMenu()` | 0x13c3e4 | 52 | tu_138c50.cpp |
+| `HotspotMenu::vfunc7(SDL_Surface*)` | 0x13c418 | 48 | tu_138c50.cpp |
+| `HotspotMenu::vfunc15(int)` | 0x13c448 | 40 | tu_138c50.cpp |
+| `ImeWindow::ImeWindow(int title, Action *callback, int label)` | 0x13edfc | 1060 | tu_13edfc.cpp |
 | `ImeWindow::~ImeWindow()` | 0x13f220 | 688 | tu_13edfc.cpp |
 | `ImeWindow::~ImeWindow() [deleting]` | 0x13f4d0 | 52 | tu_13edfc.cpp |
 | `void ImeWindow::rowKeys(std::vector<int>&, int key)` | 0x13f504 | 460 | tu_13edfc.cpp |

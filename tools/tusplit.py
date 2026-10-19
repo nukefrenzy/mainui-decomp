@@ -57,6 +57,8 @@ CUT_DROP = {
 }
 # Units proven as one file (tools/unitcheck.py): both ends are cuts, nothing inside is.
 UNIT_FIXED = {
+    (0x138c50, 0x13edfc): "unitcheck --end 13edfc: src/tu_138c50.cpp body + 122 inline/template functions "
+                          "fill exactly 0x138c50-0x13edfc; Wi-Fi/Hotspot menus; ImeWindow follows",
     (0x13edfc, 0x143720): "unitcheck: src/tu_13edfc.cpp body + 67 template/inline functions fill exactly "
                           "0x13edfc-0x143720; ImeWindow keyboard; 0x143720 starts the pinyin unit",
     (0x143720, 0x1484d4): "unitcheck: src/tu_143720.cpp body + 170 template/inline functions fill exactly "

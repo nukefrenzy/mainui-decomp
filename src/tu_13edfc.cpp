@@ -26,7 +26,7 @@ int drawImeInput(SDL_Surface *, void *, SDL_Rect *, char *, const char *, SDL_Co
 static_assert(sizeof(ImeKey) == 100, "ImeKey layout");
 static_assert(sizeof(ImeWindow) == 0xf0, "ImeWindow layout");
 
-ImeWindow::ImeWindow(int title, ImeCallback *callback, int label) : TrimusWindow(title, 0x16)
+ImeWindow::ImeWindow(int title, Action *callback, int label) : TrimusWindow(title, 0x16)
 {
     btn1Focused = loadImeImage(g_themePath, "./", "skin/bg-btn-01-f.png");
     btn1Normal = loadImeImage(g_themePath, "./", "skin/bg-btn-01-n.png");

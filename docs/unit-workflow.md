@@ -38,6 +38,10 @@ python3 tools/autoderive.py --tu tu_<lo>      # pattern matches in build/auto/tu
    (add `--flags "-O0 -fsigned-char -I<dir>"` for third-party headers).
 4. Check the unit: `python3 tools/unitcheck.py src/tu_<lo>.cpp [--verbose]`. Fix body mismatches
    first, then tail mismatches (wrong types or calls), then tail order (below).
+   If the next unit fixes the end, pass `--end <hexaddr>` while proving it. The checker enforces
+   recorded ends automatically for proven units. A draft's unconstrained `MATCH` can describe a
+   shorter layout when pointer templates have identical bytes to earlier instantiations; it does
+   not prove the missing tail. Use the required-end walk to settle that ambiguity.
 5. Bookkeeping, in the same commit:
    - one line per function in `src/matches.tsv` (`deps` = `-` or `tinyutf8`, `cflags` = `-` or
      extra whitespace-separated compiler flags such as `-fPIC`), then
@@ -85,6 +89,14 @@ literal words; no additional masking is needed.
 - Preserve which branch comes first. `if (flag) { A; } else { B; }` and the inverted spelling
   can add Boolean inversion instructions at -O0; disassembly settles the source order even when
   Ghidra prints the equivalent branches in the opposite order.
+- Keep header definitions visible when the compiler saw them: an inline `Action` constructor
+  containing only vtable/member stores is known not to throw even at -O0. A declaration alone
+  makes callers emit extra allocation-cleanup handlers, changing constructors and action bodies.
+- Assignment inside a condition matters: `int r; if ((r = action->execute(p)) >= 0) ...` emits a
+  materialized sign test in the Wi-Fi drawer. Initializing `r` with the call and then testing it
+  separately removes 12 bytes. Keep the variable's scope as well as the statement order.
+- Ignored `system()` results are still assigned in the Wi-Fi mode helpers. At -O0, removing
+  `rc = system(...)` stores changes every call site even though `rc` is never used.
 
 ## Tail order
 

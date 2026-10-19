@@ -168,6 +168,12 @@ built with the same toolchain, are binary-compatible and can be handed to `pushW
 0x11 are ROM lists from the SQLite cache, and everything else goes through
 **`createMenu(menuId, path)`** at 0x37784.
 
+The Wi-Fi/Hotspot unit is proven at 0x138c50–0x13edfc. `ListMenu` is a 0x48-byte base;
+`WifiMenuDrawer` extends it to 0x5c bytes with an item-pointer vector at +0x48, highlight surface
+at +0x54, and row height at +0x58. `WifiMenu` is 0x22fc bytes, including 32 scan records of 0x114
+bytes each. The legacy `getWifiConnected`/`setWifiConnected` names in `tu_14b860.c`
+(0x14bc54/0x14bc78) refer to the hotspot/AP-mode flag, rather than station connection status.
+
 **createMenu IDs:**
 
 | ID | Builds | ID | Builds |

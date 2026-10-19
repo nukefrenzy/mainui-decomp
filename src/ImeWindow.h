@@ -4,32 +4,18 @@
 #include <vector>
 #include "TrimusWindow.h"
 
-struct SDL_PixelFormat;
-// SDL 1.2 prefix used through pointers here; surfaces are owned/allocated by SDL.
-struct SDL_Surface {
-    unsigned int flags;
-    SDL_PixelFormat *format;
-    int w, h;
-};
-struct SDL_Rect {
-    short x, y;
-    unsigned short w, h;
-};
-struct SDL_Color { unsigned char r, g, b, unused; };
+#include "SDLTypes.h"
+#include "Action.h"
+
 struct ImeKey {
     int id;
     SDL_Rect rect;
     std::string lower, upper, symbol;
     SDL_Surface *focused, *normal, *icon, *hint;
 };
-class ImeCallback {
-public:
-    virtual ~ImeCallback();
-    virtual int execute(char *text) = 0;
-};
 class ImeWindow : public TrimusWindow {
 public:
-    ImeWindow(int title, ImeCallback *callback, int label);
+    ImeWindow(int title, Action *callback, int label);
     virtual ~ImeWindow();
     void rowKeys(std::vector<int> &out, int key);
     void columnKeys(std::vector<int> &out, int key, bool up);
@@ -57,6 +43,6 @@ public:
     int length;
     std::vector<ImeKey> keys; // +0xd8
     bool shifted, symbols; // +0xe4
-    ImeCallback *callback; // +0xe8
+    Action *callback; // +0xe8
     const char *label;
 };

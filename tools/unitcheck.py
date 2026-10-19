@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check a whole translation unit against MainUI, the way the linker lays it out.
 
-Usage: unitcheck.py <src/tu_xxxxxx.cpp> [--unit NAME | --at ADDR] [--verbose]
+Usage: unitcheck.py <src/tu_xxxxxx.cpp> [--unit NAME | --at ADDR] [--end ADDR] [--verbose]
 
 GNU ld places each object's .text first, then its template/inline COMDAT sections (.text._Z*)
 in the order they appear in the object; a COMDAT that an earlier file already contributed is
@@ -12,7 +12,9 @@ discarded. So:
    previous one ended or exist identically before the unit (discarded: kept from an earlier
    file). Many tiny templates have identical code (std::forward, std::move, trivial ctors), so
    the walk backtracks over that choice. The end of the walk is the unit's real end; it is
-   compared with docs/tu-map.tsv.
+   compared with docs/tu-map.tsv. Proven units must finish at their recorded end; --end can
+   require a known neighbouring boundary while proving a draft unit. This forces backtracking
+   past short layouts that discard byte-identical pointer templates found in earlier files.
 3. If no such layout exists, the walk reports where it breaks, and each section is then matched
    to its first identical code in the tail and listed in binary order with its object order, so an
    ordering difference shows up as "out of order" rather than as a mismatch. Identical small
@@ -36,6 +38,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("source")
 ap.add_argument("--unit", help="unit name in docs/tu-map.tsv (default: from the file name tu_<lo>)")
 ap.add_argument("--at", help="hex start address instead of a unit")
+ap.add_argument("--end", help="required hex end address (default: enforce the end of proven units)")
 ap.add_argument("--orig", default=os.path.join(ROOT, "MainUI-354-clean"))
 ap.add_argument("--flags", default="-O0 -fsigned-char")
 ap.add_argument("--verbose", action="store_true")
@@ -43,11 +46,14 @@ ap.add_argument("--window", type=lambda x: int(x, 0), default=0x10000, help="how
 a = ap.parse_args()
 
 units = {}
+proven = set()
 tu_path = os.path.join(ROOT, "docs/tu-map.tsv")
 if os.path.exists(tu_path):
     with open(tu_path, newline="") as f:
         for t in csv.DictReader(f, delimiter="\t", quoting=csv.QUOTE_NONE):
             units[t["name"]] = (int(t["lo"], 16), int(t["hi"], 16))
+            if t.get("confidence") == "proven":
+                proven.add(t["name"])
 if a.at:
     lo, hi, uname = int(a.at, 16), None, f"@{a.at}"
 else:
@@ -55,6 +61,7 @@ else:
     if uname not in units:
         sys.exit(f"unit {uname} not in docs/tu-map.tsv (use --unit or --at)")
     lo, hi = units[uname]
+required_end = int(a.end, 16) if a.end else (hi if uname in proven else None)
 
 names = {}
 with open(os.path.join(ROOT, "ghidra/names.tsv")) as f:
@@ -164,6 +171,8 @@ if idx is not None:
 tail_lo = cur
 # every word in the window is a candidate start: names.tsv does not list every function
 region_end = min(tail_lo + a.window, TB + len(TD))
+if required_end is not None:
+    region_end = min(region_end, required_end)
 
 
 def earlier_hits(data, mask):
@@ -200,7 +209,7 @@ def linker_walk():
 
     def go(i, cur):
         if i == len(tail_secs):
-            return []
+            return [] if required_end is None or cur == required_end else None
         if (i, cur) in dead:
             return None
         k, data, mask, _ = tail_secs[i]
@@ -242,6 +251,14 @@ if plan is not None:
     print("RESULT", "MATCH" if not fail else "MISMATCH")
     os.remove(obj)
     sys.exit(fail)
+fail = 1  # Diagnostic matches below cannot turn a failed linker walk into a proof.
+if not tail_secs:
+    print(f"UNIT   {uname}: {lo:#x}-{tail_lo:#x}; required end {required_end:#x}")
+    print("RESULT MISMATCH")
+    os.remove(obj)
+    sys.exit(1)
+if required_end is not None:
+    print(f"END    linker walk must finish at {required_end:#x}")
 k, _, _, nm = tail_secs[fail_i]
 print(f"TAIL   linker order breaks at {fail_cur:#x}: obj#{k} {nm[:80]} is neither there nor earlier")
 print("       (diagnostics below match each section to its first identical code in the tail)")
