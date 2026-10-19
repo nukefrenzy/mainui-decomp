@@ -8,13 +8,15 @@ in the order they appear in the object; a COMDAT that an earlier file already co
 discarded. So:
 1. The object's .text must match word for word starting at the unit's start (link-time words
    masked as in matchfn.py: relocations and BL/BLX targets).
-2. Each .text._Z* section must appear at a function start in the region after .text (its tail),
-   or else identically before the unit (discarded: kept from an earlier file). Anything else is
-   a MISMATCH. Sections found in the tail are reported in binary order with their object order,
-   so an ordering difference shows up as "out of order" rather than as a mismatch.
-3. The tail must be contiguous: every function start between the end of .text and the last
-   placed section must be accounted for. That end is the unit's real end; it is compared with
-   docs/tu-map.tsv.
+2. The .text._Z* sections, walked in object order, must each either match right where the
+   previous one ended or exist identically before the unit (discarded: kept from an earlier
+   file). Many tiny templates have identical code (std::forward, std::move, trivial ctors), so
+   the walk backtracks over that choice. The end of the walk is the unit's real end; it is
+   compared with docs/tu-map.tsv.
+3. If no such layout exists, the walk reports where it breaks, and each section is then matched
+   to its first identical code in the tail and listed in binary order with its object order, so an
+   ordering difference shows up as "out of order" rather than as a mismatch. Identical small
+   functions can be paired up wrongly there; only the walk's verdict is exact.
 Exit code 0 = whole unit matches, 1 = mismatch, 2 = error.
 """
 import argparse
@@ -170,6 +172,71 @@ def tail_hits(data, mask):
             continue
         if x not in used and not diff_at(x, data, mask):
             yield x
+tail_secs = []                               # (k, data, mask, name) in object order
+for k, idx in enumerate(i for i in order if secs[i].name != ".text"):
+    data, mask = masked(idx)
+    if data:
+        tail_secs.append((k, data, mask, ", ".join(x[2] for x in syms.get(idx, [])) or secs[idx].name))
+
+
+def linker_walk():
+    """Lay the tail out as ld does: each section in object order either goes at the current end
+    or was discarded because an earlier file has it. Many tiny template functions have identical
+    code (std::forward/std::move, trivial ctors and dtors returning `this`), so a section can both
+    match here and exist earlier; try placing first and backtrack. Returns (plan, deepest) where plan
+    is [(k, addr or None)] or None, and deepest = (i, cur) of the furthest failure."""
+    sys.setrecursionlimit(max(1000, 4 * len(tail_secs)))
+    dead, deepest = set(), [(-1, tail_lo)]
+    early = {}
+
+    def go(i, cur):
+        if i == len(tail_secs):
+            return []
+        if (i, cur) in dead:
+            return None
+        k, data, mask, _ = tail_secs[i]
+        if cur + len(data) <= region_end and not diff_at(cur, data, mask):
+            rest = go(i + 1, cur + len(data))
+            if rest is not None:
+                return [(k, cur)] + rest
+        if i not in early:
+            early[i] = next(earlier_hits(data, mask), None)
+        if early[i] is not None:
+            rest = go(i + 1, cur)
+            if rest is not None:
+                return [(k, None, early[i])] + rest
+        dead.add((i, cur))
+        if i > deepest[0][0]:
+            deepest[0] = (i, cur)
+        return None
+
+    return go(0, tail_lo), deepest[0]
+
+
+plan, (fail_i, fail_cur) = linker_walk()
+if plan is not None:
+    cur, kept = tail_lo, 0
+    for k, at, *old in plan:
+        nm = next(t[3] for t in tail_secs if t[0] == k)
+        if at is None:
+            kept += 1
+            if a.verbose:
+                print(f"KEPT   earlier at {old[0]:#x} ({names.get(old[0], '?')}): {nm[:80]}")
+        else:
+            size = len(next(t[1] for t in tail_secs if t[0] == k))
+            if a.verbose:
+                print(f"TAIL   {at:#x} {size:4d} B  obj#{k:<3d} {nm[:80]}")
+            cur = at + size
+    print(f"TAIL   {len(plan) - kept} in object order, {kept} kept from earlier files")
+    note = "" if hi is None else (" (matches docs/tu-map.tsv)" if cur == hi else f" (docs/tu-map.tsv says {hi:#x})")
+    print(f"UNIT   {uname}: {lo:#x}-{cur:#x}{note}")
+    print("RESULT", "MATCH" if not fail else "MISMATCH")
+    os.remove(obj)
+    sys.exit(fail)
+k, _, _, nm = tail_secs[fail_i]
+print(f"TAIL   linker order breaks at {fail_cur:#x}: obj#{k} {nm[:80]} is neither there nor earlier")
+print("       (diagnostics below match each section to its first identical code in the tail)")
+
 used, placed, discarded, bad = {}, [], 0, 0
 starts_all = starts_all
 for k, idx in enumerate(i for i in order if secs[i].name != ".text"):

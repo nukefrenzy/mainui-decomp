@@ -2,12 +2,20 @@
 // Loads ./py.dat ("<hanzi> <pinyin>" per line) into a map from codepoint to pinyin, and uses it
 // to match ASCII search keys against UTF-8 names. Strings are tiny-utf8 4.4.x
 // (scripts/fetch-tinyutf8.sh); every template function in the tail comes from its header.
+//
+// Tail order (applies to every file): GCC 8 at -O0 emits COMDAT functions in cgraph node order.
+// Every inline non-template function defined in a header gets its node in definition order, so
+// include order decides theirs: <map> must come before <algorithm> (which pulls in <limits>), or
+// numeric_limits<>::max() lands before _Rb_tree_header. Templates get nodes as they are instantiated,
+// breadth-first from the first odr-use in the source, and an elided copy still odr-uses the move ctor:
+// `str = tiny_utf8::string(text)` below (not `str(text)`) puts basic_string(basic_string&&) where the
+// original has it. (pinyinFind would do equally well; the bytes do not tell the two apart.)
+#include <map>
+#include <string>
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <map>
-#include <string>
 #include "tinyutf8/tinyutf8.h"
 
 std::map<char32_t, std::string> g_pinyinTable;   // 0x18249c
@@ -57,7 +65,7 @@ void loadPinyinTable()
 // 0x143ae4: one ASCII letter per codepoint (the pinyin initial for CJK); caller frees
 char *pinyinInitials(const char *text)
 {
-    tiny_utf8::string str(text);
+    tiny_utf8::string str = tiny_utf8::string(text);
     char *out = (char *)malloc(str.length() + 1);
     memset(out, 0, str.length() + 1);
     char32_t cp;
