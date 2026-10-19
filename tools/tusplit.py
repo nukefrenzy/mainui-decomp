@@ -59,6 +59,19 @@ UNIT_FIXED = {
                           "0x143720-0x1484d4; 0x1484d4 starts the next file",
     (0x1484d4, 0x14acfc): "unitcheck: src/tu_1484d4.cpp body + 60 template/inline functions fill exactly "
                           "0x1484d4-0x14acfc; 0x14acfc starts the next file",
+    # C files (no template tail). GCC merges identical literals within a file even at -O0, so each
+    # repeated literal proves a cut: "w" (0x1639a4 vs 0x163bac) inside 0x14b198-0x14bb64, "r"
+    # (0x163bfc vs 0x164630) inside 0x14c460-0x14da50, "r"/"%d" (0x164630/0x164640 vs
+    # 0x1646c0/0x1647f0) inside 0x14db84-0x14e184. The cuts inside those windows are by subsystem.
+    (0x14acfc, 0x14b860): "unitcheck: src/tu_14acfc.c fills 0x14acfc-0x14b860 (C, no tail); device "
+                          "helpers; \"w\" repeats at 0x163bac, so the file ends by 0x14bb64",
+    (0x14b860, 0x14cb24): "unitcheck: src/tu_14b860.c fills 0x14b860-0x14cb24 (C); system.json settings",
+    (0x14cb24, 0x14da50): "unitcheck: src/tu_14cb24.c fills 0x14cb24-0x14da50 (C); zip reader, cut by subsystem",
+    (0x14da50, 0x14dc18): "unitcheck: src/tu_14da50.c fills 0x14da50-0x14dc18 (C); language strings, own "
+                          "\"r\" and \"%d\"",
+    (0x14dc18, 0x14e0cc): "unitcheck: src/tu_14dc18.c fills 0x14dc18-0x14e0cc (C); I2C helpers, cut by subsystem",
+    (0x14e0cc, 0x14f730): "unitcheck: src/tu_14e0cc.c fills 0x14e0cc-0x14f730 (C); Wi-Fi, own \"r\" and "
+                          "\"%d\"; 0x14f730 starts PIC code (GOT base via add r4, pc, r4)",
 }
 # libstdc++'s own messages: a string span made only of these says nothing about the user's files
 LIB_STR = re.compile(r"^(vector::|basic_string::|deque::|map::|cannot create std::)")
@@ -75,7 +88,9 @@ a = ap.parse_args()
 FIXED = [(0x14d20, 0x15b20, "runtime", "PLT, _start, crtbegin"),
          (0x51b60, 0x57920, "lib_cjson", "cJSON 1.7.10, byte-exact (verify-libs.sh)"),
          (0x57920, 0x11cdc8, "lib_sqlite", "SQLite 3.30.1, byte-exact (verify-libs.sh)")]
-MIYOO = [(0x15b20, 0x51b60), (0x11cdc8, 0x150000)]
+# Miyoo code ends at 0x150ad8, where libgcc's __udivsi3 starts: 0x14f730-0x150ad8 is -O0 PIC code
+# (a static library) that calls the I2C helpers of tu_14dc18.
+MIYOO = [(0x15b20, 0x51b60), (0x11cdc8, 0x150ad8)]
 
 
 def tsv(path):
@@ -192,7 +207,7 @@ for lo, hi, _, why in FIXED:
 cuts[0x15b20] = "end of C runtime"
 cuts.setdefault(0x51b60, "cJSON 1.7.10")
 cuts.setdefault(0x11cdc8, "end of SQLite")
-cuts.setdefault(0x150000, "libgcc / C runtime helpers")
+cuts.setdefault(0x150ad8, "libgcc / C runtime helpers")
 run = []
 for s in starts + [None]:
     if s is not None and s in tmpl:
@@ -213,7 +228,7 @@ for (ulo, uhi), why in UNIT_FIXED.items():
     cuts.setdefault(uhi, "end of " + why.split(":")[0] + f" unit {ulo:#x}")
 
 # Merge template-only fragments back into the file before them
-fixed_cuts = {x for f in FIXED for x in f[:2]} | {0x11cdc8, 0x150000} | set(CUT_ADD) \
+fixed_cuts = {x for f in FIXED for x in f[:2]} | {0x11cdc8, 0x150ad8} | set(CUT_ADD) \
     | {x for u in UNIT_FIXED for x in u}
 changed = True
 while changed:

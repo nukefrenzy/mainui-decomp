@@ -19,5 +19,11 @@ lo	hi	name	confidence	evidence	label
 13edfc	1424e8	tu_13edfc	review	after template run 0x13e0ac-0x13edfc (46 fns); 34 fns, 12 template	ImeWindow
 1424e8	143720	tu_1424e8	review	after template run 0x1423d0-0x1424e8 (4 fns); string spans 0x1425e4-0x142990; 51 fns, 39 template	
 143720	1484d4	tu_143720	proven	unitcheck: src/tu_143720.cpp body + 170 template/inline functions fill exactly 0x143720-0x1484d4; 0x1484d4 starts the next file; 176 fns, 54 template, static init at 0x143e8c	loadPinyinTable
-1484d4	14acfc	tu_1484d4	proven	unitcheck: src/tu_1484d4.cpp body + 60 template/inline functions fill exactly 0x1484d4-0x14acfc; 0x14acfc starts the next file; 78 fns, 40 template	MultiDBCachedTextMenu
-14acfc	150000	tu_14acfc	review	end of unitcheck unit 0x1484d4; string spans 0x14ae04-0x14b04c 0x14bca8-0x14c5fc 0x14dc18-0x14de34 0x14e260-0x14e39c 0x14ec28-0x14f634; 79 fns, 0 template	launch_tinymix_4ad50, display_class_4ae74, device_devices_4b0fc
+1484d4	14acfc	tu_1484d4	proven	unitcheck: src/tu_1484d4.cpp body + 60 template/inline functions fill exactly 0x1484d4-0x14acfc; 0x14acfc starts the next file; 78 fns, 41 template	MultiDBCachedTextMenu
+14acfc	14b860	tu_14acfc	proven	unitcheck: src/tu_14acfc.c fills 0x14acfc-0x14b860 (C, no tail); device helpers; "w" repeats at 0x163bac, so the file ends by 0x14bb64; string spans 0x14ae04-0x14b04c; 18 fns, 3 template	stub_4acfc, stub_4ad34, launch_tinymix_4ad50
+14b860	14cb24	tu_14b860	proven	unitcheck: src/tu_14b860.c fills 0x14b860-0x14cb24 (C); system.json settings; string spans 0x14bca8-0x14c5fc; 14 fns, 0 template	language_lang_4ba18, language_language_4ba58, input_keymap_4baf8
+14cb24	14da50	tu_14cb24	proven	unitcheck: src/tu_14cb24.c fills 0x14cb24-0x14da50 (C); zip reader, cut by subsystem; 17 fns, 0 template	
+14da50	14dc18	tu_14da50	proven	unitcheck: src/tu_14da50.c fills 0x14da50-0x14dc18 (C); language strings, own "r" and "%d"; 3 fns, 0 template	language_SDCARD_4da50
+14dc18	14e0cc	tu_14dc18	proven	unitcheck: src/tu_14dc18.c fills 0x14dc18-0x14e0cc (C); I2C helpers, cut by subsystem; string spans 0x14dc18-0x14de34; 5 fns, 0 template	device_error_4dc18, device_error_4de34
+14e0cc	14f730	tu_14e0cc	proven	unitcheck: src/tu_14e0cc.c fills 0x14e0cc-0x14f730 (C); Wi-Fi, own "r" and "%d"; 0x14f730 starts PIC code (GOT base via add r4, pc, r4); string spans 0x14e260-0x14e39c 0x14ec28-0x14f634; 21 fns, 0 template	threads_pthread_self_4e0cc, wifi_wifi_4e220, wifi_remove_4e260
+14f730	150ad8	tu_14f730	review	end of unitcheck unit 0x14e0cc; 8 fns, 0 template	

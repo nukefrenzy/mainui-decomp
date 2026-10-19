@@ -7,8 +7,8 @@ function start (so literal pools count toward it), capped at the end of its code
 Matched bytes come from src/matches.tsv. If docs/tu-map.tsv exists (lo, hi, name, confidence,
 evidence; hex addresses, hi exclusive), progress is also reported per translation unit, and a unit
 whose range is "proven" (tools/tusplit.py UNIT_FIXED, set after tools/unitcheck.py printed RESULT
-MATCH) and whose src/<name>.cpp exists counts whole: every function in it, template tail included.
-CI keeps that claim honest by running scripts/run_units.sh on every src/tu_*.cpp.
+MATCH) and whose src/<name>.cpp (or .c) exists counts whole: every function in it, template tail included.
+CI keeps that claim honest by running scripts/run_units.sh on every src/tu_*.cpp and src/tu_*.c.
 """
 import argparse
 import bisect
@@ -57,7 +57,8 @@ if os.path.exists(tu_path):
     for t in tsv(tu_path):
         lo, hi = int(t["lo"], 16), int(t["hi"], 16)
         tus.append((lo, hi, t["name"]))
-        if t["confidence"] == "proven" and os.path.exists(os.path.join(ROOT, "src", t["name"] + ".cpp")):
+        if t["confidence"] == "proven" and any(os.path.exists(os.path.join(ROOT, "src", t["name"] + x))
+                                               for x in (".cpp", ".c")):
             proven.append((lo, hi))
             done |= {s for s in starts if lo <= s < hi}
 

@@ -4751,8 +4751,11 @@ addr	name	subsystem	confidence	comment
 0014ac68	misc_4ac68	misc	guess	
 0014acb0	misc_4acb0	misc	guess	
 0014acd4	misc_4acd4	misc	guess	
+0014acfc	stub_4acfc	device	confirmed	Returns 0. Byte-exact (src/tu_14acfc.c).
 0014ad18	files_4ad18	files	guess	
+0014ad34	stub_4ad34	device	confirmed	Returns 0. Byte-exact (src/tu_14acfc.c).
 0014ad50	launch_tinymix_4ad50	launch	inferred	
+0014ade8	stub_4ade8	device	confirmed	Returns 2. Byte-exact (src/tu_14acfc.c).
 0014ae04	display_Cannot_4ae04	display	guess	
 0014ae74	display_class_4ae74	display	inferred	
 0014aed4	audio_null_4aed4	audio	guess	
@@ -4814,6 +4817,7 @@ addr	name	subsystem	confidence	comment
 0014e4e0	wifi_udhcpc_4e4e0	wifi	inferred	
 0014e528	wifi_4e528	wifi	guess	
 0014e564	wifi_4e564	wifi	guess	
+0014e584	hexDigit	wifi	confirmed	0-15 to '0'-'9'/'A'-'F', else 0xff. Byte-exact (src/tu_14e0cc.c).
 0014e5f8	wifi_4e5f8	wifi	guess	
 0014e6a0	wifi_strstr_4e6a0	wifi	guess	
 0014e824	wifi_strcpy_4e824	wifi	guess	
