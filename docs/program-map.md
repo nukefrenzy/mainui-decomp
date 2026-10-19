@@ -174,6 +174,12 @@ at +0x54, and row height at +0x58. `WifiMenu` is 0x22fc bytes, including 32 scan
 bytes each. The legacy `getWifiConnected`/`setWifiConnected` names in `tu_14b860.c`
 (0x14bc54/0x14bc78) refer to the hotspot/AP-mode flag, rather than station connection status.
 
+The key-mapping screen is proven at 0x1376fc–0x138c50. `KeySettingWindow` (id 0x19)
+is 0x15c bytes: three surface pointers at +0x0c, selected index at +0x18, eight `std::string`
+key names at +0x1c, eight SDL rectangles at +0xdc, and a 64-byte keymap at +0x11c. It captures
+SDL key releases; Escape serializes the mapping, saves system settings, and closes. The file also
+contains a legacy touch worker that reads `/dev/input/event0` and pushes directional user events.
+
 **createMenu IDs:**
 
 | ID | Builds | ID | Builds |

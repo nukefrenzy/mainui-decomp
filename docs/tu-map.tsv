@@ -14,7 +14,7 @@ lo	hi	name	confidence	evidence	label
 12ef8c	12fe90	tu_12ef8c	review	after template run 0x12ee04-0x12ef8c (6 fns); 51 fns, 42 template	
 12fe90	133f60	tu_12fe90	review	after template run 0x12fb58-0x12fe90 (17 fns); string spans 0x1303b0-0x131ce8; 149 fns, 55 template	MenuHelper80, MenuHelper60
 133f60	1376fc	tu_133f60	review	after template run 0x133e90-0x133f60 (4 fns); string spans 0x134080-0x134f34 0x1359a8-0x136010; 122 fns, 76 template, static init at 0x135308	language_genShortLangFile_34080, language_customer_343c4, language_have_34568
-1376fc	138c50	tu_1376fc	review	after template run 0x13759c-0x1376fc (6 fns); 19 fns, 2 template, static init at 0x138b8c	KeySettingWindow
+1376fc	138c50	tu_1376fc	proven	unitcheck --end 138c50: src/tu_1376fc.cpp body + five inline virtuals fill exactly 0x1376fc-0x138c50; KeySettingWindow and touch-input worker; 19 fns, 2 template, static init at 0x138b8c	KeySettingWindow
 138c50	13edfc	tu_138c50	proven	unitcheck --end 13edfc: src/tu_138c50.cpp body + 122 inline/template functions fill exactly 0x138c50-0x13edfc; Wi-Fi/Hotspot menus; ImeWindow follows; string spans 0x138c50-0x13e368; 166 fns, 57 template	HotspotMenu, WifiItem, WifiConnectAction
 13edfc	143720	tu_13edfc	proven	unitcheck: src/tu_13edfc.cpp body + 67 template/inline functions fill exactly 0x13edfc-0x143720; ImeWindow keyboard; 0x143720 starts the pinyin unit; string spans 0x1425e4-0x142990; 85 fns, 51 template	ImeWindow
 143720	1484d4	tu_143720	proven	unitcheck: src/tu_143720.cpp body + 170 template/inline functions fill exactly 0x143720-0x1484d4; 0x1484d4 starts the next file; 176 fns, 54 template, static init at 0x143e8c	loadPinyinTable

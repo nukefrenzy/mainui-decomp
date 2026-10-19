@@ -57,6 +57,8 @@ CUT_DROP = {
 }
 # Units proven as one file (tools/unitcheck.py): both ends are cuts, nothing inside is.
 UNIT_FIXED = {
+    (0x1376fc, 0x138c50): "unitcheck --end 138c50: src/tu_1376fc.cpp body + five inline virtuals "
+                          "fill exactly 0x1376fc-0x138c50; KeySettingWindow and touch-input worker",
     (0x138c50, 0x13edfc): "unitcheck --end 13edfc: src/tu_138c50.cpp body + 122 inline/template functions "
                           "fill exactly 0x138c50-0x13edfc; Wi-Fi/Hotspot menus; ImeWindow follows",
     (0x13edfc, 0x143720): "unitcheck: src/tu_13edfc.cpp body + 67 template/inline functions fill exactly "

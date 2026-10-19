@@ -7,14 +7,15 @@ method: `docs/unit-workflow.md`. Update this file when a unit is proven or the p
 
 - **Goal:** complete MainUI source that rebuilds byte-exact with Arm GNU 8.2-2018.08, `-O0 -fsigned-char`,
   worked file by file (one translation unit per `src/tu_<lo>.cpp` or `.c`).
-- **Progress:** 11 whole units proven by `tools/unitcheck.py`, plus 9 single functions in
-  `tu_015b20`: 598 of 2,605 Miyoo functions, 99,316 of 457,584 bytes (21.70%). CI checks every match
+- **Progress:** 12 whole units proven by `tools/unitcheck.py`, plus 9 single functions in
+  `tu_015b20`: 616 of 2,605 Miyoo functions, 104,776 of 457,584 bytes (22.90%). CI checks every match
   and every unit on each push.
 - **Embedded libraries:** SQLite 3.30.1 and cJSON 1.7.10 rebuild byte-exact (`scripts/verify-libs.sh`);
   tiny-utf8 4.4.x is header-only and appears in the template tails of the files that use it.
 
 | Proven unit | Range | What it is |
 | --- | --- | --- |
+| tu_1376fc (C++) | 0x1376fc–0x138c50 | KeySettingWindow and touch-input worker: 12 written functions, compiler init pair, five inline virtuals |
 | tu_138c50 (C++) | 0x138c50–0x13edfc | Wi-Fi/Hotspot menus: 44 body functions plus 122 inline/template functions |
 | tu_13edfc (C++) | 0x13edfc–0x143720 | ImeWindow keyboard: 18 body functions plus 67 generated template/inline functions |
 | tu_143720 (C++) | 0x143720–0x1484d4 | pinyin search table (tiny-utf8, `std::map`); the pilot |
@@ -37,13 +38,18 @@ a shorter layout. `unitcheck` now enforces recorded ends for proven units and su
 for a known neighbour when proving a draft. Shared `Action`, SDL prefixes, and the 0x48-byte
 `ListMenu` base are laid out; `TextMenuDrawer` keeps its existing 0xf8-byte layout.
 
+`tu_1376fc` matches with the default flags: 5,288 body bytes to 0x138ba4 and five inline
+virtuals (172 bytes). `KeySettingWindow` is 0x15c bytes, with eight strings, eight SDL rectangles,
+and a 64-byte serialized keymap. The touch worker reads `/dev/input/event0`; the window itself
+waits for SDL key releases and saves the map on Escape.
+
 ## Next units, in order
 
 Work outward from proven units: a proven neighbour fixes one boundary for free. One fresh session per
 unit, each in its own worktree; merge their branches into `main` one at a time.
 
-1. **tu_1376fc, KeySettingWindow** (0x1376fc–0x138c50, 5,460 bytes): key mapping settings. Its
-   end is fixed by the Wi-Fi unit. Then continue through tu_133f60 (language) toward 0x11cdc8.
+1. **tu_133f60, language** (0x133f60–0x1376fc, 14,236 bytes): language loading and rendering
+   helpers. Its end is fixed by KeySettingWindow. Continue backward toward 0x11cdc8.
 2. **Small units with draft boundaries** (tu_126c60 1.5 KB, tu_1297a8 2 KB, tu_12ef8c 3.8 KB) are
    cheap but unbounded; take them when a neighbour is proven.
 3. **tu_049c3c** (main program: main, signal handler, status poll) and **tu_04c12c** (hardware test

@@ -98,6 +98,14 @@ literal words; no additional masking is needed.
 - Ignored `system()` results are still assigned in the Wi-Fi mode helpers. At -O0, removing
   `rc = system(...)` stores changes every call site even though `rc` is never used.
 
+- Nested switches can share a default exit by fallthrough. In KeySettingWindow's key waiter,
+  `switch (event.type) { case KEYUP: switch (sym) { ...; default: break; } default: break; }`
+  emits the shared `nop` used by both unmatched event types and unmatched keys. An outer
+  `if`, or a `break` between the switches, changes branch targets or adds/removes instructions.
+- Chained stores can retain a reload at -O0: `touchX = touchY = -1` reloads `touchY` before
+  storing `touchX`; two independent assignments do not match. Conversely, the input-device
+  name buffers each require their own zero assignment, rather than a chained byte assignment.
+
 ## Tail order
 
 GCC 8 at `-O0` emits COMDAT functions in call-graph node order:

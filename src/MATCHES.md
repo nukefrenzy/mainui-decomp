@@ -16,6 +16,23 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `TrimusWindow::animateIn(SDL_Surface*, FlipFn)` | 0x39478 | 40 | TrimusWindow.cpp |
 | `TrimusWindow::animateOut(SDL_Surface*, FlipFn)` | 0x394a0 | 40 | TrimusWindow.cpp |
 | `TrimusWindow::getId()` | 0x394c8 | 40 | TrimusWindow.cpp |
+| `openInputDevice(char const*)` | 0x1376fc | 744 | tu_1376fc.cpp |
+| `touchInputThread(void*)` | 0x1379e4 | 988 | tu_1376fc.cpp |
+| `startTouchInput()` | 0x137dc0 | 64 | tu_1376fc.cpp |
+| `stopTouchInput()` | 0x137e00 | 56 | tu_1376fc.cpp |
+| `waitMappingKey()` | 0x137e38 | 280 | tu_1376fc.cpp |
+| `KeySettingWindow::KeySettingWindow()` | 0x137f50 | 248 | tu_1376fc.cpp |
+| `KeySettingWindow::~KeySettingWindow()` | 0x138048 | 216 | tu_1376fc.cpp |
+| `KeySettingWindow::~KeySettingWindow()` | 0x138120 | 52 | tu_1376fc.cpp |
+| `KeySettingWindow::handleInput()` | 0x138154 | 948 | tu_1376fc.cpp |
+| `drawKeySettingFooter(SDL_Surface*, SDL_Surface*)` | 0x138508 | 236 | tu_1376fc.cpp |
+| `KeySettingWindow::draw(SDL_Surface*)` | 0x1385f4 | 380 | tu_1376fc.cpp |
+| `KeySettingWindow::loadResources()` | 0x138770 | 952 | tu_1376fc.cpp |
+| `KeySettingWindow::onHide()` | 0x138ba4 | 32 | tu_1376fc.cpp |
+| `KeySettingWindow::onShow()` | 0x138bc4 | 32 | tu_1376fc.cpp |
+| `KeySettingWindow::saveState(cJSON*)` | 0x138be4 | 36 | tu_1376fc.cpp |
+| `KeySettingWindow::restoreState(cJSON*)` | 0x138c08 | 40 | tu_1376fc.cpp |
+| `KeySettingWindow::update()` | 0x138c30 | 32 | tu_1376fc.cpp |
 | `wifiMode()` | 0x138c50 | 116 | tu_138c50.cpp |
 | `wlanAddress(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)` | 0x138cc4 | 304 | tu_138c50.cpp |
 | `switch2WpaMode(int)` | 0x138df4 | 288 | tu_138c50.cpp |
