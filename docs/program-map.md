@@ -38,7 +38,13 @@ either open another window or write a launch command and exit.
 | cJSON 1.7.10, compiled as C++ (byte-exact) | 0x51b60–0x57920 | 104 | 24 KB |
 | SQLite 3.30.1 (byte-exact) | 0x57920–0x11cdc8 | 2,126 | 808 KB |
 | stb_image zlib decoder | around 0x1303b0 | 11 | 4 KB |
+| tiny-utf8 4.4.x (header-only `tiny_utf8::string`) | template code in the files that use it, e.g. 0x143ea4–0x1484d4 | ~100+ | |
 | libgcc / C runtime helpers | 0x150000 and up | 22 | 5 KB |
+
+tiny-utf8 (github.com/DuffsDevice/tiny-utf8) is identified by its error messages and by code: under
+MainUI's flags v4.4.1–v4.4.3 compile identically, and `scripts/fetch-tinyutf8.sh` pins v4.4.3. Being
+header-only, it has no range of its own: its functions appear in the template tail of each file that
+first uses them, and come for free once that file's source is right (see `src/tu_143720.cpp`).
 
 Shared libraries it links against:
 

@@ -53,6 +53,11 @@ CUT_ADD = {
 CUT_DROP = {
     0x049b14: "reviewed: std::__copy_move<..>::__copy_m for a 1-byte type, still the first file's tail",
 }
+# Units proven as one file (tools/unitcheck.py): both ends are cuts, nothing inside is.
+UNIT_FIXED = {
+    (0x143720, 0x1484d4): "unitcheck: src/tu_143720.cpp body + 170 template/inline functions fill exactly "
+                          "0x143720-0x1484d4; 0x1484d4 starts the next file",
+}
 # libstdc++'s own messages: a string span made only of these says nothing about the user's files
 LIB_STR = re.compile(r"^(vector::|basic_string::|deque::|map::|cannot create std::)")
 
@@ -199,9 +204,15 @@ for c in CUT_DROP:
     cuts.pop(c, None)
 for c, why in CUT_ADD.items():
     cuts[c] = why
+for (ulo, uhi), why in UNIT_FIXED.items():
+    for c in [c for c in cuts if ulo < c < uhi]:
+        del cuts[c]
+    cuts[ulo] = why
+    cuts.setdefault(uhi, "end of " + why.split(":")[0] + f" unit {ulo:#x}")
 
 # Merge template-only fragments back into the file before them
-fixed_cuts = {x for f in FIXED for x in f[:2]} | {0x11cdc8, 0x150000} | set(CUT_ADD)
+fixed_cuts = {x for f in FIXED for x in f[:2]} | {0x11cdc8, 0x150000} | set(CUT_ADD) \
+    | {x for u in UNIT_FIXED for x in u}
 changed = True
 while changed:
     changed = False
@@ -245,7 +256,7 @@ for lo, hi in zip(bounds, bounds[1:]):
         if after:
             ev.append(f"CHECK: own string span {after[0][0]:#x}-{after[0][1]:#x} follows static init {x:#x}; "
                       f"possible split near {after[0][0]:#x}")
-    conf = "reviewed" if lo in CUT_ADD else "review"
+    conf = "proven" if (lo, hi) in UNIT_FIXED else "reviewed" if lo in CUT_ADD else "review"
     rows.append((lo, hi, f"tu_{lo:06x}", conf, "; ".join(ev), label))
 
 os.makedirs(os.path.dirname(a.out), exist_ok=True)

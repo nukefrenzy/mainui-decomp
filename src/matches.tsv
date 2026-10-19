@@ -8,3 +8,7 @@ MenuWindow.cpp	_ZN10MenuWindowC2EiiP8ListMenu	2e6d4	676	-	MenuWindow::MenuWindow
 MenuWindow.cpp	_ZN10MenuWindowD2Ev	2ec3c	316	-	MenuWindow::~MenuWindow() (complete)
 MenuWindow.cpp	_ZN10MenuWindowD0Ev	2ed78	52	-	MenuWindow::~MenuWindow() (deleting)
 writeCmdToRun.cpp	writeCmdToRun	17fc0	88	-	writeCmdToRun(const char*)
+tu_143720.cpp	parsePinyinLine	143720	512	tinyutf8	int parsePinyinLine(tiny_utf8::string, char32_t*, std::string&)
+tu_143720.cpp	loadPinyinTable	143920	452	tinyutf8	void loadPinyinTable()
+tu_143720.cpp	pinyinInitials	143ae4	528	tinyutf8	char* pinyinInitials(const char*)
+tu_143720.cpp	pinyinFind	143cf4	308	tinyutf8	int pinyinFind(const char*, const char*, const char*, const char**, int*)
