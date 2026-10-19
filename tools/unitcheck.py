@@ -63,13 +63,22 @@ with open(os.path.join(ROOT, "ghidra/names.tsv")) as f:
         if re.fullmatch(r"[0-9a-f]{8}", p[0]):
             names[int(p[0], 16)] = p[1]
 
-# third-party headers this file needs, as listed in src/matches.tsv (deps column)
+# Per-file headers and extra compiler flags from src/matches.tsv. The CLI --flags supplies
+# the base flags; cflags is appended, just as in run_matches.sh. Old manifests default to "-".
 deps = set()
+file_flags = set()
 with open(os.path.join(ROOT, "src/matches.tsv"), newline="") as f:
     for m in csv.DictReader(f, delimiter="\t", quoting=csv.QUOTE_NONE):
-        if m["file"] == os.path.basename(a.source) and m.get("deps", "-") != "-":
-            deps |= set(m["deps"].split(","))
+        if m["file"] == os.path.basename(a.source):
+            file_flags.add(m.get("cflags", "-") or "-")
+            if m.get("deps", "-") != "-":
+                deps |= set(m["deps"].split(","))
+if len(file_flags) > 1:
+    sys.exit(f"inconsistent cflags for {os.path.basename(a.source)} in src/matches.tsv")
 extra = []
+flags = next(iter(file_flags), "-")
+if flags != "-":
+    extra.extend(flags.split())
 if "tinyutf8" in deps:
     extra.append("-I" + subprocess.run([os.path.join(ROOT, "scripts/fetch-tinyutf8.sh")], capture_output=True,
                                        text=True, check=True).stdout.strip())

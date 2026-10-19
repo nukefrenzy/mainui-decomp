@@ -39,13 +39,21 @@ python3 tools/autoderive.py --tu tu_<lo>      # pattern matches in build/auto/tu
 4. Check the unit: `python3 tools/unitcheck.py src/tu_<lo>.cpp [--verbose]`. Fix body mismatches
    first, then tail mismatches (wrong types or calls), then tail order (below).
 5. Bookkeeping, in the same commit:
-   - one line per function in `src/matches.tsv` (`deps` = `-` or `tinyutf8`), then
+   - one line per function in `src/matches.tsv` (`deps` = `-` or `tinyutf8`, `cflags` = `-` or
+     extra whitespace-separated compiler flags such as `-fPIC`), then
      `python3 tools/progress.py --matches-md src/MATCHES.md`;
    - the proven range in `UNIT_FIXED` in `tools/tusplit.py` with a one-line reason, then
      `python3 tools/tusplit.py` to regenerate `docs/tu-map.tsv`;
    - `scripts/run_matches.sh` and `scripts/run_units.sh` must pass.
 6. Commit as `nukefrenzy <nukefrenzy@users.noreply.github.com>`. Never commit the binary, `build/`,
    or decompiler output.
+
+`cflags` must be identical for every row of a source file. `scripts/run_matches.sh` and
+`unitcheck.py` append it to the base flags (`-O0 -fsigned-char`, or `unitcheck --flags`). Keep
+`deps` for fetched headers and `cflags` for compiler options; use `-` instead of empty fields.
+For a new file not yet registered, probe with `--flags "-O0 -fsigned-char -fPIC"` in both
+`matchfn.py` and `unitcheck.py`. Existing relocation masks already cover PIC's GOTPC/GOT32
+literal words; no additional masking is needed.
 
 ## -O0 idioms learned so far
 
@@ -59,6 +67,15 @@ python3 tools/autoderive.py --tu tu_<lo>      # pattern matches in build/auto/tu
 - Calls whose callers look the same can differ only in the tail: `s[i]` and `s.at(i)` produce
   identical calling code in tiny-utf8 but instantiate different functions (unchecked vs checked).
 - Return values kept across a destructor call live in `r4`; that is the compiler, not the source.
+- Array dimensions affect address calculation even for identical storage: in `tu_14f730`,
+  `byte table[2][8]; table[round][i]` adds the table base to the scaled round before adding `i`.
+  A flat `table[round * 8 + i]` computes the combined index first and does not match.
+- A saved index in `r5` across a call can expose the callee's return type. In the PIC C unit,
+  `deviceTx[i * 2] = randomByte()` matches with an `unsigned char` return declaration; an `int`
+  declaration changes evaluation order, adds truncation, and removes the saved index.
+- A `mov r3, r0` before a byte store does not alone establish C++: the PIC C unit also emits
+  it for byte-returning I2C calls. Here both `int` and `unsigned char` return declarations produce
+  the same bytes; use the known helper signature. Its loops use C's bottom condition layout.
 
 ## Tail order
 

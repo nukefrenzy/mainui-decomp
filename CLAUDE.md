@@ -34,7 +34,8 @@ Ghidra 12.1.4: import with defaults, auto-analyze, run `ghidra/ApplyMainUINames.
 1. Write it in `src/` against the existing headers (`TrimusWindow.h`, `MenuWindow.h`).
 2. `python3 tools/matchfn.py src/File.cpp <name|mangled> <hexaddr> --orig MainUI-354-clean` must print `MATCH`.
    Use mangled names to pick a specific ctor/dtor variant (C2/D2 = base, D0 = deleting).
-3. Add one line to `src/matches.tsv` (file, symbol, addr, size, deps, signature; deps is `-` or `tinyutf8`), then run
+3. Add one line to `src/matches.tsv` (file, symbol, addr, size, deps, cflags, signature; deps is `-` or `tinyutf8`,
+   cflags is `-` or per-file extra flags such as `-fPIC`, identical for all rows of that file), then run
    `python3 tools/progress.py --matches-md src/MATCHES.md`. CI (`.github/workflows/match.yml`) re-checks all of them
    and posts the progress summary.
 

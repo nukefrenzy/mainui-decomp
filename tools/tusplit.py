@@ -74,6 +74,8 @@ UNIT_FIXED = {
     (0x14dc18, 0x14e0cc): "unitcheck: src/tu_14dc18.c fills 0x14dc18-0x14e0cc (C); I2C helpers, cut by subsystem",
     (0x14e0cc, 0x14f730): "unitcheck: src/tu_14e0cc.c fills 0x14e0cc-0x14f730 (C); Wi-Fi, own \"r\" and "
                           "\"%d\"; 0x14f730 starts PIC code (GOT base via add r4, pc, r4)",
+    (0x14f730, 0x150ad8): "unitcheck: src/tu_14f730.c fills 0x14f730-0x150ad8 (C, -fPIC, no tail); "
+                          "8 I2C device-authentication functions; libgcc __udivsi3 follows",
 }
 # libstdc++'s own messages: a string span made only of these says nothing about the user's files
 LIB_STR = re.compile(r"^(vector::|basic_string::|deque::|map::|cannot create std::)")

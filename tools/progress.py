@@ -16,7 +16,7 @@ import csv
 import os
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RANGES = [(0x15b20, 0x51b60), (0x11cdc8, 0x150000)]   # Miyoo code: after the PLT/C runtime, minus the libraries
+RANGES = [(0x15b20, 0x51b60), (0x11cdc8, 0x150ad8)]   # After PLT/crt, minus libraries, up to libgcc __udivsi3
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--md", help="also write a Markdown report here")

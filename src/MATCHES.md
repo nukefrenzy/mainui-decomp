@@ -117,6 +117,14 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `void *wifiMonitorThread(void *arg)` | 0x14f530 | 260 | tu_14e0cc.c |
 | `void startWifiMonitor(void (*callback)(WifiStatus *))` | 0x14f634 | 192 | tu_14e0cc.c |
 | `void stopWifiMonitor()` | 0x14f6f4 | 60 | tu_14e0cc.c |
+| `byte readDeviceKeys()` | 0x14f730 | 552 | tu_14f730.c |
+| `void invertSwapHalves(byte *data)` | 0x14f958 | 220 | tu_14f730.c |
+| `void xorSwapHalves(byte *data, byte *key)` | 0x14fa34 | 268 | tu_14f730.c |
+| `void rotateBytesRight(byte *data)` | 0x14fb40 | 188 | tu_14f730.c |
+| `void transformDeviceBlock(byte *input, byte *output, byte *seed, byte rounds, int bits, byte mode)` | 0x14fbfc | 1208 | tu_14f730.c |
+| `byte beginDeviceAuth()` | 0x1500b4 | 620 | tu_14f730.c |
+| `byte sendDeviceKey()` | 0x150320 | 484 | tu_14f730.c |
+| `byte authenticateDevice(byte *challenge, byte *response)` | 0x150504 | 1492 | tu_14f730.c |
 
 Embedded libraries, verified as whole objects by `scripts/verify-libs.sh`:
 

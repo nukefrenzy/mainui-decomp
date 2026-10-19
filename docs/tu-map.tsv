@@ -25,4 +25,4 @@ lo	hi	name	confidence	evidence	label
 14da50	14dc18	tu_14da50	proven	unitcheck: src/tu_14da50.c fills 0x14da50-0x14dc18 (C); language strings, own "r" and "%d"; 3 fns, 0 template	language_SDCARD_4da50
 14dc18	14e0cc	tu_14dc18	proven	unitcheck: src/tu_14dc18.c fills 0x14dc18-0x14e0cc (C); I2C helpers, cut by subsystem; string spans 0x14dc18-0x14de34; 5 fns, 0 template	device_error_4dc18, device_error_4de34
 14e0cc	14f730	tu_14e0cc	proven	unitcheck: src/tu_14e0cc.c fills 0x14e0cc-0x14f730 (C); Wi-Fi, own "r" and "%d"; 0x14f730 starts PIC code (GOT base via add r4, pc, r4); string spans 0x14e260-0x14e39c 0x14ec28-0x14f634; 21 fns, 0 template	threads_pthread_self_4e0cc, wifi_wifi_4e220, wifi_remove_4e260
-14f730	150ad8	tu_14f730	review	end of unitcheck unit 0x14e0cc; 8 fns, 0 template	
+14f730	150ad8	tu_14f730	proven	unitcheck: src/tu_14f730.c fills 0x14f730-0x150ad8 (C, -fPIC, no tail); 8 I2C device-authentication functions; libgcc __udivsi3 follows; 8 fns, 0 template	

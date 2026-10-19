@@ -60,7 +60,8 @@ Confidence tags: `library-exact`, `confirmed`, `inferred` and `likely` are relia
 3. Check it: `python3 tools/matchfn.py src/YourFile.cpp functionName <hex address> --orig MainUI-354-clean`.
    It prints `MATCH`, or a side-by-side disassembly at the first difference.
 4. Add one line to `src/matches.tsv` (its `deps` column names third-party headers such as
-   `tinyutf8`), then regenerate the table in `src/MATCHES.md` with
+   `tinyutf8`; `cflags` is `-` or per-file extra flags such as `-fPIC`, identical across that file's rows),
+   then regenerate the table in `src/MATCHES.md` with
    `python3 tools/progress.py --matches-md src/MATCHES.md`.
 5. Once a whole file is written (`src/tu_<lo>.cpp`, ranges in `docs/tu-map.tsv`), check it as a unit with
    `python3 tools/unitcheck.py src/tu_<lo>.cpp`.
