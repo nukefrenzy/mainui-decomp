@@ -16,6 +16,24 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `TrimusWindow::animateIn(SDL_Surface*, FlipFn)` | 0x39478 | 40 | TrimusWindow.cpp |
 | `TrimusWindow::animateOut(SDL_Surface*, FlipFn)` | 0x394a0 | 40 | TrimusWindow.cpp |
 | `TrimusWindow::getId()` | 0x394c8 | 40 | TrimusWindow.cpp |
+| `ImeWindow::ImeWindow(int title, ImeCallback *callback, int label)` | 0x13edfc | 1060 | tu_13edfc.cpp |
+| `ImeWindow::~ImeWindow()` | 0x13f220 | 688 | tu_13edfc.cpp |
+| `ImeWindow::~ImeWindow() [deleting]` | 0x13f4d0 | 52 | tu_13edfc.cpp |
+| `void ImeWindow::rowKeys(std::vector<int>&, int key)` | 0x13f504 | 460 | tu_13edfc.cpp |
+| `void ImeWindow::columnKeys(std::vector<int>&, int key, bool up)` | 0x13f6d0 | 404 | tu_13edfc.cpp |
+| `void ImeWindow::moveHorizontal(bool left)` | 0x13f864 | 652 | tu_13edfc.cpp |
+| `void ImeWindow::moveVertical(bool up)` | 0x13faf0 | 652 | tu_13edfc.cpp |
+| `int ImeWindow::handleInput()` | 0x13fd7c | 1716 | tu_13edfc.cpp |
+| `void ImeWindow::drawKeys(SDL_Surface*, int x, int y)` | 0x140430 | 1756 | tu_13edfc.cpp |
+| `int ImeWindow::draw(SDL_Surface*)` | 0x140b0c | 328 | tu_13edfc.cpp |
+| `void ImeWindow::setKeyIcons(int key, SDL_Surface *icon, SDL_Surface *hint)` | 0x140c54 | 244 | tu_13edfc.cpp |
+| `void ImeWindow::initKey(ImeKey&, int id, SDL_Surface *focused, SDL_Surface *normal, SDL_Surface *icon, SDL_Surface *hint)` | 0x140d48 | 3716 | tu_13edfc.cpp |
+| `void ImeWindow::buildKeys()` | 0x141bcc | 1036 | tu_13edfc.cpp |
+| `void ImeWindow::onHide()` | 0x141fd8 | 32 | tu_13edfc.cpp |
+| `void ImeWindow::onShow()` | 0x141ff8 | 32 | tu_13edfc.cpp |
+| `void ImeWindow::saveState(cJSON*)` | 0x142018 | 36 | tu_13edfc.cpp |
+| `int ImeWindow::restoreState(cJSON*)` | 0x14203c | 40 | tu_13edfc.cpp |
+| `void ImeWindow::update()` | 0x142064 | 32 | tu_13edfc.cpp |
 | `int parsePinyinLine(tiny_utf8::string, char32_t*, std::string&)` | 0x143720 | 512 | tu_143720.cpp |
 | `void loadPinyinTable()` | 0x143920 | 452 | tu_143720.cpp |
 | `char* pinyinInitials(const char*)` | 0x143ae4 | 528 | tu_143720.cpp |

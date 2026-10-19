@@ -76,6 +76,15 @@ literal words; no additional masking is needed.
 - A `mov r3, r0` before a byte store does not alone establish C++: the PIC C unit also emits
   it for byte-returning I2C calls. Here both `int` and `unsigned char` return declarations produce
   the same bytes; use the known helper signature. Its loops use C's bottom condition layout.
+- Keep switch cases in source order, even when their numeric values look unsorted: ImeWindow's
+  input handler emits cases 10, 4, 3, 12, 13, 1, 2, 7, 8, 5, 6, then default. Sorting them preserves
+  behavior and total size but moves the blocks and fails the byte comparison.
+- Signed loop counters matter even when `vector::size()` makes the comparison unsigned. In
+  ImeWindow, changing `int i` to `unsigned int i` reverses `cmp` operands and the materialized
+  condition (`movhi` versus `movcc`); some loops also change size.
+- Preserve which branch comes first. `if (flag) { A; } else { B; }` and the inverted spelling
+  can add Boolean inversion instructions at -O0; disassembly settles the source order even when
+  Ghidra prints the equivalent branches in the opposite order.
 
 ## Tail order
 

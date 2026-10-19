@@ -102,6 +102,9 @@ and the top window is `back()`. While the stack isn't empty and `g_running` is s
 | 8 | 0x20 | `update()` each frame, before draw | pure virtual |
 | 9, 10 | 0x24, 0x28 | `animateIn` / `animateOut(SDL_Surface*, flipFn)` | empty |
 
+`draw` and `restoreState` return `int`, as confirmed by ImeWindow's whole-unit match and the
+MenuWindow decompilation. The shared headers reflect those return types.
+
 **handleInput result codes:**
 
 | Code | Effect |

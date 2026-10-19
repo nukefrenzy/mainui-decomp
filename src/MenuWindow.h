@@ -12,11 +12,11 @@ public:
     MenuWindow(int titleLabelId, int id, ListMenu *menu);    // 0x2e6d4
     virtual ~MenuWindow();                                    // 0x2ec3c (D1), 0x2ed78 (D0)
     virtual int  handleInput();                  // 0x2ff04
-    virtual void draw(SDL_Surface *dst);         // 0x31398
+    virtual int  draw(SDL_Surface *dst);         // 0x31398
     virtual void onHide();                       // 0x2fc74
     virtual void onShow();                       // 0x2f290 builds `menu` lazily
     virtual void saveState(cJSON *obj);          // 0x2edac currpos/pagestart/pageend/emuname/raname/ppath/searchstr
-    virtual void restoreState(cJSON *obj);       // 0x2efcc
+    virtual int  restoreState(cJSON *obj);       // 0x2efcc
     virtual void update();                       // 0x2fb14
 
     ListMenu    *menu;            // +0x0c  not freed by the window
