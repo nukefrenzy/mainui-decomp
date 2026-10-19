@@ -33,7 +33,9 @@ Ghidra 12.1.4: import with defaults, auto-analyze, run `ghidra/ApplyMainUINames.
 1. Write it in `src/` against the existing headers (`TrimusWindow.h`, `MenuWindow.h`).
 2. `python3 tools/matchfn.py src/File.cpp <name|mangled> <hexaddr> --orig MainUI-354-clean` must print `MATCH`.
    Use mangled names to pick a specific ctor/dtor variant (C2/D2 = base, D0 = deleting).
-3. Add it to `scripts/run_matches.sh` and `src/MATCHES.md`. CI (`.github/workflows/match.yml`) re-checks all of them.
+3. Add one line to `src/matches.tsv` (file, symbol, addr, size, signature), then run
+   `python3 tools/progress.py --matches-md src/MATCHES.md`. CI (`.github/workflows/match.yml`) re-checks all of them
+   and posts the progress summary.
 
 At `-O0` the code mirrors the source closely: keep statement order, redundant assignments and member order exactly
 as the disassembly shows. Externs (calls, globals, strings) are link-time words and are ignored by the checker.

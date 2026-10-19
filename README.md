@@ -39,6 +39,7 @@ export MIYOO_TC=$(scripts/fetch-toolchain.sh)   # downloads and verifies the too
 scripts/fetch-mainui.sh                          # fetches MainUI-354-clean from Onion's git history
 scripts/verify.sh                                # checks both against their expected hashes
 scripts/run_matches.sh                           # every rewrite in src/ must report MATCH
+python3 tools/progress.py                        # matched bytes of Miyoo's own code
 scripts/verify-libs.sh                           # SQLite and cJSON rebuild byte-identical
 ```
 
@@ -58,7 +59,8 @@ Confidence tags: `library-exact`, `confirmed`, `inferred` and `likely` are relia
 2. Write it in `src/` using the existing headers.
 3. Check it: `python3 tools/matchfn.py src/YourFile.cpp functionName <hex address> --orig MainUI-354-clean`.
    It prints `MATCH`, or a side-by-side disassembly at the first difference.
-4. Add it to the list in `scripts/run_matches.sh` and to the table in `src/MATCHES.md`.
+4. Add one line to `src/matches.tsv`, then regenerate the table in `src/MATCHES.md` with
+   `python3 tools/progress.py --matches-md src/MATCHES.md`.
 
 Only words the linker fills in (call targets, string and global addresses) are ignored when
 comparing; every other byte must be identical.

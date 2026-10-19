@@ -3,13 +3,15 @@
 
 Usage:
   matchfn.py <source.c|.cpp> <function_name> <orig_address_hex> [--orig MainUI-354-clean]
-             [--toolchain DIR] [--flags "-O0 -fsigned-char"] [--context N]
+             [--toolchain DIR] [--flags "-O0 -fsigned-char"] [--context N] [--quiet]
 
 Compiles <source> with the Arm GNU Toolchain 8.2-2018.08 (g++ for .cpp/.cc, gcc for .c)
 using the flags recovered from MainUI, finds <function_name> in the object (plain or
 mangled name), and compares it byte for byte with the original at <orig_address>.
 Words the linker fills in (relocations: calls to other functions, string/global addresses,
 MOVW/MOVT immediates) and BL calls are ignored, since they depend on final layout.
+
+--quiet prints one line per function and cuts the diff to 2 words of context.
 
 Exit code 0 = MATCH, 1 = differs, 2 = error.
 """
@@ -27,12 +29,15 @@ ap = argparse.ArgumentParser()
 ap.add_argument("source")
 ap.add_argument("function")
 ap.add_argument("address")
-ap.add_argument("--orig", default=os.path.join(HERE, "MainUI-354-clean"))
+ap.add_argument("--orig", default=os.path.join(os.path.dirname(HERE), "MainUI-354-clean"))
 ap.add_argument("--toolchain", default=os.environ.get("MIYOO_TC", ""),
                 help="toolchain bin/ dir (or set MIYOO_TC)")
 ap.add_argument("--flags", default="-O0 -fsigned-char")
 ap.add_argument("--context", type=int, default=6)
+ap.add_argument("--quiet", action="store_true")
 a = ap.parse_args()
+if a.quiet:
+    a.context = min(a.context, 2)
 
 tc = a.toolchain
 pre = os.path.join(tc, "arm-linux-gnueabihf-") if tc else "arm-linux-gnueabihf-"
@@ -45,7 +50,7 @@ if r.returncode:
     print(r.stderr)
     sys.exit(2)
 ver = subprocess.run([cc, "--version"], capture_output=True, text=True).stdout.splitlines()[0]
-if "8.2-2018-08 (arm-rel-8.23)" not in ver:
+if "8.2-2018-08 (arm-rel-8.23)" not in ver and not a.quiet:
     print(f"warning: not the original toolchain: {ver}")
 
 o = ELFFile(open(obj, "rb"))

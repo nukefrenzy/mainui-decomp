@@ -21,3 +21,5 @@ ghidra_*/
 # Python
 __pycache__/
 .match_failures
+# Generated locally (packets, probes, drafts); may contain decompiler-derived text
+build/
