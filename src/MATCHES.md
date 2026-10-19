@@ -20,6 +20,25 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `void loadPinyinTable()` | 0x143920 | 452 | tu_143720.cpp |
 | `char* pinyinInitials(const char*)` | 0x143ae4 | 528 | tu_143720.cpp |
 | `int pinyinFind(const char*, const char*, const char*, const char**, int*)` | 0x143cf4 | 308 | tu_143720.cpp |
+| `deleteTextItem(SDL_Surface*)` | 0x1484d4 | 68 | tu_1484d4.cpp |
+| `freeData(SDL_Surface*)` | 0x148518 | 44 | tu_1484d4.cpp |
+| `lastPathComponent(char*)` | 0x148544 | 184 | tu_1484d4.cpp |
+| `MultiDBCachedTextMenu::MultiDBCachedTextMenu(std::string const&)` | 0x1485fc | 416 | tu_1484d4.cpp |
+| `MultiDBCachedTextMenu::~MultiDBCachedTextMenu()` | 0x14879c | 256 | tu_1484d4.cpp |
+| `MultiDBCachedTextMenu::~MultiDBCachedTextMenu() [deleting]` | 0x14889c | 52 | tu_1484d4.cpp |
+| `MultiDBCachedTextMenu::openCache(EmuInfo&, char*, size_t)` | 0x1488d0 | 756 | tu_1484d4.cpp |
+| `MultiDBCachedTextMenu::prepare()` | 0x148bc4 | 744 | tu_1484d4.cpp |
+| `MultiDBCachedTextMenu::fetchForward()` | 0x148eac | 132 | tu_1484d4.cpp |
+| `MultiDBCachedTextMenu::fetchBackward()` | 0x148f30 | 124 | tu_1484d4.cpp |
+| `MultiDBCachedTextMenu::vfunc16()` | 0x148fac | 60 | tu_1484d4.cpp |
+| `MultiDBCachedTextMenu::vfunc17()` | 0x148fe8 | 60 | tu_1484d4.cpp |
+| `MultiDBCachedTextMenu::vfunc9()` | 0x149024 | 60 | tu_1484d4.cpp |
+| `MultiDBCachedTextMenu::vfunc10()` | 0x149060 | 60 | tu_1484d4.cpp |
+| `MultiDBCachedTextMenu::restorePosition(int, int, int)` | 0x14909c | 156 | tu_1484d4.cpp |
+| `MultiDBCachedTextMenu::prepareBGWorkers(int, int)` | 0x149138 | 988 | tu_1484d4.cpp |
+| `MultiDBCachedTextMenu::getItem(int)` | 0x149514 | 784 | tu_1484d4.cpp |
+| `MultiDBCachedTextMenu::vfunc6(int)` | 0x149824 | 816 | tu_1484d4.cpp |
+| `MultiDBCachedTextMenu::count()` | 0x149b54 | 40 | tu_1484d4.cpp |
 
 Embedded libraries, verified as whole objects by `scripts/verify-libs.sh`:
 

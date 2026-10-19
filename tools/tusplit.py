@@ -57,6 +57,8 @@ CUT_DROP = {
 UNIT_FIXED = {
     (0x143720, 0x1484d4): "unitcheck: src/tu_143720.cpp body + 170 template/inline functions fill exactly "
                           "0x143720-0x1484d4; 0x1484d4 starts the next file",
+    (0x1484d4, 0x14acfc): "unitcheck: src/tu_1484d4.cpp body + 60 template/inline functions fill exactly "
+                          "0x1484d4-0x14acfc; 0x14acfc starts the next file",
 }
 # libstdc++'s own messages: a string span made only of these says nothing about the user's files
 LIB_STR = re.compile(r"^(vector::|basic_string::|deque::|map::|cannot create std::)")

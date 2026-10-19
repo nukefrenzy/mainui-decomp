@@ -137,7 +137,7 @@ window/menu ID).
 | 0x58 | `SDL_Surface*` | freed in destructor |
 | 0x5c | emulator / RetroArch app entry | ROM lists (ids 5, 0x11); saved as `emuname`/`raname` |
 | 0x60 | 32-byte helper (`MenuHelper60`) | constructed with 2 |
-| 0x80 | 24-byte helper (`MenuHelper80`) | takes a surface-free callback, likely a surface cache |
+| 0x80 | 0x14-byte keyed cache (`MenuHelper80`, see src/MenuHelpers.h) | takes a free callback; +0x94 is an untouched int |
 | 0xb0 | `SDL_Surface *iconTF` | `skin/icon-TF.png` |
 | 0xb4 | `std::string` | used when building ROM lists |
 | 0xcc | `std::string path` | folder passed to `createMenu`; saved as `ppath` |

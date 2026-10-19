@@ -19,6 +19,5 @@ lo	hi	name	confidence	evidence	label
 13edfc	1424e8	tu_13edfc	review	after template run 0x13e0ac-0x13edfc (46 fns); 34 fns, 12 template	ImeWindow
 1424e8	143720	tu_1424e8	review	after template run 0x1423d0-0x1424e8 (4 fns); string spans 0x1425e4-0x142990; 51 fns, 39 template	
 143720	1484d4	tu_143720	proven	unitcheck: src/tu_143720.cpp body + 170 template/inline functions fill exactly 0x143720-0x1484d4; 0x1484d4 starts the next file; 176 fns, 54 template, static init at 0x143e8c	loadPinyinTable
-1484d4	149fc8	tu_1484d4	review	end of unitcheck unit 0x143720; 34 fns, 8 template	MultiDBCachedTextMenu
-149fc8	14a954	tu_149fc8	review	after template run 0x149efc-0x149fc8 (4 fns); 31 fns, 26 template	
-14a954	150000	tu_14a954	review	after template run 0x14a770-0x14a954 (11 fns); string spans 0x14ae04-0x14b04c 0x14bca8-0x14c5fc 0x14dc18-0x14de34 0x14e260-0x14e39c 0x14ec28-0x14f634; 92 fns, 6 template	launch_tinymix_4ad50, display_class_4ae74, device_devices_4b0fc
+1484d4	14acfc	tu_1484d4	proven	unitcheck: src/tu_1484d4.cpp body + 60 template/inline functions fill exactly 0x1484d4-0x14acfc; 0x14acfc starts the next file; 78 fns, 40 template	MultiDBCachedTextMenu
+14acfc	150000	tu_14acfc	review	end of unitcheck unit 0x1484d4; string spans 0x14ae04-0x14b04c 0x14bca8-0x14c5fc 0x14dc18-0x14de34 0x14e260-0x14e39c 0x14ec28-0x14f634; 79 fns, 0 template	launch_tinymix_4ad50, display_class_4ae74, device_devices_4b0fc

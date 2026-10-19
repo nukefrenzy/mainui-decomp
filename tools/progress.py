@@ -5,7 +5,10 @@ Usage: progress.py [--md docs/progress.md] [--matches-md src/MATCHES.md]
 Function boundaries come from ghidra/names.tsv: a function's size is the distance to the next
 function start (so literal pools count toward it), capped at the end of its code range.
 Matched bytes come from src/matches.tsv. If docs/tu-map.tsv exists (lo, hi, name, confidence,
-evidence; hex addresses, hi exclusive), progress is also reported per translation unit.
+evidence; hex addresses, hi exclusive), progress is also reported per translation unit, and a unit
+whose range is "proven" (tools/tusplit.py UNIT_FIXED, set after tools/unitcheck.py printed RESULT
+MATCH) and whose src/<name>.cpp exists counts whole: every function in it, template tail included.
+CI keeps that claim honest by running scripts/run_units.sh on every src/tu_*.cpp.
 """
 import argparse
 import bisect
@@ -48,11 +51,15 @@ matches = tsv(os.path.join(ROOT, "src/matches.tsv"))
 done = {int(m["addr"], 16) for m in matches}
 unknown = sorted(d for d in done if d not in size)
 
-tus = []
+tus, proven = [], []
 tu_path = os.path.join(ROOT, "docs/tu-map.tsv")
 if os.path.exists(tu_path):
     for t in tsv(tu_path):
-        tus.append((int(t["lo"], 16), int(t["hi"], 16), t["name"]))
+        lo, hi = int(t["lo"], 16), int(t["hi"], 16)
+        tus.append((lo, hi, t["name"]))
+        if t["confidence"] == "proven" and os.path.exists(os.path.join(ROOT, "src", t["name"] + ".cpp")):
+            proven.append((lo, hi))
+            done |= {s for s in starts if lo <= s < hi}
 
 
 def stats(lo, hi):
@@ -72,13 +79,15 @@ if tus:
     rows.append("| --- | --- | --- | --- | --- |")
     for lo, hi, name in tus:
         mf, nf, mb, nb = stats(lo, hi)
-        rows.append(f"| {name} | {lo:#x}–{hi:#x} | {mf}/{nf} | {mb:,}/{nb:,} | {pct(mb, nb)} |")
+        mark = " (unit proven)" if (lo, hi) in proven else ""
+        rows.append(f"| {name} | {lo:#x}–{hi:#x} | {mf}/{nf} | {mb:,}/{nb:,} | {pct(mb, nb)}{mark} |")
     rows.append("")
 mf = sum(stats(lo, hi)[0] for lo, hi in RANGES)
 nf = sum(stats(lo, hi)[1] for lo, hi in RANGES)
 mb = sum(stats(lo, hi)[2] for lo, hi in RANGES)
 nb = sum(stats(lo, hi)[3] for lo, hi in RANGES)
-rows.append(f"**Miyoo code:** {mf:,} of {nf:,} functions, {mb:,} of {nb:,} bytes matched ({pct(mb, nb)}).")
+rows.append(f"**Miyoo code:** {mf:,} of {nf:,} functions, {mb:,} of {nb:,} bytes matched ({pct(mb, nb)}): "
+            f"{len(proven)} whole units proven by unitcheck, plus single functions from src/matches.tsv elsewhere.")
 if not tus:
     rows.append("No docs/tu-map.tsv yet, so there is no per-unit breakdown.")
 if unknown:
