@@ -1,0 +1,28 @@
+lo	hi	name	confidence	evidence	label
+014d20	015b20	runtime	fixed	PLT, _start, crtbegin	
+015b20	049c3c	tu_015b20	review	end of C runtime; string spans 0x16b54-0x4846c; 1099 fns, 553 template, static init at 0x39228	FileBrowserMenu, DBCachedTextMenu, GameDetailWindow
+049c3c	04c12c	tu_049c3c	reviewed	reviewed: first file's tail ends with std::__copy_move helpers at 0x49b14/0x49b74; onSIGTERM starts the main-program file; string spans 0x49cc0-0x49f24 0x4a19c-0x4a2fc; 94 fns, 68 template, static init at 0x4aea8	onSIGTERM, appExit, pollStatusA_pushEvent
+04c12c	051b60	tu_04c12c	review	after template run 0x4be3c-0x4c12c (13 fns); string spans 0x4d6f8-0x4f7f0 0x4f860-0x4fa44 0x4ffd8-0x5020c 0x50674-0x5084c; 104 fns, 16 template	SDLKeyTestWindow, KeyTestWindow2, LCDTestWindow
+051b60	057920	lib_cjson	fixed	cJSON 1.7.10, byte-exact (verify-libs.sh)	
+057920	11cdc8	lib_sqlite	fixed	SQLite 3.30.1, byte-exact (verify-libs.sh)	
+11cdc8	124a34	tu_11cdc8	review	end of SQLite; string spans 0x11cf40-0x11e2ac 0x11e390-0x11f790 0x1208a0-0x12329c 0x123444-0x123658; 95 fns, 14 template, static init at 0x124020	files_SDCARD_1cf40, files_SDCARD_1d198, device_proc_1d2e4
+124a34	126c60	tu_124a34	review	after template run 0x124944-0x124a34 (3 fns); string spans 0x125070-0x1269d8; 74 fns, 43 template	
+126c60	127210	tu_126c60	review	after template run 0x1267d4-0x126c60 (10 fns); 13 fns, 9 template	
+127210	1297a8	tu_127210	review	after template run 0x127150-0x127210 (3 fns); 115 fns, 77 template	
+1297a8	129f9c	tu_1297a8	review	after template run 0x1296a0-0x1297a8 (3 fns); 24 fns, 18 template	
+129f9c	12ef8c	tu_129f9c	review	after template run 0x129ca8-0x129f9c (14 fns); string spans 0x12a27c-0x12ac2c 0x12d18c-0x12d4b4; 63 fns, 25 template	FileAction
+12ef8c	12fe90	tu_12ef8c	review	after template run 0x12ee04-0x12ef8c (6 fns); 51 fns, 42 template	
+12fe90	133f60	tu_12fe90	review	after template run 0x12fb58-0x12fe90 (17 fns); string spans 0x1303b0-0x131ce8; 149 fns, 55 template	MenuHelper80, MenuHelper60
+133f60	1376fc	tu_133f60	review	after template run 0x133e90-0x133f60 (4 fns); string spans 0x134080-0x134f34 0x1359a8-0x136010; 122 fns, 76 template, static init at 0x135308	language_genShortLangFile_34080, language_customer_343c4, language_have_34568
+1376fc	138c50	tu_1376fc	review	after template run 0x13759c-0x1376fc (6 fns); 19 fns, 2 template, static init at 0x138b8c	KeySettingWindow
+138c50	13edfc	tu_138c50	reviewed	reviewed: KeySettingWindow's inline virtuals (0x138ba4-0x138c30) end its tail; Wi-Fi code and its string span start here; string spans 0x138c50-0x13e368; 166 fns, 57 template	HotspotMenu, WifiItem, WifiConnectAction
+13edfc	1424e8	tu_13edfc	review	after template run 0x13e0ac-0x13edfc (46 fns); 34 fns, 12 template	ImeWindow
+1424e8	143720	tu_1424e8	review	after template run 0x1423d0-0x1424e8 (4 fns); string spans 0x1425e4-0x142990; 51 fns, 39 template	
+143720	144024	tu_143720	review	after template run 0x14368c-0x143720 (3 fns); 15 fns, 3 template, static init at 0x143e8c	loadPinyinTable
+144024	144c98	tu_144024	review	after template run 0x143fa4-0x144024 (3 fns); 25 fns, 6 template	
+144c98	146da8	tu_144c98	review	after template run 0x144c28-0x144c98 (3 fns); 69 fns, 16 template	
+146da8	14778c	tu_146da8	review	after template run 0x146d3c-0x146da8 (3 fns); 16 fns, 6 template	
+14778c	147f30	tu_14778c	review	after template run 0x1476b8-0x14778c (4 fns); 26 fns, 12 template	
+147f30	149fc8	tu_147f30	review	after template run 0x147d70-0x147f30 (10 fns); 59 fns, 19 template	MultiDBCachedTextMenu
+149fc8	14a954	tu_149fc8	review	after template run 0x149efc-0x149fc8 (4 fns); 31 fns, 26 template	
+14a954	150000	tu_14a954	review	after template run 0x14a770-0x14a954 (11 fns); string spans 0x14ae04-0x14b04c 0x14bca8-0x14c5fc 0x14dc18-0x14de34 0x14e260-0x14e39c 0x14ec28-0x14f634; 92 fns, 6 template	launch_tinymix_4ad50, display_class_4ae74, device_devices_4b0fc
