@@ -30,8 +30,8 @@ src/tu_015b20/p02.inc    ...
 ```
 
 `#include` is textual, so the parts compile exactly like one file: function order, first-use order
-and the tail are unchanged. Each session owns one `.inc` and adds only the declarations it needs to
-the shared header.
+and the tail are unchanged. Each session owns one `.inc`; shared declarations are already in the
+headers (see "Shared declarations" below).
 
 **Order-sensitive pieces, handled once in the skeleton:**
 
@@ -158,6 +158,65 @@ after p01's `setStrB4` 0x3aafc). `tu_015b20.h`: the p02 classes in tail declarat
 windows, `EmuAction` and `GeneralAction` are p01's declarations, and p02 uses p01's names for the
 status-bar and text helpers and globals (`g_launchCmd` is also the counter text buffer).
 
+## Shared declarations (header pass, before p03-p11)
+
+p01 and p02 each declared the same classes differently in `tu_015b20.h` and had to be reconciled at
+merge. To let p03-p11 run in parallel, every class, global and cross-part function they share is now
+declared once: `src/ListMenu.h` (ListMenu, TextMenuDrawer), `src/FileBrowserCache.h` (TextItem,
+FileAction), `src/MenuHelpers.h` (BGWorker), `src/TrimusWindow.h`, `src/MenuWindow.h`, and the
+section "Shared declarations for parts p03-p11" at the end of `src/tu_015b20.h` (globals,
+prototypes, menus, workers, windows, then `static_assert`s on every size).
+
+**Rule for part sessions.**
+- Use the shared declarations as they are. Put only part-local things in your own `.inc`: static
+  helpers, file-local structs, `extern`s for globals no other part uses, string tables.
+- You own the classes listed for your part below. You may add non-virtual member declarations to
+  them and rename or retype a member marked `unverified`, keeping the `static_assert`s true. Never
+  reorder virtual slots or members.
+- If a declaration outside your classes must change (a signature, a type, a class you do not own),
+  make the smallest change, keep `scripts/run_units.sh` and every match passing, and list it under
+  "Shared declaration changes" in your report so the merge can check it.
+- `unverified` marks a choice from incomplete evidence (argument types, names, unknown members as
+  `raw` arrays). Correcting it is expected; say so in the report.
+
+| Part | Owns |
+| --- | --- |
+| p03 | `DeleteRomAction`, `TrimusWindow` (ctor, dtor, `dump`), `ListMenu` ctor and `setRect`, helpers 0x1a4bc-0x1d720 |
+| p04 | `ListMenu` slots (0x1d9d8-0x1dc30, 0x1de34), `TextMenuDrawer` (0x1e128-0x204d4) |
+| p05 | `TextMenu`; the database/scan helpers 0x20b1c-0x23318 |
+| p06 | `DBCacheWorker`, `DBCachedTextMenu`, `TextItem` ctor/dtor, `IconMenuItem`, `IconMenu`, `SettingMenuItem` |
+| p07 | `SettingMenu`, `DeviceInfoMenu` |
+| p08 | `ColorMenu`, `LanguageMenu`, `ThemeMenu`, `FileAction`, `FileBrowserMenu`, `LoadSurfaceWorker` |
+| p09 | `MenuWindow`, `FloatWindow` |
+| p10 | `PopUpWindow`, `NotifyWindow`, `CountDownWindow`, `DialogWindow`, `ProgressDialog`, `GameDetailWindow` |
+| p11 | `ADCInfoWindow`; window stack, loop, `createMenu` |
+
+**What the pass found** (from vtables, RTTI, the ctors and the tail):
+- Inline methods now in the headers (tail, phase 3 orders them): `ListMenu` dtor, slots 6 and 11-15,
+  getters `getCur/getPageStart/getPageEnd/getSearch/getRect`; `TextMenuDrawer` setters at 0x3a678 and
+  0x3a6a8; `count()` of TextMenu, DBCachedTextMenu, IconMenu; `TextMenu::getItems` (printf);
+  `DBCachedTextMenu::setTotal`; three `IconMenu` setters; `DeviceInfoMenu::vfunc4`; five slots each of
+  `FloatWindow` and `ADCInfoWindow`; `DBCacheWorker` and `LoadSurfaceWorker` ctors and dtors;
+  `BGWorker` dtor; `FileAction` dtor; `BusyData` ctor (0x3adc4, `{0, -1, 0}`, so it has a third
+  field); the free function `isListMenuId` (0x3ad44).
+- ListMenu slots 4, 5, 7 and 8 are pure; slots 2, 9, 10, 16 and 17 (0x1d9d8...) are ListMenu's own,
+  not TextMenuDrawer's or FileBrowserMenu's (IconMenu and FileBrowserMenu use them directly). Ghidra's
+  "FileBrowserMenu::" and "DBCachedTextMenu::" labels on 0x1d9d8-0x204d4 are inherited slots.
+- `FileAction` has no slot 3/4 overrides (the vtable shows Action's); its old declarations are gone.
+- The base Ghidra left unnamed in p02 is `MenuItemAction` in RTTI (renamed from `ItemAction`).
+- `rapidxml` is included: `rapidxml::parse_error` ctor/`what` sit at 0x3acc0/0x3ad1c and its
+  templates later in the tail. The file includes the header-only rapidxml; the part that parses XML
+  adds the include (not yet fetched by any script).
+- The tail getter at 0x3aad4 (+0xc, called by `GameDetailWindow::update`) has no class yet.
+
+**Part ranges.** The boundaries hold (no function straddles one), but some labels were wrong:
+- p03 also holds `TrimusWindow::dump` 0x1d898, the `ListMenu` ctor 0x1d8fc and `setRect` 0x1d99c.
+- p04 is ListMenu's own slots plus `TextMenuDrawer`, not FileBrowserMenu/DBCachedTextMenu.
+- p05 is `TextMenu` (0x20500-0x20b1c) and then about 10 KB of database/ROM-scan helpers.
+- Three functions are missing from the Ghidra export: 0x1ec00 (p04, 512 bytes, unreferenced: cuts a
+  UTF-8 string to a width and appends "..."), 0x25c68 (p06, returns `g_iconFont`, stored in
+  `IconMenu::fontFn`) and 0x37760 (p11, returns `g_smallFont`, passed to `setFontFn` in `createMenu`).
+
 ## Checking a part on its own
 
 `matchfn` works per function in a partial file, as long as it compiles (declare what other parts
@@ -175,9 +234,9 @@ partly guesses.
 | --- | --- | --- | --- |
 | p01 | 0x15b20–0x18c54 | 12.6 KB | runtime helpers: render/audio/power, `handleGlobalInput`, launch, `writeCmdToRun`; `EmuAction` |
 | p02 | 0x18c54–0x1a44c | 6.1 KB | actions: App, RemoveFavorite, Search, GlobalSearch, Popup*, General, Clear*, AddFavorite |
-| p03 | 0x1a44c–0x1d9d8 | 13.7 KB | `DeleteRomAction`, helpers, `TrimusWindow` |
-| p04 | 0x1d9d8–0x20500 | 11.0 KB | `ListMenu` base slots, `FileBrowserMenu` (first part), `DBCachedTextMenu` |
-| p05 | 0x20500–0x23548 | 12.4 KB | `TextMenu` |
+| p03 | 0x1a44c–0x1d9d8 | 13.7 KB | `DeleteRomAction`, helpers, `TrimusWindow`, `ListMenu` ctor |
+| p04 | 0x1d9d8–0x20500 | 11.0 KB | `ListMenu` base slots, `TextMenuDrawer` |
+| p05 | 0x20500–0x23548 | 12.4 KB | `TextMenu`, database/ROM-scan helpers |
 | p06 | 0x23548–0x2849c | 20.3 KB | `DBCacheWorker`, `DBCachedTextMenu`, `IconMenuItem`, `IconMenu`, `SettingMenuItem` |
 | p07 | 0x2849c–0x2b788 | 13.0 KB | `SettingMenu`, `DeviceInfoMenu` |
 | p08 | 0x2b788–0x2e424 | 11.4 KB | `ColorMenu`, `LanguageMenu`, `ThemeMenu`, `FileAction`, `FileBrowserMenu`, `LoadSurfaceWorker` |
@@ -217,8 +276,9 @@ the five unconstructed settings entries).
 
 > Read CLAUDE.md, docs/status.md, docs/unit-workflow.md and docs/plan-tu_015b20.md. Set up the
 > environment, confirm scripts/run_matches.sh and scripts/run_units.sh pass. Write part pNN
-> (range from the plan) in src/tu_015b20/pNN.inc, functions in address order, adding only needed
-> declarations to src/tu_015b20.h. Every function must MATCH with tools/matchfn.py; check the body
+> (range from the plan) in src/tu_015b20/pNN.inc, functions in address order, using the shared
+> declarations and following the rule in "Shared declarations" (part-local helpers only in your
+> .inc; report any shared declaration you had to change). Every function must MATCH with tools/matchfn.py; check the body
 > prefix with tools/unitcheck.py --body-only if the earlier parts are in main. Keep existing
 > matches and units passing. Work on a new branch, commit as nukefrenzy, don't push; stop and
 > report what matched, what didn't, and header changes. Ghidra exports are in ~/mainui-exports/

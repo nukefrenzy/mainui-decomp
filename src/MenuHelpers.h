@@ -6,11 +6,12 @@ struct SDL_Surface;
 struct SDL_mutex;
 struct SDL_cond;
 struct SDL_Thread;
+// Ctor 0x393dc (implicit), dtor 0x39410 and deleting dtor 0x39444 are inline in tu_015b20's tail.
 class BGWorker {
 public:
-    virtual ~BGWorker();
-    virtual void run() = 0;
-    virtual void finished() = 0;
+    virtual ~BGWorker() {}
+    virtual void run() = 0;         // slot 2, on the worker thread
+    virtual void finished() = 0;    // slot 3
 };
 struct CacheEntry {
     std::string key;
