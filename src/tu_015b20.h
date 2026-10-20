@@ -187,7 +187,7 @@ extern "C" {
     void cJSON_Delete(cJSON *);
 }
 int clearRecent(std::list<RecentItem> *list);                // 0x120e20 (tu_11cdc8)
-bool isFavourite(const char *label, FILE *f, const char *rompath); // 0x1b210 (p03)
+bool isFavourite(char *buf, FILE *f, const char *rompath);   // 0x1b210 (p03)
 
 // p02 render helpers (0x18dd4-0x19acc): busy animation while a background job runs. g_launchCmd
 // doubles as the counter text buffer, g_titleFont/g_wifiEmptyColor/g_background are p01's globals.
@@ -346,24 +346,24 @@ class DBCachedTextMenu;
 
 // Non-member functions called across parts (p01/p02 functions are defined before every later part).
 // p03
-void power_label_1a4bc(char *s, int n);                         // 0x1a4bc  unverified
-void launch_label_1a75c(char *a, char *b);                      // 0x1a75c  unverified
-TextMenu *buildMenu_1a924(const char *path);                    // 0x1a924  app/emu lists; unverified
-TextMenu *buildMenu_1b488(int arg);                             // 0x1b488  unverified
-TextMenu *buildMenu_1bbfc(int arg);                             // 0x1bbfc  unverified
-int display_getlcd_1bea4(int a, int b, int c, int d);           // 0x1bea4  unverified
-void initAudioSettings(void *shm);                              // 0x1bf90  unverified argument
-bool refreshMenu_1c0ac(void *menu, int arg);                    // 0x1c0ac  drops removed items? unverified
-int restoreWindowState(std::vector<TrimusWindow *> *stack);     // 0x1c1fc  unverified argument
-void saveWindowState(std::vector<TrimusWindow *> *stack, const char *path); // 0x1c544  unverified
-void setRomListPosition(std::vector<RomListPosition> *list, std::string *path,
-                        int cur, int start, int selected);      // 0x1c760  unverified
+void power_label_1a4bc(const char *path, std::vector<TextItem *> *items); // 0x1a4bc  writes a favourites file
+void launch_label_1a75c(const char *label, const char *path);   // 0x1a75c  removes a favourite
+TextMenu *buildMenu_1a924(const char *path);                    // 0x1a924  favourites list
+TextMenu *buildMenu_1b488(std::list<RecentItem> *list);         // 0x1b488  recent games
+TextMenu *buildMenu_1bbfc(std::vector<AppInfo> *apps);          // 0x1bbfc  app list
+int display_getlcd_1bea4(int luma, int hue, int saturation, int contrast); // 0x1bea4  MI_DISP LCD params
+void initAudioSettings(void *shm);                              // 0x1bf90  key shm
+bool refreshMenu_1c0ac(void *menu, int id);                     // 0x1c0ac  deletes removed favourites (id 2)
+int restoreWindowState(std::vector<TrimusWindow *> *stack);     // 0x1c1fc
+void saveWindowState(std::vector<TrimusWindow *> *stack, const char *path); // 0x1c544
+void setRomListPosition(std::vector<RomListPosition> *list, const std::string &path,
+                        int cur, int start, int selected);      // 0x1c760  JSON keys pos, start, end
 int getRomListPosition(std::vector<RomListPosition> *list, std::string *path,
-                       RomListPosition *out);                   // 0x1c8d0  unverified
-int loadRomListPositions(std::vector<RomListPosition> *list);   // 0x1c994  unverified argument
-void saveRomListPositions(std::vector<RomListPosition> *list);  // 0x1cc90  unverified argument
-SDL_Surface *loadThumbnail(const char *path, int w, int h);     // 0x1cee0  unverified
-std::string makeThumbPath(std::string *launch, const char *icon); // 0x1d318  unverified
+                       RomListPosition *out);                   // 0x1c8d0
+int loadRomListPositions(std::vector<RomListPosition> *list);   // 0x1c994
+void saveRomListPositions(const std::vector<RomListPosition> *list); // 0x1cc90
+SDL_Surface *loadThumbnail(const char *path, int w, int h);     // 0x1cee0
+std::string makeThumbPath(std::string *game, const char *img);  // 0x1d318
 // createSurface 0x1d720 and isFavourite 0x1b210 are declared with p02 above.
 // p04
 int drawListNumber_1e868(SDL_Surface *dst, SDL_Rect *rect, int a, int b); // 0x1e868  unverified
@@ -409,7 +409,7 @@ public:
     virtual void vfunc13();                                    // 0x206e0
     virtual int  vfunc18();                                    // 0x205f8 slot 18 (new)
     void addItem(TextItem *item);                              // 0x20898
-    bool hasItem(std::string *label);                          // 0x20a3c  unverified argument type
+    bool hasItem(TextItem *item);                              // 0x20a3c  appends item unless its label is listed; true if added
     std::vector<TextItem *> *getItems()                        // 0x3a70c, inline
     {
         printf("TextMenu %p mItemList %p\n", this, &items);

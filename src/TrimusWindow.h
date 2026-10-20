@@ -29,7 +29,7 @@ public:
     int getId();                                      // 0x394c8, inline in the tail; see TrimusWindow.cpp
     void dump();                                      // 0x1d898 printf("title %s, type %d"); name unverified
 
-protected:
+    // Public: saveWindowState (0x1c544) reads both fields directly.
     int titleLabelId;   // +0x04  language string id for the title (e.g. 0x83 = Wi-Fi)
     int id;             // +0x08  window/menu id (MenuWindow: the createMenu id)
 };

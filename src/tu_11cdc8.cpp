@@ -1268,11 +1268,7 @@ unsigned long milliseconds() {
     return value;
 }
 
-struct SDL_PixelFormat {
-    void*palette;
-    unsigned char bitsPerPixel,bytesPerPixel,rLoss,gLoss,bLoss,aLoss,rShift,gShift,bShift,aShift;
-    unsigned rMask,gMask,bMask,aMask;
-};
+// SDL_PixelFormat is in SDLTypes.h.
 // 0x123908
 void printSurfaceFormat(const char*label,SDL_Surface*surface) {
     printf("%s flags %x bpp %d loss(%d, %d, %d, %d) shift(%d, %d, %d, %d) mask(%x, %x, %x, %x)\n",label,surface->flags,surface->format->bitsPerPixel,surface->format->rLoss,surface->format->gLoss,surface->format->bLoss,surface->format->aLoss,surface->format->rShift,surface->format->gShift,surface->format->bShift,surface->format->aShift,surface->format->rMask,surface->format->gMask,surface->format->bMask,surface->format->aMask);

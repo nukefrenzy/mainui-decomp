@@ -158,6 +158,49 @@ after p01's `setStrB4` 0x3aafc). `tu_015b20.h`: the p02 classes in tail declarat
 windows, `EmuAction` and `GeneralAction` are p01's declarations, and p02 uses p01's names for the
 status-bar and text helpers and globals (`g_launchCmd` is also the counter text buffer).
 
+## p03 findings (0x1a44c–0x1d9d8, done)
+
+All 27 functions match with `matchfn` (13,708 bytes, the whole range); `unitcheck --body-only` now reports
+the prefix 0x15b20–0x1d9d8 (75 whole functions). Next is ListMenu slot 2 at 0x1d9d8 (p04).
+
+**Functions.** `DeleteRomAction::execute` (calls `menu->vfunc12(field0c)`); favourites: `power_label_1a4bc`
+rewrites a favourites file from a `TextItem` list, `launch_label_1a75c` removes the lines whose label starts
+with a given label, `buildMenu_1a924` builds the favourites list (type 3 apps, 5/17 ROMs; rewrites the file
+when `hasItem` rejects duplicates), `isFavourite` searches `"rompath"` in a buffer or file; `buildMenu_1b488`
+(recent games), `buildMenu_1bbfc` (apps, row height 90); `display_getlcd_1bea4` (MI_DISP LCD luma/hue/
+saturation/contrast); `initAudioSettings` (keymap, volume, backlight, music volume); `refreshMenu_1c0ac`
+(deletes removed favourites, menu id 2); `restoreWindowState`/`saveWindowState` (`/tmp/state.json`,
+`{"list": [{title, type, ...}]}`; type 8 restores a `GameDetailWindow`, others a `MenuWindow`); ROM-list
+positions (`/appconfigs/romwinidx.json`, keys `rompath`, `pos`, `start`, `end`); `loadThumbnail` (RGBA
+copy, scaled to width w); `makeThumbPath`; `createSurface`; `TrimusWindow` ctor, dtors, `dump`; `ListMenu`
+ctor and `setRect`.
+
+**-O0 idioms.**
+- GCC's C++ front end marks a function nothrow once its whole body has no throwing call, and callers anywhere
+  in the unit (also earlier ones) then drop the cleanup pad of `new T(...)`. `restoreWindowState` only matches
+  with `GameDetailWindow(int, int)` (0x34a14, member stores only) defined in the unit, so p03 wrote it in p10.
+- Nested `new` keeps the inner object in a callee-saved register: `new TextItem(label, 0, new AppAction(...), true)`;
+  a named local for the action adds a stack slot.
+- `return img;` (implicit `std::string` from `const char *`) changes argument evaluation for the whole function
+  (`img` copied through a register for `strstr`, `printf` and every `std::string(img)`); `return std::string(img)`
+  does not.
+- `std::string::size_type` positions: `int` adds conversion moves before `substr`.
+- A `do { ... break; ... } while (0)` gives each `break` its own `nop` block (state/position loaders).
+- Locals assigned more than once get the first stack slots regardless of declaration order.
+
+**Shared declaration changes.**
+- `tu_015b20.h`: p03 prototypes retyped (names kept): `power_label_1a4bc(const char *, std::vector<TextItem *> *)`,
+  `launch_label_1a75c(const char *, const char *)`, `buildMenu_1b488(std::list<RecentItem> *)`,
+  `buildMenu_1bbfc(std::vector<AppInfo> *)`, `isFavourite(char *buf, FILE *, const char *)`,
+  `setRomListPosition(..., const std::string &path, ...)`, `saveRomListPositions(const std::vector<...> *)`,
+  `makeThumbPath(std::string *game, const char *img)`.
+- `TextMenu::hasItem` (p05) takes `TextItem *`: 0x20a3c appends the item unless its label is listed, true if added.
+- `TrimusWindow.h`: `titleLabelId` and `id` are public (`saveWindowState` reads them directly).
+- `SDLTypes.h`: full `SDL_PixelFormat` (moved from `tu_11cdc8.cpp`) and `SDL_Surface::pitch`/`pixels`.
+- `scalePixels` (0x11cdc8) is declared here with `unsigned` sizes (conversion moves); its tu_11cdc8 definition
+  matches with `int`, so the two prototypes mangle differently.
+- p10.inc: `GameDetailWindow(int, int)` 0x34a14, see above.
+
 ## Shared declarations (header pass, before p03-p11)
 
 p01 and p02 each declared the same classes differently in `tu_015b20.h` and had to be reconciled at

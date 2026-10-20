@@ -54,11 +54,35 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `ClearFavoriteAction::execute(void*)` | 0x19f64 | 116 | tu_015b20.cpp |
 | `ClearRecentAction::execute(void*)` | 0x19fd8 | 84 | tu_015b20.cpp |
 | `AddFavoriteAction::execute(void*)` | 0x1a02c | 1056 | tu_015b20.cpp |
+| `DeleteRomAction::execute(void*)` | 0x1a44c | 112 | tu_015b20.cpp |
+| `power_label_1a4bc(char const*, std::vector<TextItem*>*)` | 0x1a4bc | 672 | tu_015b20.cpp |
+| `launch_label_1a75c(char const*, char const*)` | 0x1a75c | 456 | tu_015b20.cpp |
+| `buildMenu_1a924(char const*)` | 0x1a924 | 2284 | tu_015b20.cpp |
+| `isFavourite(char*, FILE*, char const*)` | 0x1b210 | 632 | tu_015b20.cpp |
+| `buildMenu_1b488(std::list<RecentItem>*)` | 0x1b488 | 1908 | tu_015b20.cpp |
+| `buildMenu_1bbfc(std::vector<AppInfo>*)` | 0x1bbfc | 680 | tu_015b20.cpp |
+| `display_getlcd_1bea4(int, int, int, int)` | 0x1bea4 | 236 | tu_015b20.cpp |
+| `initAudioSettings(void*)` | 0x1bf90 | 284 | tu_015b20.cpp |
+| `refreshMenu_1c0ac(void*, int)` | 0x1c0ac | 336 | tu_015b20.cpp |
+| `restoreWindowState(std::vector<TrimusWindow*>*)` | 0x1c1fc | 840 | tu_015b20.cpp |
+| `saveWindowState(std::vector<TrimusWindow*>*, char const*)` | 0x1c544 | 540 | tu_015b20.cpp |
+| `setRomListPosition(std::vector<RomListPosition>*, std::string const&, int, int, int)` | 0x1c760 | 368 | tu_015b20.cpp |
+| `getRomListPosition(std::vector<RomListPosition>*, std::string*, RomListPosition*)` | 0x1c8d0 | 196 | tu_015b20.cpp |
+| `loadRomListPositions(std::vector<RomListPosition>*)` | 0x1c994 | 764 | tu_015b20.cpp |
+| `saveRomListPositions(std::vector<RomListPosition> const*)` | 0x1cc90 | 592 | tu_015b20.cpp |
+| `loadThumbnail(char const*, int, int)` | 0x1cee0 | 1080 | tu_015b20.cpp |
+| `makeThumbPath(std::string*, char const*)` | 0x1d318 | 1032 | tu_015b20.cpp |
+| `createSurface(int, int)` | 0x1d720 | 188 | tu_015b20.cpp |
 | `TrimusWindow::TrimusWindow(int titleLabelId, int id)` | 0x1d7dc | 84 | tu_015b20.cpp |
 | `TrimusWindow::~TrimusWindow()` | 0x1d830 | 52 | tu_015b20.cpp |
+| `TrimusWindow::~TrimusWindow() (deleting)` | 0x1d864 | 52 | tu_015b20.cpp |
+| `TrimusWindow::dump()` | 0x1d898 | 100 | tu_015b20.cpp |
+| `ListMenu::ListMenu(bool)` | 0x1d8fc | 160 | tu_015b20.cpp |
+| `ListMenu::setRect(SDL_Rect*)` | 0x1d99c | 60 | tu_015b20.cpp |
 | `MenuWindow::MenuWindow(int, int, ListMenu*)` | 0x2e6d4 | 676 | tu_015b20.cpp |
 | `MenuWindow::~MenuWindow() (complete)` | 0x2ec3c | 316 | tu_015b20.cpp |
 | `MenuWindow::~MenuWindow() (deleting)` | 0x2ed78 | 52 | tu_015b20.cpp |
+| `GameDetailWindow::GameDetailWindow(int, int)` | 0x34a14 | 264 | tu_015b20.cpp |
 | `TrimusWindow::animateIn(SDL_Surface*, FlipFn)` | 0x39478 | 40 | tu_015b20.cpp |
 | `TrimusWindow::animateOut(SDL_Surface*, FlipFn)` | 0x394a0 | 40 | tu_015b20.cpp |
 | `TrimusWindow::getId()` | 0x394c8 | 40 | TrimusWindow.cpp |
