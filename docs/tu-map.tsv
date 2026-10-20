@@ -5,11 +5,7 @@ lo	hi	name	confidence	evidence	label
 04c12c	051b60	tu_04c12c	review	after template run 0x4be3c-0x4c12c (13 fns); string spans 0x4d6f8-0x4f7f0 0x4f860-0x4fa44 0x4ffd8-0x5020c 0x50674-0x5084c; 104 fns, 16 template	SDLKeyTestWindow, KeyTestWindow2, LCDTestWindow
 051b60	057920	lib_cjson	fixed	cJSON 1.7.10, byte-exact (verify-libs.sh)	
 057920	11cdc8	lib_sqlite	fixed	SQLite 3.30.1, byte-exact (verify-libs.sh)	
-11cdc8	124a34	tu_11cdc8	review	end of SQLite; string spans 0x11cf40-0x11e2ac 0x11e390-0x11f790 0x1208a0-0x12329c 0x123444-0x123658; 95 fns, 14 template, static init at 0x124020	files_SDCARD_1cf40, files_SDCARD_1d198, device_proc_1d2e4
-124a34	126c60	tu_124a34	review	after template run 0x124944-0x124a34 (3 fns); string spans 0x125070-0x1269d8; 74 fns, 43 template	
-126c60	127210	tu_126c60	review	after template run 0x1267d4-0x126c60 (10 fns); 13 fns, 9 template	
-127210	1297a8	tu_127210	review	after template run 0x127150-0x127210 (3 fns); 115 fns, 77 template	
-1297a8	129f9c	tu_1297a8	review	after template run 0x1296a0-0x1297a8 (3 fns); 24 fns, 18 template	
+11cdc8	129f9c	tu_11cdc8	proven	unitcheck --end 129f9c: src/tu_11cdc8.cpp body + 263 inline/template functions fill exactly 0x11cdc8-0x129f9c; shared device/configuration helpers; string spans 0x11cf40-0x11e2ac 0x11e390-0x11f790 0x1208a0-0x12329c 0x123444-0x123658 0x125070-0x1269d8; 321 fns, 161 template, static init at 0x124020	files_SDCARD_1cf40, files_SDCARD_1d198, device_proc_1d2e4
 129f9c	12ce28	tu_129f9c	proven	unitcheck --end 12ce28: src/tu_129f9c.cpp fills exactly 0x129f9c-0x12ce28; seven theme/font/image/sound functions, no tail; string spans 0x12a27c-0x12ac2c; 7 fns, 0 template	render_open_29f9c, render_open_2a140, render_change_2a27c
 12ce28	1302cc	tu_12ce28	proven	unitcheck --end 1302cc: src/tu_12ce28.cpp body + 105 template/inline functions fill exactly 0x12ce28-0x1302cc; file-browser directory cache and traversal; string spans 0x12d18c-0x12d4b4; 120 fns, 73 template	FileAction
 1302cc	131e34	tu_1302cc	proven	unitcheck --end 131e34: src/tu_1302cc.cpp fills exactly 0x1302cc-0x131e34; streaming stb_zlib.cpp decoder, 19 functions, no tail; string spans 0x1303b0-0x131ce8; 19 fns, 0 template	

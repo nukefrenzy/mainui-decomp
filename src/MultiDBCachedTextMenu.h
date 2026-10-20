@@ -10,11 +10,14 @@ struct sqlite3;
 
 // One ROM source (emulator or app list entry). sizeof == 0xdc (std::vector<EmuInfo>::size at 0x3b3bc).
 struct EmuInfo {
-    char        raw00[0x78];
-    std::string path;           // +0x78  folder holding <name>_cache6.db
-    char        raw90[0xc4 - 0x90];
-    int         hasCpinyin;     // +0xc4  search the cpinyin column when the language is Chinese
-    char        rawC8[0xdc - 0xc8];
+    std::string label, labelVerbose, icon, iconSelected, launch;
+    std::string path;           // +0x78  ROM folder
+    std::string imagePath, gameList;
+    int useSwap;               // +0xc0
+    int hasCpinyin;            // +0xc4  JSON shortname; search uses the cpinyin column
+    int hideBios;              // +0xc8
+    std::vector<std::string> extensions; // +0xcc
+    int noAudioFix;            // +0xd8
 };
 
 // One opened cache database that has hits for the search string.

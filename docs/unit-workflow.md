@@ -2,8 +2,9 @@
 
 MainUI is rebuilt one translation unit (original source file) at a time. A unit is a range in
 `docs/tu-map.tsv`; its rewrite is `src/tu_<lo>.cpp`; it is done when `tools/unitcheck.py` prints
-`RESULT MATCH`. Proven units so far: `tu_143720` (pinyin search) and `tu_1484d4`
-(MultiDBCachedTextMenu); read them as worked examples.
+`RESULT MATCH`. Worked examples include `tu_143720` (pinyin search), `tu_1484d4`
+(MultiDBCachedTextMenu), and `tu_11cdc8` (shared configuration). See `docs/status.md` for the
+current list of proven units.
 
 ## What a unit looks like in the binary
 
@@ -154,3 +155,12 @@ GCC 8 at `-O0` emits COMDAT functions in call-graph node order:
 If `unitcheck` reports displaced sections, use `--verbose`: each tail line shows `obj#k` (our
 section index), so the sequence of k shows exactly which functions move. Try include order first,
 then where the first use of the displaced function happens.
+
+- A predecrement in a loop condition can materialize a Boolean that a separate decrement
+  statement does not: the scaler needs `do { ... } while (--remaining != 0)`. Moving
+  `--remaining` into the body removes 16 bytes per loop despite preserving behavior.
+- The first use of an inline/template function affects the tail even when body bytes match.
+  The configuration unit's list scans need `while (it != end) { ... *it ...; it++; }`:
+  a `for` increment instantiates `operator++` before `operator*` and swaps their tail order.
+  Its global recent-list declaration also follows the first local recent-item construction;
+  moving it ahead changes the order of generated constructors and destructors.

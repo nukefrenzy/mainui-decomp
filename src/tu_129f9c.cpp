@@ -18,7 +18,7 @@ void Mix_FreeMusic(void *); void Mix_FreeChunk(void *);
 const char *getLanguageFile();
 }
 bool languageFontExists();
-SDL_Surface *loadSkinImage(const char *, const char *, const char *, SDL_Surface *, int);
+SDL_Surface *loadSkinImage(const char *, const char *, const char *, SDL_Surface *, bool);
 extern SDL_Surface *g_backBuffer;
 void *g_imeFont; // 0x18217c
 void *g_iconFont; // 0x182180

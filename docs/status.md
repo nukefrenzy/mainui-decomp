@@ -7,14 +7,15 @@ method: `docs/unit-workflow.md`. Update this file when a unit is proven or the p
 
 - **Goal:** complete MainUI source that rebuilds byte-exact with Arm GNU 8.2-2018.08, `-O0 -fsigned-char`,
   worked file by file (one translation unit per `src/tu_<lo>.cpp` or `.c`).
-- **Progress:** 17 whole units proven by `tools/unitcheck.py`, plus 9 single functions in
-  `tu_015b20`: 1,000 of 2,605 Miyoo functions, 159,912 of 457,584 bytes (34.95%). CI checks every match
+- **Progress:** 18 whole units proven by `tools/unitcheck.py`, plus 9 single functions in
+  `tu_015b20`: 1,320 of 2,605 Miyoo functions, 213,628 of 457,584 bytes (46.69%). CI checks every match
   and every unit on each push.
 - **Embedded libraries:** SQLite 3.30.1 and cJSON 1.7.10 rebuild byte-exact (`scripts/verify-libs.sh`);
   tiny-utf8 4.4.x is header-only and appears in the template tails of the files that use it.
 
 | Proven unit | Range | What it is |
 | --- | --- | --- |
+| tu_11cdc8 (C++) | 0x11cdc8–0x129f9c | Shared configuration/device helpers: 56 written functions, compiler init pair, 263 inline/template functions |
 | tu_129f9c (C++) | 0x129f9c–0x12ce28 | Seven theme/font/image/sound functions, no tail |
 | tu_12ce28 (C++) | 0x12ce28–0x1302cc | File-browser directory cache and traversal: 15 body functions plus 105 inline/template functions |
 | tu_1302cc (C++) | 0x1302cc–0x131e34 | Streaming stb_zlib decoder: 19 functions, no tail |
@@ -77,21 +78,29 @@ relative theme paths, with built-in fallback files. Image loading converts/compo
 sounds and background music also have explicit fallback paths. The loader retains its unused
 font-size pointer argument, and cleanup retains the original resource order.
 
+`tu_11cdc8` matches with the default flags: 29,296 body bytes to 0x124038 and 24,420 tail
+bytes to 0x129f9c. Its 56 written functions cover scaling, SD-card/platform paths, mount/module
+checks, ROM-cache cleanup, swap/CPU/memory helpers, recent-list load/save, app/emulator/theme
+JSON parsing, factory-test results, serial formatting, image loading, and process lookup. The
+compiler init pair constructs a string vector and the global recent-item list. The four later
+drafts were all part of this unit's generated tail; the SQLite end proves its start.
+
+`EmuInfo` now has its full 0xdc-byte layout: eight strings, three integer options, a string
+vector, and the audio-fix option. The JSON `shortname` option is the field previously named
+`hasCpinyin` by its search consumer. Recent items are 100 bytes; app records are 128 bytes.
+The image helper's debug flag is Boolean; earlier caller declarations have been reconciled.
+All Miyoo code after SQLite, 0x11cdc8–0x150ad8, is now covered by proven units.
+
 ## Next units, in order
 
 Work outward from proven units: a proven neighbour fixes one boundary for free. One fresh session per
 unit, each in its own worktree; merge their branches into `main` one at a time.
 
-1. **Trace the preceding configuration unit ending at 0x129f9c.** The drafts `tu_124a34`,
-   `tu_126c60`, `tu_127210`, and `tu_1297a8` contain generated container/record functions,
-   including `Theme` move construction; they are not useful standalone body units. Trace their
-   first uses into the `tu_11cdc8` draft and prove the actual file boundaries. The combined
-   candidate range 0x11cdc8–0x129f9c is 53,716 bytes; treat its start as unproven.
-2. Continue backward through any remaining units toward 0x11cdc8 after the configuration proof.
-3. **tu_049c3c** (main program: main, signal handler, status poll) and **tu_04c12c** (hardware test
-   windows) after the 0x11cdc8+ region.
-4. **tu_015b20 last:** the first file, 212 KB, about 46% of all bytes (all window/menu classes, actions,
-   createMenu). It benefits from the class headers the other units produce. The original
+1. **tu_049c3c** (main program: main, signal handler, status poll), followed by
+   **tu_04c12c** (hardware test windows). Confirm their body/tail boundaries before treating
+   the draft ranges 0x049c3c–0x04c12c and 0x04c12c–0x051b60 as whole files.
+2. **tu_015b20 last:** the first file, 212 KB, about 46% of all bytes (all window/menu classes,
+   actions, createMenu). It benefits from the class headers the other units produce. The original
    "item and action wiring" question is answered inside it.
 
 ## Open findings and questions

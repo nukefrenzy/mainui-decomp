@@ -32,7 +32,7 @@ extern int g_fontSize;
 extern SDL_Surface *g_backBuffer, *g_keySettingFooter;
 extern void *g_imeFont;
 extern SDL_Color g_imeTextColor;
-SDL_Surface *loadSkinImage(const char *, const char *, const char *, SDL_Surface *, int); // 0x123af0
+SDL_Surface *loadSkinImage(const char *, const char *, const char *, SDL_Surface *, bool); // 0x123af0
 const char *languageString(int);
 void drawBackground(SDL_Surface *); // 0x17450
 void drawTitle(SDL_Surface *, const char *, bool); // 0x16f68

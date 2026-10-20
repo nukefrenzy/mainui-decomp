@@ -5,7 +5,7 @@ extern char *g_themePath;                   // 0x181970
 extern SDL_Surface *g_backBuffer;           // 0x181928
 extern const char g_skinSubdir[];           // 0x151a48 (second argument of every skin load)
 SDL_Surface *loadSkinImage(const char *theme, const char *sub, const char *file,
-                           SDL_Surface *fmt, int flags);   // 0x123af0
+                           SDL_Surface *fmt, bool flags);   // 0x123af0
 void freeSurfaceCallback(SDL_Surface *s);  // 0x2e318
 
 MenuWindow::MenuWindow(int titleLabelId, int id, ListMenu *menu)

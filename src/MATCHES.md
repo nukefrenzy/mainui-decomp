@@ -16,6 +16,62 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `TrimusWindow::animateIn(SDL_Surface*, FlipFn)` | 0x39478 | 40 | TrimusWindow.cpp |
 | `TrimusWindow::animateOut(SDL_Surface*, FlipFn)` | 0x394a0 | 40 | TrimusWindow.cpp |
 | `TrimusWindow::getId()` | 0x394c8 | 40 | TrimusWindow.cpp |
+| `scalePixels(int, int, int, int, int, int, int, int, int*, int*)` | 0x11cdc8 | 376 | tu_11cdc8.cpp |
+| `sdCardSpace[abi:cxx11]()` | 0x11cf40 | 600 | tu_11cdc8.cpp |
+| `sdCardFreeMB()` | 0x11d198 | 332 | tu_11cdc8.cpp |
+| `isMounted(char const*)` | 0x11d2e4 | 220 | tu_11cdc8.cpp |
+| `sdCardMounted()` | 0x11d3c0 | 32 | tu_11cdc8.cpp |
+| `moduleLoaded(char const*)` | 0x11d3e0 | 240 | tu_11cdc8.cpp |
+| `isSpinand()` | 0x11d4d0 | 52 | tu_11cdc8.cpp |
+| `fileExists(char const*, char const*, int)` | 0x11d504 | 400 | tu_11cdc8.cpp |
+| `loadPlatformPaths()` | 0x11d694 | 2316 | tu_11cdc8.cpp |
+| `dualPartition()` | 0x11dfa0 | 140 | tu_11cdc8.cpp |
+| `copyNeoGeo(char const*)` | 0x11e02c | 196 | tu_11cdc8.cpp |
+| `platformPath(int)` | 0x11e0f0 | 304 | tu_11cdc8.cpp |
+| `verifyGameList(char const*, char const*)` | 0x11e220 | 140 | tu_11cdc8.cpp |
+| `mountP2Ext()` | 0x11e2ac | 228 | tu_11cdc8.cpp |
+| `removeAllDBFiles()` | 0x11e390 | 5028 | tu_11cdc8.cpp |
+| `removeEmulatorConfigs()` | 0x11f734 | 92 | tu_11cdc8.cpp |
+| `initSdCardFolders()` | 0x11f790 | 2072 | tu_11cdc8.cpp |
+| `swapSize()` | 0x11ffa8 | 180 | tu_11cdc8.cpp |
+| `enableSwap()` | 0x12005c | 248 | tu_11cdc8.cpp |
+| `maxCpuMHz()` | 0x120154 | 140 | tu_11cdc8.cpp |
+| `memoryMB()` | 0x1201e0 | 176 | tu_11cdc8.cpp |
+| `removeMax(std::__cxx11::list<int, std::allocator<int> >*)` | 0x120290 | 276 | tu_11cdc8.cpp |
+| `removeMin(std::__cxx11::list<int, std::allocator<int> >*)` | 0x1203a4 | 288 | tu_11cdc8.cpp |
+| `addRecent(std::__cxx11::list<RecentItem, std::allocator<RecentItem> >*, char const*, char const*, char const*, char const*, int, bool)` | 0x1204c4 | 724 | tu_11cdc8.cpp |
+| `removeRecent(std::__cxx11::list<RecentItem, std::allocator<RecentItem> >*, char const*)` | 0x120798 | 264 | tu_11cdc8.cpp |
+| `loadRecentList(std::__cxx11::list<RecentItem, std::allocator<RecentItem> >*)` | 0x1208a0 | 596 | tu_11cdc8.cpp |
+| `saveRecentList(std::__cxx11::list<RecentItem, std::allocator<RecentItem> >*)` | 0x120af4 | 812 | tu_11cdc8.cpp |
+| `clearRecent(std::__cxx11::list<RecentItem, std::allocator<RecentItem> >*)` | 0x120e20 | 56 | tu_11cdc8.cpp |
+| `removeApp(std::vector<AppInfo, std::allocator<AppInfo> >*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)` | 0x120e58 | 296 | tu_11cdc8.cpp |
+| `findEmuByLaunch(std::vector<EmuInfo, std::allocator<EmuInfo> >*, char const*)` | 0x120f80 | 244 | tu_11cdc8.cpp |
+| `findEmuByLabelPrefix(std::vector<EmuInfo, std::allocator<EmuInfo> >*, char const*)` | 0x121074 | 216 | tu_11cdc8.cpp |
+| `findApp(std::vector<AppInfo, std::allocator<AppInfo> >*, char const*)` | 0x12114c | 224 | tu_11cdc8.cpp |
+| `parseApp(void*, char const*, char const*, cJSON*)` | 0x12122c | 1208 | tu_11cdc8.cpp |
+| `loadConfigFolder(void*, char const*, char const*, void (*)(void*, char const*, char const*, cJSON*))` | 0x1216e4 | 628 | tu_11cdc8.cpp |
+| `loadAppFolder(std::vector<AppInfo, std::allocator<AppInfo> >*, char const*)` | 0x121958 | 64 | tu_11cdc8.cpp |
+| `removeEmu(std::vector<EmuInfo, std::allocator<EmuInfo> >*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)` | 0x121998 | 296 | tu_11cdc8.cpp |
+| `parseEmu(void*, char const*, char const*, cJSON*)` | 0x121ac0 | 2480 | tu_11cdc8.cpp |
+| `loadEmuFolder(std::vector<EmuInfo, std::allocator<EmuInfo> >*, char const*)` | 0x122470 | 64 | tu_11cdc8.cpp |
+| `parseThemeColor(char const*, char const*, SDL_Color*)` | 0x1224b0 | 260 | tu_11cdc8.cpp |
+| `parseFont(char const*, cJSON*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*, int*, SDL_Color*)` | 0x1225b4 | 440 | tu_11cdc8.cpp |
+| `parseListFont(char const*, cJSON*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*, int*, SDL_Color*, SDL_Color*, SDL_Color*)` | 0x12276c | 640 | tu_11cdc8.cpp |
+| `parseGridFont(char const*, cJSON*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*, int*, int*, int*, int*, int*, SDL_Color*, SDL_Color*)` | 0x1229ec | 908 | tu_11cdc8.cpp |
+| `parseTheme(void*, char const*, char const*, cJSON*)` | 0x122d78 | 1316 | tu_11cdc8.cpp |
+| `loadThemeFolder(std::vector<Theme, std::allocator<Theme> >*, char const*)` | 0x12329c | 64 | tu_11cdc8.cpp |
+| `findTheme(std::vector<Theme, std::allocator<Theme> >*, char const*)` | 0x1232dc | 212 | tu_11cdc8.cpp |
+| `replaceAll(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)` | 0x1233b0 | 148 | tu_11cdc8.cpp |
+| `loadTestResults(int*, char*)` | 0x123444 | 532 | tu_11cdc8.cpp |
+| `saveTestResults(int*)` | 0x123658 | 336 | tu_11cdc8.cpp |
+| `getSerial(char*)` | 0x1237a8 | 176 | tu_11cdc8.cpp |
+| `languageFontExists()` | 0x123858 | 84 | tu_11cdc8.cpp |
+| `milliseconds()` | 0x1238ac | 92 | tu_11cdc8.cpp |
+| `printSurfaceFormat(char const*, SDL_Surface*)` | 0x123908 | 304 | tu_11cdc8.cpp |
+| `loadImage(char const*, SDL_Surface*, bool)` | 0x123a38 | 184 | tu_11cdc8.cpp |
+| `loadSkinImage(char const*, char const*, char const*, SDL_Surface*, bool)` | 0x123af0 | 412 | tu_11cdc8.cpp |
+| `readTextFile(char const*, char*, int)` | 0x123c8c | 156 | tu_11cdc8.cpp |
+| `findProcess(char const*, int)` | 0x123d28 | 620 | tu_11cdc8.cpp |
 | `openThemeFont(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, char const*, char const*, int)` | 0x129f9c | 420 | tu_129f9c.cpp |
 | `loadImeImage(char const*, char const*, char const*)` | 0x12a140 | 316 | tu_129f9c.cpp |
 | `changeLanguageFonts(Theme*, int*)` | 0x12a27c | 1640 | tu_129f9c.cpp |
