@@ -74,26 +74,27 @@ addr	name	subsystem	confidence	comment
 0001d898	input_title_1d898	input	guess	
 0001d8fc	render_string_1d8fc	render	guess	
 0001d99c	ui_framework_1d99c	ui_framework	guess	
-0001d9d8	FileBrowserMenu::restorePosition	games	inferred	
-0001dae8	FileBrowserMenu::vfunc9	games	confirmed-class	
-0001db6c	FileBrowserMenu::vfunc10	games	confirmed-class	
-0001dbdc	FileBrowserMenu::vfunc16	games	confirmed-class	
-0001dc30	FileBrowserMenu::vfunc17	games	confirmed-class	
-0001dcc8	database_1dcc8	database	guess	
-0001ddf4	device_1ddf4	device	guess	
-0001de34	device_pressed_1de34	device	guess	
-0001e128	render_skin_1e128	render	inferred	
-0001e3f8	render_SDL_FreeSurface_1e3f8	render	inferred	
-0001e4e4	render_operatordelete_1e4e4	render	guess	
-0001e518	DBCachedTextMenu::onSelect	games	confirmed	
-0001e5d0	DBCachedTextMenu::vfunc11	render	confirmed-class	
-0001e76c	render_TextMenuDrawer_1e76c	render	inferred	
-0001e868	render_snprintf_1e868	render	inferred	
-0001ede4	render_operator_1ede4	render	inferred	
-0001f5e0	render_SDL_FreeSurface_1f5e0	render	inferred	
-0001f694	render_SDL_FreeSurface_1f694	render	inferred	
-0001f6f0	DBCachedTextMenu::vfunc7	render	confirmed-class	
-000204d4	DBCachedTextMenu::vfunc3	games	confirmed-class	
+0001d9d8	ListMenu::restorePosition	ui_framework	confirmed	Byte-exact slot 2 (p04): restore cur/pageStart/pageEnd if inside the list.
+0001dae8	ListMenu::vfunc9	ui_framework	confirmed	Byte-exact slot 9 (p04): next item, wraps to 0.
+0001db6c	ListMenu::vfunc10	ui_framework	confirmed	Byte-exact slot 10 (p04): previous item, wraps to the last.
+0001dbdc	ListMenu::vfunc16	ui_framework	confirmed	Byte-exact slot 16 (p04): six items up.
+0001dc30	ListMenu::vfunc17	ui_framework	confirmed	Byte-exact slot 17 (p04): six items down.
+0001dcc8	ListMenu::recordKey	ui_framework	confirmed	Byte-exact (p04): history (+0x3c) of a key repeated within 200 ms, time in +0x38.
+0001ddf4	ListMenu::keyRepeating	ui_framework	confirmed	Byte-exact (p04): history.size() > 25 (held key scrolls by six).
+0001de34	ListMenu::vfunc3	ui_framework	confirmed	Byte-exact slot 3 key input (p04): 1/4 -> onSelect, 2/3 -> 1, up/down move, left/right page or return 5/6, 10/11 returned, else slot 15.
+0001e128	TextMenuDrawer::TextMenuDrawer	ui_framework	confirmed	Byte-exact (p04): (bool noSelBg, bool stripes, int rows, const char *background).
+0001e3f8	TextMenuDrawer::~TextMenuDrawer	ui_framework	confirmed	Byte-exact (p04).
+0001e4e4	TextMenuDrawer::~TextMenuDrawer_D0	ui_framework	confirmed	Byte-exact deleting dtor (p04).
+0001e518	TextMenuDrawer::vfunc4	ui_framework	confirmed	Byte-exact onSelect shared by text menus (p04): getItem(cur)->action->execute(item), -1 if none or negative.
+0001e5d0	TextMenuDrawer::vfunc11	ui_framework	confirmed	Byte-exact slot 11 (p04): reload selection background and favourite mark after a theme change.
+0001e76c	TextMenuDrawer::makeSelectedBackground	ui_framework	confirmed	Byte-exact (p04): copy a surface into a new 32-bit RGBA surface; no caller found.
+0001e868	drawListNumber	render	confirmed	Byte-exact (p04): draw n (<=9999, %04d) with g_listNumber digits over g_numberBg, else text; called by GameDetailWindow::draw.
+0001ec00	truncateUtf8	render	confirmed	Byte-exact (p04): cut a UTF-8 string to a width (ASCII 1, other 1.5) and add dots; unreferenced; missed by Ghidra export.
+0001ede4	TextMenuDrawer::drawHighlighted	ui_framework	confirmed	Byte-exact (p04): row label with the pinyinFind search match drawn in the highlight colour.
+0001f5e0	TextMenuDrawer::setBackground	ui_framework	confirmed	Byte-exact (p04): load a skin image into +0x54 and remember it; no caller found.
+0001f694	TextMenuDrawer::freeSelectedBackground	ui_framework	confirmed	Byte-exact (p04): no caller found.
+0001f6f0	TextMenuDrawer::vfunc7	ui_framework	confirmed	Byte-exact draw (p04): page clamp, row/selection backgrounds, icon, highlighted label or thumbnail + two lines, favourite mark.
+000204d4	TextMenuDrawer::vfunc3	ui_framework	confirmed	Byte-exact slot 3 (p04): ListMenu::vfunc3().
 00020500	TextMenu::ctor_or_dtor_20500	ui_framework	likely	
 00020570	TextMenu::dtor	ui_framework	confirmed	
 000205c4	TextMenu::deletingDtor	ui_framework	confirmed	
