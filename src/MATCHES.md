@@ -79,6 +79,27 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `TrimusWindow::dump()` | 0x1d898 | 100 | tu_015b20.cpp |
 | `ListMenu::ListMenu(bool)` | 0x1d8fc | 160 | tu_015b20.cpp |
 | `ListMenu::setRect(SDL_Rect*)` | 0x1d99c | 60 | tu_015b20.cpp |
+| `ListMenu::restorePosition(int, int, int)` | 0x1d9d8 | 272 | tu_015b20.cpp |
+| `ListMenu::vfunc9()` | 0x1dae8 | 132 | tu_015b20.cpp |
+| `ListMenu::vfunc10()` | 0x1db6c | 112 | tu_015b20.cpp |
+| `ListMenu::vfunc16()` | 0x1dbdc | 84 | tu_015b20.cpp |
+| `ListMenu::vfunc17()` | 0x1dc30 | 152 | tu_015b20.cpp |
+| `ListMenu::recordKey(int)` | 0x1dcc8 | 300 | tu_015b20.cpp |
+| `ListMenu::keyRepeating()` | 0x1ddf4 | 64 | tu_015b20.cpp |
+| `ListMenu::vfunc3()` | 0x1de34 | 756 | tu_015b20.cpp |
+| `TextMenuDrawer::TextMenuDrawer(bool, bool, int, char const*)` | 0x1e128 | 720 | tu_015b20.cpp |
+| `TextMenuDrawer::~TextMenuDrawer()` | 0x1e3f8 | 236 | tu_015b20.cpp |
+| `TextMenuDrawer::~TextMenuDrawer() (deleting)` | 0x1e4e4 | 52 | tu_015b20.cpp |
+| `TextMenuDrawer::vfunc4()` | 0x1e518 | 184 | tu_015b20.cpp |
+| `TextMenuDrawer::vfunc11()` | 0x1e5d0 | 412 | tu_015b20.cpp |
+| `TextMenuDrawer::makeSelectedBackground(SDL_Surface*)` | 0x1e76c | 252 | tu_015b20.cpp |
+| `drawListNumber(int, SDL_Rect*, SDL_Surface*, void*)` | 0x1e868 | 920 | tu_015b20.cpp |
+| `truncateUtf8(char*, int, int)` | 0x1ec00 | 484 | tu_015b20.cpp |
+| `TextMenuDrawer::drawHighlighted(SDL_Surface*, void*, SDL_Rect, char const*, SDL_Color, int, bool, char const*, char const*)` | 0x1ede4 | 2044 | tu_015b20.cpp |
+| `TextMenuDrawer::setBackground(char const*)` | 0x1f5e0 | 180 | tu_015b20.cpp |
+| `TextMenuDrawer::freeSelectedBackground(bool)` | 0x1f694 | 92 | tu_015b20.cpp |
+| `TextMenuDrawer::vfunc7(SDL_Surface*)` | 0x1f6f0 | 3556 | tu_015b20.cpp |
+| `TextMenuDrawer::vfunc3()` | 0x204d4 | 44 | tu_015b20.cpp |
 | `MenuWindow::MenuWindow(int, int, ListMenu*)` | 0x2e6d4 | 676 | tu_015b20.cpp |
 | `MenuWindow::~MenuWindow() (complete)` | 0x2ec3c | 316 | tu_015b20.cpp |
 | `MenuWindow::~MenuWindow() (deleting)` | 0x2ed78 | 52 | tu_015b20.cpp |

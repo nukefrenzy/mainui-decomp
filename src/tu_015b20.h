@@ -366,7 +366,7 @@ SDL_Surface *loadThumbnail(const char *path, int w, int h);     // 0x1cee0
 std::string makeThumbPath(std::string *game, const char *img);  // 0x1d318
 // createSurface 0x1d720 and isFavourite 0x1b210 are declared with p02 above.
 // p04
-int drawListNumber_1e868(SDL_Surface *dst, SDL_Rect *rect, int a, int b); // 0x1e868  unverified
+int drawListNumber(int n, SDL_Rect *rect, SDL_Surface *dst, TTF_Font *font); // 0x1e868
 // p05
 char *database_strlen_20b1c(char *s);                           // 0x20b1c  unverified
 int database_lang_22d90(int a, int b, int c, int d, char *buf, size_t size); // 0x22d90  unverified

@@ -260,6 +260,66 @@ prototypes, menus, workers, windows, then `static_assert`s on every size).
   UTF-8 string to a width and appends "..."), 0x25c68 (p06, returns `g_iconFont`, stored in
   `IconMenu::fontFn`) and 0x37760 (p11, returns `g_smallFont`, passed to `setFontFn` in `createMenu`).
 
+## p04 findings (0x1d9d8–0x20500, done)
+
+All 21 functions match with `matchfn` (11,048 bytes, exactly the range, including the unexported
+`truncateUtf8` 0x1ec00, 484 bytes). p03 was written in parallel, so the body prefix was not checked
+past p02; it should run straight through p04 once p03 is merged.
+
+**How a selected text-menu item becomes an Action.** Every text menu (TextMenu, DBCachedTextMenu,
+MultiDBCachedTextMenu, the settings/theme/language/colour menus) inherits:
+1. key input `ListMenu::vfunc3` 0x1de34 (`TextMenuDrawer::vfunc3` 0x204d4 only forwards to it):
+   `key = handleGlobalInput(0)`, `recordKey(key)`; keys 1 and 4 (A) print `"a pressed at %dms"` and
+   return `vfunc4()`; 2/3 return 1; 10/11 are returned as they are; 5/6 move up/down (by six once
+   a key has repeated more than 25 times within 200 ms each, `keyRepeating`), 12/13 page by six;
+   7/8 move when `flag08` is set (IconMenu) and otherwise return 5/6 to the window; any other key goes
+   to slot 15 (`vfunc15(key)`, -1 in ListMenu). Everything else returns -1.
+2. onSelect `TextMenuDrawer::vfunc4` 0x1e518: `item = (TextItem *)getItem(cur)`; if the item has an
+   `action` (+0x18), return `item->action->execute(item)` when it is >= 0, else -1. So an Action's
+   `execute` gets its own TextItem as `param`, and its return code (4 popup queued, 1 list edited,
+   -1 nothing / window pushed directly; see p02) goes back from `handleInput` to the window.
+
+**TextMenuDrawer.** Ctor `(bool noSelectedBg, bool stripes, int rows, const char *background)`:
+loads the selection background (`skin/bg-list-s.png` unless given) and the favourite mark, sets
+`rect` = {0, 60, 640, 360}, row height 60. `fieldC4` is the rows per page, `flagC1` draws
+`g_listStripe` between rows, `flagC0` passes "selected" as the text shadow flag. Draw (0x1f6f0)
+clamps `pageStart/pageEnd` around `cur`, then draws per row: `surface48` (row background, never set
+here), the selection background, `surface54` (set only by `setBackground` 0x1f5e0, no caller found),
+the item icon (`TextItem::value`, an `SDL_Surface *`), and the label through `drawHighlighted`
+0x1ede4 (search `str18` matched with `pinyinFind` 0x143cf4 against `str40`, the pinyin initials,
+else the label; labels over 48 bytes are cut to 64 bytes in `shortLabel` +0x5d). Items with
+`flag24` show a 71x71 thumbnail (`field70`, loaded once from `str58` by `loadImage`), the label
+and `str28` below in `g_selectedColor`. A null item shows `languageString(0x4c)`.
+
+**-O0 idioms.**
+- `TextMenuDrawer` redeclares `getItem` and `count` as pure virtuals: a call through the inherited
+  ListMenu declaration evaluates `this` before the arguments and does not match (0x1e518, 0x1f6f0).
+- `bool && (i == cur)` passed as an argument: the original is `flagC0 ? i == cur : false`.
+- `if (field70 == NULL) if (str58.length() != 0)` (nested): the `&&` form materializes the whole
+  condition.
+- A `struct timeval` declared in a case body without braces (braces add a `nop`); `int now =
+  milliseconds(); if ((unsigned long)(now - field38) < 200)` (an `unsigned long now` adds a `mov`).
+- `int i` against `strlen()` (not `unsigned`) in `drawListNumber`; `strlen(text) > start - text + len`
+  (strlen first); `sr.x = (short)x + sr.w + 20`.
+- Stack order follows declaration order: `int w, h;` before `SDL_Rect r = rect;`; in the draw, `sr`,
+  `color`, `dr` are declared at function scope in that order, and an unused `int size = 71` is kept.
+
+**Tail.** `recordKey` is the first user of `std::vector<int>` `size`/`operator[]`/`push_back`/`clear`
+(0x3ba0c, 0x3ba44, 0x3ba7c, 0x3bb00); `<sys/time.h>` is included in p04.inc for `gettimeofday`.
+
+**Shared declaration changes.**
+- `ListMenu.h`: slot 2 parameter names; non-virtual `recordKey`/`keyRepeating`; `field38` kept
+  (commented). TextMenuDrawer (owned): `field48/50/54` -> `surface48`, `favoriteMark`, `surface54`
+  (all `SDL_Surface *`), `raw5d` -> `shortLabel`, pure `getItem`/`count` redeclared, new non-virtual
+  `makeSelectedBackground`, `drawHighlighted`, `setBackground`, `freeSelectedBackground`.
+- `FileBrowserCache.h` (TextItem, p06): `value` (+0x20) and `field70` (+0x70) retyped from `int`
+  to `SDL_Surface *`, names kept; `struct SDL_Surface;` forward declaration added. The 0x25510 ctor
+  still declares `int value` (p06 to settle).
+- `tu_015b20.h`: `drawListNumber_1e868(SDL_Surface *, SDL_Rect *, int, int)` ->
+  `drawListNumber(int n, SDL_Rect *rect, SDL_Surface *dst, TTF_Font *font)` (p10's caller).
+- Part-local in p04.inc: `g_listNumberColor` 0x18228c, `g_highlightColor` 0x1822b0,
+  `SDL_CreateRGBSurface`, `TTF_SizeText`, `loadImage` 0x123a38, `pinyinFind` 0x143cf4.
+
 ## Checking a part on its own
 
 `matchfn` works per function in a partial file, as long as it compiles (declare what other parts
