@@ -2,8 +2,16 @@
 // loop and createMenu. Each part file in src/tu_015b20/ adds only the declarations it needs here.
 #pragma once
 #include <stdio.h>
+#include <unistd.h>
 #include "TrimusWindow.h"
 #include "MenuWindow.h"
+#include <list>
+#include "Action.h"
+#include "ConfigTypes.h"
+#include "MultiDBCachedTextMenu.h"   // EmuInfo
+#include "ListMenu.h"
+#include "FileBrowserCache.h"
+#include "ImeWindow.h"
 
 // p01
 #include <string>
@@ -197,6 +205,130 @@ public:
 };
 void writeCmdToRun(const char *cmd);        // 0x17fc0
 void drawBackground(SDL_Surface *dst);      // 0x17450
+
+// p02: actions. Inline ctors/dtors sit in the tail at 0x3984c-0x3a678, in this declaration order
+// (EmuAction and GeneralAction are declared with p01 above, DeleteRomAction belongs to p03; FileAction is in FileBrowserCache.h).
+// Every class here inherits Action's slots 3/4 (0x397fc returns -1, 0x39828 returns 0) except AppAction.
+struct cJSON;
+extern "C" {
+    cJSON *cJSON_CreateObject();
+    cJSON *cJSON_AddStringToObject(cJSON *, const char *, const char *);
+    cJSON *cJSON_AddNumberToObject(cJSON *, const char *, double);
+    char *cJSON_PrintUnformatted(const cJSON *);
+    void cJSON_Delete(cJSON *);
+}
+int clearRecent(std::list<RecentItem> *list);                // 0x120e20 (tu_11cdc8)
+bool isFavourite(const char *label, FILE *f, const char *rompath); // 0x1b210 (p03)
+
+// p02 render helpers (0x18dd4-0x19acc): busy animation while a background job runs. g_launchCmd
+// doubles as the counter text buffer, g_titleFont/g_wifiEmptyColor/g_background are p01's globals.
+extern "C" void SDL_Delay(unsigned int ms);
+extern volatile int g_busy;                                         // 0x181908  animation runs while set
+extern volatile int g_progressCur;                                  // 0x18190c
+extern volatile int g_progressTotal;                                // 0x181910
+extern SDL_Color g_progressColor;                            // 0x1822a0
+int digitCount(int n);                                       // 0x18dd4
+extern "C" void SDL_FreeSurface(SDL_Surface *s);
+SDL_Surface *createSurface(int w, int h);                    // 0x1d720 (p03)
+// Argument of the busy-screen thread (SDL_CreateThread from IconMenu::onSelect, createMenu, ...).
+struct BusyData {
+    const char *title;      // "sdata->title"
+    int type;
+};
+int busyScreenThread(void *arg);                             // 0x193a8
+int loadingScreenThread(void *arg);                          // 0x198a8
+
+class AppAction : public Action {
+public:
+    AppAction(AppInfo *app, bool detail, int result) : Action(result) { this->app = app; this->detail = detail; } // 0x3984c
+    virtual ~AppAction() {}
+    virtual int execute(void *param);                        // 0x18c54
+    virtual int progress(int *item, int *arg);               // 0x18c94, opens the detail window
+    virtual int finished() { return 1; }                     // 0x39924
+    AppInfo *app;       // +0x08
+    bool detail;        // +0x0c
+};
+// Unnamed base (ctor 0x39c8c, vtable 0x1546e0) of the actions that reload a list afterwards.
+class MenuAction : public Action {
+public:
+    MenuAction(ListMenu *menu, int result) : Action(result) { this->menu = menu; field0c = 0; }
+    virtual ~MenuAction() {}
+    ListMenu *menu;     // +0x08
+    int field0c;        // +0x0c
+};
+class ClearFavoriteAction : public MenuAction {
+public:
+    ClearFavoriteAction(ListMenu *menu, int result) : MenuAction(menu, result) {} // 0x39e18
+    virtual ~ClearFavoriteAction() {}
+    virtual int execute(void *param);                        // 0x19f64
+};
+class ClearRecentAction : public MenuAction {
+public:
+    ClearRecentAction(ListMenu *menu, int result) : MenuAction(menu, result) {} // 0x39ed4
+    virtual ~ClearRecentAction() {}
+    virtual int execute(void *param);                        // 0x19fd8
+};
+// Unnamed base (ctor 0x39f90, vtable 0x1546c4) of the actions on one list item.
+class ItemAction : public Action {
+public:
+    ItemAction(TextItem *item, int result) : Action(result) { this->item = item; }
+    virtual ~ItemAction() {}
+    TextItem *item;     // +0x08
+};
+class AddFavoriteAction : public ItemAction {
+public:
+    AddFavoriteAction(TextItem *item, int result) : ItemAction(item, result) {} // 0x3a054
+    virtual ~AddFavoriteAction() {}
+    virtual int execute(void *param);                        // 0x1a02c
+};
+class RemoveFavoriteAction : public ItemAction {
+public:
+    RemoveFavoriteAction(TextItem *item, int result) : ItemAction(item, result) {} // 0x3a110
+    virtual ~RemoveFavoriteAction() {}
+    virtual int execute(void *param);                        // 0x19acc
+};
+class SearchAction : public Action {
+public:
+    SearchAction(int arg, int id, void *emu) : Action(-1) { this->arg = arg; this->id = id; this->emu = emu; } // 0x3a24c
+    virtual ~SearchAction() {}
+    virtual int execute(void *param);                        // 0x19b04
+    int arg;            // +0x08
+    int id;             // +0x0c  menu id of the result window
+    void *emu;          // +0x10
+};
+class GlobalSearchAction : public Action {
+public:
+    GlobalSearchAction() : Action(-1) {}                     // 0x3a32c
+    virtual ~GlobalSearchAction() {}
+    virtual int execute(void *param);                        // 0x19c18
+};
+class PopupSearchIME : public Action {
+public:
+    PopupSearchIME(int arg, int id, void *emu) : Action(-1) { this->arg = arg; this->id = id; this->emu = emu; } // 0x3a3dc
+    virtual ~PopupSearchIME() {}
+    virtual int execute(void *param);                        // 0x19d24
+    int arg;            // +0x08
+    int id;             // +0x0c
+    void *emu;          // +0x10
+};
+class PopupDialogAction : public Action {
+public:
+    PopupDialogAction(int title, int text, bool flag, Action *action) : Action(-1) { this->title = title; this->text = text; this->flag = flag; this->action = action; } // 0x3a4bc
+    virtual ~PopupDialogAction() {}
+    virtual int execute(void *param);                        // 0x19dc0
+    int title;          // +0x08
+    int text;           // +0x0c
+    bool flag;          // +0x10
+    Action *action;     // +0x14  run by the dialog
+};
+class PopupProgressAction : public Action {
+public:
+    PopupProgressAction(int title, Action *action) : Action(-1) { this->title = title; this->action = action; } // 0x3a5a8
+    virtual ~PopupProgressAction() {}
+    virtual int execute(void *param);                        // 0x19e44
+    int title;          // +0x08
+    Action *action;     // +0x0c
+};
 
 // p09
 extern "C" void SDL_FreeSurface(SDL_Surface *s);

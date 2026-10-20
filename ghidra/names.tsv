@@ -34,11 +34,11 @@ addr	name	subsystem	confidence	comment
 0001897c	EmuAction::execute	actions	confirmed	
 00018b00	EmuAction::vfunc3	actions	confirmed-class	
 00018c54	AppAction::execute	actions	confirmed	
-00018c94	AppAction::vfunc3	actions	confirmed-class	
-00018dd4	render_18dd4	render	guess	
-00018e3c	render_SDL_Delay_18e3c	render	inferred	
-000193a8	render_sdata_193a8	render	inferred	
-000198a8	render_skin_198a8	render	inferred	
+00018c94	AppAction::progress	actions	confirmed	Byte-exact Action slot 3: opens GameDetailWindow (0x9c) for the selected TextItem when the detail flag is set; 0 or -1.
+00018dd4	digitCount	render	confirmed	Byte-exact decimal digit count; field width for the busy animation's cur/total text.
+00018e3c	animateBusy	render	confirmed	Byte-exact four-dot busy animation (28 ms frames, step every 5) with optional cur/total counter until g_busy (volatile int 0x181908) clears.
+000193a8	busyScreenThread	render	confirmed	Byte-exact SDL thread body: window frame, status bar, dimmed screen, then pop-bg popup with animateBusy; arg {title, type}.
+000198a8	loadingScreenThread	render	confirmed	Byte-exact SDL thread body: background, text 0x4b, animateBusy below it.
 00019acc	RemoveFavoriteAction::execute	ui_framework	confirmed	
 00019b04	SearchAction::execute	games	confirmed	
 00019c18	GlobalSearchAction::execute	games	confirmed	

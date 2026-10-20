@@ -9,6 +9,7 @@ class ListMenu;   // IconMenu, TextMenu, FileBrowserMenu, ... (+0x0c current ite
 
 class MenuWindow : public TrimusWindow {
 public:
+    MenuWindow(int titleLabelId, int id, void *emuEntry);    // 0x2e424 (by menu id)
     MenuWindow(int titleLabelId, int id, ListMenu *menu);    // 0x2e6d4
     virtual ~MenuWindow();                                    // 0x2ec3c (D1), 0x2ed78 (D0)
     MenuWindow(const char *path, int id, void *emuEntry);    // 0x2e978 (ROM folder)
@@ -20,6 +21,7 @@ public:
     virtual int  restoreState(cJSON *obj);       // 0x2efcc
     virtual void update();                       // 0x2fb14
     void setStrB4(const std::string &s) { strB4 = s; }   // 0x3aafc, inline
+    void setPath(const std::string &p) { path = p; }   // 0x3ab30, inline (search string for ROM lists)
 
     ListMenu    *menu;            // +0x0c  not freed by the window
     int          savedCurPos;     // +0x10  restored into the list on show

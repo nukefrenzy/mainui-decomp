@@ -12,6 +12,11 @@ classes = json.load(open(f"{out}/classes.json"))
 
 M = {
     "00015b20": ("keyEventName", "input", "confirmed", "Byte-exact key/event code to name switch (key_none..key_hotkey4, event_battery/hotplug/notify, key_max_key); no caller; missed by Ghidra export."),
+    "00018c94": ("AppAction::progress", "actions", "confirmed", "Byte-exact Action slot 3: opens GameDetailWindow (0x9c) for the selected TextItem when the detail flag is set; 0 or -1."),
+    "00018dd4": ("digitCount", "render", "confirmed", "Byte-exact decimal digit count; field width for the busy animation's cur/total text."),
+    "00018e3c": ("animateBusy", "render", "confirmed", "Byte-exact four-dot busy animation (28 ms frames, step every 5) with optional cur/total counter until g_busy (volatile int 0x181908) clears."),
+    "000193a8": ("busyScreenThread", "render", "confirmed", "Byte-exact SDL thread body: window frame, status bar, dimmed screen, then pop-bg popup with animateBusy; arg {title, type}."),
+    "000198a8": ("loadingScreenThread", "render", "confirmed", "Byte-exact SDL thread body: background, text 0x4b, animateBusy below it."),
     "0004c418": ("ringAt", "container", "confirmed", "Byte-exact indexed access to a circular singly linked list; missed by Ghidra export."),
     "0004c7a8": ("ringCount", "container", "confirmed", "Byte-exact circular-list count; missed by Ghidra export."),
     # program entry and lifecycle

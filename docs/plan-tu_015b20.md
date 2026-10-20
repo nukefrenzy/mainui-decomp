@@ -102,6 +102,62 @@ caller moves it into the header and points its `matches.tsv` row at `tu_015b20.c
 `render_SDL_Flip_15d00`. `scripts/run_units.sh` lists the unit in `PARTIAL` and runs it body-only:
 a short prefix is reported, only a compile error fails. Remove it from `PARTIAL` in phase 3.
 
+## p02 findings (0x18c54–0x1a44c, done)
+
+All 16 functions match with `matchfn` (6,136 bytes, exactly the range). Rebased on p01:
+`unitcheck --body-only` now reports the prefix 0x15b20–0x1a44c (47 whole functions); the next
+function is `DeleteRomAction::execute` (p03).
+
+**Functions.** `AppAction::execute`, `AppAction::progress` (slot 3), then four render helpers that
+are not actions: `digitCount` 0x18dd4, `animateBusy` 0x18e3c, `busyScreenThread` 0x193a8,
+`loadingScreenThread` 0x198a8; then `execute` of RemoveFavorite, Search, GlobalSearch,
+PopupSearchIME, PopupDialog, PopupProgress, General, ClearFavorite, ClearRecent, AddFavorite.
+
+**How actions execute.** `Action` (`src/Action.h`) is `{vtable, int result}`; `result` (+4) is
+really a constructor argument whose meaning varies (AppAction: passed to the launcher;
+AddFavoriteAction: the window id it was opened from). Slots: 2 `execute(void *param)`,
+3 `progress(int *, int *)`, 4 `finished()`. Slots 3/4 are inline in `Action` itself
+(0x397fc returns -1, 0x39828 returns 0): every action here shares them, except `AppAction`
+(slot 3 opens the detail window, slot 4 returns 1). Return codes seen (matching the window
+`handleInput` codes in `TrimusWindow.h`):
+
+| Action | Fields | execute does | returns |
+| --- | --- | --- | --- |
+| `AppAction(AppInfo*, bool detail, int)` | app +8, detail +0xc | `launchApp_buildCommand(app, result)` | its result |
+| `AppAction::progress(item, arg)` | | if `detail`: `GameDetailWindow(0x54, 8, app label, item label, launch, iconSelected, arg, result, item->favorite)`, `onShow`, push on `g_windowStack` | 0, else -1 |
+| `RemoveFavoriteAction(TextItem*, int)` | item +8 | `item->removed` (+0x1e) = true | 1 |
+| `SearchAction(int, int id, void *emu)` | +8 unused, id +0xc, emu +0x10 | `MenuWindow(0x99, id, emu)` (ctor 0x2e424), `setPath(param string)`, `onShow`, push | -1 |
+| `GlobalSearchAction()` | | same with menu 0x18, no emu | -1 |
+| `PopupSearchIME(int, int, void*)` | as SearchAction | `pushWindow(ImeWindow(0x99, new SearchAction(...), 0x99))` | 4 |
+| `PopupDialogAction(int, int, bool, Action*)` | title +8, text +0xc, flag +0x10, action +0x14 | `pushWindow(DialogWindow(title, text, flag, action))` (0x34 bytes) | 4 |
+| `PopupProgressAction(int, Action*)` | +8, +0xc | `ProgressDialog(title, action)` (0x3c), `onShow`, `pushWindow` | 4 |
+| `GeneralAction(int, int (*)(void*), void*)` | fn +8, arg +0xc, verbose +0x10 | `fn(arg)` | fn's result, -1 if none |
+| `ClearFavoriteAction(ListMenu*, int)` | menu +8 | `unlink favourite.json`; on success `menu->vfunc13()` (reload), `sync` | 1 |
+| `ClearRecentAction(ListMenu*, int)` | menu +8 | `clearRecent(&g_recentGames)`, `menu->vfunc13()` | 1 |
+| `AddFavoriteAction(TextItem*, int win)` | item +8 | win must be 3 (apps), 5, 0x11 or 0x18 (ROM lists); appends `{label, launch, type, rompath}` (apps: no rompath, from `AppAction::app`; ROMs: from `EmuAction`, skipped if already listed via `isFavourite` 0x1b210) to favourite.json, sets `item->favorite` (+0x1d) | 1 |
+
+In short: 4 after `pushWindow` (popup queued), 1 after a list edit, -1 when the new window went
+straight onto `g_windowStack` or nothing ran. How callers act on these is for p06/p07 (`IconMenu::onSelect`). Two unnamed abstract bases (vtables with a pure slot 2):
+`MenuAction` (ctor 0x39c8c, `{ListMenu *menu, int 0}`) for DeleteRom/ClearFavorite/ClearRecent,
+and `ItemAction` (ctor 0x39f90, `{TextItem *item}`) for Add/RemoveFavorite.
+
+**Busy screens.** `busyScreenThread` and `loadingScreenThread` are thread bodies; they animate
+until `g_busy` (0x181908) clears. `busyScreenThread` is passed to `SDL_CreateThread` from
+`IconMenu::onSelect` (0x277c0), `createRomListMenu` (0x37700) and three sites in `createMenu`
+(0x37e6c-0x37f84); no `movw` reference to `loadingScreenThread` was found. `busyScreenThread` takes `{const char *title, int type}`
+("sdata"). The progress counter `g_progressCur/Total` (0x18190c/0x181910) is shown as `"%*d/%d"`.
+
+**-O0 idioms.** `g_busy` and the progress counters are `volatile int`: a plain `int` drops the
+materialized `movne/moveq/uxtb` test in `while (g_busy)` and `if (showCount && total > 0)`. In
+`busyScreenThread` the two popup rectangles must be declared at function scope (they get the slots
+before the dimming block's rectangles), and `int x;` is declared before `sdata` but assigned after it.
+
+**Header changes.** `Action.h` slots 3/4 inline and the named `TextItem` bytes (made identically by
+p01). `MenuWindow.h`: the 0x2e424 ctor `(int, int, void *emuEntry)` and inline `setPath` (0x3ab30,
+after p01's `setStrB4` 0x3aafc). `tu_015b20.h`: the p02 classes in tail declaration order; the p10
+windows, `EmuAction` and `GeneralAction` are p01's declarations, and p02 uses p01's names for the
+status-bar and text helpers and globals (`g_launchCmd` is also the counter text buffer).
+
 ## Checking a part on its own
 
 `matchfn` works per function in a partial file, as long as it compiles (declare what other parts

@@ -38,6 +38,22 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `launchApp_buildCommand(AppInfo*, int)` | 0x18560 | 1052 | tu_015b20.cpp |
 | `EmuAction::execute(void*)` | 0x1897c | 388 | tu_015b20.cpp |
 | `EmuAction::progress(int*, int*)` | 0x18b00 | 340 | tu_015b20.cpp |
+| `AppAction::execute(void*)` | 0x18c54 | 64 | tu_015b20.cpp |
+| `AppAction::progress(int*, int*)` | 0x18c94 | 320 | tu_015b20.cpp |
+| `digitCount(int)` | 0x18dd4 | 104 | tu_015b20.cpp |
+| `animateBusy(SDL_Surface*, SDL_Surface*, SDL_Rect, SDL_Rect, bool)` | 0x18e3c | 1388 | tu_015b20.cpp |
+| `busyScreenThread(void*)` | 0x193a8 | 1280 | tu_015b20.cpp |
+| `loadingScreenThread(void*)` | 0x198a8 | 548 | tu_015b20.cpp |
+| `RemoveFavoriteAction::execute(void*)` | 0x19acc | 56 | tu_015b20.cpp |
+| `SearchAction::execute(void*)` | 0x19b04 | 276 | tu_015b20.cpp |
+| `GlobalSearchAction::execute(void*)` | 0x19c18 | 268 | tu_015b20.cpp |
+| `PopupSearchIME::execute(void*)` | 0x19d24 | 156 | tu_015b20.cpp |
+| `PopupDialogAction::execute(void*)` | 0x19dc0 | 132 | tu_015b20.cpp |
+| `PopupProgressAction::execute(void*)` | 0x19e44 | 136 | tu_015b20.cpp |
+| `GeneralAction::execute(void*)` | 0x19ecc | 152 | tu_015b20.cpp |
+| `ClearFavoriteAction::execute(void*)` | 0x19f64 | 116 | tu_015b20.cpp |
+| `ClearRecentAction::execute(void*)` | 0x19fd8 | 84 | tu_015b20.cpp |
+| `AddFavoriteAction::execute(void*)` | 0x1a02c | 1056 | tu_015b20.cpp |
 | `TrimusWindow::TrimusWindow(int titleLabelId, int id)` | 0x1d7dc | 84 | tu_015b20.cpp |
 | `TrimusWindow::~TrimusWindow()` | 0x1d830 | 52 | tu_015b20.cpp |
 | `MenuWindow::MenuWindow(int, int, ListMenu*)` | 0x2e6d4 | 676 | tu_015b20.cpp |
