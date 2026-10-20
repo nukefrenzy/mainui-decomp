@@ -14,9 +14,8 @@ first; this file only adds what is different about a unit this size.
 
 - 553 tail functions are known `std::` template shapes and come free. The other ~240 are inline class
   methods (getters, empty virtuals, inline ctors/dtors) from the class headers.
-- Already matched: `writeCmdToRun`, the `TrimusWindow` and `MenuWindow` ctors/dtors (body), and
-  `TrimusWindow::animateIn/animateOut/getId` (tail).
-- 0x15b20–0x15d00 has no known function starts (Ghidra missed them). Disassemble it first.
+- Already matched: `keyEventName`, `writeCmdToRun`, the `TrimusWindow` and `MenuWindow` ctors/dtors
+  (body), and `TrimusWindow::animateIn/animateOut/getId` (tail). See "Skeleton findings" below.
 
 ## Structure: one unit, several part files
 
@@ -47,13 +46,69 @@ the shared header.
   `MultiDBCachedTextMenu.h`, ...) are already used by proven units. Any change must keep
   `scripts/run_units.sh` passing. Classes whose key function is defined here get their vtable here.
 
+## Skeleton findings (phase 1, done)
+
+**Layout.** `src/tu_015b20.cpp` includes `<iostream>`, `<atomic>`, `<vector>`, `src/tu_015b20.h`,
+defines the one constructed global, then includes `src/tu_015b20/p01.inc` … `p11.inc` in order.
+Each part file starts with its range; gaps not yet written are marked `// 0x…-0x…: not written yet.`
+The part ranges above are unchanged.
+
+**The gap 0x15b20–0x15d00** is one function, missed by the Ghidra export: `keyEventName(int)`
+(480 bytes), a switch returning `"key_none"` … `"key_hotkey4"` for 0–15, `"event_battery"`,
+`"event_hotplug"`, `"event_notify"` for 18–20, `"key_max_key"` for 45 and `"event_unkown"` otherwise.
+Nothing calls it (no `bl`, no stored address). It matches with a plain `int` parameter and is now in
+p01, `ghidra/names.tsv` and `tools/manual_names.py`. `render_SDL_Flip` at 0x15d00 is the next function.
+
+**Globals with constructors.** The static init (0x3919c, called by `_GLOBAL__sub_I` at 0x39228)
+constructs only two objects:
+1. `std::ios_base::Init` at 0x180858 (so the file includes `<iostream>`);
+2. the window queue at 0x17ff3c, a `std::vector<TrimusWindow *>` (ctor 0x3b130, dtor 0x49be0, `size()`
+   0x3b790; used by `flushPendingWindows` 0x36cb8 and around 0x370e4). The skeleton calls it
+   `g_pendingWindows` and defines it before the parts. Its real position among the functions is
+   unknown; it only affects where the vector templates land in the tail, so settle it in phase 3.
+
+**Tail inline order and include order.** Inline non-template methods come first in the tail, in
+definition order, from 0x39240 to about 0x3b130, where the `std::` template instantiations begin
+(starting with the global vector's ctor). The sequence:
+
+| From | What | Suggests |
+| --- | --- | --- |
+| 0x39240 | six small leaf functions (0x39328 is missing from names.tsv), then 0x3934c `std::operator&(memory_order, __memory_order_modifier)` (48 B, same as a probe) and 0x3937c `std::atomic<bool>::load` (96 B; a default-order probe gives 100 B, unexplored) | `<atomic>` (or a header pulling it in) comes first |
+| 0x393dc | leaf ctor/dtor, dtor, deleting dtor of a memberless polymorphic class | a worker base such as `BGWorker` |
+| 0x39478 | `TrimusWindow::animateIn`, `animateOut`, `getId` (0x394c8), `getTitle` (0x394f0, calls `languageString`) | `TrimusWindow.h`; define `getId` before `getTitle` when both become inline |
+| 0x39520 | dtor (string member) + deleting dtor; getters for +0x0c/+0x10/+0x14, a getter returning a `std::string` copy, a leaf | `ListMenu.h` (current item, page start/end) |
+| 0x39678 | six `FileBrowserMenu` inline virtuals | |
+| 0x39750 | ctor/dtor/deleting-dtor triple (string member) | an item or action class |
+| 0x397fc | two inline virtuals (slots 3, 4), then inline ctor, dtor, deleting dtor of: `AppAction`, `EmuAction`, `GeneralAction`, unnamed (0x39c8c), `DeleteRomAction`, `ClearFavoriteAction`, `ClearRecentAction`, unnamed (0x39f90), `AddFavoriteAction`, `RemoveFavoriteAction`, `FileAction` (dtors only), `SearchAction`, `GlobalSearchAction`, `PopupSearchIME`, `PopupDialogAction`, `PopupProgressAction` | the action classes' header, in this declaration order (not body order) |
+| 0x3a678 | `TextMenu` vfunc8, `DBCacheWorker` ctor/dtors, `DBCachedTextMenu` vfunc8, `IconMenu` vfunc8, `DeviceInfoMenu::onSelect`, ... | menu headers |
+| 0x3ab64 | five `FloatWindow` and five `ADCInfoWindow` inline virtuals | window headers |
+| 0x3af38 | `LoadSurfaceWorker` ctor/dtors, then a few more until the templates | |
+
+So the original order is roughly: `<atomic>` → worker base → `TrimusWindow.h` → `ListMenu.h` → file
+browser → actions → menus → float/ADC windows → `LoadSurfaceWorker`. Our current headers do not
+follow this yet (`MenuWindow.h` includes `TrimusWindow.h` before `MenuHelpers.h`); the parts can
+ignore it, phase 3 arranges the includes.
+
+**Moved matches.** `keyEventName` and `writeCmdToRun` are in p01, the `TrimusWindow` ctor/dtor in p03,
+the `MenuWindow` ctor and both dtors in p09; `src/MenuWindow.cpp` and `src/writeCmdToRun.cpp` are gone.
+`animateIn`/`animateOut` are now inline in `TrimusWindow.h` (emitted here through the vtable; the
+other units still pass, their copies are kept from earlier). `getId` must also become inline, but an
+unused inline function is not emitted and its callers (0x35054 in p10; 0x37004, 0x372b8 in p11) are not
+written, so it stays matched on its own in `src/TrimusWindow.cpp` until then. Whoever writes the first
+caller moves it into the header and points its `matches.tsv` row at `tu_015b20.cpp`.
+
+**Body check.** `python3 tools/unitcheck.py src/tu_015b20.cpp --body-only` now reports
+`PREFIX 0x15b20-0x15d00 matches: 1 whole functions`, next ours `writeCmdToRun`, original
+`render_SDL_Flip_15d00`. `scripts/run_units.sh` lists the unit in `PARTIAL` and runs it body-only:
+a short prefix is reported, only a compile error fails. Remove it from `PARTIAL` in phase 3.
+
 ## Checking a part on its own
 
 `matchfn` works per function in a partial file, as long as it compiles (declare what other parts
 define). To prove a part's whole range, compile the skeleton with only parts 1..N and compare the
 body prefix. `unitcheck` already compares `.text` from the unit start. It needs a small addition,
 `--body-only` (stop after `.text`, report how far it matched), so that a growing prefix can be checked
-before the tail exists. Add that in the skeleton step.
+before the tail exists. (Added: it counts whole functions only and names the next function on both sides.)
 
 ## Parts
 

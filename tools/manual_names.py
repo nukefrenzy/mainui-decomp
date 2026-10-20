@@ -11,6 +11,7 @@ names = json.load(open(f"{out}/names.json"))
 classes = json.load(open(f"{out}/classes.json"))
 
 M = {
+    "00015b20": ("keyEventName", "input", "confirmed", "Byte-exact key/event code to name switch (key_none..key_hotkey4, event_battery/hotplug/notify, key_max_key); no caller; missed by Ghidra export."),
     "0004c418": ("ringAt", "container", "confirmed", "Byte-exact indexed access to a circular singly linked list; missed by Ghidra export."),
     "0004c7a8": ("ringCount", "container", "confirmed", "Byte-exact circular-list count; missed by Ghidra export."),
     # program entry and lifecycle
@@ -73,10 +74,10 @@ M = {
     "00017fc0": ("writeCmdToRun", "launch", "confirmed", "Writes /tmp/cmd_to_run.sh; MainUI then exits so the shell runs it."),
     "00018560": ("launchApp_buildCommand", "launch", "confirmed", "cd dir; chmod a+x; LD_PRELOAD=libpadsp.so <launch> <args>."),
     # menus and windows
-    "0002e6d4": ("MenuWindow::MenuWindow", "ui_framework", "confirmed", "(titleLabelId, id, ListMenu*). Byte-exact rewrite in MenuWindow.cpp."),
+    "0002e6d4": ("MenuWindow::MenuWindow", "ui_framework", "confirmed", "(titleLabelId, id, ListMenu*). Byte-exact rewrite in src/tu_015b20/p09.inc."),
     "0002e424": ("MenuWindow::MenuWindow_byMenuId", "ui_framework", "confirmed", "(labelId, menuId, param)"),
     "0002e978": ("MenuWindow::MenuWindow_byPath", "ui_framework", "confirmed", "(path, menuId, param)"),
-    "0002ec3c": ("MenuWindow::~MenuWindow", "ui_framework", "confirmed", "Byte-exact rewrite in MenuWindow.cpp."),
+    "0002ec3c": ("MenuWindow::~MenuWindow", "ui_framework", "confirmed", "Byte-exact rewrite in src/tu_015b20/p09.inc."),
     "0002f290": ("MenuWindow::onShow", "ui_framework", "confirmed", "Lazily builds its ListMenu: 0x18 search, 5/0x11 DB rom list, else createMenu."),
     "00027724": ("IconMenu::onSelect", "ui_framework", "confirmed", "Opens a MenuWindow for item->menuId (+0x4c); item 0x18 = global search."),
     "000256f0": ("IconMenuItem::IconMenuItem", "ui_framework", "confirmed", "(labelId@+0x40, iconFocused, iconNormal, x, y, menuId@+0x4c, param@+0x44, flag)"),

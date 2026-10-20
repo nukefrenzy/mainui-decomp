@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check a whole translation unit against MainUI, the way the linker lays it out.
 
-Usage: unitcheck.py <src/tu_xxxxxx.cpp> [--unit NAME | --at ADDR] [--end ADDR] [--verbose]
+Usage: unitcheck.py <src/tu_xxxxxx.cpp> [--unit NAME | --at ADDR] [--end ADDR] [--verbose] [--body-only]
 
 GNU ld places each object's .text first, then its template/inline COMDAT sections (.text._Z*)
 in the order they appear in the object; a COMDAT that an earlier file already contributed is
@@ -19,6 +19,9 @@ discarded. So:
    to its first identical code in the tail and listed in binary order with its object order, so an
    ordering difference shows up as "out of order" rather than as a mismatch. Identical small
    functions can be paired up wrongly there; only the walk's verdict is exact.
+--body-only checks a unit that is still being written: it compares only the object's .text from the
+unit start, reports how far it matches (the first mismatch is normally the first unwritten
+function) and ignores the tail. Exit code 0 = the whole .text matches, 1 = it stops earlier.
 Exit code 0 = whole unit matches, 1 = mismatch, 2 = error.
 """
 import argparse
@@ -42,6 +45,7 @@ ap.add_argument("--end", help="required hex end address (default: enforce the en
 ap.add_argument("--orig", default=os.path.join(ROOT, "MainUI-354-clean"))
 ap.add_argument("--flags", default="-O0 -fsigned-char")
 ap.add_argument("--verbose", action="store_true")
+ap.add_argument("--body-only", action="store_true", help="compare .text only and report the matching prefix")
 ap.add_argument("--window", type=lambda x: int(x, 0), default=0x10000, help="how far past .text to look for the tail")
 a = ap.parse_args()
 
@@ -167,6 +171,18 @@ if idx is not None:
         print(f"       original {w(TD, cur - TB + off)}  ours {w(data, off)}")
     else:
         print(f"BODY   OK  {cur:#x}-{cur + len(data):#x} ({len(data)} bytes, {len(syms.get(idx, []))} functions)")
+    if a.body_only:
+        # count whole functions only: a mismatching function can still share its prologue
+        bad = d[0] if d else len(data)
+        good = max((off for off, _, _ in syms.get(idx, []) if off <= bad), default=0) if d else len(data)
+        nfun = sum(1 for off, _, _ in syms.get(idx, []) if off < good)
+        print(f"PREFIX {cur:#x}-{cur + good:#x} matches: {nfun} whole functions, {good} of {len(data)} bytes")
+        if d:
+            orig = max((x for x in names if x <= cur + good), default=cur + good)
+            print(f"       next: ours {where(idx, good)}, original {names.get(orig, '?')} at {orig:#x}"
+                  f"{'' if orig == cur + good else f' +{cur + good - orig:#x}'}")
+        os.remove(obj)
+        sys.exit(1 if d else 0)
     cur += len(data)
 tail_lo = cur
 # every word in the window is a candidate start: names.tsv does not list every function

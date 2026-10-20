@@ -17,11 +17,16 @@ public:
     virtual void saveState(cJSON *obj) = 0;           // slot 6: called by saveWindowState (/tmp/state.json)
     virtual int  restoreState(cJSON *obj) = 0;        // slot 7: called by restoreWindowState
     virtual void update() = 0;                        // slot 8: every frame, before draw
-    virtual void animateIn(SDL_Surface *dst, FlipFn flip);   // slot 9, default empty (0x39478)
-    virtual void animateOut(SDL_Surface *dst, FlipFn flip);  // slot 10, default empty (0x394a0)
+    // Inline: both sit in tu_015b20's template/inline tail, not in its body.
+    virtual void animateIn(SDL_Surface *dst, FlipFn flip)    // slot 9, default empty (0x39478)
+    {
+    }
+    virtual void animateOut(SDL_Surface *dst, FlipFn flip)   // slot 10, default empty (0x394a0)
+    {
+    }
 
     const char *getTitle();                            // 0x394f0, languageString(titleLabelId)
-    int getId();                                      // 0x394c8
+    int getId();                                      // 0x394c8, inline in the tail; see TrimusWindow.cpp
 
 protected:
     int titleLabelId;   // +0x04  language string id for the title (e.g. 0x83 = Wi-Fi)

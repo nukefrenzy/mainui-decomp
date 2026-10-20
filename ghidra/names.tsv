@@ -2,6 +2,7 @@ addr	name	subsystem	confidence	comment
 00015a6c	misc___gmon_start___15a6c	misc	guess	
 00015a90	misc_15a90	misc	guess	
 00015abc	misc_15abc	misc	guess	
+00015b20	keyEventName	input	confirmed	Byte-exact key/event code to name switch (key_none..key_hotkey4, event_battery/hotplug/notify, key_max_key); no caller; missed by Ghidra export.
 00015d00	render_SDL_Flip_15d00	render	inferred	
 00015d24	render_TTF_RenderUTF8_Blend_15d24	render	inferred	
 00016018	render_free_16018	render	guess	

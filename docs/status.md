@@ -7,8 +7,8 @@ method: `docs/unit-workflow.md`. Update this file when a unit is proven or the p
 
 - **Goal:** complete MainUI source that rebuilds byte-exact with Arm GNU 8.2-2018.08, `-O0 -fsigned-char`,
   worked file by file (one translation unit per `src/tu_<lo>.cpp` or `.c`).
-- **Progress:** 21 whole units proven by `tools/unitcheck.py`, plus 9 single functions in
-  `tu_015b20`: 1,519 of 2,607 Miyoo functions, 246,176 of 457,584 bytes (53.80%). CI checks every match
+- **Progress:** 21 whole units proven by `tools/unitcheck.py`, plus 10 single functions in
+  `tu_015b20`: 1,520 of 2,608 Miyoo functions, 246,656 of 458,064 bytes (53.85%). CI checks every match
   and every unit on each push.
 - **Embedded libraries:** SQLite 3.30.1 and cJSON 1.7.10 rebuild byte-exact (`scripts/verify-libs.sh`);
   tiny-utf8 4.4.x is header-only and appears in the template tails of the files that use it.
@@ -121,7 +121,11 @@ unit, each in its own worktree; merge their branches into `main` one at a time.
 
 1. **tu_015b20 last:** the first file, 212 KB, about 46% of all bytes (all window/menu classes,
    actions, createMenu). It benefits from the class headers the other units produce. The original
-   "item and action wiring" question is answered inside it.
+   "item and action wiring" question is answered inside it. Plan and part ranges:
+   `docs/plan-tu_015b20.md`. The skeleton is in place: `src/tu_015b20.cpp` includes the part files
+   `src/tu_015b20/p01.inc`..`p11.inc`; check a growing body with `unitcheck --body-only`
+   (`scripts/run_units.sh` runs it that way until the unit is complete). The Ghidra export missed
+   `keyEventName` at 0x15b20 (now matched), so the function denominator rises from 2,607 to 2,608.
 
 ## Open findings and questions
 
