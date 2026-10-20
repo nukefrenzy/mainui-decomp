@@ -100,6 +100,24 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `TextMenuDrawer::freeSelectedBackground(bool)` | 0x1f694 | 92 | tu_015b20.cpp |
 | `TextMenuDrawer::vfunc7(SDL_Surface*)` | 0x1f6f0 | 3556 | tu_015b20.cpp |
 | `TextMenuDrawer::vfunc3()` | 0x204d4 | 44 | tu_015b20.cpp |
+| `TextMenu::TextMenu(bool, bool, int, char const*)` | 0x20500 | 112 | tu_015b20.cpp |
+| `TextMenu::~TextMenu()` | 0x20570 | 84 | tu_015b20.cpp |
+| `TextMenu::~TextMenu() (deleting)` | 0x205c4 | 52 | tu_015b20.cpp |
+| `TextMenu::vfunc18()` | 0x205f8 | 232 | tu_015b20.cpp |
+| `TextMenu::vfunc13()` | 0x206e0 | 52 | tu_015b20.cpp |
+| `TextMenu::getItem(int)` | 0x20714 | 136 | tu_015b20.cpp |
+| `TextMenu::vfunc12(int)` | 0x2079c | 252 | tu_015b20.cpp |
+| `TextMenu::addItem(TextItem*)` | 0x20898 | 56 | tu_015b20.cpp |
+| `TextMenu::insertSorted(TextItem*, int (*)(TextItem*, TextItem*))` | 0x208d0 | 364 | tu_015b20.cpp |
+| `TextMenu::addUnique(TextItem*)` | 0x20a3c | 224 | tu_015b20.cpp |
+| `database_strlen_20b1c(char*)` | 0x20b1c | 184 | tu_015b20.cpp |
+| `importGameList(char const*, int, char const*, sqlite3*)` | 0x20bd4 | 3140 | tu_015b20.cpp |
+| `isHiddenRomFile(EmuInfo*, char const*, char const*, int)` | 0x21818 | 1336 | tu_015b20.cpp |
+| `scanRomDir(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, EmuInfo*, char const*, bool, sqlite3*, char*, char*, int, char*, int, unsigned long*, int*)` | 0x21d50 | 3020 | tu_015b20.cpp |
+| `rebuildRomCache(EmuInfo*, int, char const*, sqlite3*)` | 0x2291c | 876 | tu_015b20.cpp |
+| `isRomFile(char const*, char const*)` | 0x22c88 | 264 | tu_015b20.cpp |
+| `database_lang_22d90(EmuInfo*, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, char*, int)` | 0x22d90 | 1416 | tu_015b20.cpp |
+| `buildRomList_23318(EmuInfo*, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*)` | 0x23318 | 560 | tu_015b20.cpp |
 | `MenuWindow::MenuWindow(int, int, ListMenu*)` | 0x2e6d4 | 676 | tu_015b20.cpp |
 | `MenuWindow::~MenuWindow() (complete)` | 0x2ec3c | 316 | tu_015b20.cpp |
 | `MenuWindow::~MenuWindow() (deleting)` | 0x2ed78 | 52 | tu_015b20.cpp |

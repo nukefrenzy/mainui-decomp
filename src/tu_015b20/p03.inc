@@ -166,7 +166,7 @@ TextMenu *buildMenu_1a924(const char *path)
                                                 true);
                         }
                     }
-                    if (item != NULL && !menu->hasItem(item)) {
+                    if (item != NULL && !menu->addUnique(item)) {
                         printf("%s is repeat\n", buf);
                         delete item;
                         repeat = true;
@@ -292,7 +292,7 @@ TextMenu *buildMenu_1b488(std::list<RecentItem> *list)
             }
             if (f != NULL && item != NULL)
                 item->favorite = isFavourite(0, f, it->label.c_str());
-            if (item == NULL || !menu->hasItem(item))
+            if (item == NULL || !menu->addUnique(item))
                 delete item;
         }
         if (f != NULL)
@@ -318,7 +318,7 @@ TextMenu *buildMenu_1bbfc(std::vector<AppInfo> *apps)
             item->flag24 = true;
             if (f != NULL)
                 item->favorite = isFavourite(0, f, (*apps)[i].label.c_str());
-            if (!menu->hasItem(item))
+            if (!menu->addUnique(item))
                 delete item;
         }
         if (f != NULL)

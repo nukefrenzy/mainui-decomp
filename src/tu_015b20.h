@@ -369,13 +369,14 @@ std::string makeThumbPath(std::string *game, const char *img);  // 0x1d318
 int drawListNumber(int n, SDL_Rect *rect, SDL_Surface *dst, TTF_Font *font); // 0x1e868
 // p05
 char *database_strlen_20b1c(char *s);                           // 0x20b1c  unverified
-int database_lang_22d90(int a, int b, int c, int d, char *buf, size_t size); // 0x22d90  unverified
-DBCachedTextMenu *buildRomList_23318(void *emu, int arg, std::string *dir,
+int database_lang_22d90(EmuInfo *emu, int arg, std::string dir, std::string search, char *buf,
+                        int size);                              // 0x22d90  arg unverified
+DBCachedTextMenu *buildRomList_23318(EmuInfo *emu, int arg, std::string *dir,
                                      std::string *search);      // 0x23318  unverified
 // p07
 void display_memset_2b5bc();                                    // 0x2b5bc
 // p08
-unsigned fileType_2cfc0(const char *name);                      // 0x2cfc0  unverified
+int fileType_2cfc0(const char *name);                           // 0x2cfc0  unverified; int (p05 tests < 0)
 // p09
 int drawPageDots_311f4(SDL_Surface *dst, int a, int b);         // 0x311f4  unverified
 // freeSurfaceCallback 0x2e318 is declared with p09's globals above.
@@ -407,9 +408,10 @@ public:
     virtual int  count() { return items.size(); }              // 0x3a6dc, inline
     virtual void vfunc12(int);                                 // 0x2079c
     virtual void vfunc13();                                    // 0x206e0
-    virtual int  vfunc18();                                    // 0x205f8 slot 18 (new)
+    virtual void vfunc18();                                    // 0x205f8 slot 18 (new)
     void addItem(TextItem *item);                              // 0x20898
-    bool hasItem(TextItem *item);                              // 0x20a3c  appends item unless its label is listed; true if added
+    void insertSorted(TextItem *item, int (*cmp)(TextItem *, TextItem *)); // 0x208d0
+    bool addUnique(TextItem *item);                            // 0x20a3c  false if the label is listed
     std::vector<TextItem *> *getItems()                        // 0x3a70c, inline
     {
         printf("TextMenu %p mItemList %p\n", this, &items);
@@ -421,7 +423,7 @@ public:
 // p06. vtable 0x153d40; sizeof 0x430 (layout parallels MultiDBCachedTextMenu).
 class DBCachedTextMenu : public TextMenuDrawer {
 public:
-    DBCachedTextMenu(const char *dbName, int arg414, int arg174, std::string *search); // 0x25240 unverified
+    DBCachedTextMenu(const char *dbName, EmuInfo *emu, int arg174, std::string search); // 0x25240; emu is stored at +0x414
     virtual ~DBCachedTextMenu();                               // 0x2540c (D0 0x254dc)
     virtual void restorePosition(int a, int cur, int c);       // 0x246f8
     virtual void *getItem(int index);                          // 0x24410
@@ -521,7 +523,7 @@ public:
     virtual int  vfunc3();                                     // 0x2a5d4
     virtual void vfunc7(SDL_Surface *dst);                     // 0x28994
     virtual void vfunc11();                                    // 0x2877c
-    virtual int  vfunc18();                                    // 0x2a6ec
+    virtual void vfunc18();                                    // 0x2a6ec
     int          field104;          // +0x104  0
     SDL_Surface *surface108;        // +0x108
     SDL_Surface *surface10c;        // +0x10c  also selectedBackground
@@ -536,7 +538,7 @@ public:
     virtual int  vfunc4() { return 0; }                        // 0x3aab0, inline
     virtual void vfunc7(SDL_Surface *dst);                     // 0x2aae4
     virtual void vfunc11();                                    // 0x2aa08
-    virtual int  vfunc18();                                    // 0x2b504
+    virtual void vfunc18();                                    // 0x2b504
     void loadInfo();                                           // 0x2b0f8  name unverified
     int          field104;          // +0x104  0
     std::string  themePath;         // +0x108
@@ -550,7 +552,7 @@ public:
     virtual int  vfunc3();                                     // 0x2c274
     virtual int  vfunc4();                                     // 0x2c73c
     virtual void vfunc7(SDL_Surface *dst);                     // 0x2b9a0
-    virtual int  vfunc18();                                    // 0x2c760
+    virtual void vfunc18();                                    // 0x2c760
     void loadItems();                                          // 0x2c824  name unverified
     SDL_Surface *surface104;        // +0x104
     SDL_Surface *surface108;        // +0x108  also selectedBackground

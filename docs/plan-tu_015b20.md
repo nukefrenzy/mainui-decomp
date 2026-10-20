@@ -166,7 +166,7 @@ the prefix 0x15b20–0x1d9d8 (75 whole functions). Next is ListMenu slot 2 at 0x
 **Functions.** `DeleteRomAction::execute` (calls `menu->vfunc12(field0c)`); favourites: `power_label_1a4bc`
 rewrites a favourites file from a `TextItem` list, `launch_label_1a75c` removes the lines whose label starts
 with a given label, `buildMenu_1a924` builds the favourites list (type 3 apps, 5/17 ROMs; rewrites the file
-when `hasItem` rejects duplicates), `isFavourite` searches `"rompath"` in a buffer or file; `buildMenu_1b488`
+when `addUnique` rejects duplicates), `isFavourite` searches `"rompath"` in a buffer or file; `buildMenu_1b488`
 (recent games), `buildMenu_1bbfc` (apps, row height 90); `display_getlcd_1bea4` (MI_DISP LCD luma/hue/
 saturation/contrast); `initAudioSettings` (keymap, volume, backlight, music volume); `refreshMenu_1c0ac`
 (deletes removed favourites, menu id 2); `restoreWindowState`/`saveWindowState` (`/tmp/state.json`,
@@ -194,12 +194,64 @@ ctor and `setRect`.
   `buildMenu_1bbfc(std::vector<AppInfo> *)`, `isFavourite(char *buf, FILE *, const char *)`,
   `setRomListPosition(..., const std::string &path, ...)`, `saveRomListPositions(const std::vector<...> *)`,
   `makeThumbPath(std::string *game, const char *img)`.
-- `TextMenu::hasItem` (p05) takes `TextItem *`: 0x20a3c appends the item unless its label is listed, true if added.
+- 0x20a3c (p05's `TextMenu::addUnique`, called `hasItem` while p03 was written) appends the item unless its label is listed, true if added.
 - `TrimusWindow.h`: `titleLabelId` and `id` are public (`saveWindowState` reads them directly).
 - `SDLTypes.h`: full `SDL_PixelFormat` (moved from `tu_11cdc8.cpp`) and `SDL_Surface::pitch`/`pixels`.
 - `scalePixels` (0x11cdc8) is declared here with `unsigned` sizes (conversion moves); its tu_11cdc8 definition
   matches with `int`, so the two prototypes mangle differently.
 - p10.inc: `GameDetailWindow(int, int)` 0x34a14, see above.
+
+## p05 findings (0x20500–0x23548, done)
+
+All 18 functions match with `matchfn` (12,360 bytes, exactly the range). p03/p04 were not merged, so
+the body prefix could not reach p05; the function sizes add up to the whole range with no gap.
+
+**TextMenu** (0x20500–0x20b1c): ctor, dtor, deleting dtor; slot 18 `vfunc18` is `void` (frees every
+item, printing `TextMenu::freeListItem`), slot 13 calls it, slot 5 `getItem`, slot 12 erases one item;
+`addItem` (push_back), `insertSorted(item, cmp)` 0x208d0 (no caller found) and `addUnique(item)`
+0x20a3c (false if an item with that label exists; was `hasItem(std::string*)`).
+
+**ROM cache** (0x20b1c–0x23548). Each emulator folder has `<path>/<name>_cache6.db` with a table
+`<name>_roms (disp, path, imgpath, type, ppath, pinyin, cpinyin)`:
+
+| Addr | Name | Does |
+| --- | --- | --- |
+| 0x20b1c | `database_strlen_20b1c` | last path component (same code as tu_1484d4's) |
+| 0x20bd4 | `importGameList(xml, arg, table, db)` | DROP/CREATE, then rows from `gamelist.xml` via rapidxml (`gameList/game/{path,name,image}`), only `.zip` or known file types; pinyin from `pinyinInitials` |
+| 0x21818 | `isHiddenRomFile(emu, path, name, hideBios)` | scan filter: `[BIOS]`, dot files, neogeo/gngeo, COPYING/LICENSE; extension list, or a save/db/png blacklist plus `.bin` with a `.cue` |
+| 0x21d50 | `scanRomDir(dir, imgDir, emu, table, sub, db, ...)` | readdir walk, one level of subfolders (type 1 rows); pinyin columns from `GetGameName("en.lang"/"ch.lang", name)` when `EmuInfo::hasCpinyin` |
+| 0x2291c | `rebuildRomCache(emu, arg, table, db)` | DROP/CREATE, then `scanRomDir(path, imagePath, ...)` in one transaction |
+| 0x22c88 | `isRomFile(name, dir)` | `countDirectoryItems` filter for the progress total |
+| 0x22d90 | `database_lang_22d90(emu, arg, dir, search, buf, size)` | open the cache, count rows (folder `ppath` or pinyin/cpinyin search); empty: `importGameList`, else `rebuildRomCache` |
+| 0x23318 | `buildRomList_23318(emu, arg, &dir, &search)` | `create_rom_browser_menu`: `DBCachedTextMenu(emu->label, emu, arg, search)`, count, `setTotal`, `open(db, name, dir or ".")` |
+
+The `arg` passed down from `createRomListMenu` is never used by these functions.
+
+**rapidxml 1.13** is now fetched by `scripts/fetch-rapidxml.sh` (pinned SHA-256, into `build/`) and
+included by p05 (with `<fstream>`, `<iterator>`, `<sys/time.h>`). All p05 rows in `matches.tsv` carry
+`deps` `rapidxml`; `run_matches.sh` now gives a file the union of its rows' deps (as `unitcheck`
+already did), so the other `tu_015b20.cpp` rows keep `-`.
+
+**-O0 idioms.**
+- `goto done;` reproduces both early exits in 0x22d90 (one after the COUNT step, one after
+  `importGameList`), including the `nop` landing blocks.
+- `if (isHiddenRomFile(...)) continue;` gives the `nop; b loop` block; `!f()` on a bool function
+  emits `eor`.
+- `if (strncasecmp(ext, ".zip", 4) != 0) { if (fileType(path) < 0) continue; }` emits the
+  materialized `lsr #31` test; the `&&` spelling does not.
+- Loop counters over `items.size()` are `int` (`movhi`); an `int` return from the scan filter adds
+  `moveq/movne`, so it is `bool`. `rfind` results are `size_t`. A size parameter passed straight to
+  `snprintf` is `int` (a `size_t` one is reloaded after the call arguments).
+- Address-taken locals (`err`, `db`, `stmt`, `timeval`) and strings get slots after the scalars, in
+  declaration order; `char *err` is the first declaration in 0x20bd4, and an uninitialized `int cost;`
+  holds its slot before `bufSize`.
+
+**Shared declaration changes.** `TextMenu::vfunc18` is `void`, so the slot-18 overrides in
+`SettingMenu` (0x2a6ec), `DeviceInfoMenu` (0x2b504) and `ColorMenu` (0x2c760) are `void` too.
+`fileType_2cfc0` returns `int` (tested `< 0`). `database_lang_22d90(EmuInfo*, int, std::string,
+std::string, char*, int)`. `buildRomList_23318(EmuInfo*, ...)`. The `DBCachedTextMenu` ctor is
+`(const char *, EmuInfo *emu, int, std::string search)` (by value; p06 should retype `field414`).
+`TextMenu::hasItem` became `insertSorted` and `addUnique`.
 
 ## Shared declarations (header pass, before p03-p11)
 

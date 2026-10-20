@@ -93,6 +93,9 @@ if flags != "-":
 if "tinyutf8" in deps:
     extra.append("-I" + subprocess.run([os.path.join(ROOT, "scripts/fetch-tinyutf8.sh")], capture_output=True,
                                        text=True, check=True).stdout.strip())
+if "rapidxml" in deps:
+    extra.append("-I" + subprocess.run([os.path.join(ROOT, "scripts/fetch-rapidxml.sh")], capture_output=True,
+                                       text=True, check=True).stdout.strip())
 
 tc = os.environ.get("MIYOO_TC", "")
 pre = os.path.join(tc, "arm-linux-gnueabihf-") if tc else "arm-linux-gnueabihf-"
