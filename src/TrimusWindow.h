@@ -20,6 +20,7 @@ public:
     virtual void animateIn(SDL_Surface *dst, FlipFn flip);   // slot 9, default empty (0x39478)
     virtual void animateOut(SDL_Surface *dst, FlipFn flip);  // slot 10, default empty (0x394a0)
 
+    const char *getTitle();                            // 0x394f0, languageString(titleLabelId)
     int getId();                                      // 0x394c8
 
 protected:

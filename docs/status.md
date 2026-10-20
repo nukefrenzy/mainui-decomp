@@ -7,14 +7,17 @@ method: `docs/unit-workflow.md`. Update this file when a unit is proven or the p
 
 - **Goal:** complete MainUI source that rebuilds byte-exact with Arm GNU 8.2-2018.08, `-O0 -fsigned-char`,
   worked file by file (one translation unit per `src/tu_<lo>.cpp` or `.c`).
-- **Progress:** 18 whole units proven by `tools/unitcheck.py`, plus 9 single functions in
-  `tu_015b20`: 1,320 of 2,605 Miyoo functions, 213,628 of 457,584 bytes (46.69%). CI checks every match
+- **Progress:** 21 whole units proven by `tools/unitcheck.py`, plus 9 single functions in
+  `tu_015b20`: 1,519 of 2,607 Miyoo functions, 246,176 of 457,584 bytes (53.80%). CI checks every match
   and every unit on each push.
 - **Embedded libraries:** SQLite 3.30.1 and cJSON 1.7.10 rebuild byte-exact (`scripts/verify-libs.sh`);
   tiny-utf8 4.4.x is header-only and appears in the template tails of the files that use it.
 
 | Proven unit | Range | What it is |
 | --- | --- | --- |
+| tu_04cb68 (C++) | 0x04cb68–0x051b5c | Hardware diagnostics: 56 written functions, constructor/destructor variants, 27 inline tail functions |
+| tu_049c3c (C++) | 0x049c3c–0x04c418 | Main program, status/hotplug/Wi-Fi callbacks: ten written functions, init pair, 93 inline/template functions |
+| tu_04c418 (C++) | 0x04c418–0x04cb68 | Ten circular singly linked-list helpers, no tail |
 | tu_11cdc8 (C++) | 0x11cdc8–0x129f9c | Shared configuration/device helpers: 56 written functions, compiler init pair, 263 inline/template functions |
 | tu_129f9c (C++) | 0x129f9c–0x12ce28 | Seven theme/font/image/sound functions, no tail |
 | tu_12ce28 (C++) | 0x12ce28–0x1302cc | File-browser directory cache and traversal: 15 body functions plus 105 inline/template functions |
@@ -91,15 +94,32 @@ vector, and the audio-fix option. The JSON `shortname` option is the field previ
 The image helper's debug flag is Boolean; earlier caller declarations have been reconciled.
 All Miyoo code after SQLite, 0x11cdc8–0x150ad8, is now covered by proven units.
 
+`tu_049c3c` matches with the default flags: 4,740 body bytes to 0x04aec0 and 5,464 tail
+bytes to 0x04c418. Its ten written functions include `main`, SIGTERM/exit handling, status and
+volume polling, the hotplug worker, and Wi-Fi callbacks. The init pair constructs the global
+recent list, app/emulator/theme vectors, default theme, and ROM-position vector. ROM-position
+records are 36 bytes (a path string and three integer indices). `loadTheme` returns Boolean;
+its shared declaration and definition are corrected without changing its matched code.
+
+`tu_04c418` matches with the default C++ flags: 1,872 bytes, ten circular-list helpers and no
+tail. The Ghidra export omitted the starts at 0x04c418 (indexed access) and 0x04c7a8 (count).
+Both are now recorded in `ghidra/names.tsv` and `tools/manual_names.py`; the function denominator
+therefore increases from 2,605 to 2,607.
+The list nodes contain a value pointer and a next pointer. Allocation, sorted/unique insertion,
+append/prepend, removal, traversal and cleanup retain their original edge-case behavior.
+
+`tu_04cb68` matches with the default flags: 19,208 body bytes to 0x051670, then 27 inline
+functions through 0x051b5c. The four zero bytes before cJSON at 0x051b60 are linker padding.
+The written functions cover USB/device keyboards, key masks, LCD colors, sound, SD-card workers,
+and the hardware-test menu. All 108 string-literal references were checked separately.
+The SD-card workers retain the original use of an uninitialized end timestamp inside the loop.
+
 ## Next units, in order
 
 Work outward from proven units: a proven neighbour fixes one boundary for free. One fresh session per
 unit, each in its own worktree; merge their branches into `main` one at a time.
 
-1. **tu_049c3c** (main program: main, signal handler, status poll), followed by
-   **tu_04c12c** (hardware test windows). Confirm their body/tail boundaries before treating
-   the draft ranges 0x049c3c–0x04c12c and 0x04c12c–0x051b60 as whole files.
-2. **tu_015b20 last:** the first file, 212 KB, about 46% of all bytes (all window/menu classes,
+1. **tu_015b20 last:** the first file, 212 KB, about 46% of all bytes (all window/menu classes,
    actions, createMenu). It benefits from the class headers the other units produce. The original
    "item and action wiring" question is answered inside it.
 

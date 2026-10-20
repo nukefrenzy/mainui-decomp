@@ -196,7 +196,7 @@ void setDefaultTheme(Theme *theme)
     theme->field140 = 0;
     theme->field148 = 0;
 }
-int loadTheme(Theme *theme, int *unusedFontSize)
+bool loadTheme(Theme *theme, int *unusedFontSize)
 {
     char filename[128];
     memset(filename, 0, 128);

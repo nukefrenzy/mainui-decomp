@@ -30,6 +30,6 @@ struct Theme {
     ThemeColor accentColor;
 };
 void setDefaultTheme(Theme *);
-int loadTheme(Theme *, int *);
+bool loadTheme(Theme *, int *);
 int freeTheme();
 int changeLanguageFonts(Theme *, int *);

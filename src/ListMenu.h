@@ -46,7 +46,9 @@ public:
     virtual int  vfunc10();                                        // 0x1db6c
     virtual int  vfunc16();                                        // 0x1dbdc
     virtual int  vfunc17();                                        // 0x1dc30
-    char        raw48[0x10];
+    int         field48;
+    SDL_Surface *selectedBackground; // +0x4c
+    char        raw50[8];
     int         field58;        // +0x58
     char        raw5c[0xf8 - 0x5c];
 };

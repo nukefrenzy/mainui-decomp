@@ -16,6 +16,7 @@
 #include <sys/time.h>
 #include <fcntl.h>
 #include "Theme.h"
+#include "ConfigTypes.h"
 #include "MultiDBCachedTextMenu.h"
 struct cJSON {
     cJSON *next,*prev,*child;
@@ -42,10 +43,6 @@ extern "C" {
     int readWholeFile(const char*,FILE*,char**);
 }
 
-struct RecentItem {
-    std::string label,launch,rompath,imgpath;
-    int type;
-};
 static_assert(sizeof(RecentItem)==100, "recent item layout");
 static_assert(sizeof(EmuInfo)==0xdc, "emulator layout");
 std::vector<std::string> g_platformPaths; // 0x182064
@@ -767,10 +764,6 @@ int clearRecent(std::list<RecentItem>*list) {
     return 0;
 }
 
-struct AppInfo {
-    std::string label,icon,iconSelected,launch,description;
-    int autoFlip,noAudioFix;
-};
 // 0x120e58
 static_assert(sizeof(AppInfo)==128, "app layout");
 int removeApp(std::vector<AppInfo>*list,const std::string&launch) {

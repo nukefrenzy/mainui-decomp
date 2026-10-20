@@ -1203,72 +1203,74 @@ addr	name	subsystem	confidence	comment
 0004c3ac	misc_4c3ac	misc	guess	
 0004c3d0	misc_4c3d0	misc	guess	
 0004c3f4	misc_4c3f4	misc	guess	
+0004c418	ringAt	container	confirmed	Byte-exact indexed access to a circular singly linked list; missed by Ghidra export.
 0004c4cc	misc_free_4c4cc	misc	guess	
 0004c558	misc_malloc_4c558	misc	guess	
 0004c730	misc_4c730	misc	guess	
 0004c76c	misc_4c76c	misc	guess	
+0004c7a8	ringCount	container	confirmed	Byte-exact circular-list count; missed by Ghidra export.
 0004c820	misc_malloc_4c820	misc	guess	
 0004c8e8	misc_malloc_4c8e8	misc	guess	
 0004c9a8	misc_free_4c9a8	misc	guess	
 0004cae0	misc_4cae0	misc	guess	
-0004cb68	input_SDL_WaitEvent_4cb68	input	inferred	
-0004cce4	SDLKeyTestWindow::ctor_or_dtor_4cce4	hardware_test	likely	
-0004cd88	SDLKeyTestWindow::handleInput	hardware_test	confirmed	
-0004cebc	SDLKeyTestWindow::vfunc11	ui_framework	confirmed-class	
-0004cfb4	render_TTF_RenderUTF8_Blend_4cfb4	render	inferred	
-0004d53c	SDLKeyTestWindow::draw	hardware_test	confirmed	
-0004d6f8	hardware_test_Failed_4d6f8	hardware_test	guess	
-0004d7cc	hardware_test_SDL_RemoveTimer_4d7cc	hardware_test	guess	
-0004d828	SDLKeyTestWindow::onHide	hardware_test	inferred	
-0004d870	SDLKeyTestWindow::onShow	hardware_test	confirmed	
-0004d894	render_4d894	render	guess	
-0004d93c	render_SDL_FreeSurface_4d93c	render	inferred	
-0004d99c	KeyTestWindow::ctor_or_dtor_4d99c	render	likely	
-0004db34	KeyTestWindow::vfunc11	ui_framework	confirmed-class	
-0004dc44	render_4dc44	render	guess	
-0004dc98	KeyTestWindow::draw	render	confirmed	
-0004e1c4	KeyTestWindow2::ctor_or_dtor_4e1c4	hardware_test	likely	
-0004e230	KeyTestWindow2::dtor	render	confirmed	
+0004cb68	readTestInput	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004cce4	SDLKeyTestWindow::SDLKeyTestWindow	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004cd88	SDLKeyTestWindow::handleInput	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004cebc	SDLKeyTestWindow::keyName	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004cfb4	drawHighlightedText	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004d53c	SDLKeyTestWindow::draw	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004d6f8	testKeyTimer	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004d7cc	SDLKeyTestWindow::restartTimer	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004d828	SDLKeyTestWindow::onHide	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004d870	SDLKeyTestWindow::onShow	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004d894	TestKeyImage::TestKeyImage	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004d93c	TestKeyImage::~TestKeyImage	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004d99c	KeyTestWindow::KeyTestWindow	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004db34	KeyTestWindow::keyName	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004dc44	KeyTestWindow::expecting	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004dc98	KeyTestWindow::draw	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004e1c4	KeyTestWindow2::KeyTestWindow2	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004e230	KeyTestWindow2::~KeyTestWindow2	hardware	confirmed	Byte-exact tu_04cb68 function.
 0004e36c	KeyTestWindow2::deletingDtor	hardware_test	confirmed	
-0004e3a0	render_skin_4e3a0	render	inferred	
-0004e5dc	input_4e5dc	input	guess	
-0004e774	KeyTestWindow2::handleInput	input	confirmed	
-0004e8e8	render_4e8e8	render	guess	
-0004e9bc	render_4e9bc	render	guess	
-0004edf8	render_skin_4edf8	render	inferred	
-0004ef30	KeyTestWindow2::draw	render	confirmed	
-0004f10c	LCDTestWindow::ctor_or_dtor_4f10c	hardware_test	likely	
-0004f1cc	LCDTestWindow::handleInput	hardware_test	confirmed	
-0004f2fc	LCDTestWindow::draw	render	confirmed	
-0004f444	LCDTestWindow::onHide	ui_framework	inferred	
-0004f464	LCDTestWindow::onShow	ui_framework	confirmed	
-0004f484	SoundTestWindow::ctor_or_dtor_4f484	hardware_test	likely	
-0004f4e0	SoundTestWindow::handleInput	hardware_test	confirmed	
-0004f588	SoundTestWindow::draw	audio	confirmed	
-0004f7f0	audio_Failed_4f7f0	audio	guess	
-0004f860	audio_play_4f860	audio	inferred	
-0004f978	SoundTestWindow::onHide	audio	inferred	
-0004fa44	SoundTestWindow::onShow	audio	confirmed	
-0004fb64	input_SDL_WaitEvent_4fb64	input	inferred	
-0004fbd4	SDCardTestWindow::ctor_or_dtor_4fbd4	hardware_test	likely	
-0004fc78	SDCardTestWindow::handleInput	hardware_test	confirmed	
-0004fd2c	SDCardTestWindow::draw	hardware_test	confirmed	
-0004ffd8	files_SDCARD_4ffd8	files	inferred	
-0005020c	files_SDCARD_5020c	files	inferred	
-000504a8	SDCardTestWindow::onHide	hardware_test	inferred	
-000504e8	files_test_504e8	files	guess	
-0005052c	SDCardTestWindow::onShow	hardware_test	confirmed	
-00050564	audio_string_50564	audio	guess	
-00050624	render_SDL_FreeSurface_50624	render	inferred	
-00050674	HardwareTestMenu::ctor_or_dtor_50674	hardware_test	likely	
-000507d4	HardwareTestMenu::dtor	hardware_test	confirmed	
+0004e3a0	KeyTestWindow2::loadMasks	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004e5dc	KeyTestWindow2::mapKey	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004e774	KeyTestWindow2::handleInput	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004e8e8	keyMask	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004e9bc	keyMaskRect	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004edf8	drawKeyTestFooter	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004ef30	KeyTestWindow2::draw	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004f10c	LCDTestWindow::LCDTestWindow	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004f1cc	LCDTestWindow::handleInput	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004f2fc	LCDTestWindow::draw	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004f444	LCDTestWindow::onHide	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004f464	LCDTestWindow::onShow	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004f484	SoundTestWindow::SoundTestWindow	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004f4e0	SoundTestWindow::handleInput	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004f588	SoundTestWindow::draw	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004f7f0	soundTestTimer	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004f860	SoundTestWindow::playNext	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004f978	SoundTestWindow::onHide	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004fa44	SoundTestWindow::onShow	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004fb64	readUsbTestInput	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004fbd4	SDCardTestWindow::SDCardTestWindow	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004fc78	SDCardTestWindow::handleInput	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004fd2c	SDCardTestWindow::draw	hardware	confirmed	Byte-exact tu_04cb68 function.
+0004ffd8	SDCardTestWindow::testWrite	hardware	confirmed	Byte-exact tu_04cb68 function.
+0005020c	SDCardTestWindow::testRead	hardware	confirmed	Byte-exact tu_04cb68 function.
+000504a8	SDCardTestWindow::onHide	hardware	confirmed	Byte-exact tu_04cb68 function.
+000504e8	sdCardTestThread	hardware	confirmed	Byte-exact tu_04cb68 function.
+0005052c	SDCardTestWindow::onShow	hardware	confirmed	Byte-exact tu_04cb68 function.
+00050564	TestMenuItem::TestMenuItem	hardware	confirmed	Byte-exact tu_04cb68 function.
+00050624	TestMenuItem::~TestMenuItem	hardware	confirmed	Byte-exact tu_04cb68 function.
+00050674	HardwareTestMenu::HardwareTestMenu	hardware	confirmed	Byte-exact tu_04cb68 function.
+000507d4	HardwareTestMenu::~HardwareTestMenu	hardware	confirmed	Byte-exact tu_04cb68 function.
 00050818	HardwareTestMenu::deletingDtor	hardware_test	confirmed	
-0005084c	HardwareTestMenu::onSelect	files	confirmed	
-00050ce8	render_UNTEST_50ce8	render	guess	
-00050d40	render_50d40	render	guess	
-00050dd4	HardwareTestMenu::vfunc7	render	confirmed-class	
-00051390	HardwareTestMenu::vfunc18	hardware_test	confirmed-class	
-00051454	audio_Test_51454	audio	inferred	
+0005084c	HardwareTestMenu::vfunc4	hardware	confirmed	Byte-exact tu_04cb68 function.
+00050ce8	testResultLabel	hardware	confirmed	Byte-exact tu_04cb68 function.
+00050d40	testResultColor	hardware	confirmed	Byte-exact tu_04cb68 function.
+00050dd4	HardwareTestMenu::vfunc7	hardware	confirmed	Byte-exact tu_04cb68 function.
+00051390	HardwareTestMenu::vfunc18	hardware	confirmed	Byte-exact tu_04cb68 function.
+00051454	HardwareTestMenu::initializeTests	hardware	confirmed	Byte-exact tu_04cb68 function.
 00051670	KeyTestWindow2::onHide	ui_framework	inferred	
 00051690	KeyTestWindow2::onShow	ui_framework	confirmed	
 000516b0	KeyTestWindow2::saveState	ui_framework	confirmed	

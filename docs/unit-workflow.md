@@ -164,3 +164,15 @@ then where the first use of the displaced function happens.
   a `for` increment instantiates `operator++` before `operator*` and swaps their tail order.
   Its global recent-list declaration also follows the first local recent-item construction;
   moving it ahead changes the order of generated constructors and destructors.
+
+- An apparently large exported function can contain an unexported function start. The main
+  program tail ends with a 36-byte destroy helper at 0x04c3f4; the next 180 bytes are a separate
+  circular-list access function at 0x04c418. The unique-insert wrapper at 0x04c76c likewise ends
+  at 0x04c7a8, where a 120-byte count function begins. Check prologues and call/return boundaries
+  before trusting sizes derived solely from adjacent Ghidra-exported starts.
+
+- Hardware keyboard mapping needs an enum parameter whose values promote to int; a plain int
+  parameter adds 84 bytes of switch reloads at `-O0`. Keep aggregate working variables at their
+  original scope: a loop-local SDL_Color can add an exception-cleanup path even when it is POD.
+- Inline virtual declarations may precede their definitions. Defining the hardware no-op virtuals
+  and destructors out of class, in original emission order, reproduces the 27-function tail.

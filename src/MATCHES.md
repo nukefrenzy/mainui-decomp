@@ -16,6 +16,82 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `TrimusWindow::animateIn(SDL_Surface*, FlipFn)` | 0x39478 | 40 | TrimusWindow.cpp |
 | `TrimusWindow::animateOut(SDL_Surface*, FlipFn)` | 0x394a0 | 40 | TrimusWindow.cpp |
 | `TrimusWindow::getId()` | 0x394c8 | 40 | TrimusWindow.cpp |
+| `onSIGTERM(int)` | 0x49c3c | 44 | tu_049c3c.cpp |
+| `appExit(int)` | 0x49c68 | 88 | tu_049c3c.cpp |
+| `pollStatusA_pushEvent()` | 0x49cc0 | 356 | tu_049c3c.cpp |
+| `pollStatusB_pushEvent()` | 0x49e24 | 256 | tu_049c3c.cpp |
+| `pollVolume_pushEvent()` | 0x49f24 | 300 | tu_049c3c.cpp |
+| `statusPollThread(void*)` | 0x4a050 | 184 | tu_049c3c.cpp |
+| `pushHotplugEvent(int, int)` | 0x4a108 | 104 | tu_049c3c.cpp |
+| `hotplugThread(void*)` | 0x4a170 | 44 | tu_049c3c.cpp |
+| `wifiStatusCallback(WifiStatus*)` | 0x4a19c | 352 | tu_049c3c.cpp |
+| `main` | 0x4a2fc | 2648 | tu_049c3c.cpp |
+| `ringAt(RingNode*, int)` | 0x4c418 | 180 | tu_04c418.cpp |
+| `freeRing(RingNode*, void (*)(void*))` | 0x4c4cc | 140 | tu_04c418.cpp |
+| `insertRingSorted(RingNode*, void*, int (*)(void*, void*), int)` | 0x4c558 | 472 | tu_04c418.cpp |
+| `insertRing(RingNode*, void*, int (*)(void*, void*))` | 0x4c730 | 60 | tu_04c418.cpp |
+| `insertRingUnique(RingNode*, void*, int (*)(void*, void*))` | 0x4c76c | 60 | tu_04c418.cpp |
+| `ringCount(RingNode*)` | 0x4c7a8 | 120 | tu_04c418.cpp |
+| `appendRing(RingNode*, void*)` | 0x4c820 | 200 | tu_04c418.cpp |
+| `prependRing(RingNode*, void*)` | 0x4c8e8 | 192 | tu_04c418.cpp |
+| `removeRingNode(RingNode*, RingNode*)` | 0x4c9a8 | 312 | tu_04c418.cpp |
+| `forEachRing(RingNode*, void (*)(void*))` | 0x4cae0 | 136 | tu_04c418.cpp |
+| `readTestInput()` | 0x4cb68 | 380 | tu_04cb68.cpp |
+| `SDLKeyTestWindow::SDLKeyTestWindow(int const*, int, int (*)(), char const*, int)` | 0x4cce4 | 164 | tu_04cb68.cpp |
+| `SDLKeyTestWindow::handleInput()` | 0x4cd88 | 308 | tu_04cb68.cpp |
+| `SDLKeyTestWindow::keyName(int)` | 0x4cebc | 248 | tu_04cb68.cpp |
+| `drawHighlightedText(SDL_Surface*, void*, SDL_Rect, char const*, SDL_Color, int, int, int)` | 0x4cfb4 | 1416 | tu_04cb68.cpp |
+| `SDLKeyTestWindow::draw(SDL_Surface*)` | 0x4d53c | 444 | tu_04cb68.cpp |
+| `testKeyTimer(unsigned int, void*)` | 0x4d6f8 | 212 | tu_04cb68.cpp |
+| `SDLKeyTestWindow::restartTimer()` | 0x4d7cc | 92 | tu_04cb68.cpp |
+| `SDLKeyTestWindow::onHide()` | 0x4d828 | 72 | tu_04cb68.cpp |
+| `SDLKeyTestWindow::onShow()` | 0x4d870 | 36 | tu_04cb68.cpp |
+| `TestKeyImage::TestKeyImage(char const*, char const*)` | 0x4d894 | 168 | tu_04cb68.cpp |
+| `TestKeyImage::~TestKeyImage()` | 0x4d93c | 96 | tu_04cb68.cpp |
+| `KeyTestWindow::KeyTestWindow(int const*, int, int (*)(), char const*, int)` | 0x4d99c | 408 | tu_04cb68.cpp |
+| `KeyTestWindow::keyName(int)` | 0x4db34 | 272 | tu_04cb68.cpp |
+| `KeyTestWindow::expecting(int)` | 0x4dc44 | 84 | tu_04cb68.cpp |
+| `KeyTestWindow::draw(SDL_Surface*)` | 0x4dc98 | 1324 | tu_04cb68.cpp |
+| `KeyTestWindow2::KeyTestWindow2()` | 0x4e1c4 | 108 | tu_04cb68.cpp |
+| `KeyTestWindow2::~KeyTestWindow2()` | 0x4e230 | 316 | tu_04cb68.cpp |
+| `KeyTestWindow2::loadMasks()` | 0x4e3a0 | 572 | tu_04cb68.cpp |
+| `KeyTestWindow2::mapKey(SDLKey)` | 0x4e5dc | 408 | tu_04cb68.cpp |
+| `KeyTestWindow2::handleInput()` | 0x4e774 | 372 | tu_04cb68.cpp |
+| `keyMask(KeyTestWindow2*, int)` | 0x4e8e8 | 212 | tu_04cb68.cpp |
+| `keyMaskRect(KeyTestWindow2*, int, SDL_Rect*)` | 0x4e9bc | 1084 | tu_04cb68.cpp |
+| `drawKeyTestFooter(SDL_Surface*)` | 0x4edf8 | 312 | tu_04cb68.cpp |
+| `KeyTestWindow2::draw(SDL_Surface*)` | 0x4ef30 | 476 | tu_04cb68.cpp |
+| `LCDTestWindow::LCDTestWindow()` | 0x4f10c | 192 | tu_04cb68.cpp |
+| `LCDTestWindow::handleInput()` | 0x4f1cc | 304 | tu_04cb68.cpp |
+| `LCDTestWindow::draw(SDL_Surface*)` | 0x4f2fc | 328 | tu_04cb68.cpp |
+| `LCDTestWindow::onHide()` | 0x4f444 | 32 | tu_04cb68.cpp |
+| `LCDTestWindow::onShow()` | 0x4f464 | 32 | tu_04cb68.cpp |
+| `SoundTestWindow::SoundTestWindow()` | 0x4f484 | 92 | tu_04cb68.cpp |
+| `SoundTestWindow::handleInput()` | 0x4f4e0 | 168 | tu_04cb68.cpp |
+| `SoundTestWindow::draw(SDL_Surface*)` | 0x4f588 | 616 | tu_04cb68.cpp |
+| `soundTestTimer(unsigned int, void*)` | 0x4f7f0 | 112 | tu_04cb68.cpp |
+| `SoundTestWindow::playNext()` | 0x4f860 | 280 | tu_04cb68.cpp |
+| `SoundTestWindow::onHide()` | 0x4f978 | 204 | tu_04cb68.cpp |
+| `SoundTestWindow::onShow()` | 0x4fa44 | 288 | tu_04cb68.cpp |
+| `readUsbTestInput()` | 0x4fb64 | 112 | tu_04cb68.cpp |
+| `SDCardTestWindow::SDCardTestWindow()` | 0x4fbd4 | 164 | tu_04cb68.cpp |
+| `SDCardTestWindow::handleInput()` | 0x4fc78 | 180 | tu_04cb68.cpp |
+| `SDCardTestWindow::draw(SDL_Surface*)` | 0x4fd2c | 684 | tu_04cb68.cpp |
+| `SDCardTestWindow::testWrite()` | 0x4ffd8 | 564 | tu_04cb68.cpp |
+| `SDCardTestWindow::testRead()` | 0x5020c | 668 | tu_04cb68.cpp |
+| `SDCardTestWindow::onHide()` | 0x504a8 | 64 | tu_04cb68.cpp |
+| `sdCardTestThread(void*)` | 0x504e8 | 68 | tu_04cb68.cpp |
+| `SDCardTestWindow::onShow()` | 0x5052c | 56 | tu_04cb68.cpp |
+| `TestMenuItem::TestMenuItem(char const*, char const*)` | 0x50564 | 192 | tu_04cb68.cpp |
+| `TestMenuItem::~TestMenuItem()` | 0x50624 | 80 | tu_04cb68.cpp |
+| `HardwareTestMenu::HardwareTestMenu()` | 0x50674 | 352 | tu_04cb68.cpp |
+| `HardwareTestMenu::~HardwareTestMenu()` | 0x507d4 | 68 | tu_04cb68.cpp |
+| `HardwareTestMenu::vfunc4()` | 0x5084c | 1180 | tu_04cb68.cpp |
+| `testResultLabel(int)` | 0x50ce8 | 88 | tu_04cb68.cpp |
+| `testResultColor(int)` | 0x50d40 | 148 | tu_04cb68.cpp |
+| `HardwareTestMenu::vfunc7(SDL_Surface*)` | 0x50dd4 | 1468 | tu_04cb68.cpp |
+| `HardwareTestMenu::vfunc18()` | 0x51390 | 196 | tu_04cb68.cpp |
+| `HardwareTestMenu::initializeTests()` | 0x51454 | 540 | tu_04cb68.cpp |
 | `scalePixels(int, int, int, int, int, int, int, int, int*, int*)` | 0x11cdc8 | 376 | tu_11cdc8.cpp |
 | `sdCardSpace[abi:cxx11]()` | 0x11cf40 | 600 | tu_11cdc8.cpp |
 | `sdCardFreeMB()` | 0x11d198 | 332 | tu_11cdc8.cpp |
