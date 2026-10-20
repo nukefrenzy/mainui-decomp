@@ -11,6 +11,7 @@ class MenuWindow : public TrimusWindow {
 public:
     MenuWindow(int titleLabelId, int id, ListMenu *menu);    // 0x2e6d4
     virtual ~MenuWindow();                                    // 0x2ec3c (D1), 0x2ed78 (D0)
+    MenuWindow(const char *path, int id, void *emuEntry);    // 0x2e978 (ROM folder)
     virtual int  handleInput();                  // 0x2ff04
     virtual int  draw(SDL_Surface *dst);         // 0x31398
     virtual void onHide();                       // 0x2fc74
@@ -18,6 +19,7 @@ public:
     virtual void saveState(cJSON *obj);          // 0x2edac currpos/pagestart/pageend/emuname/raname/ppath/searchstr
     virtual int  restoreState(cJSON *obj);       // 0x2efcc
     virtual void update();                       // 0x2fb14
+    void setStrB4(const std::string &s) { strB4 = s; }   // 0x3aafc, inline
 
     ListMenu    *menu;            // +0x0c  not freed by the window
     int          savedCurPos;     // +0x10  restored into the list on show

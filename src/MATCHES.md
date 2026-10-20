@@ -8,7 +8,36 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | Function | Address | Size | File |
 | --- | --- | --- | --- |
 | `keyEventName(int)` | 0x15b20 | 480 | tu_015b20.cpp |
+| `flipScreen()` | 0x15d00 | 36 | tu_015b20.cpp |
+| `drawText(SDL_Surface*, void*, SDL_Rect, char const*, SDL_Color, int, bool)` | 0x15d24 | 756 | tu_015b20.cpp |
+| `drawTextLines(SDL_Surface*, void*, SDL_Rect*, char const*, char const*, SDL_Color*, int, bool)` | 0x16018 | 532 | tu_015b20.cpp |
+| `drawIconOnBg(SDL_Surface*, SDL_Surface*, SDL_Rect*, SDL_Surface*)` | 0x1622c | 420 | tu_015b20.cpp |
+| `drawSkinIconOnBg(SDL_Surface*, SDL_Surface*, SDL_Rect*, char const*)` | 0x163d0 | 128 | tu_015b20.cpp |
+| `drawTextOnBg(SDL_Surface*, SDL_Surface*, SDL_Rect*, char const*)` | 0x16450 | 284 | tu_015b20.cpp |
+| `drawKeyStateIndicator(SDL_Surface*, int, bool)` | 0x1656c | 540 | tu_015b20.cpp |
+| `drawWifiIndicator(SDL_Surface*, int, bool)` | 0x16788 | 972 | tu_015b20.cpp |
+| `drawSoundCardIndicator(SDL_Surface*, bool)` | 0x16b54 | 324 | tu_015b20.cpp |
+| `drawBatteryIndicator(SDL_Surface*, bool)` | 0x16c98 | 584 | tu_015b20.cpp |
+| `playEnterSound(int, int)` | 0x16ee0 | 136 | tu_015b20.cpp |
+| `drawTitleBar(SDL_Surface*, char const*, bool)` | 0x16f68 | 400 | tu_015b20.cpp |
+| `drawIconLabel(SDL_Surface*, SDL_Surface*, int, int, char const*, char const*)` | 0x170f8 | 424 | tu_015b20.cpp |
+| `drawFooter(SDL_Surface*, char const*, char const*)` | 0x172a0 | 432 | tu_015b20.cpp |
+| `drawBackground(SDL_Surface*)` | 0x17450 | 280 | tu_015b20.cpp |
+| `drawScreenFrame(SDL_Surface*, char const*, int, bool)` | 0x17568 | 180 | tu_015b20.cpp |
+| `powerOff(void*)` | 0x1761c | 140 | tu_015b20.cpp |
+| `powerOffNow()` | 0x176a8 | 24 | tu_015b20.cpp |
+| `sendPowerOffEvent(int, int)` | 0x176c0 | 108 | tu_015b20.cpp |
+| `onUserActivity()` | 0x1772c | 24 | tu_015b20.cpp |
+| `handleGlobalInput(SDL_Event*)` | 0x17744 | 1996 | tu_015b20.cpp |
+| `compareDirentNames(dirent const**, dirent const**)` | 0x17f10 | 80 | tu_015b20.cpp |
+| `compareLabels(void const*, void const*)` | 0x17f60 | 96 | tu_015b20.cpp |
 | `writeCmdToRun(const char*)` | 0x17fc0 | 88 | tu_015b20.cpp |
+| `showLaunchScreen(char const*)` | 0x18018 | 344 | tu_015b20.cpp |
+| `doNothingAction(void*, void*)` | 0x18170 | 48 | tu_015b20.cpp |
+| `launchRom(char const*, EmuInfo*, char const*, char const*, int)` | 0x181a0 | 960 | tu_015b20.cpp |
+| `launchApp_buildCommand(AppInfo*, int)` | 0x18560 | 1052 | tu_015b20.cpp |
+| `EmuAction::execute(void*)` | 0x1897c | 388 | tu_015b20.cpp |
+| `EmuAction::progress(int*, int*)` | 0x18b00 | 340 | tu_015b20.cpp |
 | `TrimusWindow::TrimusWindow(int titleLabelId, int id)` | 0x1d7dc | 84 | tu_015b20.cpp |
 | `TrimusWindow::~TrimusWindow()` | 0x1d830 | 52 | tu_015b20.cpp |
 | `MenuWindow::MenuWindow(int, int, ListMenu*)` | 0x2e6d4 | 676 | tu_015b20.cpp |

@@ -21,7 +21,10 @@ public:
     ~TextItem();
     std::string label;
     Action *action;
-    char raw[0x74 - 0x1c];
+    bool flag1c;
+    bool favorite;      // +0x1d  set by AddFavoriteAction, shown by the game detail window
+    bool removed;       // +0x1e  set by RemoveFavoriteAction
+    char raw[0x74 - 0x1f];
 };
 struct DirectoryItems {
     std::string path;
