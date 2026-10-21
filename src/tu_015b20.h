@@ -97,14 +97,7 @@ union MainEvent {                           // SDL_Event as pushed by MainUI (SD
     } user;
     char storage[20];
 };
-struct WifiStatus {                         // 0x74 bytes, see tu_14e0cc.c
-    int state;                              // 4 = COMPLETED
-    char raw4[4];
-    char ssid[0x40];
-    char ip[0x18];
-    int rssi;                               // +0x60
-    int linkSpeed, noise, freq, id;
-};
+#include "WifiStatus.h"
 extern "C" WifiStatus *getWifiStatus();     // 0x14e564
 int wifiMode();                             // 0x138c50: 2 station, 3 hotspot
 #define SDL_BlitSurface SDL_UpperBlit
@@ -531,9 +524,12 @@ public:
     virtual void vfunc7(SDL_Surface *dst);                     // 0x28994
     virtual void vfunc11();                                    // 0x2877c
     virtual void vfunc18();                                    // 0x2a6ec
-    int          field104;          // +0x104  0
-    SDL_Surface *surface108;        // +0x108
-    SDL_Surface *surface10c;        // +0x10c  also selectedBackground
+    void decrease();                                          // 0x295a8
+    void increase();                                          // 0x298ec
+    void select();                                            // 0x29dc8
+    void        *field104;          // +0x104  delayed volume-preview timer
+    SDL_Surface *surface108;        // +0x108  left-arrow icon
+    SDL_Surface *surface10c;        // +0x10c  right-arrow icon (separate from selectedBackground)
     std::string  themePath;         // +0x110
 };
 
@@ -546,8 +542,8 @@ public:
     virtual void vfunc7(SDL_Surface *dst);                     // 0x2aae4
     virtual void vfunc11();                                    // 0x2aa08
     virtual void vfunc18();                                    // 0x2b504
-    void loadInfo();                                           // 0x2b0f8  name unverified
-    int          field104;          // +0x104  0
+    void loadInfo();                                           // 0x2b0f8, populate the seven device-information rows
+    char        *field104;          // +0x104  loaded firmware-version buffer
     std::string  themePath;         // +0x108
 };
 

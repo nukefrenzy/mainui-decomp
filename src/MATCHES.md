@@ -158,6 +158,30 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `SettingMenuItem::SettingMenuItem(int, char const*, int)` | 0x282d0 | 232 | tu_015b20.cpp |
 | `SettingMenuItem::~SettingMenuItem()` | 0x283b8 | 80 | tu_015b20.cpp |
 | `SettingMenuItem::reload()` | 0x28408 | 148 | tu_015b20.cpp |
+| `SettingMenu::SettingMenu()` | 0x2849c | 376 | tu_015b20.cpp |
+| `SettingMenu::~SettingMenu()` | 0x28614 | 308 | tu_015b20.cpp |
+| `SettingMenu::~SettingMenu()` | 0x28748 | 52 | tu_015b20.cpp |
+| `SettingMenu::vfunc11()` | 0x2877c | 536 | tu_015b20.cpp |
+| `SettingMenu::vfunc7(SDL_Surface*)` | 0x28994 | 2916 | tu_015b20.cpp |
+| `previewVolume(unsigned int, void*)` | 0x294f8 | 176 | tu_015b20.cpp |
+| `SettingMenu::decrease()` | 0x295a8 | 836 | tu_015b20.cpp |
+| `SettingMenu::increase()` | 0x298ec | 836 | tu_015b20.cpp |
+| `rebootToEfex()` | 0x29c30 | 28 | tu_015b20.cpp |
+| `resetEmulatorSettings(void*)` | 0x29c4c | 40 | tu_015b20.cpp |
+| `resetAllSettings(void*)` | 0x29c74 | 340 | tu_015b20.cpp |
+| `SettingMenu::select()` | 0x29dc8 | 2060 | tu_015b20.cpp |
+| `SettingMenu::vfunc3()` | 0x2a5d4 | 280 | tu_015b20.cpp |
+| `SettingMenu::vfunc18()` | 0x2a6ec | 196 | tu_015b20.cpp |
+| `DeviceInfoItem::DeviceInfoItem(char const*, char const*)` | 0x2a7b0 | 140 | tu_015b20.cpp |
+| `DeviceInfoMenu::DeviceInfoMenu()` | 0x2a83c | 248 | tu_015b20.cpp |
+| `DeviceInfoMenu::~DeviceInfoMenu()` | 0x2a934 | 160 | tu_015b20.cpp |
+| `DeviceInfoMenu::~DeviceInfoMenu()` | 0x2a9d4 | 52 | tu_015b20.cpp |
+| `DeviceInfoMenu::vfunc11()` | 0x2aa08 | 220 | tu_015b20.cpp |
+| `DeviceInfoMenu::vfunc7(SDL_Surface*)` | 0x2aae4 | 1348 | tu_015b20.cpp |
+| `formatDeviceUuid(char*, unsigned int)` | 0x2b028 | 208 | tu_015b20.cpp |
+| `DeviceInfoMenu::loadInfo()` | 0x2b0f8 | 1036 | tu_015b20.cpp |
+| `DeviceInfoMenu::vfunc18()` | 0x2b504 | 184 | tu_015b20.cpp |
+| `display_memset_2b5bc()` | 0x2b5bc | 460 | tu_015b20.cpp |
 | `MenuWindow::MenuWindow(int, int, ListMenu*)` | 0x2e6d4 | 676 | tu_015b20.cpp |
 | `MenuWindow::~MenuWindow() (complete)` | 0x2ec3c | 316 | tu_015b20.cpp |
 | `MenuWindow::~MenuWindow() (deleting)` | 0x2ed78 | 52 | tu_015b20.cpp |

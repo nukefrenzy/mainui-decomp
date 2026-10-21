@@ -153,30 +153,30 @@ addr	name	subsystem	confidence	comment
 000282d0	SettingMenuItem::SettingMenuItem	menus	confirmed	Byte-exact tu_015b20 p06.
 000283b8	SettingMenuItem::~SettingMenuItem	menus	confirmed	Byte-exact tu_015b20 p06.
 00028408	SettingMenuItem::reload	menus	confirmed	Byte-exact tu_015b20 p06.
-0002849c	SettingMenu::ctor_or_dtor_2849c	render	likely	
-00028614	SettingMenu::dtor	render	confirmed	
-00028748	SettingMenu::deletingDtor	settings	confirmed	
-0002877c	SettingMenu::vfunc11	render	confirmed-class	
-00028994	SettingMenu::vfunc7	render	confirmed-class	
-000294f8	audio_PlayChunk_294f8	audio	inferred	
-000295a8	audio_touch_295a8	audio	inferred	
-000298ec	audio_touch_298ec	audio	inferred	
-00029c30	power_reboot_29c30	power	inferred	
-00029c4c	files_29c4c	files	guess	
-00029c74	config_SDCARD_29c74	config	inferred	
-00029dc8	render_operatornew_29dc8	render	guess	
-0002a5d4	SettingMenu::vfunc3	settings	confirmed-class	
-0002a6ec	SettingMenu::vfunc18	settings	confirmed-class	
-0002a7b0	launch_string_2a7b0	launch	guess	
-0002a83c	DeviceInfoMenu::ctor_or_dtor_2a83c	render	likely	
-0002a934	DeviceInfoMenu::dtor	render	confirmed	
-0002a9d4	DeviceInfoMenu::deletingDtor	settings	confirmed	
-0002aa08	DeviceInfoMenu::vfunc11	render	confirmed-class	
-0002aae4	DeviceInfoMenu::vfunc7	render	confirmed-class	
-0002b028	device_memset_2b028	device	inferred	
-0002b0f8	launch_printenv_2b0f8	launch	inferred	
-0002b504	DeviceInfoMenu::vfunc18	settings	confirmed-class	
-0002b5bc	display_memset_2b5bc	display	inferred	
+0002849c	SettingMenu::SettingMenu	menus	confirmed	Byte-exact tu_015b20 p07.
+00028614	SettingMenu::~SettingMenu	menus	confirmed	Byte-exact tu_015b20 p07.
+00028748	SettingMenu::deletingDtor	menus	confirmed	Byte-exact tu_015b20 p07.
+0002877c	SettingMenu::vfunc11	menus	confirmed	Byte-exact tu_015b20 p07.
+00028994	SettingMenu::vfunc7	menus	confirmed	Byte-exact tu_015b20 p07.
+000294f8	previewVolume	menus	confirmed	Byte-exact tu_015b20 p07.
+000295a8	SettingMenu::decrease	menus	confirmed	Byte-exact tu_015b20 p07.
+000298ec	SettingMenu::increase	menus	confirmed	Byte-exact tu_015b20 p07.
+00029c30	rebootToEfex	menus	confirmed	Byte-exact tu_015b20 p07.
+00029c4c	resetEmulatorSettings	menus	confirmed	Byte-exact tu_015b20 p07.
+00029c74	resetAllSettings	menus	confirmed	Byte-exact tu_015b20 p07.
+00029dc8	SettingMenu::select	menus	confirmed	Byte-exact tu_015b20 p07.
+0002a5d4	SettingMenu::vfunc3	menus	confirmed	Byte-exact tu_015b20 p07.
+0002a6ec	SettingMenu::vfunc18	menus	confirmed	Byte-exact tu_015b20 p07.
+0002a7b0	DeviceInfoItem::DeviceInfoItem	menus	confirmed	Byte-exact tu_015b20 p07.
+0002a83c	DeviceInfoMenu::DeviceInfoMenu	menus	confirmed	Byte-exact tu_015b20 p07.
+0002a934	DeviceInfoMenu::~DeviceInfoMenu	menus	confirmed	Byte-exact tu_015b20 p07.
+0002a9d4	DeviceInfoMenu::deletingDtor	menus	confirmed	Byte-exact tu_015b20 p07.
+0002aa08	DeviceInfoMenu::vfunc11	menus	confirmed	Byte-exact tu_015b20 p07.
+0002aae4	DeviceInfoMenu::vfunc7	menus	confirmed	Byte-exact tu_015b20 p07.
+0002b028	formatDeviceUuid	menus	confirmed	Byte-exact tu_015b20 p07.
+0002b0f8	DeviceInfoMenu::loadInfo	menus	confirmed	Byte-exact tu_015b20 p07.
+0002b504	DeviceInfoMenu::vfunc18	menus	confirmed	Byte-exact tu_015b20 p07.
+0002b5bc	display_memset_2b5bc	menus	confirmed	Byte-exact tu_015b20 p07.
 0002b788	ColorMenu::ctor_or_dtor_2b788	render	likely	
 0002b8bc	ColorMenu::dtor	render	confirmed	
 0002b96c	ColorMenu::deletingDtor	theme	confirmed	

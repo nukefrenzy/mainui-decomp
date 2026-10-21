@@ -36,24 +36,7 @@ public:
     bool expecting(int);
     TestKeyImage left,right,up,down,circle,rectangle;
 };
-enum SDLKey { SDLKeyUnknown=0, SDLKeyLast=323 };
-class KeyTestWindow2 : public TrimusWindow {
-public:
-    KeyTestWindow2();
-    ~KeyTestWindow2() override;
-    int handleInput() override;
-    int draw(SDL_Surface*) override;
-    void onHide() override;
-    void onShow() override;
-    void saveState(cJSON*) override;
-    int restoreState(cJSON*) override;
-    void update() override;
-    void loadMasks();
-    int mapKey(SDLKey);
-    SDL_Surface *maskCross,*maskStart,*maskMenu,*maskLR,*maskABXY,*maskAdd,*maskMinus,*background;
-    int pressed[18],released[18];
-    bool menuHeld;
-};
+#include "KeyTestWindow2.h"
 union TestColor { unsigned value; SDL_Color bytes; };
 class LCDTestWindow : public TrimusWindow {
 public:
@@ -139,11 +122,6 @@ public:
 };
 
 // Inline definitions follow the original object emission order.
-inline void KeyTestWindow2::onHide() {  }
-inline void KeyTestWindow2::onShow() {  }
-inline void KeyTestWindow2::saveState(cJSON*) {  }
-inline int KeyTestWindow2::restoreState(cJSON*) { return 0; }
-inline void KeyTestWindow2::update() {  }
 inline void SDLKeyTestWindow::saveState(cJSON*) {  }
 inline int SDLKeyTestWindow::restoreState(cJSON*) { return 0; }
 inline void SDLKeyTestWindow::update() {  }

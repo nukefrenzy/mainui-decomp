@@ -305,6 +305,63 @@ redundant `i = 0`, the unused page-length calculation in `open`, and original ex
 quotient-times-page-size calculations must evaluate the division first. Explicit no-op cases 12/13
 retain the 13-entry keyboard dispatch table; omitting them shrinks it despite identical default behavior.
 
+## p07 findings (0x2849c–0x2b788, done)
+
+All 24 function ranges match (13,036 bytes): 22 written definitions and two generated deleting
+destructors. The merged body prefix reaches **0x2b788**: 198 function symbols including aliases,
+89,192 consecutive bytes from 0x15b20. The next unwritten function is `ColorMenu::ColorMenu`
+(p08); the complete unit's template/inline tail remains an integration task. All 40 p07 string
+references and all 66 switch-table entries were compared separately with the binary.
+
+**Settings selection.** `SettingMenu` stores `SettingMenuItem*` through the inherited TextMenu
+pointer vector, uses its own drawing/input/freeing methods, and never runs the inherited
+TextItem-to-Action selection cast. A/keys 1 and 4 call `select`; each opened window receives
+`onShow` and is pushed directly. `select` returns immediately from each handled case.
+
+| Selector at item +8 | Result |
+| --- | --- |
+| 0 | KeySettingWindow |
+| 1 / 2 / 3 | Left/right adjust volume (0–20), music/effects volume (0–20), backlight (1–10) |
+| 4 | Confirm dialog → PopupProgressAction → GeneralAction(reset emulator databases/configs) |
+| 5 | Confirm dialog → PopupProgressAction → GeneralAction(reset system settings) |
+| 7 / 8 / 9 | Device-info MenuWindow (id 9), KeyTestWindow2, ADCInfoWindow (id 12) |
+| 11 / 13 / 15 / 16 | Language/colour/theme/fixes MenuWindow (ids 14/18/19/20) |
+| 12 | Both left/right cycle the idle setting 0 → 5 → 15 → 30 → 0 |
+| 17 | Toggle the audio-server flag and `/tmp/no_audioserver` marker |
+| 18 | Shutdown confirmation dialog with GeneralAction(powerOff) |
+| 19 / 20 | WifiMenu/HotspotMenu wrapped in MenuWindow (ids 21/23) |
+
+Volume changes cancel the old 150-ms preview timer, stop its channel, then schedule a new one.
+The destructor frees rows/resources, saves system.json, clears the dirty flag, and restores
+volume after cancelling a pending preview. The Wi-Fi row displays the connection IP (not SSID) when mode is 2 and state is 4.
+The five allocated-but-unconstructed settings entries still need the p11 `createMenu` caller, which supplies the menu's rows. An unused helper invokes
+`reboot efex`; this reconstruction only compiles these actions and never executes them.
+
+**Device info.** Rows are a part-local 0x30-byte `DeviceInfoItem` (two strings), with their own
+freeing override. The menu owns the loaded `/tmp/miyoo_version` text buffer, strips its newline
+and `miyoo_version=` prefix, and uses the original fallback `202110071805`. Rows show MY354,
+MI_SYS_ReadUuid (eight bytes as uppercase hex), firmware, CPU MHz, memory MB, SD-card space and
+`www.lomiyoo.com`. The final helper restores MI_DISP timing from the panel-info globals; its
+48-byte attribute shape and the panel prefix used here are part-local, not full SDK declarations.
+It retains 16 bytes of unused local stack storage required by the original frame.
+
+**Shared declaration changes.**
+- Owned `SettingMenu::field104` is the opaque timer pointer; `DeviceInfoMenu::field104` is
+  `char*` firmware text. The two settings surfaces at +0x108/+0x10c are separate left/right
+  arrows, not aliases of selectedBackground. Added non-virtual `decrease`, `increase`, and `select`.
+- Extracted the existing KeyTestWindow2 declaration/inline methods into `KeyTestWindow2.h`,
+  included from HardwareTestWindows.h and p07; this avoids importing the hardware header's
+  separate TextMenu declaration. The hardware unit still passes its strict full-range proof.
+- Extracted the common 0x74-byte WifiStatus into `WifiStatus.h`, included by WifiMenus.h and
+  tu_015b20.h. Its second integer occupies the old tu_015b20 `raw4` bytes. Layouts/virtual slots
+  are unchanged; p07 uses the existing KeySettingWindow and Wi-Fi menu declarations.
+
+**-O0 details.** Keep the settings switch order (volume, backlight, music, idle, audio server),
+reuse the level local for the idle/toggle states, and keep each case's explicit return/break.
+The UUID helper copies eight bytes as an aggregate before byte-index formatting; replacing the
+byte accesses with shifts of 32-bit words adds instructions. The working rectangles are reused
+for arrow blits; introducing separate arrow rectangles changes stack accesses and byte order.
+
 ## Shared declarations (header pass, before p03-p11)
 
 p01 and p02 each declared the same classes differently in `tu_015b20.h` and had to be reconciled at

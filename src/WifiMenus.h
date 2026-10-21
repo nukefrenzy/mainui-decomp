@@ -12,9 +12,7 @@ struct WifiAP {
     char raw0[8]; char ssid[0x58]; int rssi; char raw64[8]; int freq;
     char raw70[4]; char bssid[0x18]; char flags[0x80]; int secured, current;
 };
-struct WifiStatus {
-    int state, status; char ssid[0x40], ip[0x18]; int rssi, linkSpeed, noise, freq, id;
-};
+#include "WifiStatus.h"
 extern char *g_themePath;
 extern void *g_imeFont;
 extern SDL_Color g_imeTextColor, g_wifiSelectedColor;

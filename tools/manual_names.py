@@ -332,6 +332,34 @@ M.update({
     '00028408': ('SettingMenuItem::reload', 'menus', 'confirmed', 'Byte-exact tu_015b20 p06.'),
 })
 
+# Verified tu_015b20 p07 functions (0x2849c-0x2b788).
+M.update({
+    '0002849c': ('SettingMenu::SettingMenu', 'menus', 'confirmed', 'Byte-exact tu_015b20 p07.'),
+    '00028614': ('SettingMenu::~SettingMenu', 'menus', 'confirmed', 'Byte-exact tu_015b20 p07.'),
+    '00028748': ('SettingMenu::deletingDtor', 'menus', 'confirmed', 'Byte-exact tu_015b20 p07.'),
+    '0002877c': ('SettingMenu::vfunc11', 'menus', 'confirmed', 'Byte-exact tu_015b20 p07.'),
+    '00028994': ('SettingMenu::vfunc7', 'menus', 'confirmed', 'Byte-exact tu_015b20 p07.'),
+    '000294f8': ('previewVolume', 'menus', 'confirmed', 'Byte-exact tu_015b20 p07.'),
+    '000295a8': ('SettingMenu::decrease', 'menus', 'confirmed', 'Byte-exact tu_015b20 p07.'),
+    '000298ec': ('SettingMenu::increase', 'menus', 'confirmed', 'Byte-exact tu_015b20 p07.'),
+    '00029c30': ('rebootToEfex', 'menus', 'confirmed', 'Byte-exact tu_015b20 p07.'),
+    '00029c4c': ('resetEmulatorSettings', 'menus', 'confirmed', 'Byte-exact tu_015b20 p07.'),
+    '00029c74': ('resetAllSettings', 'menus', 'confirmed', 'Byte-exact tu_015b20 p07.'),
+    '00029dc8': ('SettingMenu::select', 'menus', 'confirmed', 'Byte-exact tu_015b20 p07.'),
+    '0002a5d4': ('SettingMenu::vfunc3', 'menus', 'confirmed', 'Byte-exact tu_015b20 p07.'),
+    '0002a6ec': ('SettingMenu::vfunc18', 'menus', 'confirmed', 'Byte-exact tu_015b20 p07.'),
+    '0002a7b0': ('DeviceInfoItem::DeviceInfoItem', 'menus', 'confirmed', 'Byte-exact tu_015b20 p07.'),
+    '0002a83c': ('DeviceInfoMenu::DeviceInfoMenu', 'menus', 'confirmed', 'Byte-exact tu_015b20 p07.'),
+    '0002a934': ('DeviceInfoMenu::~DeviceInfoMenu', 'menus', 'confirmed', 'Byte-exact tu_015b20 p07.'),
+    '0002a9d4': ('DeviceInfoMenu::deletingDtor', 'menus', 'confirmed', 'Byte-exact tu_015b20 p07.'),
+    '0002aa08': ('DeviceInfoMenu::vfunc11', 'menus', 'confirmed', 'Byte-exact tu_015b20 p07.'),
+    '0002aae4': ('DeviceInfoMenu::vfunc7', 'menus', 'confirmed', 'Byte-exact tu_015b20 p07.'),
+    '0002b028': ('formatDeviceUuid', 'menus', 'confirmed', 'Byte-exact tu_015b20 p07.'),
+    '0002b0f8': ('DeviceInfoMenu::loadInfo', 'menus', 'confirmed', 'Byte-exact tu_015b20 p07.'),
+    '0002b504': ('DeviceInfoMenu::vfunc18', 'menus', 'confirmed', 'Byte-exact tu_015b20 p07.'),
+    '0002b5bc': ('display_memset_2b5bc', 'menus', 'confirmed', 'Byte-exact tu_015b20 p07.'),
+})
+
 for a, (nm, sub, conf, cmt) in M.items():
     names[a] = {"name": nm, "subsystem": sub, "confidence": conf, "comment": cmt}
 
