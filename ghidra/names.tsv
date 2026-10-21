@@ -177,38 +177,38 @@ addr	name	subsystem	confidence	comment
 0002b0f8	DeviceInfoMenu::loadInfo	menus	confirmed	Byte-exact tu_015b20 p07.
 0002b504	DeviceInfoMenu::vfunc18	menus	confirmed	Byte-exact tu_015b20 p07.
 0002b5bc	display_memset_2b5bc	menus	confirmed	Byte-exact tu_015b20 p07.
-0002b788	ColorMenu::ctor_or_dtor_2b788	render	likely	
-0002b8bc	ColorMenu::dtor	render	confirmed	
-0002b96c	ColorMenu::deletingDtor	theme	confirmed	
-0002b9a0	ColorMenu::vfunc7	render	confirmed-class	
-0002c274	ColorMenu::vfunc3	device	confirmed-class	
-0002c73c	ColorMenu::onSelect	ui_framework	confirmed	
-0002c760	ColorMenu::vfunc18	theme	confirmed-class	
-0002c824	render_operatornew_2c824	render	guess	
-0002c950	LanguageMenu::ctor_or_dtor_2c950	language	likely	
-0002caa8	LanguageMenu::dtor	language	confirmed	
-0002caf4	LanguageMenu::deletingDtor	language	confirmed	
-0002cb28	LanguageMenu::onSelect	language	confirmed	
-0002cc14	ThemeMenu::ctor_or_dtor_2cc14	theme	likely	
-0002cd80	ThemeMenu::dtor	theme	confirmed	
-0002cdbc	ThemeMenu::deletingDtor	theme	confirmed	
-0002cdf0	ThemeMenu::onSelect	audio	confirmed	
-0002cfc0	render_strrchr_2cfc0	render	guess	
-0002d158	misc_upgrade_2d158	misc	guess	
-0002d1bc	FileAction::execute	render	confirmed	
-0002d574	render_COPYING_2d574	render	guess	
-0002d700	FileBrowserMenu::ctor_or_dtor_2d700	render	likely	
-0002d908	FileBrowserMenu::dtor	render	confirmed	
-0002da58	FileBrowserMenu::deletingDtor	games	confirmed	
-0002da8c	FileBrowserMenu::vfunc8	games	confirmed-class	
-0002dad4	FileBrowserMenu::onSelect	games	confirmed	
-0002db8c	FileBrowserMenu::getItem	games	inferred	
-0002dc14	render_2dc14	render	guess	
-0002dcbc	FileBrowserMenu::vfunc7	render	confirmed-class	
-0002e0f0	FileBrowserMenu::vfunc3	games	confirmed-class	
-0002e318	freeSurfaceCallback	render	inferred	Wraps SDL_FreeSurface; passed to MenuHelper80.
-0002e344	LoadSurfaceWorker::vfunc2	threads	confirmed-class	
-0002e3ec	LoadSurfaceWorker::vfunc3	threads	confirmed-class	
+0002b788	ColorMenu::ColorMenu	menus	confirmed	Byte-exact tu_015b20 p08.
+0002b8bc	ColorMenu::~ColorMenu	menus	confirmed	Byte-exact tu_015b20 p08.
+0002b96c	ColorMenu::deletingDtor	menus	confirmed	Byte-exact tu_015b20 p08.
+0002b9a0	ColorMenu::vfunc7	menus	confirmed	Byte-exact tu_015b20 p08.
+0002c274	ColorMenu::vfunc3	menus	confirmed	Byte-exact tu_015b20 p08.
+0002c73c	ColorMenu::vfunc4	menus	confirmed	Byte-exact tu_015b20 p08.
+0002c760	ColorMenu::vfunc18	menus	confirmed	Byte-exact tu_015b20 p08.
+0002c824	ColorMenu::loadItems	menus	confirmed	Byte-exact tu_015b20 p08.
+0002c950	LanguageMenu::LanguageMenu	menus	confirmed	Byte-exact tu_015b20 p08.
+0002caa8	LanguageMenu::~LanguageMenu	menus	confirmed	Byte-exact tu_015b20 p08.
+0002caf4	LanguageMenu::deletingDtor	menus	confirmed	Byte-exact tu_015b20 p08.
+0002cb28	LanguageMenu::vfunc4	menus	confirmed	Byte-exact tu_015b20 p08.
+0002cc14	ThemeMenu::ThemeMenu	menus	confirmed	Byte-exact tu_015b20 p08.
+0002cd80	ThemeMenu::~ThemeMenu	menus	confirmed	Byte-exact tu_015b20 p08.
+0002cdbc	ThemeMenu::deletingDtor	menus	confirmed	Byte-exact tu_015b20 p08.
+0002cdf0	ThemeMenu::vfunc4	menus	confirmed	Byte-exact tu_015b20 p08.
+0002cfc0	fileType_2cfc0	menus	confirmed	Byte-exact tu_015b20 p08.
+0002d158	requestUpgrade	menus	confirmed	Byte-exact tu_015b20 p08.
+0002d1bc	FileAction::execute	menus	confirmed	Byte-exact tu_015b20 p08.
+0002d574	fileBrowserFilter	menus	confirmed	Byte-exact tu_015b20 p08.
+0002d700	FileBrowserMenu::FileBrowserMenu	menus	confirmed	Byte-exact tu_015b20 p08.
+0002d908	FileBrowserMenu::~FileBrowserMenu	menus	confirmed	Byte-exact tu_015b20 p08.
+0002da58	FileBrowserMenu::deletingDtor	menus	confirmed	Byte-exact tu_015b20 p08.
+0002da8c	FileBrowserMenu::count	menus	confirmed	Byte-exact tu_015b20 p08.
+0002dad4	FileBrowserMenu::vfunc4	menus	confirmed	Byte-exact tu_015b20 p08.
+0002db8c	FileBrowserMenu::getItem	menus	confirmed	Byte-exact tu_015b20 p08.
+0002dc14	FileBrowserMenu::itemIcon	menus	confirmed	Byte-exact tu_015b20 p08.
+0002dcbc	FileBrowserMenu::vfunc7	menus	confirmed	Byte-exact tu_015b20 p08.
+0002e0f0	FileBrowserMenu::vfunc3	menus	confirmed	Byte-exact tu_015b20 p08.
+0002e318	freeSurfaceCallback	menus	confirmed	Byte-exact tu_015b20 p08.
+0002e344	LoadSurfaceWorker::run	menus	confirmed	Byte-exact tu_015b20 p08.
+0002e3ec	LoadSurfaceWorker::finished	menus	confirmed	Byte-exact tu_015b20 p08.
 0002e424	MenuWindow::MenuWindow_byMenuId	ui_framework	confirmed	(labelId, menuId, param)
 0002e6d4	MenuWindow::MenuWindow	ui_framework	confirmed	(titleLabelId, id, ListMenu*). Byte-exact rewrite in src/tu_015b20/p09.inc.
 0002e978	MenuWindow::MenuWindow_byPath	ui_framework	confirmed	(path, menuId, param)

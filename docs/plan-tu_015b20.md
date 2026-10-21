@@ -362,6 +362,56 @@ The UUID helper copies eight bytes as an aggregate before byte-index formatting;
 byte accesses with shifts of 32-bit words adds instructions. The working rectangles are reused
 for arrow blits; introducing separate arrow rectangles changes stack accesses and byte order.
 
+## p08 findings (0x2b788–0x2e424, done)
+
+All 32 function ranges match (11,420 bytes): 28 written definitions and four generated deleting
+destructors. The body prefix reaches **0x2e424**, 238 function symbols including aliases and
+100,612 consecutive bytes from 0x15b20. The next part is p09's MenuWindow constructor; the
+whole-unit tail remains an integration task. Separately checked all 33 string references and
+25 switch-table entries. Every registered function and all existing unit checks still pass.
+
+**Selection and actions.**
+
+- Colour rows reuse SettingMenuItem, with integer selectors 1–4 for shared-memory keys 8–11
+  (luma, hue, saturation and contrast), clamped to 0–20. Left/right restore the panel's custom
+  timing once if needed, clear its flag, and apply all four LCD parameters. A is a no-op;
+  returning/back queues a NotifyWindow with label 123 and button label 46 through pushWindow.
+- LanguageMenu copies `std::vector<LanguageChoice>` (48-byte filename/name pairs), displays each
+  name, and selects its filename with setLanguageFile. It reloads fonts from the current theme,
+  falling back to g_skin when no theme record matches. ThemeMenu adds a built-in/default row;
+  selection changes g_themePath, reloads fonts and resources, then restarts background music.
+- FileBrowserMenu's input handler selects a TextItem and runs its Action. FileAction kind 101
+  finds the first emulator with a matching extension (case-insensitive prefix comparison) and
+  calls launchRom with the item's label, full path and recent-list type 5. Its return code goes
+  back to the menu/window. Kind 102 posts SDL user-event code 25 with the directory path;
+  FileBrowserMenu handles it with cache.parent/child and resets the cursor/page range.
+- After emulator-extension matching fails, the filter admits a TrimuiUpdate*.zip only when
+  it contains `updater`. Selecting a TrimuiUpdate*.zip checks 500 MB free space: insufficient space opens a NotifyWindow; otherwise a DialogWindow wraps a
+  GeneralAction whose callback writes `/tmp/.try_upgrade_file` and returns 3. Both windows get
+  onShow and are pushed directly. COPYING and LICENSE names are also admitted by the filter.
+- LoadSurfaceWorker loads a 250×360 thumbnail, puts it in the shared keyed cache and posts user
+  event 24 on completion. FileBrowserMenu's destructor retains the original empty local vector
+  loop: it does not free the two icon-vector entries through that loop.
+
+**Shared declaration changes.**
+
+- tu_015b20.h includes the existing Language.h; owned LanguageMenu's constructor and member now
+  use `std::vector<LanguageChoice>` instead of `std::vector<std::string>` (same vector size).
+- Added owned FileBrowserMenu's non-virtual itemIcon declaration. Corrected the ColorMenu arrow
+  comment: surface108 is the right arrow, separate from selectedBackground at +0x4c.
+- Outside p08's ownership, NotifyWindow's second constructor argument and field34 are now
+  `const char*` button-label text, replacing int. This follows both p08 callers and agrees with
+  the Wi-Fi unit's existing second argument. Layout and virtual slots are unchanged.
+- ZIP forward declarations, helper functions, globals and the 16-byte directory user-event
+  struct are local to p08.inc. No tool changes were needed.
+
+**-O0 details.** A callback argument copied into a named local is observable in both
+requestUpgrade and freeSurfaceCallback. Use the 16-byte SDL user-event struct for FileAction,
+the 20-byte union for worker completion, and the existing full SDL_Event for input; choosing a
+larger event changes stack offsets. Keep assignment inside the result condition (Action execution
+and ZIP lookup) to retain materialized Boolean instructions. Casting a returned label pointer to
+int adds a move even when the sizes match; fixing NotifyWindow's argument type removes it.
+
 ## Shared declarations (header pass, before p03-p11)
 
 p01 and p02 each declared the same classes differently in `tu_015b20.h` and had to be reconciled at

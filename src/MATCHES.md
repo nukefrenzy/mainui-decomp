@@ -182,6 +182,38 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `DeviceInfoMenu::loadInfo()` | 0x2b0f8 | 1036 | tu_015b20.cpp |
 | `DeviceInfoMenu::vfunc18()` | 0x2b504 | 184 | tu_015b20.cpp |
 | `display_memset_2b5bc()` | 0x2b5bc | 460 | tu_015b20.cpp |
+| `ColorMenu::ColorMenu()` | 0x2b788 | 308 | tu_015b20.cpp |
+| `ColorMenu::~ColorMenu()` | 0x2b8bc | 176 | tu_015b20.cpp |
+| `ColorMenu::~ColorMenu()` | 0x2b96c | 52 | tu_015b20.cpp |
+| `ColorMenu::vfunc7(SDL_Surface*)` | 0x2b9a0 | 2260 | tu_015b20.cpp |
+| `ColorMenu::vfunc3()` | 0x2c274 | 1224 | tu_015b20.cpp |
+| `ColorMenu::vfunc4()` | 0x2c73c | 36 | tu_015b20.cpp |
+| `ColorMenu::vfunc18()` | 0x2c760 | 196 | tu_015b20.cpp |
+| `ColorMenu::loadItems()` | 0x2c824 | 300 | tu_015b20.cpp |
+| `LanguageMenu::LanguageMenu(std::vector<LanguageChoice, std::allocator<LanguageChoice> > const&)` | 0x2c950 | 344 | tu_015b20.cpp |
+| `LanguageMenu::~LanguageMenu()` | 0x2caa8 | 76 | tu_015b20.cpp |
+| `LanguageMenu::~LanguageMenu()` | 0x2caf4 | 52 | tu_015b20.cpp |
+| `LanguageMenu::vfunc4()` | 0x2cb28 | 236 | tu_015b20.cpp |
+| `ThemeMenu::ThemeMenu()` | 0x2cc14 | 364 | tu_015b20.cpp |
+| `ThemeMenu::~ThemeMenu()` | 0x2cd80 | 60 | tu_015b20.cpp |
+| `ThemeMenu::~ThemeMenu()` | 0x2cdbc | 52 | tu_015b20.cpp |
+| `ThemeMenu::vfunc4()` | 0x2cdf0 | 464 | tu_015b20.cpp |
+| `fileType_2cfc0(char const*)` | 0x2cfc0 | 408 | tu_015b20.cpp |
+| `requestUpgrade(void*)` | 0x2d158 | 100 | tu_015b20.cpp |
+| `FileAction::execute(void*)` | 0x2d1bc | 952 | tu_015b20.cpp |
+| `fileBrowserFilter(char const*, char const*)` | 0x2d574 | 396 | tu_015b20.cpp |
+| `FileBrowserMenu::FileBrowserMenu(char const*)` | 0x2d700 | 520 | tu_015b20.cpp |
+| `FileBrowserMenu::~FileBrowserMenu()` | 0x2d908 | 336 | tu_015b20.cpp |
+| `FileBrowserMenu::~FileBrowserMenu()` | 0x2da58 | 52 | tu_015b20.cpp |
+| `FileBrowserMenu::count()` | 0x2da8c | 72 | tu_015b20.cpp |
+| `FileBrowserMenu::vfunc4()` | 0x2dad4 | 184 | tu_015b20.cpp |
+| `FileBrowserMenu::getItem(int)` | 0x2db8c | 136 | tu_015b20.cpp |
+| `FileBrowserMenu::itemIcon(TextItem*)` | 0x2dc14 | 168 | tu_015b20.cpp |
+| `FileBrowserMenu::vfunc7(SDL_Surface*)` | 0x2dcbc | 1076 | tu_015b20.cpp |
+| `FileBrowserMenu::vfunc3()` | 0x2e0f0 | 552 | tu_015b20.cpp |
+| `freeSurfaceCallback(SDL_Surface*)` | 0x2e318 | 44 | tu_015b20.cpp |
+| `LoadSurfaceWorker::run()` | 0x2e344 | 168 | tu_015b20.cpp |
+| `LoadSurfaceWorker::finished()` | 0x2e3ec | 56 | tu_015b20.cpp |
 | `MenuWindow::MenuWindow(int, int, ListMenu*)` | 0x2e6d4 | 676 | tu_015b20.cpp |
 | `MenuWindow::~MenuWindow() (complete)` | 0x2ec3c | 316 | tu_015b20.cpp |
 | `MenuWindow::~MenuWindow() (deleting)` | 0x2ed78 | 52 | tu_015b20.cpp |

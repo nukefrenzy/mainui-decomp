@@ -176,3 +176,10 @@ then where the first use of the displaced function happens.
   original scope: a loop-local SDL_Color can add an exception-cleanup path even when it is POD.
 - Inline virtual declarations may precede their definitions. Defining the hardware no-op virtuals
   and destructors out of class, in original emission order, reproduces the 27-function tail.
+
+- Match the concrete SDL event type used at each site: a 16-byte user-event struct, 20-byte
+  event union and full keyboard-event union can carry the same user fields but give different
+  local offsets (`FileAction::execute` 0x2d1bc versus `LoadSurfaceWorker::finished` 0x2e3ec).
+- A pointer-to-int argument cast can add `mov r3, r0` before copying a call result to a saved
+  register, even though both types are 32 bits. The NotifyWindow button-label parameter must
+  be `const char*` for its p08 callers to match; an integer placeholder plus cast is not equivalent.

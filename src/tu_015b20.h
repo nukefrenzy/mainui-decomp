@@ -319,6 +319,7 @@ void freeSurfaceCallback(SDL_Surface *s);  // 0x2e318
 // says so in its report. Vtable slot order is from ghidra/classes.json and is not to be changed.
 // ===========================================================================================
 #include "Theme.h"
+#include "Language.h"
 
 // Globals used by two or more parts (names as in the units that define them).
 extern std::vector<AppInfo> g_appFolder;            // 0x181938  /mnt/SDCARD/App
@@ -556,18 +557,18 @@ public:
     virtual int  vfunc4();                                     // 0x2c73c
     virtual void vfunc7(SDL_Surface *dst);                     // 0x2b9a0
     virtual void vfunc18();                                    // 0x2c760
-    void loadItems();                                          // 0x2c824  name unverified
+    void loadItems();                                          // 0x2c824  four LCD controls
     SDL_Surface *surface104;        // +0x104
-    SDL_Surface *surface108;        // +0x108  also selectedBackground
+    SDL_Surface *surface108;        // +0x108  right arrow (selection background is +0x4c)
 };
 
 // p08. vtable 0x153ba0; sizeof 0x110.
 class LanguageMenu : public TextMenu {
 public:
-    LanguageMenu(const std::vector<std::string> &languages);   // 0x2c950  unverified argument
+    LanguageMenu(const std::vector<LanguageChoice> &languages); // 0x2c950
     virtual ~LanguageMenu();                                   // 0x2caa8 (D0 0x2caf4)
     virtual int  vfunc4();                                     // 0x2cb28
-    std::vector<std::string> languages; // +0x104  unverified element type
+    std::vector<LanguageChoice> languages; // +0x104  filename/name pairs
 };
 
 // p08. vtable 0x153b4c; sizeof 0x104 (lists g_themeList).
@@ -588,6 +589,7 @@ public:
     virtual void *getItem(int index);                          // 0x2db8c
     virtual void vfunc7(SDL_Surface *dst);                     // 0x2dcbc
     virtual int  count();                                      // 0x2da8c
+    SDL_Surface *itemIcon(TextItem *item);                     // 0x2dc14
     FileBrowserCache cache;         // +0x48  filter 0x2d574
     std::vector<TextItem *> *dirItems; // +0x64  cache.open(path)
     std::vector<SDL_Surface *> icons;  // +0x68  unverified element type
@@ -685,7 +687,7 @@ public:
 // p10. vtable 0x153a2c; sizeof 0x3c.
 class NotifyWindow : public FloatWindow {
 public:
-    NotifyWindow(const char *text, int arg34, const char *background, void (*callback)()); // 0x327e4 unverified types
+    NotifyWindow(const char *text, const char *arg34, const char *background, void (*callback)()); // 0x327e4: text, button label, button background, callback
     virtual ~NotifyWindow();                                   // 0x32920 (D0 0x329cc)
     virtual int  handleInput();                                // 0x32d0c
     virtual int  draw(SDL_Surface *dst);                       // 0x32d74
@@ -694,7 +696,7 @@ public:
     std::string  text;              // +0x14
     SDL_Surface *surface2c;         // +0x2c
     SDL_Surface *surface30;         // +0x30
-    int          field34;           // +0x34  ctor arg34
+    const char  *field34;           // +0x34  borrowed button-label text
     void       (*callback)();       // +0x38
 };
 

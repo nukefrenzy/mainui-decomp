@@ -360,6 +360,42 @@ M.update({
     '0002b5bc': ('display_memset_2b5bc', 'menus', 'confirmed', 'Byte-exact tu_015b20 p07.'),
 })
 
+# Verified tu_015b20 p08 functions (0x2b788-0x2e424).
+M.update({
+    '0002b788': ('ColorMenu::ColorMenu', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002b8bc': ('ColorMenu::~ColorMenu', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002b96c': ('ColorMenu::deletingDtor', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002b9a0': ('ColorMenu::vfunc7', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002c274': ('ColorMenu::vfunc3', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002c73c': ('ColorMenu::vfunc4', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002c760': ('ColorMenu::vfunc18', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002c824': ('ColorMenu::loadItems', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002c950': ('LanguageMenu::LanguageMenu', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002caa8': ('LanguageMenu::~LanguageMenu', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002caf4': ('LanguageMenu::deletingDtor', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002cb28': ('LanguageMenu::vfunc4', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002cc14': ('ThemeMenu::ThemeMenu', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002cd80': ('ThemeMenu::~ThemeMenu', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002cdbc': ('ThemeMenu::deletingDtor', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002cdf0': ('ThemeMenu::vfunc4', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002cfc0': ('fileType_2cfc0', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002d158': ('requestUpgrade', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002d1bc': ('FileAction::execute', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002d574': ('fileBrowserFilter', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002d700': ('FileBrowserMenu::FileBrowserMenu', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002d908': ('FileBrowserMenu::~FileBrowserMenu', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002da58': ('FileBrowserMenu::deletingDtor', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002da8c': ('FileBrowserMenu::count', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002dad4': ('FileBrowserMenu::vfunc4', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002db8c': ('FileBrowserMenu::getItem', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002dc14': ('FileBrowserMenu::itemIcon', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002dcbc': ('FileBrowserMenu::vfunc7', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002e0f0': ('FileBrowserMenu::vfunc3', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002e318': ('freeSurfaceCallback', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002e344': ('LoadSurfaceWorker::run', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+    '0002e3ec': ('LoadSurfaceWorker::finished', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
+})
+
 for a, (nm, sub, conf, cmt) in M.items():
     names[a] = {"name": nm, "subsystem": sub, "confidence": conf, "comment": cmt}
 
