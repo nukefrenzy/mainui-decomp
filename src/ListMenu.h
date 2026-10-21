@@ -23,7 +23,7 @@ public:
     virtual void vfunc11() {}                                  // slot 11, 0x396a0
     virtual void vfunc12(int) {}                               // slot 12, 0x396c0
     virtual void vfunc13() {}                                  // slot 13, 0x396e4 (reload)
-    virtual void vfunc14(int) {}                               // slot 14, 0x39704
+    virtual void vfunc14(const char *) {}                      // slot 14, 0x39704
     virtual int  vfunc15(int event) { return -1; }             // slot 15, 0x39728
     virtual int  vfunc16();                                    // slot 16, 0x1dbdc (6 up)
     virtual int  vfunc17();                                    // slot 17, 0x1dc30 (6 down)

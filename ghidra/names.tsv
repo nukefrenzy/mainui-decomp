@@ -113,45 +113,46 @@ addr	name	subsystem	confidence	comment
 00022c88	isRomFile	files	confirmed	Byte-exact countDirectoryItems filter: known file type or .zip, never [BIOS]/neogeo/gngeo.
 00022d90	database_lang_22d90	database	confirmed	Byte-exact open <path>/<name>_cache6.db and count rows (folder ppath or pinyin/cpinyin search); empty cache is rebuilt from gamelist.xml, else the file system. Name kept: shared prototype.
 00023318	buildRomList_23318	database	confirmed	Byte-exact create_rom_browser_menu: new DBCachedTextMenu(emu label, emu, arg, search), count via 0x22d90, setTotal, open the cache. Name kept: shared prototype.
-00023548	DBCacheWorker::vfunc2	database	confirmed-class	
-0002407c	DBCacheWorker::vfunc3	games	confirmed-class	
-000240b4	DBCachedTextMenu::vfunc16	games	confirmed-class	
-000240ec	DBCachedTextMenu::vfunc17	games	confirmed-class	
-00024128	DBCachedTextMenu::vfunc9	games	confirmed-class	
-00024164	DBCachedTextMenu::vfunc10	games	confirmed-class	
-000241a0	games_operatornew_241a0	games	guess	
-000242dc	games_operatornew_242dc	games	guess	
-00024410	DBCachedTextMenu::getItem	games	inferred	
-00024584	DBCachedTextMenu::vfunc6	games	confirmed-class	
-000246f8	DBCachedTextMenu::restorePosition	games	inferred	
-00024834	database_open_24834	database	guess	
-00024a14	DBCachedTextMenu::vfunc12	database	confirmed-class	
-00024d28	render_operatordelete_24d28	render	guess	
-00024d6c	misc_free_24d6c	misc	guess	
-00024d98	DBCachedTextMenu::vfunc14	database	confirmed-class	
-00025240	DBCachedTextMenu::ctor_or_dtor_25240	games	likely	
-0002540c	DBCachedTextMenu::dtor	games	confirmed	
-000254dc	DBCachedTextMenu::deletingDtor	games	confirmed	
-00025510	config_string_25510	config	guess	
-00025620	render_SDL_FreeSurface_25620	render	inferred	
-000256f0	IconMenuItem::IconMenuItem	ui_framework	confirmed	(labelId@+0x40, iconFocused, iconNormal, x, y, menuId@+0x4c, param@+0x44, flag)
-000258d4	render_string_258d4	render	guess	
-00025a8c	render_SDL_FreeSurface_25a8c	render	inferred	
-00025b5c	render_SDL_FreeSurface_25b5c	render	inferred	
-00025c8c	IconMenu::ctor_or_dtor_25c8c	ui_framework	likely	
-00025e48	IconMenu::dtor	ui_framework	confirmed	
-00025ec8	IconMenu::deletingDtor	ui_framework	confirmed	
-00025efc	IconMenu::vfunc7	render	confirmed-class	
-00026fa0	IconMenu::getItem	ui_framework	inferred	
-00027014	database_cache6_27014	database	inferred	
-00027724	IconMenu::onSelect	ui_framework	confirmed	Opens a MenuWindow for item->menuId (+0x4c); item 0x18 = global search.
-0002797c	ui_framework_IconMenu_2797c	ui_framework	guess	
-00027a30	itemVec_pushBack	ui_framework	inferred	
-00027a68	IconMenu::vfunc11	ui_framework	confirmed-class	
-00027bc4	IconMenu::vfunc3	ui_framework	confirmed-class	
-000282d0	SettingMenuItem::SettingMenuItem	settings	inferred	(labelId, icon, handler/target)
-000283b8	render_SDL_FreeSurface_283b8	render	inferred	
-00028408	render_SDL_FreeSurface_28408	render	inferred	
+00023548	DBCacheWorker::run	database	confirmed	Byte-exact tu_015b20 p06.
+0002407c	DBCacheWorker::finished	database	confirmed	Byte-exact tu_015b20 p06.
+000240b4	DBCachedTextMenu::vfunc16	database	confirmed	Byte-exact tu_015b20 p06.
+000240ec	DBCachedTextMenu::vfunc17	database	confirmed	Byte-exact tu_015b20 p06.
+00024128	DBCachedTextMenu::vfunc9	database	confirmed	Byte-exact tu_015b20 p06.
+00024164	DBCachedTextMenu::vfunc10	database	confirmed	Byte-exact tu_015b20 p06.
+000241a0	DBCachedTextMenu::prefetchNext	database	confirmed	Byte-exact tu_015b20 p06.
+000242dc	DBCachedTextMenu::prefetchPrevious	database	confirmed	Byte-exact tu_015b20 p06.
+00024410	DBCachedTextMenu::getItem	database	confirmed	Byte-exact tu_015b20 p06.
+00024584	DBCachedTextMenu::vfunc6	database	confirmed	Byte-exact tu_015b20 p06.
+000246f8	DBCachedTextMenu::restorePosition	database	confirmed	Byte-exact tu_015b20 p06.
+00024834	DBCachedTextMenu::open	database	confirmed	Byte-exact tu_015b20 p06.
+00024a14	DBCachedTextMenu::vfunc12	database	confirmed	Byte-exact tu_015b20 p06.
+00024d28	deleteCachedTextItem	database	confirmed	Byte-exact tu_015b20 p06.
+00024d6c	freeCachedData	database	confirmed	Byte-exact tu_015b20 p06.
+00024d98	DBCachedTextMenu::vfunc14	database	confirmed	Byte-exact tu_015b20 p06.
+00025240	DBCachedTextMenu::DBCachedTextMenu	database	confirmed	Byte-exact tu_015b20 p06.
+0002540c	DBCachedTextMenu::~DBCachedTextMenu	database	confirmed	Byte-exact tu_015b20 p06.
+000254dc	DBCachedTextMenu::deletingDtor	database	confirmed	Byte-exact tu_015b20 p06.
+00025510	TextItem::TextItem	menus	confirmed	Byte-exact tu_015b20 p06.
+00025620	TextItem::~TextItem	menus	confirmed	Byte-exact tu_015b20 p06.
+000256f0	IconMenuItem::IconMenuItem	menus	confirmed	Byte-exact tu_015b20 p06.
+000258d4	IconMenuItem::IconMenuItem_byLabel	menus	confirmed	Byte-exact tu_015b20 p06.
+00025a8c	IconMenuItem::~IconMenuItem	menus	confirmed	Byte-exact tu_015b20 p06.
+00025b5c	IconMenuItem::reload	menus	confirmed	Byte-exact tu_015b20 p06.
+00025c68	defaultIconFont	menus	confirmed	Byte-exact tu_015b20 p06.
+00025c8c	IconMenu::IconMenu	menus	confirmed	Byte-exact tu_015b20 p06.
+00025e48	IconMenu::~IconMenu	menus	confirmed	Byte-exact tu_015b20 p06.
+00025ec8	IconMenu::deletingDtor	menus	confirmed	Byte-exact tu_015b20 p06.
+00025efc	IconMenu::vfunc7	menus	confirmed	Byte-exact tu_015b20 p06.
+00026fa0	IconMenu::getItem	menus	confirmed	Byte-exact tu_015b20 p06.
+00027014	prepareGlobalRomCache	menus	confirmed	Byte-exact tu_015b20 p06.
+00027724	IconMenu::vfunc4	menus	confirmed	Byte-exact tu_015b20 p06.
+0002797c	IconMenu::freeItems	menus	confirmed	Byte-exact tu_015b20 p06.
+00027a30	IconMenu::addItem	menus	confirmed	Byte-exact tu_015b20 p06.
+00027a68	IconMenu::vfunc11	menus	confirmed	Byte-exact tu_015b20 p06.
+00027bc4	IconMenu::vfunc3	menus	confirmed	Byte-exact tu_015b20 p06.
+000282d0	SettingMenuItem::SettingMenuItem	menus	confirmed	Byte-exact tu_015b20 p06.
+000283b8	SettingMenuItem::~SettingMenuItem	menus	confirmed	Byte-exact tu_015b20 p06.
+00028408	SettingMenuItem::reload	menus	confirmed	Byte-exact tu_015b20 p06.
 0002849c	SettingMenu::ctor_or_dtor_2849c	render	likely	
 00028614	SettingMenu::dtor	render	confirmed	
 00028748	SettingMenu::deletingDtor	settings	confirmed	

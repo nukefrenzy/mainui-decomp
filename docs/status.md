@@ -1,15 +1,16 @@
 # Status and next steps
 
-Snapshot of 2026-10-19. Live numbers: `python3 tools/progress.py`; unit ranges: `docs/tu-map.tsv`;
+Snapshot of 2026-10-20. Live numbers: `python3 tools/progress.py`; unit ranges: `docs/tu-map.tsv`;
 method: `docs/unit-workflow.md`. Update this file when a unit is proven or the plan changes.
 
 ## Where things stand
 
 - **Goal:** complete MainUI source that rebuilds byte-exact with Arm GNU 8.2-2018.08, `-O0 -fsigned-char`,
   worked file by file (one translation unit per `src/tu_<lo>.cpp` or `.c`).
-- **Progress:** 21 whole units proven by `tools/unitcheck.py`, plus 10 single functions in
-  `tu_015b20`: 1,520 of 2,608 Miyoo functions, 246,656 of 458,064 bytes (53.85%). CI checks every match
-  and every unit on each push.
+- **Progress:** 21 whole units proven by `tools/unitcheck.py`, plus 158 matched function ranges in
+  `tu_015b20`: 1,668 of 2,610 Miyoo functions, 322,372 of 458,064 bytes (70.38%). CI checks every
+  match and every unit on each push. Parts p01–p06 match consecutively through 0x2849c (169 function
+  symbols including aliases); the rest of the body and the whole-unit tail remain unfinished.
 - **Embedded libraries:** SQLite 3.30.1 and cJSON 1.7.10 rebuild byte-exact (`scripts/verify-libs.sh`);
   tiny-utf8 4.4.x is header-only and appears in the template tails of the files that use it.
 
@@ -124,8 +125,10 @@ unit, each in its own worktree; merge their branches into `main` one at a time.
    "item and action wiring" question is answered inside it. Plan and part ranges:
    `docs/plan-tu_015b20.md`. The skeleton is in place: `src/tu_015b20.cpp` includes the part files
    `src/tu_015b20/p01.inc`..`p11.inc`; check a growing body with `unitcheck --body-only`
-   (`scripts/run_units.sh` runs it that way until the unit is complete). The Ghidra export missed
-   `keyEventName` at 0x15b20 (now matched), so the function denominator rises from 2,607 to 2,608.
+   (`scripts/run_units.sh` runs it that way until the unit is complete). Parts p01–p06 are complete;
+   **p07, 0x2849c–0x2b788 (SettingMenu/DeviceInfoMenu), is next.** The export omitted
+   `keyEventName`, p04's `truncateUtf8` and p06's `defaultIconFont`; recording those starts raises
+   the function denominator from 2,607 to 2,610.
 
 ## Open findings and questions
 

@@ -288,6 +288,50 @@ M.update({'0004cb68': ('readTestInput', 'hardware', 'confirmed', 'Byte-exact tu_
               'confirmed',
               'Byte-exact tu_04cb68 function.')})
 
+# Verified tu_015b20 p06 functions (0x23548-0x2849c).
+M.update({
+    '00023548': ('DBCacheWorker::run', 'database', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '0002407c': ('DBCacheWorker::finished', 'database', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '000240b4': ('DBCachedTextMenu::vfunc16', 'database', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '000240ec': ('DBCachedTextMenu::vfunc17', 'database', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '00024128': ('DBCachedTextMenu::vfunc9', 'database', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '00024164': ('DBCachedTextMenu::vfunc10', 'database', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '000241a0': ('DBCachedTextMenu::prefetchNext', 'database', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '000242dc': ('DBCachedTextMenu::prefetchPrevious', 'database', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '00024410': ('DBCachedTextMenu::getItem', 'database', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '00024584': ('DBCachedTextMenu::vfunc6', 'database', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '000246f8': ('DBCachedTextMenu::restorePosition', 'database', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '00024834': ('DBCachedTextMenu::open', 'database', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '00024a14': ('DBCachedTextMenu::vfunc12', 'database', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '00024d28': ('deleteCachedTextItem', 'database', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '00024d6c': ('freeCachedData', 'database', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '00024d98': ('DBCachedTextMenu::vfunc14', 'database', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '00025240': ('DBCachedTextMenu::DBCachedTextMenu', 'database', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '0002540c': ('DBCachedTextMenu::~DBCachedTextMenu', 'database', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '000254dc': ('DBCachedTextMenu::deletingDtor', 'database', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '00025510': ('TextItem::TextItem', 'menus', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '00025620': ('TextItem::~TextItem', 'menus', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '000256f0': ('IconMenuItem::IconMenuItem', 'menus', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '000258d4': ('IconMenuItem::IconMenuItem_byLabel', 'menus', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '00025a8c': ('IconMenuItem::~IconMenuItem', 'menus', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '00025b5c': ('IconMenuItem::reload', 'menus', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '00025c68': ('defaultIconFont', 'menus', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '00025c8c': ('IconMenu::IconMenu', 'menus', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '00025e48': ('IconMenu::~IconMenu', 'menus', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '00025ec8': ('IconMenu::deletingDtor', 'menus', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '00025efc': ('IconMenu::vfunc7', 'menus', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '00026fa0': ('IconMenu::getItem', 'menus', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '00027014': ('prepareGlobalRomCache', 'menus', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '00027724': ('IconMenu::vfunc4', 'menus', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '0002797c': ('IconMenu::freeItems', 'menus', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '00027a30': ('IconMenu::addItem', 'menus', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '00027a68': ('IconMenu::vfunc11', 'menus', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '00027bc4': ('IconMenu::vfunc3', 'menus', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '000282d0': ('SettingMenuItem::SettingMenuItem', 'menus', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '000283b8': ('SettingMenuItem::~SettingMenuItem', 'menus', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+    '00028408': ('SettingMenuItem::reload', 'menus', 'confirmed', 'Byte-exact tu_015b20 p06.'),
+})
+
 for a, (nm, sub, conf, cmt) in M.items():
     names[a] = {"name": nm, "subsystem": sub, "confidence": conf, "comment": cmt}
 

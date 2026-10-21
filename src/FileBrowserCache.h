@@ -17,7 +17,7 @@ public:
 // One list row; sizeof == 0x74. Ctor 0x25510 and dtor 0x25620 are in tu_015b20 (p06).
 class TextItem {
 public:
-    TextItem(const char *label, int value, Action *action, bool flag);  // 0x25510
+    TextItem(const char *label, SDL_Surface *value, Action *action, bool flag);  // 0x25510
     ~TextItem();                                                        // 0x25620
     std::string label;
     Action *action;     // +0x18

@@ -435,22 +435,24 @@ public:
     virtual int  vfunc9();                                     // 0x24128
     virtual int  vfunc10();                                    // 0x24164
     virtual void vfunc12(int);                                 // 0x24a14
-    virtual void vfunc14(int);                                 // 0x24d98
+    virtual void vfunc14(const char *);                         // 0x24d98
     virtual int  vfunc16();                                    // 0x240b4
     virtual int  vfunc17();                                    // 0x240ec
+    void prefetchNext();                                      // 0x241a0
+    void prefetchPrevious();                                  // 0x242dc
     void setTotal(int n) { total = n; }                        // 0x3a9b0, inline; name unverified
-    int  open(const char *a, const char *b, const char *c);    // 0x24834, called by p05; unverified
+    int  open(const char *path, const char *table, const char *folder); // 0x24834
     MenuHelper60 workers;           // +0xf8   3 threads
     MenuHelper80 items;             // +0x118  rows (free 0x24d28)
     MenuHelper80 data;              // +0x12c  (free 0x24d6c)
-    int          field140;          // +0x140  0
+    sqlite3     *field140;          // +0x140  database connection
     std::string  name;              // +0x144
     std::string  str15c;            // +0x15c
     int          field174;          // +0x174  ctor arg174
     int          total;             // +0x178  0
     std::string  dbName;            // +0x17c
-    char         raw194[0x414 - 0x194];
-    int          field414;          // +0x414  ctor arg414
+    char         raw194[0x280];     // +0x194  SQL/cache-key formatting buffer
+    EmuInfo     *field414;          // +0x414  emulator record (constructor argument)
     std::string  dir;               // +0x418
 };
 
@@ -461,7 +463,8 @@ public:
                  int param, bool flag);                         // 0x256f0
     IconMenuItem(const char *label, const char *icon, const char *iconSelected, int x, int y,
                  int menuId, int param, bool flag);             // 0x258d4 (labelId -1)
-    ~IconMenuItem();                                           // 0x25a8c  unverified
+    ~IconMenuItem();                                           // 0x25a8c
+    void reload();                                            // 0x25b5c
     SDL_Surface *iconSurface;       // +0x00
     SDL_Surface *iconSelectedSurface; // +0x04
     int          x, y;              // +0x08, +0x0c
@@ -486,6 +489,7 @@ public:
     virtual void vfunc7(SDL_Surface *dst);                     // 0x25efc draw
     virtual int  count() { return items.size(); }              // 0x3a9e0, inline
     virtual void vfunc11();                                    // 0x27a68
+    void freeItems();                                          // 0x2797c
     void addItem(IconMenuItem *item);                          // 0x27a30
     void setField68(int a, int b) { field68 = a; field6c = b; } // 0x3aa10, inline; name unverified
     void setFontFn(TTF_Font *(*fn)()) { fontFn = fn; }         // 0x3aa50, inline; name unverified
@@ -509,12 +513,12 @@ public:
 // p06. Not polymorphic; sizeof 0x24.
 class SettingMenuItem {
 public:
-    SettingMenuItem(int labelId, const char *icon, int handler); // 0x282d0  handler unverified
-    ~SettingMenuItem();                                        // 0x283b8  unverified
-    void reload();                                             // 0x28408  called by SettingMenu::vfunc11; unverified
+    SettingMenuItem(int labelId, const char *icon, int handler); // 0x282d0, integer settings selector
+    ~SettingMenuItem();                                        // 0x283b8
+    void reload();                                             // 0x28408, called by SettingMenu::vfunc11
     SDL_Surface *iconSurface;       // +0x00
     int          labelId;           // +0x04
-    int          handler;           // +0x08  unverified type
+    int          handler;           // +0x08  settings selector, switched on in p07 (not a pointer)
     std::string  icon;              // +0x0c
 };
 
@@ -621,7 +625,7 @@ public:
     virtual ~DBCacheWorker() {}                                // 0x3a8d8 (D0 0x3a954)
     virtual void run();                                        // 0x23548
     virtual void finished();                                   // 0x2407c
-    char          raw04[0x200];     // +0x04  unverified (query buffer?)
+    char          raw04[0x200];     // +0x04  SQL/cache-key formatting buffer
     sqlite3      *db;               // +0x204
     std::string   dbName;           // +0x208
     std::string   table;            // +0x220

@@ -118,6 +118,46 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `isRomFile(char const*, char const*)` | 0x22c88 | 264 | tu_015b20.cpp |
 | `database_lang_22d90(EmuInfo*, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, char*, int)` | 0x22d90 | 1416 | tu_015b20.cpp |
 | `buildRomList_23318(EmuInfo*, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*)` | 0x23318 | 560 | tu_015b20.cpp |
+| `DBCacheWorker::run()` | 0x23548 | 2868 | tu_015b20.cpp |
+| `DBCacheWorker::finished()` | 0x2407c | 56 | tu_015b20.cpp |
+| `DBCachedTextMenu::vfunc16()` | 0x240b4 | 56 | tu_015b20.cpp |
+| `DBCachedTextMenu::vfunc17()` | 0x240ec | 60 | tu_015b20.cpp |
+| `DBCachedTextMenu::vfunc9()` | 0x24128 | 60 | tu_015b20.cpp |
+| `DBCachedTextMenu::vfunc10()` | 0x24164 | 60 | tu_015b20.cpp |
+| `DBCachedTextMenu::prefetchNext()` | 0x241a0 | 316 | tu_015b20.cpp |
+| `DBCachedTextMenu::prefetchPrevious()` | 0x242dc | 308 | tu_015b20.cpp |
+| `DBCachedTextMenu::getItem(int)` | 0x24410 | 372 | tu_015b20.cpp |
+| `DBCachedTextMenu::vfunc6(int)` | 0x24584 | 372 | tu_015b20.cpp |
+| `DBCachedTextMenu::restorePosition(int, int, int)` | 0x246f8 | 316 | tu_015b20.cpp |
+| `DBCachedTextMenu::open(char const*, char const*, char const*)` | 0x24834 | 480 | tu_015b20.cpp |
+| `DBCachedTextMenu::vfunc12(int)` | 0x24a14 | 788 | tu_015b20.cpp |
+| `deleteCachedTextItem(SDL_Surface*)` | 0x24d28 | 68 | tu_015b20.cpp |
+| `freeCachedData(SDL_Surface*)` | 0x24d6c | 44 | tu_015b20.cpp |
+| `DBCachedTextMenu::vfunc14(char const*)` | 0x24d98 | 1192 | tu_015b20.cpp |
+| `DBCachedTextMenu::DBCachedTextMenu(char const*, EmuInfo*, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)` | 0x25240 | 460 | tu_015b20.cpp |
+| `DBCachedTextMenu::~DBCachedTextMenu()` | 0x2540c | 208 | tu_015b20.cpp |
+| `DBCachedTextMenu::~DBCachedTextMenu()` | 0x254dc | 52 | tu_015b20.cpp |
+| `TextItem::TextItem(char const*, SDL_Surface*, Action*, bool)` | 0x25510 | 272 | tu_015b20.cpp |
+| `TextItem::~TextItem()` | 0x25620 | 208 | tu_015b20.cpp |
+| `IconMenuItem::IconMenuItem(int, char const*, char const*, int, int, int, int, bool)` | 0x256f0 | 484 | tu_015b20.cpp |
+| `IconMenuItem::IconMenuItem(char const*, char const*, char const*, int, int, int, int, bool)` | 0x258d4 | 440 | tu_015b20.cpp |
+| `IconMenuItem::~IconMenuItem()` | 0x25a8c | 208 | tu_015b20.cpp |
+| `IconMenuItem::reload()` | 0x25b5c | 268 | tu_015b20.cpp |
+| `defaultIconFont()` | 0x25c68 | 36 | tu_015b20.cpp |
+| `IconMenu::IconMenu(int, int, bool, bool, int, int, bool)` | 0x25c8c | 444 | tu_015b20.cpp |
+| `IconMenu::~IconMenu()` | 0x25e48 | 128 | tu_015b20.cpp |
+| `IconMenu::~IconMenu()` | 0x25ec8 | 52 | tu_015b20.cpp |
+| `IconMenu::vfunc7(SDL_Surface*)` | 0x25efc | 4260 | tu_015b20.cpp |
+| `IconMenu::getItem(int)` | 0x26fa0 | 116 | tu_015b20.cpp |
+| `prepareGlobalRomCache()` | 0x27014 | 1808 | tu_015b20.cpp |
+| `IconMenu::vfunc4()` | 0x27724 | 600 | tu_015b20.cpp |
+| `IconMenu::freeItems()` | 0x2797c | 180 | tu_015b20.cpp |
+| `IconMenu::addItem(IconMenuItem*)` | 0x27a30 | 56 | tu_015b20.cpp |
+| `IconMenu::vfunc11()` | 0x27a68 | 348 | tu_015b20.cpp |
+| `IconMenu::vfunc3()` | 0x27bc4 | 1804 | tu_015b20.cpp |
+| `SettingMenuItem::SettingMenuItem(int, char const*, int)` | 0x282d0 | 232 | tu_015b20.cpp |
+| `SettingMenuItem::~SettingMenuItem()` | 0x283b8 | 80 | tu_015b20.cpp |
+| `SettingMenuItem::reload()` | 0x28408 | 148 | tu_015b20.cpp |
 | `MenuWindow::MenuWindow(int, int, ListMenu*)` | 0x2e6d4 | 676 | tu_015b20.cpp |
 | `MenuWindow::~MenuWindow() (complete)` | 0x2ec3c | 316 | tu_015b20.cpp |
 | `MenuWindow::~MenuWindow() (deleting)` | 0x2ed78 | 52 | tu_015b20.cpp |

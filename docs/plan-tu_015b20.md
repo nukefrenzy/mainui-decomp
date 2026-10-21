@@ -253,6 +253,58 @@ std::string, char*, int)`. `buildRomList_23318(EmuInfo*, ...)`. The `DBCachedTex
 `(const char *, EmuInfo *emu, int, std::string search)` (by value; p06 should retype `field414`).
 `TextMenu::hasItem` became `insertSorted` and `addUnique`.
 
+## p06 findings (0x23548–0x2849c, done)
+
+All 40 distinct function ranges match (20,308 bytes): 38 written definitions and two generated
+deleting destructors. The merged body prefix now reaches **0x2849c**: 169 function symbols
+(including constructor/destructor aliases), 76,156 consecutive bytes from 0x15b20. The next
+unwritten function is `SettingMenu::SettingMenu` (p07). This is a body-prefix proof; the whole
+unit's inline/template tail still awaits integration. All 45 p06 string-literal references were
+also compared with the binary separately from the relocation-masked code check.
+
+**Cached rows.** `DBCacheWorker::run` reads cache keys `<table>_<index>`, queries the ROM DB by
+folder or pinyin/cpinyin, and produces `TextItem`s with owned `EmuAction`s. ROM rows get the game
+icon (or no icon for previews), emulator label, favourite flag and pinyin; folder rows get the
+folder icon and `EmuAction::folderArg`. The image-path cache owns duplicated strings. `finished`
+pushes SDL user event 24. `DBCachedTextMenu` supplies forward/backward prefetch, indexed row/image
+lookup, initial open, saved-position reload, deletion and search; its owned connection is closed
+by the destructor. Deletion retains the original call removing a favourite by the item's label.
+The global-cache preparation helper retains its original allocated-buffer leak and unused reads.
+
+**How selected items open windows or run actions.**
+
+- `IconMenu::vfunc3` sends A (keys 1/4) to `vfunc4`. A normal `IconMenuItem` supplies `labelId`
+  (or its literal label), `menuId`, and `param` to a new `MenuWindow`; the selector calls `onShow`
+  and pushes it directly onto `g_windowStack`, returning 0. It does not create an `Action` for
+  ordinary icons. The item flag owns/frees a nonzero `param`.
+- Icon `menuId == 24` sets up the busy-screen thread, prepares the RApp/Emu caches, then opens
+  `ImeWindow(153, new GlobalSearchAction, 153)` and pushes it after joining that thread.
+- A `SettingMenuItem` is a separate 0x24-byte record: icon surface, language-label ID, integer
+  settings selector, icon path. Its `handler` at +8 is an **integer selector**, not an `Action*`
+  or function pointer. Reading p07's callers (0x2a5d4/0x29dc8) shows that A dispatches this selector:
+  direct windows/menus for key mapping, device info, language/colour/theme/fixes, Wi-Fi/hotspot,
+  or a dialog with a `GeneralAction` (sometimes wrapped in `PopupProgressAction`). Opened windows
+  receive `onShow` and are pushed directly. The full selector table remains p07's responsibility.
+
+**Shared declaration changes.**
+
+- `FileBrowserCache.h`: the `TextItem` constructor's second argument is `SDL_Surface*`, matching
+  the already corrected `value` field at +0x20. Existing null-icon callers are unchanged.
+- `tu_015b20.h` (owned classes): `DBCachedTextMenu::field414` is `EmuInfo*`; `field140` is
+  `sqlite3*`; the formatting arrays remain 0x280/0x200 bytes and are documented. Added non-virtual
+  `prefetchNext`/`prefetchPrevious`, `IconMenuItem::reload` and `IconMenu::freeItems` declarations.
+- `DBCachedTextMenu::vfunc14` and its base slot in `ListMenu.h` take `const char*` (a search
+  string), replacing the untyped `int`; the slot order and layouts are unchanged.
+- Confirmed p06 names are recorded in both name sources, including the previously missing
+  36-byte `defaultIconFont` at 0x25c68. This adds one function start to the denominator.
+
+**-O0 details.** Assignment in the SQLite row-status condition preserves the Boolean test;
+combining prepare/step conditions removes it. Preserve named worker locals before `addWorker`,
+redundant `i = 0`, the unused page-length calculation in `open`, and original expression order:
+`items.size() * (dot->w + 5)` differs from the reversed multiplication, and the keyboard's
+quotient-times-page-size calculations must evaluate the division first. Explicit no-op cases 12/13
+retain the 13-entry keyboard dispatch table; omitting them shrinks it despite identical default behavior.
+
 ## Shared declarations (header pass, before p03-p11)
 
 p01 and p02 each declared the same classes differently in `tu_015b20.h` and had to be reconciled at
