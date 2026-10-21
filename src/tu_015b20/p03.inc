@@ -9,7 +9,6 @@ void cJSON_DeleteItemFromObject(cJSON *object, const char *key);
 cJSON *cJSON_Parse(const char *value);
 cJSON *cJSON_GetObjectItem(const cJSON *object, const char *string);
 char *cJSON_GetStringValue(cJSON *item);
-char *GetGameName(const char *langFile, const char *name);
 }
 int findEmuByLaunch(std::vector<EmuInfo> *list, const char *path);  // 0x120f80
 int findApp(std::vector<AppInfo> *list, const char *path);          // 0x12114c

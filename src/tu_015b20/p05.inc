@@ -24,7 +24,6 @@ const char *sqlite3_errmsg(sqlite3 *db);
 const char *getLanguageFile();                                  // 0x14ba18 (tu_14b860)
 char *pinyinInitials(const char *s);                            // 0x143ae4 (tu_143720)
 int countDirectoryItems(std::string dir, bool (*filter)(const char *, const char *)); // 0x12d400
-extern "C" const char *GetGameName(const char *langFile, const char *name);   // import
 
 // 0x20500
 TextMenu::TextMenu(bool a, bool b, int c, const char *background)

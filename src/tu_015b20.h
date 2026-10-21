@@ -344,6 +344,9 @@ extern SDL_Color g_emptyColor;                      // 0x1822a4
 class TextMenu;
 class DBCachedTextMenu;
 
+// libgamename import, C++ linkage (_Z11GetGameNamePKcS0_); used by p03 and p05.
+char *GetGameName(const char *langFile, const char *name);
+
 // Non-member functions called across parts (p01/p02 functions are defined before every later part).
 // p03
 void power_label_1a4bc(const char *path, std::vector<TextItem *> *items); // 0x1a4bc  writes a favourites file
