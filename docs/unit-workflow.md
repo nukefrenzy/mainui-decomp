@@ -183,3 +183,10 @@ then where the first use of the displaced function happens.
 - A pointer-to-int argument cast can add `mov r3, r0` before copying a call result to a saved
   register, even though both types are 32 bits. The NotifyWindow button-label parameter must
   be `const char*` for its p08 callers to match; an integer placeholder plus cast is not equivalent.
+
+- A by-value `std::string` parameter has the same indirect ARM ABI as a string reference/pointer
+  inside a callee. A matching callee body alone does not settle its signature: caller-side copy
+  construction and destruction do (`MenuWindow::onShow`, `LoadSurfaceWorker` construction).
+- Returning a virtual call's result directly can differ from storing it in the common result
+  local and returning later. MenuWindow's progress dispatch needs the direct return; the latter
+  adds a store and moves branches even though the result is identical.

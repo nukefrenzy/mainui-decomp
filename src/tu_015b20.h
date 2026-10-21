@@ -261,10 +261,10 @@ public:
 };
 class SearchAction : public Action {
 public:
-    SearchAction(int arg, int id, void *emu) : Action(-1) { this->arg = arg; this->id = id; this->emu = emu; } // 0x3a24c
+    SearchAction(ListMenu *arg, int id, void *emu) : Action(-1) { this->arg = arg; this->id = id; this->emu = emu; } // 0x3a24c
     virtual ~SearchAction() {}
     virtual int execute(void *param);                        // 0x19b04
-    int arg;            // +0x08
+    ListMenu *arg;      // +0x08  originating menu
     int id;             // +0x0c  menu id of the result window
     void *emu;          // +0x10
 };
@@ -276,10 +276,10 @@ public:
 };
 class PopupSearchIME : public Action {
 public:
-    PopupSearchIME(int arg, int id, void *emu) : Action(-1) { this->arg = arg; this->id = id; this->emu = emu; } // 0x3a3dc
+    PopupSearchIME(ListMenu *arg, int id, void *emu) : Action(-1) { this->arg = arg; this->id = id; this->emu = emu; } // 0x3a3dc
     virtual ~PopupSearchIME() {}
     virtual int execute(void *param);                        // 0x19d24
-    int arg;            // +0x08
+    ListMenu *arg;      // +0x08  originating menu
     int id;             // +0x0c
     void *emu;          // +0x10
 };
@@ -355,7 +355,7 @@ int restoreWindowState(std::vector<TrimusWindow *> *stack);     // 0x1c1fc
 void saveWindowState(std::vector<TrimusWindow *> *stack, const char *path); // 0x1c544
 void setRomListPosition(std::vector<RomListPosition> *list, const std::string &path,
                         int cur, int start, int selected);      // 0x1c760  JSON keys pos, start, end
-int getRomListPosition(std::vector<RomListPosition> *list, std::string *path,
+int getRomListPosition(std::vector<RomListPosition> *list, std::string path,
                        RomListPosition *out);                   // 0x1c8d0
 int loadRomListPositions(std::vector<RomListPosition> *list);   // 0x1c994
 void saveRomListPositions(const std::vector<RomListPosition> *list); // 0x1cc90
@@ -378,8 +378,8 @@ int fileType_2cfc0(const char *name);                           // 0x2cfc0  unve
 int drawPageDots_311f4(SDL_Surface *dst, int a, int b);         // 0x311f4  unverified
 // freeSurfaceCallback 0x2e318 is declared with p09's globals above.
 // p11
-int files_374bc(int arg);                                       // 0x374bc  unverified
-ListMenu *createRomListMenu(int a, int b, int c, int d);        // 0x37610  unverified arguments
+const char *files_374bc(int arg);                                       // 0x374bc  unverified
+ListMenu *createRomListMenu(EmuInfo *, int id, std::string *dir, std::string *search); // 0x37610
 ListMenu *createMenu(int id, std::string path);                 // 0x37784  path by value (caller builds a temp)
 void flipScreen();                                              // 0x36c20
 void flushPendingWindows();                                     // 0x36cb8
@@ -642,7 +642,7 @@ public:
 // sizeof 0x24.
 class LoadSurfaceWorker : public BGWorker {
 public:
-    LoadSurfaceWorker(const std::string &path, MenuHelper80 *cache) // 0x3af38  cache unverified
+    LoadSurfaceWorker(std::string path, MenuHelper80 *cache) // 0x3af38  cache unverified
     {
         this->cache = cache;
         this->path = path;

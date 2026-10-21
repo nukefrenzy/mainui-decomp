@@ -69,7 +69,7 @@ char *lastPathComponent(char *path)
     return path;
 }
 
-MultiDBCachedTextMenu::MultiDBCachedTextMenu(const std::string &search)
+MultiDBCachedTextMenu::MultiDBCachedTextMenu(std::string search)
     : TextMenuDrawer(0, 1, 4, "skin/bg-list-l.png"), workers(10), items(deleteTextItem), data(freeData)
 {
     name = "global_search";

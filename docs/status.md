@@ -1,15 +1,15 @@
 # Status and next steps
 
-Snapshot of 2026-10-20. Live numbers: `python3 tools/progress.py`; unit ranges: `docs/tu-map.tsv`;
+Snapshot of 2026-10-21. Live numbers: `python3 tools/progress.py`; unit ranges: `docs/tu-map.tsv`;
 method: `docs/unit-workflow.md`. Update this file when a unit is proven or the plan changes.
 
 ## Where things stand
 
 - **Goal:** complete MainUI source that rebuilds byte-exact with Arm GNU 8.2-2018.08, `-O0 -fsigned-char`,
   worked file by file (one translation unit per `src/tu_<lo>.cpp` or `.c`).
-- **Progress:** 21 whole units proven by `tools/unitcheck.py`, plus 214 matched function ranges in
-  `tu_015b20`: 1,724 of 2,610 Miyoo functions, 346,828 of 458,064 bytes (75.72%). CI checks every
-  match and every unit on each push. Parts p01–p08 match consecutively through 0x2e424 (238 function
+- **Progress:** 21 whole units proven by `tools/unitcheck.py`, plus 232 matched function ranges in
+  `tu_015b20`: 1,742 of 2,610 Miyoo functions, 361,712 of 458,064 bytes (78.97%). CI checks every
+  match and every unit on each push. Parts p01–p09 match consecutively through 0x3225c (265 function
   symbols including aliases); the rest of the body and the whole-unit tail remain unfinished.
 - **Embedded libraries:** SQLite 3.30.1 and cJSON 1.7.10 rebuild byte-exact (`scripts/verify-libs.sh`);
   tiny-utf8 4.4.x is header-only and appears in the template tails of the files that use it.
@@ -125,8 +125,8 @@ unit, each in its own worktree; merge their branches into `main` one at a time.
    "item and action wiring" question is answered inside it. Plan and part ranges:
    `docs/plan-tu_015b20.md`. The skeleton is in place: `src/tu_015b20.cpp` includes the part files
    `src/tu_015b20/p01.inc`..`p11.inc`; check a growing body with `unitcheck --body-only`
-   (`scripts/run_units.sh` runs it that way until the unit is complete). Parts p01–p08 are complete;
-   **p09, 0x2e424–0x3225c (MenuWindow and FloatWindow), is next.** The export omitted
+   (`scripts/run_units.sh` runs it that way until the unit is complete). Parts p01–p09 are complete;
+   **p10, 0x3225c–0x36838 (popup, dialog and game-detail windows), is next.** The export omitted
    `keyEventName`, p04's `truncateUtf8` and p06's `defaultIconFont`; recording those starts raises
    the function denominator from 2,607 to 2,610.
 

@@ -528,10 +528,10 @@ void setRomListPosition(std::vector<RomListPosition> *list, const std::string &p
     }
 }
 
-int getRomListPosition(std::vector<RomListPosition> *list, std::string *path, RomListPosition *out)
+int getRomListPosition(std::vector<RomListPosition> *list, std::string path, RomListPosition *out)
 {
     for (unsigned int i = 0; i < list->size(); i++) {
-        if ((*list)[i].path.compare(*path) == 0) {
+        if ((*list)[i].path.compare(path) == 0) {
             *out = (*list)[i];
             return 0;
         }

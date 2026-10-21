@@ -209,27 +209,27 @@ addr	name	subsystem	confidence	comment
 0002e318	freeSurfaceCallback	menus	confirmed	Byte-exact tu_015b20 p08.
 0002e344	LoadSurfaceWorker::run	menus	confirmed	Byte-exact tu_015b20 p08.
 0002e3ec	LoadSurfaceWorker::finished	menus	confirmed	Byte-exact tu_015b20 p08.
-0002e424	MenuWindow::MenuWindow_byMenuId	ui_framework	confirmed	(labelId, menuId, param)
-0002e6d4	MenuWindow::MenuWindow	ui_framework	confirmed	(titleLabelId, id, ListMenu*). Byte-exact rewrite in src/tu_015b20/p09.inc.
-0002e978	MenuWindow::MenuWindow_byPath	ui_framework	confirmed	(path, menuId, param)
-0002ec3c	MenuWindow::~MenuWindow	ui_framework	confirmed	Byte-exact rewrite in src/tu_015b20/p09.inc.
-0002ed78	MenuWindow::deletingDtor	ui_framework	confirmed	
-0002edac	MenuWindow::saveState	ui_framework	confirmed	
-0002efcc	MenuWindow::restoreState	ui_framework	confirmed	
-0002f290	MenuWindow::onShow	ui_framework	confirmed	Lazily builds its ListMenu: 0x18 search, 5/0x11 DB rom list, else createMenu.
-0002f6c4	render_operator_2f6c4	render	guess	
-0002fb14	MenuWindow::update	render	inferred	
-0002fc74	MenuWindow::onHide	config	inferred	
-0002ff04	MenuWindow::handleInput	render	confirmed	
-000310ac	render_SDL_FreeSurface_310ac	render	inferred	
-000311f4	render_snprintf_311f4	render	inferred	
-00031398	MenuWindow::draw	files	confirmed	
-00031ed4	render_SDL_FreeSurface_31ed4	render	inferred	
-00032040	FloatWindow::ctor_or_dtor_32040	ui_framework	likely	
-00032094	FloatWindow::dtor	render	confirmed	
-000320f0	FloatWindow::deletingDtor	ui_framework	confirmed	
-00032124	FloatWindow::draw	render	confirmed	
-00032160	FloatWindow::onShow	render	confirmed	
+0002e424	MenuWindow::MenuWindow_byMenuId	windows	confirmed	Byte-exact tu_015b20 p09.
+0002e6d4	MenuWindow::MenuWindow_byMenu	windows	confirmed	Byte-exact tu_015b20 p09.
+0002e978	MenuWindow::MenuWindow_byPath	windows	confirmed	Byte-exact tu_015b20 p09.
+0002ec3c	MenuWindow::~MenuWindow	windows	confirmed	Byte-exact tu_015b20 p09.
+0002ed78	MenuWindow::deletingDtor	windows	confirmed	Byte-exact tu_015b20 p09.
+0002edac	MenuWindow::saveState	windows	confirmed	Byte-exact tu_015b20 p09.
+0002efcc	MenuWindow::restoreState	windows	confirmed	Byte-exact tu_015b20 p09.
+0002f290	MenuWindow::onShow	windows	confirmed	Byte-exact tu_015b20 p09.
+0002f6c4	MenuWindow::updateThumbnail	windows	confirmed	Byte-exact tu_015b20 p09.
+0002fb14	MenuWindow::update	windows	confirmed	Byte-exact tu_015b20 p09.
+0002fc74	MenuWindow::onHide	windows	confirmed	Byte-exact tu_015b20 p09.
+0002ff04	MenuWindow::handleInput	windows	confirmed	Byte-exact tu_015b20 p09.
+000310ac	MenuWindow::cacheBackground	windows	confirmed	Byte-exact tu_015b20 p09.
+000311f4	drawPageDots_311f4	windows	confirmed	Byte-exact tu_015b20 p09.
+00031398	MenuWindow::draw	windows	confirmed	Byte-exact tu_015b20 p09.
+00031ed4	MenuWindow::setHeaderIcon	windows	confirmed	Byte-exact tu_015b20 p09.
+00032040	FloatWindow::FloatWindow	windows	confirmed	Byte-exact tu_015b20 p09.
+00032094	FloatWindow::~FloatWindow	windows	confirmed	Byte-exact tu_015b20 p09.
+000320f0	FloatWindow::deletingDtor	windows	confirmed	Byte-exact tu_015b20 p09.
+00032124	FloatWindow::draw	windows	confirmed	Byte-exact tu_015b20 p09.
+00032160	FloatWindow::onShow	windows	confirmed	Byte-exact tu_015b20 p09.
 0003225c	PopUpWindow::ctor_or_dtor_3225c	ui_framework	likely	
 0003247c	PopUpWindow::dtor	render	confirmed	
 00032534	PopUpWindow::deletingDtor	ui_framework	confirmed	

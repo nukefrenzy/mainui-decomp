@@ -30,7 +30,7 @@ struct DBEntry {                // 0x24 bytes
 
 class MultiDBCachedTextMenu : public TextMenuDrawer {
 public:
-    MultiDBCachedTextMenu(const std::string &search);    // 0x1485fc, from MenuWindow::onShow
+    MultiDBCachedTextMenu(std::string search);    // 0x1485fc, from MenuWindow::onShow
     virtual ~MultiDBCachedTextMenu();                    // 0x14879c (D2), 0x14889c (D0)
     virtual void restorePosition(int a, int cur, int c); // 0x14909c
     virtual void *getItem(int index);                    // 0x149514

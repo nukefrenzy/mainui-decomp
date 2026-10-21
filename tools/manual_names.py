@@ -396,6 +396,31 @@ M.update({
     '0002e3ec': ('LoadSurfaceWorker::finished', 'menus', 'confirmed', 'Byte-exact tu_015b20 p08.'),
 })
 
+# Verified tu_015b20 p09 functions (0x2e424-0x3225c).
+M.update({
+    '0002e424': ('MenuWindow::MenuWindow_byMenuId', 'windows', 'confirmed', 'Byte-exact tu_015b20 p09.'),
+    '0002e6d4': ('MenuWindow::MenuWindow_byMenu', 'windows', 'confirmed', 'Byte-exact tu_015b20 p09.'),
+    '0002e978': ('MenuWindow::MenuWindow_byPath', 'windows', 'confirmed', 'Byte-exact tu_015b20 p09.'),
+    '0002ec3c': ('MenuWindow::~MenuWindow', 'windows', 'confirmed', 'Byte-exact tu_015b20 p09.'),
+    '0002ed78': ('MenuWindow::deletingDtor', 'windows', 'confirmed', 'Byte-exact tu_015b20 p09.'),
+    '0002edac': ('MenuWindow::saveState', 'windows', 'confirmed', 'Byte-exact tu_015b20 p09.'),
+    '0002efcc': ('MenuWindow::restoreState', 'windows', 'confirmed', 'Byte-exact tu_015b20 p09.'),
+    '0002f290': ('MenuWindow::onShow', 'windows', 'confirmed', 'Byte-exact tu_015b20 p09.'),
+    '0002f6c4': ('MenuWindow::updateThumbnail', 'windows', 'confirmed', 'Byte-exact tu_015b20 p09.'),
+    '0002fb14': ('MenuWindow::update', 'windows', 'confirmed', 'Byte-exact tu_015b20 p09.'),
+    '0002fc74': ('MenuWindow::onHide', 'windows', 'confirmed', 'Byte-exact tu_015b20 p09.'),
+    '0002ff04': ('MenuWindow::handleInput', 'windows', 'confirmed', 'Byte-exact tu_015b20 p09.'),
+    '000310ac': ('MenuWindow::cacheBackground', 'windows', 'confirmed', 'Byte-exact tu_015b20 p09.'),
+    '000311f4': ('drawPageDots_311f4', 'windows', 'confirmed', 'Byte-exact tu_015b20 p09.'),
+    '00031398': ('MenuWindow::draw', 'windows', 'confirmed', 'Byte-exact tu_015b20 p09.'),
+    '00031ed4': ('MenuWindow::setHeaderIcon', 'windows', 'confirmed', 'Byte-exact tu_015b20 p09.'),
+    '00032040': ('FloatWindow::FloatWindow', 'windows', 'confirmed', 'Byte-exact tu_015b20 p09.'),
+    '00032094': ('FloatWindow::~FloatWindow', 'windows', 'confirmed', 'Byte-exact tu_015b20 p09.'),
+    '000320f0': ('FloatWindow::deletingDtor', 'windows', 'confirmed', 'Byte-exact tu_015b20 p09.'),
+    '00032124': ('FloatWindow::draw', 'windows', 'confirmed', 'Byte-exact tu_015b20 p09.'),
+    '00032160': ('FloatWindow::onShow', 'windows', 'confirmed', 'Byte-exact tu_015b20 p09.'),
+})
+
 for a, (nm, sub, conf, cmt) in M.items():
     names[a] = {"name": nm, "subsystem": sub, "confidence": conf, "comment": cmt}
 

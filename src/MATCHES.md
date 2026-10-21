@@ -67,7 +67,7 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `restoreWindowState(std::vector<TrimusWindow*>*)` | 0x1c1fc | 840 | tu_015b20.cpp |
 | `saveWindowState(std::vector<TrimusWindow*>*, char const*)` | 0x1c544 | 540 | tu_015b20.cpp |
 | `setRomListPosition(std::vector<RomListPosition>*, std::string const&, int, int, int)` | 0x1c760 | 368 | tu_015b20.cpp |
-| `getRomListPosition(std::vector<RomListPosition>*, std::string*, RomListPosition*)` | 0x1c8d0 | 196 | tu_015b20.cpp |
+| `getRomListPosition(std::vector<RomListPosition>*, std::string, RomListPosition*)` | 0x1c8d0 | 196 | tu_015b20.cpp |
 | `loadRomListPositions(std::vector<RomListPosition>*)` | 0x1c994 | 764 | tu_015b20.cpp |
 | `saveRomListPositions(std::vector<RomListPosition> const*)` | 0x1cc90 | 592 | tu_015b20.cpp |
 | `loadThumbnail(char const*, int, int)` | 0x1cee0 | 1080 | tu_015b20.cpp |
@@ -214,9 +214,27 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `freeSurfaceCallback(SDL_Surface*)` | 0x2e318 | 44 | tu_015b20.cpp |
 | `LoadSurfaceWorker::run()` | 0x2e344 | 168 | tu_015b20.cpp |
 | `LoadSurfaceWorker::finished()` | 0x2e3ec | 56 | tu_015b20.cpp |
+| `MenuWindow::MenuWindow(int, int, void*)` | 0x2e424 | 688 | tu_015b20.cpp |
 | `MenuWindow::MenuWindow(int, int, ListMenu*)` | 0x2e6d4 | 676 | tu_015b20.cpp |
+| `MenuWindow::MenuWindow(char const*, int, void*)` | 0x2e978 | 708 | tu_015b20.cpp |
 | `MenuWindow::~MenuWindow() (complete)` | 0x2ec3c | 316 | tu_015b20.cpp |
 | `MenuWindow::~MenuWindow() (deleting)` | 0x2ed78 | 52 | tu_015b20.cpp |
+| `MenuWindow::saveState(cJSON*)` | 0x2edac | 544 | tu_015b20.cpp |
+| `MenuWindow::restoreState(cJSON*)` | 0x2efcc | 708 | tu_015b20.cpp |
+| `MenuWindow::onShow()` | 0x2f290 | 1076 | tu_015b20.cpp |
+| `MenuWindow::updateThumbnail()` | 0x2f6c4 | 1104 | tu_015b20.cpp |
+| `MenuWindow::update()` | 0x2fb14 | 352 | tu_015b20.cpp |
+| `MenuWindow::onHide()` | 0x2fc74 | 656 | tu_015b20.cpp |
+| `MenuWindow::handleInput()` | 0x2ff04 | 4520 | tu_015b20.cpp |
+| `MenuWindow::cacheBackground()` | 0x310ac | 328 | tu_015b20.cpp |
+| `drawPageDots_311f4(SDL_Surface*, int, int)` | 0x311f4 | 420 | tu_015b20.cpp |
+| `MenuWindow::draw(SDL_Surface*)` | 0x31398 | 2876 | tu_015b20.cpp |
+| `MenuWindow::setHeaderIcon(SDL_Surface*, char const*, bool, bool)` | 0x31ed4 | 364 | tu_015b20.cpp |
+| `FloatWindow::FloatWindow(int)` | 0x32040 | 84 | tu_015b20.cpp |
+| `FloatWindow::~FloatWindow()` | 0x32094 | 92 | tu_015b20.cpp |
+| `FloatWindow::~FloatWindow()` | 0x320f0 | 52 | tu_015b20.cpp |
+| `FloatWindow::draw(SDL_Surface*)` | 0x32124 | 60 | tu_015b20.cpp |
+| `FloatWindow::onShow()` | 0x32160 | 252 | tu_015b20.cpp |
 | `GameDetailWindow::GameDetailWindow(int, int)` | 0x34a14 | 264 | tu_015b20.cpp |
 | `TrimusWindow::animateIn(SDL_Surface*, FlipFn)` | 0x39478 | 40 | tu_015b20.cpp |
 | `TrimusWindow::animateOut(SDL_Surface*, FlipFn)` | 0x394a0 | 40 | tu_015b20.cpp |
@@ -498,7 +516,7 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `deleteTextItem(SDL_Surface*)` | 0x1484d4 | 68 | tu_1484d4.cpp |
 | `freeData(SDL_Surface*)` | 0x148518 | 44 | tu_1484d4.cpp |
 | `lastPathComponent(char*)` | 0x148544 | 184 | tu_1484d4.cpp |
-| `MultiDBCachedTextMenu::MultiDBCachedTextMenu(std::string const&)` | 0x1485fc | 416 | tu_1484d4.cpp |
+| `MultiDBCachedTextMenu::MultiDBCachedTextMenu(std::string)` | 0x1485fc | 416 | tu_1484d4.cpp |
 | `MultiDBCachedTextMenu::~MultiDBCachedTextMenu()` | 0x14879c | 256 | tu_1484d4.cpp |
 | `MultiDBCachedTextMenu::~MultiDBCachedTextMenu() [deleting]` | 0x14889c | 52 | tu_1484d4.cpp |
 | `MultiDBCachedTextMenu::openCache(EmuInfo&, char*, size_t)` | 0x1488d0 | 756 | tu_1484d4.cpp |

@@ -412,6 +412,79 @@ larger event changes stack offsets. Keep assignment inside the result condition 
 and ZIP lookup) to retain materialized Boolean instructions. Casting a returned label pointer to
 int adds a move even when the sizes match; fixing NotifyWindow's argument type removes it.
 
+## p09 findings (0x2e424–0x3225c, done)
+
+All 21 function ranges match (15,928 bytes), including three previously registered ranges
+(the by-menu constructor and two destructor variants). There are 18 new manifest entries,
+14,884 newly counted bytes. The body prefix reaches **0x3225c**: 265 symbols including aliases
+and 116,540 consecutive bytes from 0x15b20. The next unwritten function is p10's PopUpWindow
+constructor. All 42 string references were checked separately; there are no switch tables in
+this part. All existing unit checks and registered function matches pass.
+
+**Window and thumbnail lifecycle.** MenuWindow constructs its menu lazily in onShow: global
+search (id 24) gets MultiDBCachedTextMenu, ids 5/17 use createRomListMenu, other ids use
+createMenu. It restores either the saved cursor/page fields or the per-ROM-folder position
+(with the optional subdirectory appended). onHide saves changed favourites and non-search
+ROM positions, then deletes the menu. The destructor frees window surfaces and destroys its
+worker/cache members; it does not delete the menu a second time.
+
+Thumbnail previews are enabled for list ids except 3/4. AppAction rows use the selected icon;
+ROM rows use an explicit getItemData/vfunc6 path when available, otherwise makeThumbPath with
+a copied ROM path and EmuInfo::imagePath. The window borrows the cached surface, queues a
+LoadSurfaceWorker on a miss, and remembers both the selected and pending keys. Drawing leaves
+room for a 250×360 preview while a matching key is pending or a surface is available. The
+header can toggle between the emulator name/search string and its SD-card-relative path.
+The path drawing retains the original unchecked `strstr` result plus 11.
+
+**How selection opens an action or window.** ListMenu input supplies the result code. Menu-key
+result 11 constructs these TextMenu/PopUpWindow choices, calls onShow and pushes the popup:
+
+| Menu id | Popup choices |
+| --- | --- |
+| 5/17 (ROM), 3 (app), 24 (global search) | If Action::finished is nonzero: launch the existing Action and AddFavoriteAction. ROM ids also add DeleteRomAction inside PopupDialogAction; an empty current search adds PopupSearchIME. |
+| Same ids, Action::finished is zero (folder) | Non-app lists offer search only, when the current search is empty. |
+| 0/1/16 | GeneralAction(resetEmulatorSettings) wrapped in PopupProgressAction. |
+| 2 (favourites) | Existing launch Action, RemoveFavoriteAction inside PopupDialogAction, ClearFavoriteAction inside PopupDialogAction. |
+| 10 (recent) | Existing launch Action and ClearRecentAction inside PopupDialogAction. |
+
+The launch row borrows its existing Action (`TextItem` ownership flag false); newly created
+popup actions are owned. PopupSearchIME carries the originating ListMenu pointer into
+SearchAction. Right/result 6 calls the selected Action's progress method with the item and
+current index and returns its result directly; the extra vfunc6 lookup is retained even though
+its result is unused. Result 10 toggles the header-path flag. The existing progress signature
+still spells the index as `int*`; p10's GameDetailWindow constructor should settle that shared
+placeholder when following its consumer.
+
+FloatWindow captures the current back buffer once and overlays a translucent dark surface
+on its top 640×420 area. Its draw blits that capture; its destructor frees it. The separate
+MenuWindow cacheBackground helper snapshots a menu and status indicators. The old helper
+name drawPageDots_311f4 actually draws the current/total counter (not dots); retained for now.
+
+**Shared declaration changes.**
+
+- Owned MenuWindow::field38 is SDL_Surface* borrowed from its cache; field94 is a Boolean.
+  Added non-virtual updateThumbnail, cacheBackground and setHeaderIcon declarations. Layout
+  remains 0x11c, with all virtual slots unchanged. Corrected the menu-ownership comment.
+- getRomListPosition takes its string by value, replacing the pointer placeholder in p03 and
+  the shared declaration. The earlier 196-byte body still matches. MultiDBCachedTextMenu's
+  constructor likewise takes a string by value; its entire proven unit still matches. Updated
+  the constructor's mangled manifest symbol and both signature descriptions.
+- LoadSurfaceWorker's inline constructor also takes its path by value. The three callers now
+  emit the observed parameter copy/destruction; their callee bodies keep the same ABI bytes.
+- SearchAction and PopupSearchIME's originating-menu constructor argument/member are ListMenu*,
+  replacing int. Their layouts and existing execute methods still match.
+- The p11 prototypes now identify createRomListMenu's EmuInfo/string-pointer arguments and
+  files_374bc's const-char-pointer return. These replace unverified placeholders used by p09.
+- Part-local preview/count/path globals and findEmuByLabelPrefix's existing declaration stay
+  in p09.inc. No tool changes were needed.
+
+**-O0 details.** A callee's body may not distinguish a by-value string parameter from a reference
+or pointer: ARM passes the string indirectly. The caller's copy and destruction settle it.
+Keep the explicit return from Action::progress: assigning its result then returning the common
+key changes the frame and branch layout. Use an unsigned byte for the local finished-result
+snapshot (no int-to-bool normalization). Reuse the same rectangle for the empty-list image and
+header, and preserve `area.x = area.y = 0`; separate zero assignments remove the reload.
+
 ## Shared declarations (header pass, before p03-p11)
 
 p01 and p02 each declared the same classes differently in `tu_015b20.h` and had to be reconciled at
