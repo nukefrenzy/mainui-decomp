@@ -209,9 +209,9 @@ addr	name	subsystem	confidence	comment
 0002e344	LoadSurfaceWorker::vfunc2	threads	confirmed-class	
 0002e3ec	LoadSurfaceWorker::vfunc3	threads	confirmed-class	
 0002e424	MenuWindow::MenuWindow_byMenuId	ui_framework	confirmed	(labelId, menuId, param)
-0002e6d4	MenuWindow::MenuWindow	ui_framework	confirmed	(titleLabelId, id, ListMenu*). Byte-exact rewrite in MenuWindow.cpp.
+0002e6d4	MenuWindow::MenuWindow	ui_framework	confirmed	(titleLabelId, id, ListMenu*). Byte-exact rewrite in src/tu_015b20/p09.inc.
 0002e978	MenuWindow::MenuWindow_byPath	ui_framework	confirmed	(path, menuId, param)
-0002ec3c	MenuWindow::~MenuWindow	ui_framework	confirmed	Byte-exact rewrite in MenuWindow.cpp.
+0002ec3c	MenuWindow::~MenuWindow	ui_framework	confirmed	Byte-exact rewrite in src/tu_015b20/p09.inc.
 0002ed78	MenuWindow::deletingDtor	ui_framework	confirmed	
 0002edac	MenuWindow::saveState	ui_framework	confirmed	
 0002efcc	MenuWindow::restoreState	ui_framework	confirmed	
