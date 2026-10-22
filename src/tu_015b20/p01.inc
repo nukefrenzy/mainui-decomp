@@ -1,5 +1,5 @@
 // p01 0x15b20-0x18c54: runtime helpers, handleGlobalInput, launch, writeCmdToRun; EmuAction
-// Functions in address order; see docs/plan-tu_015b20.md.
+// Functions in address order.
 
 // 0x15b20: name of a key or event code (Ghidra missed this start; no caller in the binary).
 const char *keyEventName(int key)

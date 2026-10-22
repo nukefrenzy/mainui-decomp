@@ -332,7 +332,7 @@ void freeSurfaceCallback(SDL_Surface *s);  // 0x2e318
 
 // ===========================================================================================
 // Shared declarations for parts p03-p11, declared once before the parts are written
-// (docs/plan-tu_015b20.md, "Shared declarations"). Each class names its owner part: only that part
+// so the parts could be written independently. Each class names its owner part: only that part
 // defines its out-of-line methods and may add non-virtual member declarations to it. `unverified`
 // marks a type, name or argument chosen from incomplete evidence; the owner part may correct it and
 // says so in its report. Vtable slot order is from ghidra/classes.json and is not to be changed.

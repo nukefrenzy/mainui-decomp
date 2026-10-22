@@ -1,7 +1,7 @@
 # CLAUDE.md — mainui-decomp
 
 Reverse engineering and byte-matching decompilation of the Miyoo Mini Plus **MainUI** launcher
-(Onion OS build). Read `README.md`, `docs/program-map.md` and `docs/status.md` (progress, next units) before
+(Onion OS build). Read `README.md`, `docs/program-map.md` and `docs/byte-identical-build.md` before
 starting work.
 
 ## Working agreement
@@ -66,13 +66,12 @@ export scripts in `tools/ghidra/`). Never downgrade a confirmed name to a guess.
 
 ## Roadmap
 
-For resuming with another agent, read `docs/handoff.md`.
-
 Done: program map, exact toolchain + flags, match toolkit + CI, window layouts, item/action wiring,
 all 22 Miyoo translation units, and a **byte-identical build**: `scripts/build-mainui.sh` builds
 MainUI from `src/` and requires its SHA-256 to equal the original's (CI runs it via
 `tools/linkaudit.py --require-ready`). Read `docs/byte-identical-build.md`. The built binary stays in
-`build/` and is never committed or published. No device-validated replacement exists yet.
+`build/` and is never committed or published. Device run on Brad's Miyoo Mini Plus (2026-10-22):
+the built binary boots and runs (see `docs/byte-identical-build.md`).
 
 The starter LD_PRELOAD hook library remains a separate optional feature: same toolchain, wrap
 SDL_PollEvent for a hotkey, compile-test here and device-test by Brad.

@@ -23,7 +23,7 @@ COMMON objects, fourteen initialized data objects and eight read-only objects. A
 an executable linker layout; C COMMON alignment is not a recovered original address.
 
 TU-local first-unit symbols now use their local mangled names in the manifest;
-see [BSS step 1](bss-step1.md) for iostream ordering and the remaining four-byte gap.
+see [BSS layout](byte-identical-build.md#bss-layout) for iostream ordering and the final BSS placement.
 
 One recorded extent remains deliberately limited: `g_deviceId` has five bytes consumed
 by getSerial; its original full allocation size remains unknown. The panel object is now

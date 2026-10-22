@@ -21,15 +21,12 @@ The compiler and flags are proven, not guessed. The two libraries compiled into 
 byte-identical from their public sources: SQLite 3.30.1 (808,104 bytes) and cJSON 1.7.10
 (23,996 bytes). Every rewrite in `src/` is checked the same way, on every push, by CI.
 
-All **22 Miyoo translation units** now pass whole-unit checks: **2,612 tracked functions,
-458,064 bytes (100%)**. These compare code and linker section order with link-time words masked.
-An experimental ARM executable now links with verified SQLite/cJSON and pinned SDK libraries.
-Its 286 import names/versions and 23-library order match the original. Actual linked .text
-(1,294,000 bytes) now MATCHes with relocation/call masks, and all raw ARM call/patch words agree.
-All 78,184 `.rodata` bytes, all 6,828 `.data` bytes and both ARM exception sections now match
-without masks, including pointers. BSS layout, remaining relocations and device behavior remain unproven. The [link audit](docs/link-audit.md) also checks 59 storage extents,
-185 language/suffix strings and 3,095 resolved body-call destinations.
-See [status](docs/status.md) and the [AI handoff](docs/handoff.md) for the next work and approval boundaries.
+All **22 Miyoo translation units** pass whole-unit checks (**2,612 tracked functions, 458,064
+bytes**), and the whole program now links **byte-identical** to the original:
+`scripts/build-mainui.sh` builds MainUI from `src/` and requires its SHA-256 to equal the one
+above, and CI does the same on every push. The rebuilt binary has also run on a Miyoo Mini Plus.
+See [docs/byte-identical-build.md](docs/byte-identical-build.md) for how, and the
+[link audit](docs/link-audit.md) for what is checked.
 
 ## What's here
 
@@ -79,6 +76,33 @@ Confidence tags: `library-exact`, `confirmed`, `inferred` and `likely` are relia
 
 Only words the linker fills in (call targets, string and global addresses) are ignored when
 comparing; every other byte must be identical.
+
+## Working notes
+
+Run every check the way CI does (pinned compiler and fetched dependencies only, never a host
+compiler):
+
+```sh
+export MIYOO_TC=$(scripts/fetch-toolchain.sh)
+scripts/fetch-mainui.sh && scripts/fetch-tinyutf8.sh && scripts/fetch-rapidxml.sh
+scripts/run_matches.sh                            # every registered function
+scripts/run_units.sh                              # every whole unit
+python3 -m unittest discover -s tools/tests -v    # tooling tests
+python3 tools/linkaudit.py --require-ready        # full link audit + byte-identical executable
+```
+
+Never relax masks, required unit ends or the raw section checks to obtain a pass. The link audit
+writes `audit.json` (exact compile/link commands and original-address evidence), `report.md`,
+`final-link.map` and the binaries to `build/link-audit/`; none of it is committed.
+
+**Ghidra exports.** `tools/packet.py`, `autoderive.py`, `fn.py` and `fstr.py` read private exports
+(`functions.tsv`, `calls.tsv`, `strings.tsv`, `symbols.tsv`, `MainUI-354-clean_named.c`) from
+`~/mainui-exports/` or `$MAINUI_EXPORTS`. They are decompiler output of the proprietary binary, so
+they are not in the repo: copy them privately or regenerate them in Ghidra with the scripts in
+`tools/ghidra/` after applying `ApplyMainUINames`. Names in `functions.tsv` are pre-rename
+(`ghidra/names.tsv` is current), and `names.tsv` misses some function starts (templates, PIC
+code). Never read the `.c` export whole; extract single functions, for example
+`python3 tools/packet.py 1237a8 3919c --asm --stdout`.
 
 ## Rules
 

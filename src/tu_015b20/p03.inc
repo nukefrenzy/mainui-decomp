@@ -1,5 +1,5 @@
 // p03 0x1a44c-0x1d9d8: DeleteRomAction, helpers, TrimusWindow, ListMenu ctor
-// Functions in address order; see docs/plan-tu_015b20.md.
+// Functions in address order.
 
 #include <sys/time.h>
 #include <sys/stat.h>

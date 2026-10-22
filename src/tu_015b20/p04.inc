@@ -1,5 +1,5 @@
 // p04 0x1d9d8-0x20500: ListMenu base slots, TextMenuDrawer
-// Functions in address order; see docs/plan-tu_015b20.md.
+// Functions in address order.
 #include <sys/time.h>   // gettimeofday (no inline functions, so it does not move the tail)
 SDL_Surface *SDL_CreateRGBSurface(unsigned int flags, int w, int h, int depth, unsigned int rmask,
                                   unsigned int gmask, unsigned int bmask, unsigned int amask);

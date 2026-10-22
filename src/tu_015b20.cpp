@@ -1,5 +1,5 @@
 // tu_015b20 (0x15b20-0x49c3c), the first and largest file. The part files below are included
-// textually in address order, so the whole compiles as one translation unit (docs/plan-tu_015b20.md).
+// textually in address order, so the whole compiles as one translation unit.
 //
 // Header/inline definition order reproduces the 798-section tail; see the integration notes.
 // <string> supplies the first char_traits helpers; <iostream> follows the UI declarations so

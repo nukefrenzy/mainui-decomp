@@ -3,8 +3,8 @@
 MainUI is rebuilt one translation unit (original source file) at a time. A unit is a range in
 `docs/tu-map.tsv`; its rewrite is `src/tu_<lo>.cpp`; it is done when `tools/unitcheck.py` prints
 `RESULT MATCH`. Worked examples include `tu_143720` (pinyin search), `tu_1484d4`
-(MultiDBCachedTextMenu), and `tu_11cdc8` (shared configuration). See `docs/status.md` for the
-current list of proven units.
+(MultiDBCachedTextMenu), and `tu_11cdc8` (shared configuration). All 22 units are proven;
+`scripts/run_units.sh` checks them.
 
 ## What a unit looks like in the binary
 
@@ -334,4 +334,4 @@ The first UI unit's iostream object illustrates local .comm ordering: public def
 for framebuffer/private state moved ahead of it, whereas TU-local definitions place them
 after it with the original relative offsets. This fixes order without settling an earlier
 four-byte allocation gap. A next-object address bounds an interval; it does not establish
-that every unreferenced byte belongs to the preceding array. See `docs/bss-step1.md`.
+that every unreferenced byte belongs to the preceding array. See `docs/byte-identical-build.md` (BSS layout).
