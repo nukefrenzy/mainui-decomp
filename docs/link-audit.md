@@ -254,6 +254,23 @@ relocation/call values; the separate raw ARM call/patch comparison now also pass
 All 53 storage checks, 156 strings, 3,095 resolved body calls and final import/version/order checks
 continue to pass.
 
+## Unmasked code addresses in relocated words
+
+The masked proof ignores every relocated word, so a jump table or function-pointer literal could
+point same-shaped bodies at each other unnoticed. `check_code_addresses` resolves each relocated
+`.text` word from the linked bytes (`R_ARM_ABS32`, including section-relative jump-table entries,
+and `MOVW`/`MOVT` pairs); when the target is in an executable section, the raw words must equal
+the original, and any difference fails the audit. **2,819 code-targeting words** now match.
+Other relocated words that still differ are reported by target (currently `.bss` 1,768 and
+`.got` 14, both waiting on BSS/GOT layout), without failing.
+
+The check found one real error: `ImeWindow::initKey`'s 45-case jump table at **0x140db0**. Every
+case set the right strings, but cases 39, 43 and 44 (labels `""`, which the `.rodata` pool cannot
+place) were emitted last instead of right after cases 0 and 1, permuting 43 table words.
+`src/tu_13edfc.cpp` now lists them in the original order. Run against the old source, the audit
+fails with those 43 words. The tooling fixture `test_permuted_jump_table` reproduces the gap:
+swapped body layout passes the masked proof and fails this check.
+
 ## Resolved ARM call/patch differences
 
 All **14 raw ARM control-flow differences** are resolved. The audit uses ARM mapping symbols to

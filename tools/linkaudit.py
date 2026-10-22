@@ -198,6 +198,89 @@ def check_linked_text(original, rebuilt):
     return result
 
 
+ABS32, MOVW_ABS_NC, MOVT_ABS = 2, 43, 44
+GOT_RELOCATIONS = {24, 25, 26, 96}  # GOTOFF32, BASE_PREL, GOT_BREL, GOT_PREL
+
+
+def check_code_addresses(original, rebuilt):
+    """Unmasked proof for relocated .text words whose resolved target is code.
+
+    The masked text proof ignores every relocated word, so a jump table or function-pointer
+    literal can point same-shaped bodies at each other without changing a masked byte (as
+    ImeWindow::initKey's case order once did). Here each ABS32 word and each MOVW/MOVT pair is
+    resolved from the linked bytes (ARM REL keeps the addend in place, so section-relative
+    jump-table entries are included); when the target lies in an executable section, the raw
+    words must equal the original. Other relocated words that still differ are counted by
+    target (BSS, GOT, other) without failing, to track progress toward a raw .text proof.
+    """
+    with open(original, 'rb') as stream:
+        expected = ELFFile(stream).get_section_by_name('.text')
+        address, data = expected['sh_addr'], expected.data()
+    result = dict(status='MISMATCH', checked_words=0, mismatching_words=0, first_mismatches=[],
+                  differing_by_target={})
+    with open(rebuilt, 'rb') as stream:
+        elf = ELFFile(stream)
+        section = elf.get_section_by_name('.text')
+        if section['sh_addr'] != address or section['sh_size'] != len(data):
+            result['error'] = 'linked .text address or size differs'
+            return result
+        body = section.data()
+        executable = [(s['sh_addr'], s['sh_addr']+s['sh_size']) for s in elf.iter_sections()
+                      if s['sh_flags'] & 0x6 == 0x6]  # SHF_ALLOC | SHF_EXECINSTR
+        ranges = {name: (s['sh_addr'], s['sh_addr']+s['sh_size']) for name in ('.bss', '.got')
+                  for s in [elf.get_section_by_name(name)] if s}
+        text_index = elf.get_section_index('.text')
+        relocations = sorted(((rel['r_offset']-address, rel['r_info_type'], rel['r_info_sym'])
+                              for s in elf.iter_sections() if isinstance(s, RelocationSection)
+                              and s['sh_info'] == text_index for rel in s.iter_relocations()))
+        if not relocations:
+            result['error'] = 'missing static .text relocations; link with --emit-relocs'
+            return result
+    def word(blob, offset):
+        return int.from_bytes(blob[offset:offset+4], 'little')
+    def category(target):
+        if any(lo <= target < hi for lo, hi in executable):
+            return 'code'
+        for name, (lo, hi) in ranges.items():
+            if lo <= target < hi:
+                return name
+        return 'other'
+    targets = {}  # offset -> (category, offsets proving it)
+    pending_movw = {}  # (symbol, register) -> MOVW offset
+    for offset, kind, symbol in relocations:
+        if kind == ABS32:
+            targets[offset] = (category(word(body, offset) & ~1), (offset,))
+        elif kind == MOVW_ABS_NC:
+            pending_movw[(symbol, (word(body, offset) >> 12) & 15)] = offset
+        elif kind == MOVT_ABS:
+            low = pending_movw.pop((symbol, (word(body, offset) >> 12) & 15), None)
+            if low is None:
+                targets[offset] = ('other', (offset,))
+                continue
+            value = (imm16(word(body, offset)) << 16) | imm16(word(body, low))
+            targets[low] = targets[offset] = (category(value & ~1), (low, offset))
+        elif kind in GOT_RELOCATIONS:
+            targets[offset] = ('.got', (offset,))
+    for low in pending_movw.values():
+        targets.setdefault(low, ('other', (low,)))
+    differing = Counter()
+    for offset, (kind, _) in sorted(targets.items()):
+        same = body[offset:offset+4] == data[offset:offset+4]
+        if kind == 'code':
+            result['checked_words'] += 1
+            if not same:
+                result['mismatching_words'] += 1
+                if len(result['first_mismatches']) < 16:
+                    result['first_mismatches'].append(dict(
+                        address=address+offset, original_word=word(data, offset),
+                        rebuilt_word=word(body, offset)))
+        elif not same:
+            differing[kind] += 1
+    result['differing_by_target'] = dict(sorted(differing.items()))
+    result['status'] = 'MISMATCH' if result['mismatching_words'] else 'MATCH'
+    return result
+
+
 def imm16(word):
     return ((word >> 4) & 0xf000) | (word & 0xfff)
 
@@ -502,6 +585,7 @@ def audit(args):
     rebuilt_dynamic = dynamic_metadata(final_output) if final_result.returncode == 0 else None
     dynamic_comparison = compare_dynamic(original_dynamic, rebuilt_dynamic) if rebuilt_dynamic else None
     linked_text = check_linked_text(original, final_output) if rebuilt_dynamic else None
+    code_addresses = check_code_addresses(original, final_output) if rebuilt_dynamic else None
     rodata = check_rodata(original, final_output) if rebuilt_dynamic else None
     data = check_data(original, final_output) if rebuilt_dynamic else None
     unwind = {name: check_initialized_section(original, final_output, name)
@@ -603,6 +687,7 @@ def audit(args):
                   library_inputs=library_inputs, rebuilt_dynamic=rebuilt_dynamic,
                   dynamic_comparison=dynamic_comparison, body_placements=placements,
                   linked_text=linked_text,
+                  code_addresses=code_addresses,
                   rodata=rodata,
                   data=data,
                   unwind=unwind,
@@ -651,6 +736,11 @@ def audit(args):
                   f'{linked_text["size"]:,} bytes; {linked_text["mismatching_words"]} differing unmasked words.',
                   f'Raw ARM call/patch differences: {len(linked_text["control_flow_differences"])} (must be zero).',
                   'This checks actual COMDAT retention and ARM call/patch words; data addresses and indirect targets remain unproven.', '']
+        pending = ', '.join(f'{k} {v}' for k, v in code_addresses['differing_by_target'].items()) or 'none'
+        lines += [f'Relocated .text words targeting code (no masks): {code_addresses["status"]}; '
+                  f'{code_addresses["checked_words"]:,} words; {code_addresses["mismatching_words"]} differing.',
+                  f'Other relocated .text words still differing, by target: {pending}.',
+                  'Jump tables and function-pointer literals are proven here; data addresses wait on BSS/GOT layout.', '']
         lines += [f'Actual linked .rodata (no masks): {rodata["status"]}; {rodata["size"]:,} bytes; '
                   f'{rodata["mismatching_bytes"]} differing bytes.',
                   'This includes vtable/typeinfo pointers and literal/data contents, not runtime library compatibility.', '']
@@ -680,6 +770,7 @@ def audit(args):
               or (args.require_link and final_result.returncode)
               or (linked_text and linked_text['status'] != 'MATCH')
               or (linked_text and linked_text['control_flow_differences'])
+              or (code_addresses and code_addresses['status'] != 'MATCH')
               or (rodata and rodata['status'] != 'MATCH')
               or (data and data['status'] != 'MATCH')
               or any(checked['status'] != 'MATCH' for checked in unwind.values())

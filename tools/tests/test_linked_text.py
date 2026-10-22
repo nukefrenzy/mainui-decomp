@@ -65,6 +65,52 @@ datum: .word 99
             stripped_evidence = build('no-relocs', emit=False)
             self.assertIn('missing static', linkaudit.check_linked_text(original, stripped_evidence)['error'])
 
+    def test_permuted_jump_table(self):
+        """Same-shaped case bodies emitted in another order: masked proof passes, code check fails."""
+        pre = str(Path(os.environ['MIYOO_TC'])/'arm-linux-gnueabihf-')
+        def program(bodies):
+            return '''
+.syntax unified
+.arch armv7-a
+.arm
+.text
+.global entry
+entry:
+    cmp r0, #1
+    ldrls pc, [pc, r0, lsl #2]
+    b done
+    .word case0
+    .word case1
+''' + bodies + '''
+done: bx lr
+.data
+name0: .asciz "zero"
+name1: .asciz "one"
+'''
+        case0 = 'case0:\n    movw r1, #:lower16:name0\n    movt r1, #:upper16:name0\n    b done\n'
+        case1 = 'case1:\n    movw r1, #:lower16:name1\n    movt r1, #:upper16:name1\n    b done\n'
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            def build(name, text, data_address='0x30000'):
+                source, obj, output = root/(name+'.s'), root/(name+'.o'), root/(name+'.elf')
+                source.write_text(text)
+                subprocess.run([pre+'as', str(source), '-o', str(obj)], check=True, capture_output=True)
+                subprocess.run([pre+'ld', '-e', 'entry', '-Ttext=0x20000', '-Tdata='+data_address,
+                                '--emit-relocs', str(obj), '-o', str(output)],
+                               check=True, capture_output=True)
+                return output
+            original = build('original', program(case0+case1))
+            moved_data = build('moved', program(case0+case1), data_address='0x40000')
+            result = linkaudit.check_code_addresses(original, moved_data)
+            self.assertEqual(result['status'], 'MATCH')        # data moved, code targets unchanged
+            self.assertEqual(result['checked_words'], 2)
+            self.assertEqual(result['differing_by_target'], {'other': 2})  # the two MOVT upper halves
+            swapped = build('swapped', program(case1+case0))
+            self.assertEqual(linkaudit.check_linked_text(original, swapped)['status'], 'MATCH')
+            result = linkaudit.check_code_addresses(original, swapped)
+            self.assertEqual(result['status'], 'MISMATCH')
+            self.assertEqual(result['mismatching_words'], 2)
+
     def test_same_bytes_different_comdat_identity(self):
         pre = str(Path(os.environ['MIYOO_TC'])/'arm-linux-gnueabihf-')
         with tempfile.TemporaryDirectory() as temporary:
