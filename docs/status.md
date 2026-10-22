@@ -135,11 +135,20 @@ also verifies **53 storage extents / 8,421 bytes**, **156 strings** and **3,095 
 destinations**, with zero mismatches. The theme filename argument now selects non-const string::at;
 zipOpen uses the original lstat wrapper. All 22 units and 689 function matches are retained.
 
-Final layout remains unproven: .text is **552 bytes short**, with the first displaced TU body at
-**tu_129f9c (556 bytes early)**, after tu_11cdc8's COMDAT tail. Investigate actual kept/discarded
-template sections there next, then remaining data/string/allocation extents and static runtime,
-exception/init-array and relocation layout. [data-recovery.md](data-recovery.md) records the two
-minimum/prefix extent limits. No device test or deployment has occurred.
+Actual linked **.text 0x15a30–0x1518e0 (1,294,000 bytes)** now MATCHes with existing relocation/call
+masks. All 22 TU body anchors are exact. The 556-byte COMDAT deficit came from the independent
+global g_recentList being declared as list<RecentItem> instead of **list<int>**; changing only that
+local definition fixes real linker selection while preserving the complete tu_11cdc8 proof.
+The audit retains static relocations and checks actual linked text, with a regression fixture
+covering distinct byte-identical COMDATs. All 22 units, 56 affected function matches and five audit
+tests pass; the other registered functions are unchanged from the prior 689/689 run.
+
+Next review **14 raw call/patch differences**: eight original NOPs currently emitted as calls,
+three division-helper signedness differences and three template-call destinations. See
+[link-audit.md](link-audit.md) for exact sites. Remaining section deficits are .rodata 548 bytes,
+.ARM.extab 28, .ARM.exidx 16, .data 608 and .bss 160. Absolute relocation values, data allocation
+limits and device behavior remain unproven; [data-recovery.md](data-recovery.md) records the two
+minimum/prefix extents. No device test or deployment has occurred.
 
 ## Open findings and questions
 

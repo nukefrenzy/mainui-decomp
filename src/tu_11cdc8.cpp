@@ -288,9 +288,9 @@ unsigned loadPlatformPaths() {
     return g_platformPaths.size();
 }
 
-// This first use follows RecentItem construction: moving the declaration earlier
-// changes the inline constructor/destructor emission order.
-std::list<RecentItem> g_recentList;
+// This independent integer list is constructed after RecentItem first use.
+// Its distinct COMDATs are retained here; RecentItem list construction is in main.
+std::list<int> g_recentList;
 // 0x182170
 // 0x11dfa0
 bool dualPartition() {

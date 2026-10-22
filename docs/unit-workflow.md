@@ -255,4 +255,19 @@ call 0x14d8dc). Correcting argument constness and the wrapper call preserved eve
 outside relocations. Compare original destinations and final per-symbol versions; do not accept
 a new import just because linking succeeds. These are linkage/type corrections, not new -O0
 instruction patterns. Actual COMDAT selection also needs checking after full linking, beyond
-per-unit backtracking: the first linked boundary deficit is currently tu_11cdc8's tail.
+per-unit backtracking; see the example below.
+
+### Equal instructions do not establish COMDAT identity
+
+The linked tu_11cdc8 tail was 556 bytes short despite a standalone whole-unit MATCH. Its independent
+global at 0x182170 had been declared `std::list<RecentItem>`; it is `std::list<int>`. The mistaken
+type reused COMDAT constructor/destructor names from tu_049c3c's recent-games list, so ld discarded
+sections that the unit walk could assign to byte-identical code later in the binary. Correcting
+the local global type restores the original tail and all later body addresses without padding.
+A valid walk proves a byte arrangement exists, not that actual symbol identities select it.
+
+Use `linkaudit.py --require-link` alongside unitcheck: the final link keeps static relocations
+with `--emit-relocs` and compares actual .text at its original address/size, using the same
+relocation/BL/BLX masks. It also reports raw ARM call/patch differences separately. The retained
+code matches in full, but absolute addresses/call targets remain a separate proof. This is a
+cross-object type/identity issue, not a new -O0 instruction idiom.

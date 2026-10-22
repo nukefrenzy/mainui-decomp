@@ -4,7 +4,9 @@
 All **22 proven launcher units**, verified cJSON and verified SQLite now link into an experimental
 ARM executable: `build/link-audit/MainUI.audit.elf`. Its **286 import names and per-symbol version
 requirements**, **23 DT_NEEDED entries in order**, interpreter and entry point agree with the
-original. This establishes linking and import agreement; final section layout and device behavior
+original. Actual linked **.text 0x15a30–0x1518e0 (1,294,000 bytes)** now MATCHes with the existing
+relocation/call masks, and all 22 TU body anchors are at original addresses. This establishes
+code layout and import agreement; absolute relocation/call values, other sections and device behavior
 remain unproven. Do not install this audit artifact as MainUI.
 
 Run from the repository root:
@@ -45,6 +47,11 @@ Generated files under `build/link-audit/`:
 - `commands.txt`: reproducible driver/compiler/linker commands; `embedded-libs.log`: strict proofs.
 - `launcher.o` / `launcher.map`: combined relocatable object and map.
 - `MainUI.audit.elf`, `final-link.map`, `final-link.log`: experimental executable and diagnostics.
+  `--emit-relocs` retains static relocation sections for the actual linked-text comparison; these
+  are non-allocated audit metadata and do not change loadable code/data.
+- `audit.json` also records `linked_text`: original address/size, masked text result, raw call/patch
+  differences and all body placements. The masked comparison observes actual cross-object COMDAT
+  retention rather than accepting a plausible standalone unit walk.
 - `partial-link.log` and one compile log per Miyoo unit.
 
 Normal exit 0 means compilation, partial link, internal calls, recovered storage and (if linking
@@ -52,7 +59,7 @@ succeeds) dynamic import/version/order checks passed. `--require-link` additiona
 executable linking fails; CI uses it. `--require-ready` also requires final layout proof and still
 fails deliberately. `executable_ready` remains false. Setup/compilation errors return 2.
 Known internal/SQLite declaration mismatches, changed final imports/versions/library order or
-interpreter, wrong resolved calls and storage mismatches return 1. Failed links remove the ELF.
+interpreter, wrong resolved body calls, storage mismatches and a failing linked-text proof return 1. Failed links remove the ELF.
 
 ## Current inventory
 
@@ -216,30 +223,66 @@ link settings. Important original sections are:
 | .data | 0x17e480 | 6,828 |
 | .bss | 0x17ff30 | 35,624 |
 
-## Remaining linked-layout differences and next slice
+## Corrected COMDAT identity and linked text proof
 
-The entry remains **0x15a30**, and all TU body anchors through **tu_11cdc8 at 0x11cdc8** are at
-original addresses. The first displaced TU body is **tu_129f9c: 0x129f9c → 0x129d70 (-556 bytes)**.
-That localizes the first boundary deficit to tu_11cdc8's linked template/inline tail; per-unit
-backtracking alone did not establish actual cross-object COMDAT selection. Investigate that tail's
-kept/discarded sections and shared declarations before adding any padding. No padding workaround
-or forced duplicate definitions were added.
+The first layout deficit is resolved. The independent global at **0x182170**, still named
+`g_recentList` in the rewrite, is **std::list<int>**, not std::list<RecentItem>. Its initializer at
+0x123ff4 calls the new list constructor at 0x124118; atexit at 0x124010 registers its destructor
+at 0x129f70. Recent games remain the distinct `std::list<RecentItem>` from tu_049c3c.
+Only this local definition and its comment changed; no shared header or manifest symbol changed.
+
+The wrong element type gave its generated constructors/destructor the same COMDAT identities as
+the earlier recent-games list. The real linker discarded them. The standalone unit walk could
+assign those byte-identical sections to later addresses and find an apparently valid end despite
+that identity conflict. Correcting the global restores **556 tail bytes** and places tu_129f9c
+at **0x129f9c**. Final runtime alignment removes the former four-byte discrepancy, making the
+whole .text size exact. No padding, linker aliases or forced duplicate definitions were added.
+
+The audit now compares the **actual linked .text**, using emitted static relocation sites and
+the existing ARM BL/BLX call masks. The entire **0x15a30–0x1518e0** range MATCHes: 1,294,000 bytes,
+286,785 unmasked words compared, zero differing unmasked words. All 22 unit body anchors are at
+their original addresses. This checks the code produced by actual COMDAT selection, including
+embedded libraries and static runtime. It does not establish absolute relocation or call values.
+All 53 storage checks, 156 strings, 3,095 resolved body calls and final import/version/order checks
+continue to pass.
+
+## Remaining differences and next slice
+
+A raw comparison now identifies **14 ARM control-flow review sites** inside the masked words.
+The audit uses ARM mapping symbols to exclude literal pools and records exact words/targets in
+`linked_text.control_flow_differences`. These are reported separately, without weakening the
+existing code proof or treating masked equality as a complete executable proof:
+
+| Sites | Difference to resolve |
+| --- | --- |
+| 0x15fd4, 0x168b4, 0x168cc, 0x16918, 0x16a2c, 0x16a44, 0x16a90, 0x14aea0 | Original NOPs are emitted as calls; preserve the target build's patches |
+| 0x2b748 | Original signed division helper 0x150ce4; rewrite calls unsigned helper 0x150ad8 |
+| 0x11ce1c, 0x11ce38 | Original unsigned helper 0x150ad8; rewrite calls signed helper 0x150ce4 |
+| 0x12d09c, 0x12d81c | Original template target 0x3b310; rewrite calls vector<void*>::operator[] at 0x3bbb8 |
+| 0x132c10 | Original list target 0x1329e8; rewrite calls list<CacheEntry>::end at 0x132a20 |
+
+Review those patch and callee/type differences next while preserving the now-proven text layout.
+Some template targets may have identical instructions, but that does not establish original
+symbol identity. The six call-target differences are distinct from the already-checked 3,095
+body calls whose destinations resolve to known body definitions.
+
+Other section sizes still differ:
 
 | Section | Original bytes | Rebuilt bytes | Difference |
 | --- | ---: | ---: | ---: |
-| .text | 1,294,000 | 1,293,448 | -552 |
+| .text | 1,294,000 | 1,294,000 | 0 |
 | .rodata | 78,184 | 77,636 | -548 |
-| .ARM.extab | 21,828 | 21,784 | -44 |
-| .ARM.exidx | 12,936 | 12,904 | -32 |
+| .ARM.extab | 21,828 | 21,800 | -28 |
+| .ARM.exidx | 12,936 | 12,920 | -16 |
 | .init_array | 28 | 28 | 0 |
 | .got | 1,152 | 1,152 | 0 |
 | .data | 6,828 | 6,220 | -608 |
 | .bss | 35,624 | 35,464 | -160 |
 
-Equal sizes do not establish equal initializers, addresses or order. After COMDAT layout, recover
-remaining data/string initializers and allocation extents, compare static runtime/startup code,
-exception/init-array order, and verify absolute relocations. Device testing remains outstanding.
-No runnable replacement is claimed or deployed.
+The .rodata start is now the original **0x1518e8**. .init_array, .got and .data also start at their
+original addresses, but equal sizes/addresses do not establish equal contents or order. Recover
+remaining data/string initializers and allocation extents, exception/init-array data and absolute
+relocations. Device testing remains outstanding. No device-validated replacement is claimed.
 
 Validation for the audit tooling:
 
@@ -249,10 +292,17 @@ python3 -m unittest discover -s tools/tests -v
 scripts/run_units.sh
 ```
 
-The ARM fixtures also build a versioned shared library and executable with COPY data imports,
+The ARM fixtures also reject changed code and a missing COMDAT whose instructions are identical
+to an earlier function, while preserving the existing data-address/call masks. A changed raw call
+remains masked but is separately reported for review. They also build a versioned shared library and executable with COPY data imports,
 then exercise added/missing imports, wrong versions, library order and interpreter detection.
 No ARM code is executed. The relocation fixture assembles and links real MOVW/MOVT and call relocations, checking base-address
 recovery for positive offsets, a carry across a 64 KiB boundary and a negative offset. It also
 rejects a rewritten call whose symbol resolves to a different original function. No ARM
 code is executed. All 22 unit checks and 689 registered individual matches pass after the
 declaration, storage and import fixes. Matching tools, relocation/call masks and required unit ends are unchanged.
+
+Validation after the COMDAT correction: all **22/22 whole units**, all **56/56 registered functions
+in tu_11cdc8**, and **5/5 ARM audit tests** pass. The other 633 registered functions were unchanged
+and passed in the preceding 689/689 run. `linkaudit.py --require-link` passes with the new linked
+text proof, unchanged imports and zero storage/body-call mismatches.

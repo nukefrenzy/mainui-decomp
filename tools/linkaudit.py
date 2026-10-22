@@ -80,6 +80,85 @@ def compare_dynamic(original, rebuilt):
                 interpreter_matches=original['interpreter'] == rebuilt['interpreter'])
 
 
+def check_linked_text(original, rebuilt):
+    """Check actual ld output, using the existing unit proof's relocation/call-word policy.
+
+    --emit-relocs preserves static relocation sites in the audit ELF. Unlike a per-unit walk,
+    this comparison observes actual COMDAT selection across every input object. Final absolute
+    relocation values and call destinations are deliberately not claimed by this code proof.
+    """
+    with open(original, 'rb') as stream:
+        expected = ELFFile(stream).get_section_by_name('.text')
+        address, data = expected['sh_addr'], expected.data()
+    result = dict(status='MISMATCH', address=address, size=len(data), relocation_words=0,
+                  call_words=0, compared_words=0, mismatching_words=0, first_mismatches=[],
+                  control_flow_differences=[])
+    with open(rebuilt, 'rb') as stream:
+        elf = ELFFile(stream)
+        section = elf.get_section_by_name('.text')
+        if section['sh_addr'] != address or section['sh_size'] != len(data):
+            result.update(error='linked .text address or size differs',
+                          rebuilt_address=section['sh_addr'], rebuilt_size=section['sh_size'])
+            return result
+        body = section.data()
+        mask = bytearray(len(body))
+        relocations = [s for s in elf.iter_sections() if isinstance(s, RelocationSection)
+                       and s['sh_info'] == elf.get_section_index('.text')]
+        if not relocations:
+            result['error'] = 'missing static .text relocations; link with --emit-relocs'
+            return result
+        # ARM mapping symbols distinguish instructions from embedded literal-pool words.
+        mappings = sorted((s['st_value'], s.name.split('.')[0])
+                          for s in elf.get_section_by_name('.symtab').iter_symbols()
+                          if s['st_shndx'] == elf.get_section_index('.text')
+                          and s.name.split('.')[0] in ('$a', '$d', '$t'))
+        def call(word):
+            return ((word & 0x0f000000 == 0x0b000000 and word >> 28 != 15)
+                    or word & 0xfe000000 == 0xfa000000)
+        def target(at, word):
+            if not call(word):
+                return None
+            displacement = (word & 0xffffff) << 2
+            if word & 0xfe000000 == 0xfa000000:
+                displacement |= (word >> 23) & 2  # BLX immediate H bit.
+            if displacement & 0x2000000:
+                displacement -= 0x4000000
+            return at+8+displacement
+        for rels in relocations:
+            for rel in rels.iter_relocations():
+                offset = rel['r_offset'] - address
+                if offset < 0 or offset+4 > len(body) or offset % 4:
+                    result['error'] = 'unaligned or out-of-range text relocation'
+                    return result
+                mask[offset:offset+4] = b'\1'*4
+                result['relocation_words'] += 1
+        mapping_index, mapping = 0, None
+        for offset in range(0, len(body), 4):
+            word = int.from_bytes(body[offset:offset+4], 'little')
+            if call(word):
+                mask[offset:offset+4] = b'\1'*4
+                result['call_words'] += 1
+            while mapping_index < len(mappings) and mappings[mapping_index][0] <= address+offset:
+                mapping = mappings[mapping_index][1]
+                mapping_index += 1
+            original_word = int.from_bytes(data[offset:offset+4], 'little')
+            if mapping == '$a' and original_word != word and (call(word) or call(original_word)):
+                result['control_flow_differences'].append(dict(address=address+offset,
+                    original_word=original_word, rebuilt_word=word,
+                    original_target=target(address+offset, original_word),
+                    rebuilt_target=target(address+offset, word)))
+        for offset in range(0, len(body), 4):
+            if any(mask[offset:offset+4]):
+                continue
+            result['compared_words'] += 1
+            if body[offset:offset+4] != data[offset:offset+4]:
+                result['mismatching_words'] += 1
+                if len(result['first_mismatches']) < 16:
+                    result['first_mismatches'].append(address+offset)
+        result['status'] = 'MISMATCH' if result['mismatching_words'] else 'MATCH'
+    return result
+
+
 def imm16(word):
     return ((word >> 4) & 0xf000) | (word & 0xfff)
 
@@ -372,7 +451,7 @@ def audit(args):
         final_output.unlink()
     # Original arithmetic helpers are static libgcc code, but exception unwinding uses libgcc_s.
     # Select arithmetic objects before dynamic libgcc_s can satisfy their references.
-    final_cmd = [pre+'g++', *(u['object'] for u in objects), '-lgcc',
+    final_cmd = [pre+'g++', *(u['object'] for u in objects), '-lgcc', '-Wl,--emit-relocs',
                  '-L'+str(target_dir), '-Wl,-rpath-link,'+str(target_dir), '-Wl,--no-as-needed',
                  *('-l:'+name for name in original_dynamic['needed']),
                  '-Wl,-Map='+str(out/'final-link.map'), '-o', str(final_output)]
@@ -383,6 +462,7 @@ def audit(args):
         final_output.unlink(missing_ok=True)
     rebuilt_dynamic = dynamic_metadata(final_output) if final_result.returncode == 0 else None
     dynamic_comparison = compare_dynamic(original_dynamic, rebuilt_dynamic) if rebuilt_dynamic else None
+    linked_text = check_linked_text(original, final_output) if rebuilt_dynamic else None
     placements = []
     if rebuilt_dynamic:
         linked_symbols = {s['name']: s['value'] for s in symbols(final_output)
@@ -479,6 +559,7 @@ def audit(args):
     report = dict(original_sha256=SHA, compiler=version, units=len(compiled), embedded_libraries=libraries,
                   library_inputs=library_inputs, rebuilt_dynamic=rebuilt_dynamic,
                   dynamic_comparison=dynamic_comparison, body_placements=placements,
+                  linked_text=linked_text,
                   partial_link_returncode=result.returncode,
                   final_link_returncode=final_result.returncode,
                   executable_ready=False, unresolved_count=len(records), categories=counts,
@@ -520,6 +601,10 @@ def audit(args):
                   f'DT_NEEDED order matches: {dynamic_comparison["needed_order_matches"]}; '
                   f'interpreter matches: {dynamic_comparison["interpreter_matches"]}.',
                   'Link success and matching imports do not establish original layout or device safety.', '']
+        lines += [f'Actual linked .text (relocation/call words masked): {linked_text["status"]}; '
+                  f'{linked_text["size"]:,} bytes; {linked_text["mismatching_words"]} differing unmasked words.',
+                  f'Raw ARM call/patch differences requiring review: {len(linked_text["control_flow_differences"])}.',
+                  'This checks actual COMDAT retention; absolute relocation/call values remain unproven.', '']
         first_shift = next((p for p in placements if p['delta']), None)
         if first_shift:
             lines += [f'First displaced TU body anchor: {first_shift["source"]}: '
@@ -537,6 +622,7 @@ def audit(args):
                   or not dynamic_comparison['needed_order_matches']
                   or not dynamic_comparison['interpreter_matches']))
               or (args.require_link and final_result.returncode)
+              or (linked_text and linked_text['status'] != 'MATCH')
               or (args.require_ready and not report['executable_ready']))
     return 1 if failed else 0
 

@@ -72,9 +72,10 @@ disabled entries are documented in `docs/program-map.md`.
 
 Next: **byte-exact final layout**. `python3 tools/linkaudit.py --require-link` builds an experimental
 ARM ELF with verified embedded objects and pinned SDK/runtime libraries. All 286 import names and
-versions, 23 DT_NEEDED entries in order and interpreter match. Read `docs/link-audit.md`: the first
-layout deficit is tu_11cdc8's linked COMDAT tail (next TU is 556 bytes early); final .text is 552
-bytes short. `src/data.tsv` records 53 checked storage extents; read `docs/data-recovery.md` for
+versions, 23 DT_NEEDED entries in order and interpreter match. Read `docs/link-audit.md`: the
+COMDAT deficit is fixed (the independent global g_recentList is std::list<int>). Actual linked
+.text now MATCHes all 1,294,000 bytes with existing relocation/call masks. Next review the 14 raw
+call/patch differences, then data/exception/absolute relocation layout. `src/data.tsv` records 53 checked storage extents; read `docs/data-recovery.md` for
 allocation limits. No deployed or device-validated replacement exists yet.
 
 The starter LD_PRELOAD hook library remains a separate optional feature: same toolchain, wrap
