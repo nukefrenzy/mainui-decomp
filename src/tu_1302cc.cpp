@@ -5,6 +5,14 @@
 #include <cstring>
 #include <cassert>
 #include "ZlibDecoder.h"
+
+// Original deferred assertion names, kept separate from ordinary pooled literals.
+extern const char zlib_signature_zbuild_huffman[];
+extern const char zlib_signature_bit_reverse[];
+extern const char zlib_signature_fill_bits[];
+extern const char zlib_signature_compute_huffman_codes[];
+extern const char zlib_signature_zhuffman_decode[];
+extern const char zlib_signature_parse_header[];
 #define CHECK(test, line, signature) ((test) ? (void)0 : __assert_fail(#test, "stb_zlib.cpp", line, signature))
 static_assert(sizeof(zhuffman) == 0x7e4 && sizeof(zbuf) == 0x100c, "decoder layouts");
 extern int g_lengthBase[31], g_lengthExtra[31], g_distanceBase[32], g_distanceExtra[32];
@@ -33,7 +41,7 @@ int bit_reverse16(int n)
 }
 int bit_reverse(int v, int bits)
 {
-    CHECK(bits <= 16, 77, "int bit_reverse(int, int)");
+    CHECK(bits <= 16, 77, zlib_signature_bit_reverse);
     return bit_reverse16(v) >> (16 - bits);
 }
 int zbuild_huffman(zhuffman *z, unsigned char *sizelist, int num)
@@ -44,7 +52,7 @@ int zbuild_huffman(zhuffman *z, unsigned char *sizelist, int num)
     memset(z->fast, 255, sizeof(z->fast));
     for (i = 0; i < num; ++i) ++sizes[sizelist[i]];
     sizes[0] = 0;
-    for (i = 1; i < 16; ++i) CHECK(sizes[i] <= (1 << i), 95, "int zbuild_huffman(zhuffman*, uint8*, int)");
+    for (i = 1; i < 16; ++i) CHECK(sizes[i] <= (1 << i), 95, zlib_signature_zbuild_huffman);
     code = 0;
     for (i = 1; i < 16; ++i) {
         next_code[i] = code;
@@ -86,7 +94,7 @@ int zget8(zbuf *z)
 void fill_bits(zbuf *z)
 {
     do {
-        CHECK(z->code_buffer < (1U << z->num_bits), 153, "void fill_bits(zbuf*)");
+        CHECK(z->code_buffer < (1U << z->num_bits), 153, zlib_signature_fill_bits);
         z->code_buffer |= zget8(z) << z->num_bits;
         z->num_bits += 8;
     } while (z->num_bits <= 24);
@@ -115,7 +123,7 @@ int zhuffman_decode(zbuf *a, zhuffman *z)
     for (s = 10; ; ++s) { if (k < z->maxcode[s]) break; }
     if (s == 16) return -1;
     b = (k >> (16 - s)) - z->firstcode[s] + z->firstsymbol[s];
-    CHECK(z->size[b] == s, 190, "int zhuffman_decode(zbuf*, zhuffman*)");
+    CHECK(z->size[b] == s, 190, zlib_signature_zhuffman_decode);
     a->code_buffer >>= s;
     a->num_bits -= s;
     return z->value[b];
@@ -138,7 +146,7 @@ int compute_huffman_codes(zbuf *a)
     n = 0;
     while (n < hlit + hdist) {
         int c = zhuffman_decode(a, &z);
-        CHECK(c >= 0 && c < 19, 232, "int compute_huffman_codes(zbuf*)");
+        CHECK(c >= 0 && c < 19, 232, zlib_signature_compute_huffman_codes);
         if (c < 16) lencodes[n++] = (unsigned char)c;
         else if (c == 16) {
             c = zreceive(a, 2) + 3;
@@ -149,7 +157,7 @@ int compute_huffman_codes(zbuf *a)
             memset(lencodes + n, 0, c);
             n += c;
         } else {
-            CHECK(c == 18, 244, "int compute_huffman_codes(zbuf*)");
+            CHECK(c == 18, 244, zlib_signature_compute_huffman_codes);
             c = zreceive(a, 7) + 11;
             memset(lencodes + n, 0, c);
             n += c;
@@ -271,7 +279,7 @@ int parse_header(zbuf *a)
             a->code_buffer >>= 8;
             a->num_bits -= 8;
         }
-        CHECK(a->num_bits == 0, 415, "int parse_header(zbuf*)");
+        CHECK(a->num_bits == 0, 415, zlib_signature_parse_header);
         while (k < 4) header[k++] = zget8(a);
         len = header[1] * 256 + header[0];
         nlen = header[3] * 256 + header[2];
@@ -354,3 +362,10 @@ void *stbi_zlib_decode_malloc(unsigned char *input, int size, int *outsize)
     *outsize = total;
     return output;
 }
+
+const char zlib_signature_zbuild_huffman[] __attribute__((section(".rodata.function_names"),aligned(4))) = "int zbuild_huffman(zhuffman*, uint8*, int)";
+const char zlib_signature_bit_reverse[] __attribute__((section(".rodata.function_names"),aligned(4))) = "int bit_reverse(int, int)";
+const char zlib_signature_fill_bits[] __attribute__((section(".rodata.function_names"),aligned(4))) = "void fill_bits(zbuf*)";
+const char zlib_signature_compute_huffman_codes[] __attribute__((section(".rodata.function_names"),aligned(4))) = "int compute_huffman_codes(zbuf*)";
+const char zlib_signature_zhuffman_decode[] __attribute__((section(".rodata.function_names"),aligned(4))) = "int zhuffman_decode(zbuf*, zhuffman*)";
+const char zlib_signature_parse_header[] __attribute__((section(".rodata.function_names"),aligned(4))) = "int parse_header(zbuf*)";

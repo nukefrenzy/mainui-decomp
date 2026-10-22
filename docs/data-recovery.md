@@ -4,8 +4,8 @@ All 54 missing data names from the initial link audit are now resolved: 13 alias
 reconciled and 41 storage definitions were added to the existing units. Code coverage remains
 22 proven units / 689 individual matches; no extra code unit or linker alias was introduced.
 
-The data audit checks **8,421 bytes across 53 declared/consumed storage extents** and **156 English
-strings** against the hash-pinned original ELF. This is initial-storage verification, not a
+The data audit checks **9,102 bytes across 59 declared/consumed storage extents** and **185
+strings** (156 English labels and 29 legacy suffixes) against the hash-pinned original ELF. This is initial-storage verification, not a
 claim that the final executable's addresses, object order or entire data sections already match.
 
 Run `python3 tools/linkaudit.py`; inspect its `storage` and `storage_mismatches` fields in
@@ -17,35 +17,46 @@ section bounds are checked. Tests deliberately corrupt an initializer and a stri
 both failures are detected. CI runs the audit and the ARM fixtures; known linkage, call-target
 and storage mismatches fail it even while SDK imports remain pending. No ARM code is executed.
 
-The ledger includes the 41 new definitions and 12 existing canonical alias-provider objects.
-The current emitted definitions comprise 31 BSS objects, six COMMON objects, twelve initialized
-data objects and four read-only objects. Actual final placement/alignment/padding still needs
+The ledger includes the 41 initial definitions, six additional recovered objects and 12 existing
+canonical alias-provider objects. The current emitted definitions comprise 31 BSS objects, six
+COMMON objects, fourteen initialized data objects and eight read-only objects. Actual final placement/alignment/padding still needs
 an executable linker layout; C COMMON alignment is not a recovered original address.
 
-Two recorded extents are deliberately limited:
+One recorded extent remains deliberately limited: `g_deviceId` has five bytes consumed
+by getSerial; its original full allocation size remains unknown. The panel object is now
+fully recovered at 188 bytes, followed by its 341-byte command stream and 76-byte MIPI
+configuration. See [writable-data recovery](writable-data-recovery.md).
 
-- `g_deviceId`: five bytes consumed by getSerial; the original full allocation size is unknown.
-- `g_panelInfo`: the 116-byte prefix read by adjustColor, with the original `K101_IM2BVL` header
-  and timing fields. The full SigmaStar SDK object extent and trailing layout are unknown.
+The entire linked `.data` (6,828 bytes) and both exception sections now match exactly,
+including relocated pointers. BSS allocation and symbol placement remain incomplete;
+the named-object checks below do not establish those addresses.
 
-These limits remain in source comments and manifest evidence. Bytes outside the referenced
-extents were not fabricated. Other original data, padding and the initialization of globals
-that were already defined before this pass remain part of final-image reconstruction.
-
-The language table holds 156 pointer entries (624 bytes) and their original strings. Read-only
-theme colors are stored outside their consuming TU so GCC keeps the original loads at -O0.
+The language table holds 156 pointer entries (624 bytes) and their original strings. The legacy
+suffix table adds 29 entries (116 bytes). Theme colors now live in the consuming TU as SDL_Color
+structs; struct copies retain the original loads, unlike the earlier ThemeColor union definitions.
 The authentication round tables preserve both 8-byte rounds; its keys/buffers and init flag
 match original zero storage. DEFLATE tables retain the original unused zero entries.
+
+The complete linked **.rodata is also checked without any masks**: 78,184 bytes at 0x1518e8,
+including strings, palette/table constants, vtables and RTTI pointers. See [read-only recovery](rodata-recovery.md).
+The named-object checks below remain independent initializer/extent checks and do not imply that
+writable .data/.bss addresses or coverage are complete.
 
 | Symbol | Target address | Checked bytes | Check | Source |
 | --- | --- | --- | --- | --- |
 | g_skinSubdir | 0x151a48 | 3 | bytes | tu_015b20.cpp |
-| g_themeGray | 0x161808 | 4 | bytes | tu_015b20.cpp |
-| g_themeWhite | 0x16180c | 4 | bytes | tu_015b20.cpp |
-| g_themeDim | 0x161810 | 4 | bytes | tu_015b20.cpp |
+| g_powerOffCommand | 0x151aa8 | 32 | bytes | tu_015b20.cpp |
+| g_themeGray | 0x161808 | 4 | bytes | tu_129f9c.cpp |
+| g_themeWhite | 0x16180c | 4 | bytes | tu_129f9c.cpp |
+| g_themeDim | 0x161810 | 4 | bytes | tu_129f9c.cpp |
+| g_themeUnusedPalette | 0x161814 | 36 | bytes | tu_129f9c.cpp |
+| g_keyEventReadFormat | 0x162578 | 44 | bytes | tu_1376fc.cpp |
+| g_pwmDutyPath | 0x163a10 | 40 | bytes | tu_14acfc.c |
 | g_fbFd | 0x17e488 | 4 | bytes | tu_015b20.cpp |
-| g_panelInfo | 0x17e48c | 116 | bytes | tu_015b20.cpp |
+| g_panelInfo | 0x17e48c | 188 | bytes | tu_015b20.cpp |
+| g_panelCommands | 0x17e548 | 341 | bytes | tu_015b20.cpp |
 | g_customDisplayTiming | 0x17e6ec | 1 | bytes | tu_015b20.cpp |
+| g_legacyExtensions | 0x17e6f0 | 116 | cstring_table | tu_015b20.cpp |
 | g_lengthBase | 0x17f9c0 | 124 | bytes | tu_1302cc.cpp |
 | g_lengthExtra | 0x17fa3c | 124 | bytes | tu_1302cc.cpp |
 | g_distanceBase | 0x17fab8 | 128 | bytes | tu_1302cc.cpp |

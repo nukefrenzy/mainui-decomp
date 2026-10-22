@@ -1,13 +1,16 @@
 # Link-readiness audit
 
-2026-10-21, after `0c73395`, declaration/data recovery and the embedded-library/SDK pass.
+2026-10-22, after `0e93978`, ARM call/patch reconciliation and read-only-data recovery.
 All **22 proven launcher units**, verified cJSON and verified SQLite now link into an experimental
 ARM executable: `build/link-audit/MainUI.audit.elf`. Its **286 import names and per-symbol version
 requirements**, **23 DT_NEEDED entries in order**, interpreter and entry point agree with the
 original. Actual linked **.text 0x15a30–0x1518e0 (1,294,000 bytes)** now MATCHes with the existing
 relocation/call masks, and all 22 TU body anchors are at original addresses. This establishes
-code layout and import agreement; absolute relocation/call values, other sections and device behavior
-remain unproven. Do not install this audit artifact as MainUI.
+code layout and import agreement. Raw ARM call/patch words now also agree at every mapped ARM
+instruction site. The entire linked **.rodata 0x1518e8–0x164a50 (78,184 bytes)** is now byte-identical, including
+vtable/typeinfo pointers and padding, without masks. All 6,828 `.data` bytes and both ARM
+exception sections also match without masks. BSS layout, remaining relocation values and
+device behavior remain unproven. Do not install this audit artifact as MainUI.
 
 Run from the repository root:
 
@@ -59,7 +62,9 @@ succeeds) dynamic import/version/order checks passed. `--require-link` additiona
 executable linking fails; CI uses it. `--require-ready` also requires final layout proof and still
 fails deliberately. `executable_ready` remains false. Setup/compilation errors return 2.
 Known internal/SQLite declaration mismatches, changed final imports/versions/library order or
-interpreter, wrong resolved body calls, storage mismatches and a failing linked-text proof return 1. Failed links remove the ELF.
+interpreter, wrong resolved body calls, storage mismatches, a failing linked-text proof or any
+raw ARM call/patch difference or any byte/address/size difference in .rodata, .data, .ARM.extab
+or .ARM.exidx return 1. Failed links remove the ELF.
 
 ## Current inventory
 
@@ -130,10 +135,11 @@ Shared declarations now live in:
   the C zip reader uses these names and the real history field, replacing its partial Inflater
   struct and inflaterOpen/inflaterRead placeholders.
 - `PixelScale.h`: a single unsigned-dimension/stride signature for callers and definition.
-  Explicit signed casts inside the scaler preserve the original divisions and byte sequence.
-  Simply changing the caller declarations to signed removed three conversion moves at each
-  call site and shortened the first unit by 24 bytes. Both the final caller unit and the
-  376-byte scaler definition match with the shared signature.
+  Changing the caller declarations to signed removed three conversion moves at each call site
+  and shortened the first unit by 24 bytes. The shared API stays unsigned; the implementation
+  now also uses unsigned loop counters/division, matching __aeabi_uidiv at 0x11ce1c/0x11ce38.
+  A signed row-stride cast is retained for the original index sequence. Both the caller unit
+  and 376-byte scaler definition match; no shared-header change was needed for this correction.
 
 Rendering references use the actual drawText/drawTextLines/drawTitleBar/drawScreenFrame/
 drawIconLabel names and parameter types. NotifyWindow's callback is a function pointer, and
@@ -150,9 +156,9 @@ declarations continue to use C linkage.
 
 All **54 formerly unresolved data names** are resolved: 13 duplicate names were reconciled, and
 41 storage definitions were recovered. `src/data.tsv` records the original addresses, verified
-extents and check kinds. The audit checks **8,421 bytes** across 53 storage extents: 41 newly
-defined objects and 12 existing canonical alias providers. These include a 624-byte
-English pointer table, and verifies all **156 pointed-to strings**. There are no storage mismatches.
+extents and check kinds. The audit checks **9,102 bytes** across 59 storage extents: 47 recovered
+definitions and 12 existing canonical alias providers. These include a 624-byte English pointer
+table and a 116-byte legacy suffix table; all **185 pointed-to strings** are verified. There are no storage mismatches.
 
 Original MOVW/MOVT evidence identified the following data-name pairs. Twelve had an existing
 definition; the two launch-command names now share one recovered 2,048-byte buffer:
@@ -184,25 +190,26 @@ BSS/COMMON must match original zero storage. For the language table, every ABS32
 followed to its string and compared with the original entry. Corrupt bytes or strings fail the
 audit, as do missing definitions, unexpected relocations or wrong symbol sizes.
 
-Definitions of the three read-only theme colors live outside their consuming TU. Defining them
-in tu_129f9c.cpp makes GCC fold their values even at -O0, removing 36 body bytes. Separate
-storage preserves the original loads and all unit boundaries. The original color bytes are
-68 68 68 00, f0 f0 f0 00 and aa aa aa 00.
+The three read-only theme colors now live in tu_129f9c.cpp as SDL_Color structs, with their
+original order and palette neighbors. The prior ThemeColor union definitions folded values at
+-O0 when placed in that TU; copying the SDL_Color struct instead retains all original loads.
+Their bytes remain 68 68 68 00, f0 f0 f0 00 and aa aa aa 00. The full read-only-data proof now
+checks their final placement too.
 
-**Extent limits:** g_deviceId has five verified bytes read by getSerial; the original complete
-allocation size remains unknown. g_panelInfo is the verified 116-byte prefix read by adjustColor;
-its full SDK allocation/layout remains unknown. Both limits are explicit in source and the data
-manifest. No unverified tail bytes were invented. Other extents follow the existing declarations
-and access ranges. Initial contents matching does not establish final section placement, padding,
-all other pre-existing global initializers or complete coverage of original .data/.rodata/.bss.
-See [data recovery](data-recovery.md) for the storage ledger and validation boundaries.
+**Extent limit:** g_deviceId has five verified bytes read by getSerial; its original complete
+allocation remains unknown. The full 188-byte panel object, 341-byte command stream and
+76-byte MIPI configuration are now recovered. The manifest checks panel and command bytes;
+the raw .data proof includes every MIPI field and its command pointer. Named initializer
+checks do not establish BSS object sizes/placement. See [data recovery](data-recovery.md)
+and [writable-data recovery](writable-data-recovery.md).
 
 ## Remaining runtime and layout work
 
 The prior five runtime/theme names are now accounted for by the overload correction, static
 arithmetic helpers and final libc wrappers. Adding embedded objects also exposed `lstat`'s wrapper
-mismatch, corrected above. Runtime arithmetic call targets still need checking against the static
-archive members and original runtime addresses; their code is outside the 22 rewritten units.
+mismatch, corrected above. The subsequent arithmetic signedness fixes restore the original
+static helper destinations; the full linked-text proof also covers the static runtime code.
+Absolute data references and runtime behavior still require validation.
 
 The original requests `/lib/ld-linux-armhf.so.3` and **23 DT_NEEDED libraries**; their exact names
 are captured in `audit.json`. These include SDL/TTF/image/mixer, libshmvar, libgamename, librsautil,
@@ -240,49 +247,78 @@ whole .text size exact. No padding, linker aliases or forced duplicate definitio
 
 The audit now compares the **actual linked .text**, using emitted static relocation sites and
 the existing ARM BL/BLX call masks. The entire **0x15a30–0x1518e0** range MATCHes: 1,294,000 bytes,
-286,785 unmasked words compared, zero differing unmasked words. All 22 unit body anchors are at
+286,793 unmasked words compared, zero differing unmasked words. All 22 unit body anchors are at
 their original addresses. This checks the code produced by actual COMDAT selection, including
-embedded libraries and static runtime. It does not establish absolute relocation or call values.
+embedded libraries and static runtime. The masked proof itself does not establish absolute
+relocation/call values; the separate raw ARM call/patch comparison now also passes.
 All 53 storage checks, 156 strings, 3,095 resolved body calls and final import/version/order checks
 continue to pass.
 
-## Remaining differences and next slice
+## Resolved ARM call/patch differences
 
-A raw comparison now identifies **14 ARM control-flow review sites** inside the masked words.
-The audit uses ARM mapping symbols to exclude literal pools and records exact words/targets in
-`linked_text.control_flow_differences`. These are reported separately, without weakening the
-existing code proof or treating masked equality as a complete executable proof:
+All **14 raw ARM control-flow differences** are resolved. The audit uses ARM mapping symbols to
+exclude literal pools and records exact words/targets in `linked_text.control_flow_differences`;
+that list is now empty and any future entry fails the audit. The ordinary relocation/call masks
+remain unchanged.
 
-| Sites | Difference to resolve |
+| Sites | Correction |
 | --- | --- |
-| 0x15fd4, 0x168b4, 0x168cc, 0x16918, 0x16a2c, 0x16a44, 0x16a90, 0x14aea0 | Original NOPs are emitted as calls; preserve the target build's patches |
-| 0x2b748 | Original signed division helper 0x150ce4; rewrite calls unsigned helper 0x150ad8 |
-| 0x11ce1c, 0x11ce38 | Original unsigned helper 0x150ad8; rewrite calls signed helper 0x150ce4 |
-| 0x12d09c, 0x12d81c | Original template target 0x3b310; rewrite calls vector<void*>::operator[] at 0x3bbb8 |
-| 0x132c10 | Original list target 0x1329e8; rewrite calls list<CacheEntry>::end at 0x132a20 |
+| 0x15fd4 | Preserve the shadow-blit NOP in drawText |
+| 0x168b4, 0x168cc, 0x16918, 0x16a2c, 0x16a44, 0x16a90 | Preserve background blit/fill NOPs in drawWifiIndicator |
+| 0x14aea0 | Preserve the disabled PWM-period write in initBacklightPwm |
+| 0x2b748 | Panel frame-rate arithmetic uses promoted signed operands and __aeabi_idiv at 0x150ce4 |
+| 0x11ce1c, 0x11ce38 | Scaler uses unsigned counters/division and __aeabi_uidiv at 0x150ad8 |
+| 0x12d09c, 0x12d81c | insertFileItem/freeItems use vector<void*>::at at 0x3b310, not operator[] |
+| 0x132c10 | Cache put/get use push_front; its inline insertion wrapper calls begin at 0x1329e8 |
 
-Review those patch and callee/type differences next while preserving the now-proven text layout.
-Some template targets may have identical instructions, but that does not establish original
-symbol identity. The six call-target differences are distinct from the already-checked 3,095
-body calls whose destinations resolve to known body definitions.
+The cache now inserts new entries and moves hits to the front, while eviction remains at the
+back. This agrees with the original wrapper's call to begin rather than end. The browser's
+bounds-checked access also restores exception metadata omitted by operator[].
 
-Other section sizes still differ:
+The eight patched calls use the existing scoped GAS `bl` macro technique: retain GCC argument
+setup and cleanup, emit literal **0xe320f000**, omit each call relocation, and assert the expected
+patch count (1 shadow, 6 Wi-Fi, 1 PWM). The macro is removed after each function. The existing
+12 menu-factory patches remain unchanged. No extra masking, linker aliases, wrappers or padding
+were introduced. No shared headers or manifest signatures changed.
 
-| Section | Original bytes | Rebuilt bytes | Difference |
-| --- | ---: | ---: | ---: |
-| .text | 1,294,000 | 1,294,000 | 0 |
-| .rodata | 78,184 | 77,636 | -548 |
-| .ARM.extab | 21,828 | 21,800 | -28 |
-| .ARM.exidx | 12,936 | 12,920 | -16 |
-| .init_array | 28 | 28 | 0 |
-| .got | 1,152 | 1,152 | 0 |
-| .data | 6,828 | 6,220 | -608 |
-| .bss | 35,624 | 35,464 | -160 |
+## Exact read-only data and remaining work
 
-The .rodata start is now the original **0x1518e8**. .init_array, .got and .data also start at their
-original addresses, but equal sizes/addresses do not establish equal contents or order. Recover
-remaining data/string initializers and allocation extents, exception/init-array data and absolute
-relocations. Device testing remains outstanding. No device-validated replacement is claimed.
+**All 78,184 bytes of linked .rodata now match exactly at 0x1518e8–0x164a50.** No relocation,
+pointer or instruction words are masked. SHA-256 of both original and rebuilt section:
+`21ccb7647a7a9b28a7b2f74a29a236696020b25471536f23d28aee123638115d`.
+`check_rodata` makes any address, size or byte difference fail the audit. Its fixture deliberately
+corrupts a relocated vtable pointer to verify that pointers are compared too.
+
+Read [rodata-recovery.md](rodata-recovery.md) for literal identity/extents, declaration and source
+order, assertion diagnostics, and the two corrected WifiMenuDrawer bindings (slot 7 is its own
+renderer; slot 15 is pure virtual in the base). There are no new fields or virtual slots, linker
+aliases, arbitrary padding or changed text masks. Read-only constants are readable source data;
+the build does not extract replacement section bytes from MainUI.
+
+The 29-entry legacy suffix table and full panel/MIPI objects restore the entire writable
+initialized section: **6,828 raw bytes at 0x17e480–0x17ff2c**. A Wi-Fi header split restores
+both exception sections without changing code, vtables or other header consumers. All three
+sections are now enforced by the same raw-section comparator. Read
+[writable-data-recovery.md](writable-data-recovery.md) for source evidence, section hashes,
+shared-header changes and remaining BSS gaps. The manifest independently checks
+**59 extents / 9,102 bytes / 185 strings**. Next: BSS and remaining relocation values.
+
+| Section | Original bytes | Rebuilt bytes | Current result |
+| --- | ---: | ---: | --- |
+| .text | 1,294,000 | 1,294,000 | MATCH with existing relocation/call masks; zero raw ARM call/patch differences |
+| .rodata | 78,184 | 78,184 | Raw byte-identical, including pointers |
+| .ARM.extab | 21,828 | 21,828 | Raw byte-identical, including pointers |
+| .ARM.exidx | 12,936 | 12,936 | Raw byte-identical, including pointers |
+| .init_array / .fini_array | 28 / 4 | 28 / 4 | Raw bytes and addresses agree |
+| .data.rel.ro | 128 | 128 | Raw bytes and address agree |
+| .got | 1,152 | 1,152 | Size/address exact; 20 raw bytes differ |
+| .data | 6,828 | 6,828 | Raw byte-identical, including pointers |
+| .bss | 35,624 | 35,464 | 160 bytes short; allocation limits remain |
+
+The incidental matches for init/fini arrays and .data.rel.ro are recorded observations; the
+enforced whole-section proofs cover .rodata, .data, .ARM.extab and .ARM.exidx. Matching initial placeholders does
+not validate data copied by the dynamic loader or device-library compatibility. No device test,
+deployment, push or merge occurred.
 
 Validation for the audit tooling:
 
@@ -293,8 +329,8 @@ scripts/run_units.sh
 ```
 
 The ARM fixtures also reject changed code and a missing COMDAT whose instructions are identical
-to an earlier function, while preserving the existing data-address/call masks. A changed raw call
-remains masked but is separately reported for review. They also build a versioned shared library and executable with COPY data imports,
+to an earlier function, while preserving the existing data-address/call masks. Changed raw calls and re-enabled original NOPs
+remain visible despite the ordinary call mask; either now fails the audit. They also build a versioned shared library and executable with COPY data imports,
 then exercise added/missing imports, wrong versions, library order and interpreter detection.
 No ARM code is executed. The relocation fixture assembles and links real MOVW/MOVT and call relocations, checking base-address
 recovery for positive offsets, a carry across a 64 KiB boundary and a negative offset. It also
@@ -306,3 +342,18 @@ Validation after the COMDAT correction: all **22/22 whole units**, all **56/56 r
 in tu_11cdc8**, and **5/5 ARM audit tests** pass. The other 633 registered functions were unchanged
 and passed in the preceding 689/689 run. `linkaudit.py --require-link` passes with the new linked
 text proof, unchanged imports and zero storage/body-call mismatches.
+
+Validation after the call/patch corrections: all **22/22 whole units**, all **9/9 changed registered
+functions**, and **5/5 ARM audit tests** pass. The linked .text proof, all body placements, all
+3,095 resolved body calls, storage/string checks and import/version/order checks pass; raw ARM
+call/patch differences are **0**. Unchanged registered functions retain the preceding checks.
+
+Read-only-data validation: raw .rodata MATCH, unchanged full linked-text proof and zero raw ARM
+call/patch differences; all 22 whole units, all 689 registered matches and six audit tests pass.
+The full match run is recorded in build/rodata/matches-*.log. Shared-header changes are listed
+in rodata-recovery.md.
+
+Writable-data/unwind validation: all four enforced raw sections MATCH, with unchanged linked
+text, raw calls, imports and storage checks. All 22 whole units, 689 registered matches and
+six tooling tests pass after the header split.
+See writable-data-recovery.md; BSS is still 160 bytes short and no device test occurred.

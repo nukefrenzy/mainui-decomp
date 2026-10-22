@@ -25,9 +25,10 @@ All **22 Miyoo translation units** now pass whole-unit checks: **2,612 tracked f
 458,064 bytes (100%)**. These compare code and linker section order with link-time words masked.
 An experimental ARM executable now links with verified SQLite/cJSON and pinned SDK libraries.
 Its 286 import names/versions and 23-library order match the original. Actual linked .text
-(1,294,000 bytes) now MATCHes with relocation/call masks; 14 raw call/patch differences, other
-section contents and device behavior remain unproven. The [link audit](docs/link-audit.md) also checks 53 storage extents,
-156 default-language strings and 3,095 resolved body-call destinations.
+(1,294,000 bytes) now MATCHes with relocation/call masks, and all raw ARM call/patch words agree.
+All 78,184 `.rodata` bytes, all 6,828 `.data` bytes and both ARM exception sections now match
+without masks, including pointers. BSS layout, remaining relocations and device behavior remain unproven. The [link audit](docs/link-audit.md) also checks 59 storage extents,
+185 language/suffix strings and 3,095 resolved body-call destinations.
 See [status](docs/status.md).
 
 ## What's here

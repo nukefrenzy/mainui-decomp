@@ -1,6 +1,6 @@
 # Status and next steps
 
-Snapshot of 2026-10-21. Live numbers: `python3 tools/progress.py`; unit ranges: `docs/tu-map.tsv`;
+Snapshot of 2026-10-22. Live numbers: `python3 tools/progress.py`; unit ranges: `docs/tu-map.tsv`;
 method: `docs/unit-workflow.md`. Update this file when a unit is proven or the plan changes.
 
 ## Where things stand
@@ -131,7 +131,7 @@ The [link audit](link-audit.md) now builds an **experimental executable** from a
 strictly verified SQLite/cJSON objects and pinned SDK/runtime libraries. Run
 `python3 tools/linkaudit.py --require-link`. All **286 final import names and versions**, the
 **23-library DT_NEEDED order**, interpreter and entry point agree with the original. The audit
-also verifies **53 storage extents / 8,421 bytes**, **156 strings** and **3,095 resolved body-call
+also verifies **59 storage extents / 9,102 bytes**, **185 strings** and **3,095 resolved body-call
 destinations**, with zero mismatches. The theme filename argument now selects non-const string::at;
 zipOpen uses the original lstat wrapper. All 22 units and 689 function matches are retained.
 
@@ -143,12 +143,31 @@ The audit retains static relocations and checks actual linked text, with a regre
 covering distinct byte-identical COMDATs. All 22 units, 56 affected function matches and five audit
 tests pass; the other registered functions are unchanged from the prior 689/689 run.
 
-Next review **14 raw call/patch differences**: eight original NOPs currently emitted as calls,
-three division-helper signedness differences and three template-call destinations. See
-[link-audit.md](link-audit.md) for exact sites. Remaining section deficits are .rodata 548 bytes,
-.ARM.extab 28, .ARM.exidx 16, .data 608 and .bss 160. Absolute relocation values, data allocation
-limits and device behavior remain unproven; [data-recovery.md](data-recovery.md) records the two
-minimum/prefix extents. No device test or deployment has occurred.
+All **14 raw ARM call/patch differences are resolved**: the eight original NOPs are preserved;
+scaler/panel division signedness, browser vector::at calls and cache front insertion now agree with
+the original. A future raw call/patch difference fails the audit. All 22 units, nine changed function
+matches and five audit tests pass. No shared-header or manifest-signature changes were needed.
+
+The full linked **.rodata 0x1518e8–0x164a50 (78,184 bytes)** is now **raw byte-identical**, including
+vtable/typeinfo pointers: no masks. The audit enforces matching address, size and contents. The
+recovery fixes constant/literal ordering, fixed patched string extents, assertion/function-name
+data, hardware/Wi-Fi declaration order and two WifiMenuDrawer virtual bindings; see
+[rodata-recovery.md](rodata-recovery.md). It also recovers the 29-entry legacy suffix pointer table.
+The storage ledger now checks 58 extents / 8,689 bytes and 185 strings. All 22 whole units and six
+audit tests pass alongside linked text, raw call/patch and import/version/order checks.
+
+The full linked **.data 0x17e480–0x17ff2c (6,828 bytes)** and both exception tables
+(**21,828-byte .ARM.extab / 12,936-byte .ARM.exidx**) now match without masks, and the
+audit enforces all three. The panel object, command stream and MIPI configuration restore
+the initialized-data deficit; a Wi-Fi header split restores unwind order without changing
+other consumers. See [writable-data-recovery.md](writable-data-recovery.md).
+The storage ledger now checks 59 extents / 9,102 bytes and 185 strings.
+
+Next settle **BSS (160 bytes short)** and remaining GOT/code relocations. The device-ID
+allocation, original iostream initializer placement, a 96-byte unreferenced interval and
+C helper/COMMON ordering remain open. No guessed padding was added. .init_array,
+.fini_array and .data.rel.ro still agree byte-for-byte. No device test or deployment has
+occurred; all current changes remain uncommitted at the user's request.
 
 ## Open findings and questions
 

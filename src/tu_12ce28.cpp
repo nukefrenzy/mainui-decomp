@@ -36,7 +36,7 @@ void insertFileItem(std::vector<void *> *items, TextItem *item)
 {
     int i = 0;
     while (i < items->size()) {
-        if (compareFileItems(item, (TextItem *)(*items)[i]) <= 0) break;
+        if (compareFileItems(item, (TextItem *)items->at(i)) <= 0) break;
         i++;
     }
     if (i < items->size()) items->insert(items->begin() + i, (void *)item);
@@ -117,7 +117,7 @@ int loadDirectory(std::vector<void *> *items, const char *path, FileFilter filte
 void FileBrowserCache::freeItems(std::vector<void *> *items)
 {
     for (int i = 0; i < items->size(); i++) {
-        TextItem *item = (TextItem *)(*items)[i];
+        TextItem *item = (TextItem *)items->at(i);
         delete item;
     }
     items->clear();

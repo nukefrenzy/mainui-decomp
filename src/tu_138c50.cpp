@@ -7,6 +7,18 @@
 #include <unistd.h>
 #include <signal.h>
 #include <fstream>
+#include "WifiMenuItems.h"
+int findProcess(const char *, int);
+
+int wifiMode()
+{
+    int pid = findProcess("wpa_supplicant", 0);
+    if (pid >= 0) return 2;
+    pid = findProcess("hostapd", 0);
+    if (pid >= 0) return 3;
+    return 1;
+}
+// Establish the body unwind section before action/menu inline definitions.
 #include "WifiMenus.h"
 
 extern "C" {
@@ -75,14 +87,15 @@ static_assert(sizeof(WifiMenu) == 0x22fc && sizeof(HotspotMenu) == 0x5c, "Wi-Fi 
 static_assert(sizeof(WifiItem) == 0x38 && sizeof(WifiConnectAction) == 0x138, "Wi-Fi item/action layouts");
 static_assert(sizeof(ProgressDialog) == 0x3c && sizeof(NotifyWindow) == 0x3c, "external window layouts");
 
-int wifiMode()
-{
-    int pid = findProcess("wpa_supplicant", 0);
-    if (pid >= 0) return 2;
-    pid = findProcess("hostapd", 0);
-    if (pid >= 0) return 3;
-    return 1;
-}
+
+// Original function-name objects follow local RTTI and precede inline-row COMDAT data.
+extern const char wifi_function_name_0[];
+extern const char wifi_function_name_1[];
+extern const char wifi_function_name_2[];
+extern const char wifi_function_name_3[];
+extern const char wifi_function_name_4[];
+extern const char wifi_function_name_5[];
+
 int wlanAddress(std::string &address)
 {
     int result = -1;
@@ -105,9 +118,9 @@ int wlanAddress(std::string &address)
 }
 void switch2WpaMode(int pid)
 {
-    if (pid > 0) { printf("%s kill hostapd %d\n", "switch2WpaMode", pid); kill(pid, 15); }
+    if (pid > 0) { printf("%s kill hostapd %d\n", wifi_function_name_0, pid); kill(pid, 15); }
     int dhcp = findProcess("udhcpd", 0);
-    printf("%s kill udhcpd %d\n", "switch2WpaMode", dhcp);
+    printf("%s kill udhcpd %d\n", wifi_function_name_0, dhcp);
     if (dhcp > 0) kill(dhcp, 9);
     int rc;
     rc = system("ifconfig wlan0 down");
@@ -121,9 +134,9 @@ void switch2WpaMode(int pid)
 void swicth2ApMode()
 {
     int pid = findProcess("wpa_supplicant", 0);
-    printf("%s kill wpa_supplicant %d\n", "swicth2ApMode", pid);
+    printf("%s kill wpa_supplicant %d\n", wifi_function_name_1, pid);
     if (pid > 0) kill(pid, 15);
-    printf("%s kill udhcpc %d\n", "swicth2ApMode", pid);
+    printf("%s kill udhcpc %d\n", wifi_function_name_1, pid);
     pid = findProcess("udhcpc", 0);
     if (pid > 0) kill(pid, 15);
     int rc;
@@ -136,10 +149,15 @@ void swicth2ApMode()
     rc = system("udhcpd /etc/wifi/udhcpd.conf -f &");
     rc = system("ifconfig | grep HWaddr | sed 's/[ ]\\+/ /g' | cut -d' ' -f5 > /tmp/wifimac");
 }
+// Original arrow/root literals first occur with this constructor.
+extern const char g_wifiArrowLeft[] __attribute__((aligned(4))) = "skin/icon-left-arrow-24.png";
+extern const char g_wifiSkinRoot[] __attribute__((aligned(4))) = "./";
+extern const char g_wifiArrowRight[] __attribute__((aligned(4))) = "skin/icon-right-arrow-24.png";
+
 WifiOnOffLabel::WifiOnOffLabel(Action *a, bool enabled) : ItemDrawable(a)
 {
-    left = loadImeImage(g_themePath, "./", "skin/icon-left-arrow-24.png");
-    right = loadImeImage(g_themePath, "./", "skin/icon-right-arrow-24.png");
+    left = loadImeImage(g_themePath, g_wifiSkinRoot, g_wifiArrowLeft);
+    right = loadImeImage(g_themePath, g_wifiSkinRoot, g_wifiArrowRight);
     this->enabled = enabled;
 }
 WifiOnOffLabel::~WifiOnOffLabel()
@@ -223,7 +241,7 @@ int WifiConnectAction::execute(void *param)
     } while ((status.state == 2 || status.state == 0) && i < 11);
     if (status.state == 4) { puts("try dhcp"); wifiStartConnect(); setWifiConnected(0); usleep(2000000); ev.type = 24; ev.code = 30; }
     else { ev.type = 24; ev.code = 39; }
-    if (SDL_PushEvent(&ev) < 0) printf("%s %d Failed to push SDL event %s\n", "dowork", 241, SDL_GetError());
+    if (SDL_PushEvent(&ev) < 0) printf("%s %d Failed to push SDL event %s\n", wifi_function_name_2, 241, SDL_GetError());
     return -1;
 }
 int WifiConnectDialogAction::execute(void *param)
@@ -283,7 +301,7 @@ int WifiOnOffAction::execute(void *)
                 case 24:
                     if (ev.user.code == 28) {
                         puts("wifi on/off scan finish"); out.code = 28;
-                        if (SDL_PushEvent(&out) < 0) printf("%s : %d Failed to push SDL event: %s\n", "dowork", 362, SDL_GetError());
+                        if (SDL_PushEvent(&out) < 0) printf("%s : %d Failed to push SDL event: %s\n", wifi_function_name_3, 362, SDL_GetError());
                         return -1;
                     }
                 default:
@@ -296,7 +314,7 @@ int WifiOnOffAction::execute(void *)
             }
         } else setWifiScanEnable(0);
     }
-    if (SDL_PushEvent(&out) < 0) printf("%s : %d Failed to push SDL event: %s\n", "dowork", 386, SDL_GetError());
+    if (SDL_PushEvent(&out) < 0) printf("%s : %d Failed to push SDL event: %s\n", wifi_function_name_3, 386, SDL_GetError());
     return -1;
 }
 int WifiOnOffDialogAction::execute(void *)
@@ -310,7 +328,7 @@ WifiMenuDrawer::WifiMenuDrawer() : ListMenu(false)
 {
     rect.x = 0; rect.y = 60; rect.w = 640; rect.h = 360;
     rowHeight = 60;
-    background = loadImeImage(g_themePath, "./", "skin/bg-list-s.png");
+    background = loadImeImage(g_themePath, g_wifiSkinRoot, "skin/bg-list-s.png");
 }
 WifiMenuDrawer::~WifiMenuDrawer()
 {
@@ -347,7 +365,7 @@ void *WifiMenuDrawer::getItem(int index)
     if (index >= 0 && index < items.size()) return items.at(index);
     return NULL;
 }
-void WifiMenuDrawer::drawItems(SDL_Surface *dst)
+void WifiMenuDrawer::vfunc7(SDL_Surface *dst)
 {
     int index;
     int row;
@@ -404,11 +422,11 @@ void WifiMenuDrawer::vfunc13()
 WifiMenu::WifiMenu()
 {
     scanCount = 0;
-    lock = loadImeImage(g_themePath, "./", "skin/icon-wifi-locked.png");
-    check = loadImeImage(g_themePath, "./", "skin/icon-wifi-connected.png");
-    signal2 = loadImeImage(g_themePath, "./", "skin/icon-wifi-signal-02.png");
-    signal3 = loadImeImage(g_themePath, "./", "skin/icon-wifi-signal-03.png");
-    signal4 = loadImeImage(g_themePath, "./", "skin/icon-wifi-signal-04.png");
+    lock = loadImeImage(g_themePath, g_wifiSkinRoot, "skin/icon-wifi-locked.png");
+    check = loadImeImage(g_themePath, g_wifiSkinRoot, "skin/icon-wifi-connected.png");
+    signal2 = loadImeImage(g_themePath, g_wifiSkinRoot, "skin/icon-wifi-signal-02.png");
+    signal3 = loadImeImage(g_themePath, g_wifiSkinRoot, "skin/icon-wifi-signal-03.png");
+    signal4 = loadImeImage(g_themePath, g_wifiSkinRoot, "skin/icon-wifi-signal-04.png");
     if (getWifiConnected() == 0) {
         if (getWifiOn()) {
             int pid = findProcess("hostapd", 0);
@@ -435,7 +453,7 @@ WifiMenu::~WifiMenu()
 }
 void WifiMenu::vfunc7(SDL_Surface *dst)
 {
-    drawItems(dst);
+    WifiMenuDrawer::vfunc7(dst);
     if (getWifiConnected()) {
         SDL_Rect src = {0, 0, 640, 330};
         SDL_Rect pos = {0, 90, 0, 0};
@@ -495,7 +513,7 @@ int WifiMenu::vfunc15(int event)
         }
         UserEvent ev;
         ev.type = 24; ev.code = 24;
-        if (SDL_PushEvent(&ev) < 0) printf("%s : %d Failed to push SDL event: %s\n", "onUnhandledEvent", 731, SDL_GetError());
+        if (SDL_PushEvent(&ev) < 0) printf("%s : %d Failed to push SDL event: %s\n", wifi_function_name_4, 731, SDL_GetError());
     } else if (event == 39) {
         printf("event wifi connect %d fail\n", connectingIndex);
         for (int i = 1; i < items.size(); i++) {
@@ -527,15 +545,17 @@ int HotspotSwitchAction::execute(void *)
         } else {
             printf("ap/wifi off, wififlag %d\n", wifi);
             int pid = findProcess("hostapd", 0);
-            printf("%s kill hostapd %d\n", "dowork", pid);
+            printf("%s kill hostapd %d\n", wifi_function_name_5, pid);
             if (pid > 0) kill(pid, 15);
             pid = findProcess("udhcpd", 0);
-            printf("%s kill udhcpd %d\n", "dowork", pid);
+            printf("%s kill udhcpd %d\n", wifi_function_name_5, pid);
             if (pid > 0) kill(pid, 9);
         }
     }
     return -1;
 }
+extern const char g_hotspotSwitchFormat[] __attribute__((aligned(4))) = "hotspot switch flag %d\n";
+
 int writeConfigValue(const std::string &file, const std::string &key, const std::string &value)
 {
     std::string command("sed 's/^");
@@ -567,6 +587,11 @@ int HotspotImePopupAction::execute(void *)
     g_windowStack->push_back((TrimusWindow *)window);
     return -1;
 }
+// Original inline-row literal pool follows configuration helpers.
+extern const char g_hotspotSsidKey[] __attribute__((aligned(4))) = "ssid";
+extern const char g_hotspotConfigPath[] __attribute__((aligned(4))) = "/etc/wifi/hostapd.conf";
+extern const char g_hotspotPskKey[] __attribute__((aligned(4))) = "wpa_passphrase";
+
 HotspotMenu::HotspotMenu()
 {
     items.push_back(new HotspotSwitchItem);
@@ -577,5 +602,13 @@ HotspotMenu::~HotspotMenu()
 {
     saveSystemJson(g_keyShm, g_themePath, g_fontSize);
 }
-void HotspotMenu::vfunc7(SDL_Surface *dst) { drawItems(dst); }
+void HotspotMenu::vfunc7(SDL_Surface *dst) { WifiMenuDrawer::vfunc7(dst); }
 int HotspotMenu::vfunc15(int event) { return -1; }
+
+
+const char wifi_function_name_0[] __attribute__((section(".rodata.function_names"),aligned(4))) = "switch2WpaMode";
+const char wifi_function_name_1[] __attribute__((section(".rodata.function_names"),aligned(4))) = "swicth2ApMode";
+const char wifi_function_name_2[] __attribute__((section(".rodata.function_names"),aligned(4))) = "dowork";
+const char wifi_function_name_3[] __attribute__((section(".rodata.function_names"),aligned(4))) = "dowork";
+const char wifi_function_name_4[] __attribute__((section(".rodata.function_names"),aligned(4))) = "onUnhandledEvent";
+const char wifi_function_name_5[] __attribute__((section(".rodata.function_names"),aligned(4))) = "dowork";

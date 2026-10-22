@@ -801,7 +801,16 @@ public:
     void *timer;                    // +0x0c  SDL timer
 };
 
+// Preserve RapidXml's original assertion diagnostic path, independent of the checkout path.
+#include <cstdlib>
+#include <cassert>
+#include <new>
+#define RAPIDXML_NO_STDLIB // Standard declarations above; avoid re-including unguarded assert.h.
+#pragma push_macro("__assert_fail")
+#define __assert_fail(condition, file, line, function) __assert_fail(condition, "/home/alfchen/TheData/ProjectData2/miyoo_sigmastar/ssd202_miyoo354/sdk_v008/app/UI/../../../project/release/include/cust_inc/rapidxml.hpp", line, function)
 #include <rapidxml.hpp>
+#pragma pop_macro("__assert_fail")
+#undef RAPIDXML_NO_STDLIB
 
 inline bool isListMenuId(int id)                                // name unverified
 {

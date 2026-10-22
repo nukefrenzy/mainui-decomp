@@ -372,7 +372,7 @@ IconMenu::IconMenu(int rows, int columns, bool stripes, bool dots, int marginX, 
 
 // 0x25e48
 IconMenu::~IconMenu() {
-    puts("~IconMenu");
+    puts(__func__);
     freeItems();
     items.clear();
 }

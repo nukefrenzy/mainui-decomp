@@ -53,6 +53,11 @@ datum: .word 99
             self.assertEqual(len(result['control_flow_differences']), 1)
             self.assertNotEqual(result['control_flow_differences'][0]['original_target'],
                                 result['control_flow_differences'][0]['rebuilt_target'])
+            patched_original = build('patched-original', assembly.replace('bl target', '.inst 0xe320f000'))
+            result = linkaudit.check_linked_text(patched_original, original)
+            self.assertEqual(result['status'], 'MATCH')
+            self.assertEqual(len(result['control_flow_differences']), 1)
+            self.assertIsNone(result['control_flow_differences'][0]['original_target'])
             wrong_code = build('wrong', assembly.replace('#42', '#43'))
             result = linkaudit.check_linked_text(original, wrong_code)
             self.assertEqual(result['status'], 'MISMATCH')

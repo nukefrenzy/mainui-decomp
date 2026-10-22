@@ -34,13 +34,7 @@ volatile int g_progressCur; // 0x18190c
 volatile int g_progressTotal; // 0x181910
 unsigned char g_charging; // 0x181914
 int g_fbFd = -1; // 0x17e488
-bool g_customDisplayTiming = true; // 0x17e6ec
-extern const char g_skinSubdir[] = "./"; // 0x151a48
 
-// Separate from the theme consumers to preserve their original global loads at -O0.
-extern const ThemeColor g_themeGray = {0x00686868}; // 0x161808
-extern const ThemeColor g_themeWhite = {0x00f0f0f0}; // 0x16180c
-extern const ThemeColor g_themeDim = {0x00aaaaaa}; // 0x161810
 
 #include "tu_015b20/p01.inc"
 #include "tu_015b20/p02.inc"

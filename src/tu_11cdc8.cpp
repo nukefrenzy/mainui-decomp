@@ -48,18 +48,18 @@ extern "C" {
 static_assert(sizeof(RecentItem)==100, "recent item layout");
 static_assert(sizeof(EmuInfo)==0xdc, "emulator layout");
 std::vector<std::string> g_platformPaths; // 0x182064
-static char g_ioBuffer[128],g_pathBuffer[128]; // 0x182070, 0x1820f0
+char g_ioBuffer[128],g_pathBuffer[128]; // 0x182070, 0x1820f0
 extern std::vector<EmuInfo> g_romSourcesA,g_romSourcesB;
 // 0x11cdc8
 void scalePixels(int sx,int sy,unsigned sw,unsigned sh,unsigned dw,unsigned dh,unsigned stride,int padding,int *src,int *dst) {
-    int cx,cy;
+    unsigned cx,cy;
     unsigned x=sx<<16,y=sy<<16;
     cx=(int)dw;
     cy=(int)dh;
     // Keep the predecrements in the loop conditions: separate decrement
     // statements emit different Boolean tests at -O0.
-    // Unsigned API sizes are interpreted as signed for the original division arithmetic.
-    unsigned stepX=((int)sw<<16)/cx,stepY=((int)sh<<16)/cy;
+    // Original 0x11ce1c/0x11ce38 call unsigned __aeabi_uidiv.
+    unsigned stepX=(sw<<16)/cx,stepY=(sh<<16)/cy;
     int *out=dst;
     do {
         int *row=src+(int)stride*(y>>16);
@@ -1095,18 +1095,10 @@ void parseGridFont(const char*section,cJSON*root,std::string*font,std::string*as
     if (colorItem&&cJSON_IsString(colorItem))parseThemeColor(section,colorItem->valuestring,selectedcolor);
 }
 
-const SDL_Color g_configWhite= {
-    240,240,240,0
-}
-,g_configGray= {
-    104,104,104,0
-}
-,g_configDim= {
-    170,170,170,0
-}
-,g_configYellow= {
-    255,255,0,0
-};
+const SDL_Color g_configGray = {104,104,104,0}; // 0x1615a0
+const SDL_Color g_configWhite = {240,240,240,0}; // 0x1615a4
+const SDL_Color g_configDim = {170,170,170,0}; // 0x1615a8
+const SDL_Color g_configYellow = {255,255,0,0}; // 0x1615ac
 // 0x122d78
 void parseTheme(void*data,const char*base,const char*dir,cJSON*root) {
     std::vector<Theme>*list=(std::vector<Theme>*)data;

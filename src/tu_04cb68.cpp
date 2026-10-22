@@ -36,6 +36,10 @@ extern char*g_themePath;
 extern SDL_Surface*g_backBuffer;
 extern void*g_imeFont;
 extern SDL_Color g_imeTextColor;
+// 0x17e778
+TestColor g_testGray= {
+    0x404040
+};
 TestColor g_testGreen= {
     0xff00
 }
@@ -47,11 +51,9 @@ TestColor g_testGreen= {
 }
 ,g_testWhite= {
     0xffffff
-}
-,g_testBlack= {
-    0
 };
 int g_testResults[5];
+TestColor g_testBlack = {0};
 // 0x181b7c
 void drawBackground(SDL_Surface*);
 int drawText(SDL_Surface*,void*,SDL_Rect,const char*,SDL_Color,int,bool);
@@ -1041,10 +1043,6 @@ const char*testResultLabel(int result) {
     }
 }
 
-TestColor g_testGray= {
-    0x404040
-};
-// 0x17e778
 SDL_Color testResultColor(int result) {
     switch (result) {
         case 1:return g_testGreen.bytes;

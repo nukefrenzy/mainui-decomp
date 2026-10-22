@@ -287,6 +287,7 @@ void ImeWindow::setKeyIcons(int key, SDL_Surface *icon, SDL_Surface *hint)
         }
     }
 }
+// Original case order is revealed by the read-only label pool, not numeric id order.
 void ImeWindow::initKey(ImeKey &key, int id, SDL_Surface *focused, SDL_Surface *normal,
                         SDL_Surface *icon, SDL_Surface *hint)
 {
@@ -298,10 +299,6 @@ void ImeWindow::initKey(ImeKey &key, int id, SDL_Surface *focused, SDL_Surface *
     switch (id) {
     case 0: key.lower = ""; key.upper = ""; key.symbol = ""; break;
     case 1: key.lower = ""; key.upper = ""; key.symbol = ""; break;
-    case 2: key.lower = "("; key.upper = "("; key.symbol = "'"; break;
-    case 3: key.lower = ")"; key.upper = ")"; key.symbol = ","; break;
-    case 4: key.lower = "-"; key.upper = "-"; key.symbol = ">"; break;
-    case 5: key.lower = "/"; key.upper = "/"; key.symbol = "."; break;
     case 6: key.lower = "1"; key.upper = "1"; key.symbol = "1"; break;
     case 7: key.lower = "2"; key.upper = "2"; key.symbol = "2"; break;
     case 8: key.lower = "3"; key.upper = "3"; key.symbol = "3"; break;
@@ -331,6 +328,7 @@ void ImeWindow::initKey(ImeKey &key, int id, SDL_Surface *focused, SDL_Surface *
     case 32: key.lower = "j"; key.upper = "J"; key.symbol = ":"; break;
     case 33: key.lower = "k"; key.upper = "K"; key.symbol = "\""; break;
     case 34: key.lower = "l"; key.upper = "L"; key.symbol = "<"; break;
+    case 4: key.lower = "-"; key.upper = "-"; key.symbol = ">"; break;
     case 35: key.lower = "z"; key.upper = "Z"; key.symbol = "`"; break;
     case 36: key.lower = "x"; key.upper = "X"; key.symbol = "-"; break;
     case 37: key.lower = "c"; key.upper = "C"; key.symbol = "="; break;
@@ -339,6 +337,9 @@ void ImeWindow::initKey(ImeKey &key, int id, SDL_Surface *focused, SDL_Surface *
     case 40: key.lower = "b"; key.upper = "B"; key.symbol = "]"; break;
     case 41: key.lower = "n"; key.upper = "N"; key.symbol = "\\"; break;
     case 42: key.lower = "m"; key.upper = "M"; key.symbol = ";"; break;
+    case 2: key.lower = "("; key.upper = "("; key.symbol = "'"; break;
+    case 3: key.lower = ")"; key.upper = ")"; key.symbol = ","; break;
+    case 5: key.lower = "/"; key.upper = "/"; key.symbol = "."; break;
     case 43: key.lower = ""; key.upper = ""; key.symbol = ""; break;
     case 44: key.lower = ""; key.upper = ""; key.symbol = ""; break;
     }

@@ -91,13 +91,50 @@ int writeFile(const char *path, const char *text)   // 0x14ae04
     return 0;
 }
 
+// Original PWM literal slots. The patched duty-cycle path keeps its 40-byte allocation.
+const char g_pwmZero[2] __attribute__((aligned(4))) = "0";
+const char g_pwmExportPath[31] __attribute__((aligned(4))) = "/sys/class/pwm/pwmchip0/export";
+const char g_pwmPeriod[4] __attribute__((aligned(4))) = "800";
+const char g_pwmPeriodPath[36] __attribute__((aligned(4))) = "/sys/class/pwm/pwmchip0/pwm0/period";
+const char g_pwmDuty[4] __attribute__((aligned(4))) = "100";
+const char g_pwmDutyPath[40] __attribute__((aligned(4))) = "/dev/null";
+const char g_pwmDisabledEnable[1] __attribute__((aligned(4))) = "";
+const char g_pwmEnablePath[36] __attribute__((aligned(4))) = "/sys/class/pwm/pwmchip0/pwm0/enable";
+
+// Original 0x14aea0 disables the PWM-period write. Preserve argument loads and
+// the literal NOP, with no call relocation, as for the patched menu/drawing calls.
+__asm__(
+    ".set .Linit_pwm_nops, 0\n"
+    ".macro bl target\n"
+    "    .set .Lskip_patched_call, 0\n"
+    "    .irp patch, 0x2c\n"
+    "        .if (. - initBacklightPwm) == \\patch\n"
+    "            .set .Lskip_patched_call, 1\n"
+    "        .endif\n"
+    "    .endr\n"
+    "    .if .Lskip_patched_call\n"
+    "        .inst 0xe320f000\n"
+    "        .set .Linit_pwm_nops, .Linit_pwm_nops + 1\n"
+    "    .else\n"
+    "        .inst 0xebfffffe\n"
+    "        .reloc . - 4, R_ARM_CALL, \\target\n"
+    "    .endif\n"
+    ".endm\n"
+);
 void initBacklightPwm()         // 0x14ae74
 {
-    writeFile("/sys/class/pwm/pwmchip0/export", "0");
-    writeFile("/sys/class/pwm/pwmchip0/pwm0/period", "800");
-    writeFile("/dev/null", "100");
-    writeFile("/sys/class/pwm/pwmchip0/pwm0/enable", "");
+    writeFile(g_pwmExportPath, g_pwmZero);
+    writeFile(g_pwmPeriodPath, g_pwmPeriod);
+    writeFile(g_pwmDutyPath, g_pwmDuty);
+    writeFile(g_pwmEnablePath, g_pwmDisabledEnable);
 }
+
+__asm__(
+    ".purgem bl\n"
+    ".if .Linit_pwm_nops != 1\n"
+    "    .error \"target NOP patch count changed\"\n"
+    ".endif\n"
+);
 
 int setBacklight(int level)     // 0x14aed4
 {
@@ -121,22 +158,22 @@ int setBacklight(int level)     // 0x14aed4
     default: duty = 100; break;
     }
     snprintf(buf, 32, "%d", duty);
-    writeFile("/dev/null", buf);
+    writeFile(g_pwmDutyPath, buf);
     return 0;
 }
 
 int backlightOff()              // 0x14b024
 {
-    writeFile("/dev/null", "0");
+    writeFile(g_pwmDutyPath, g_pwmZero);
     return 0;
 }
 
 bool isBacklightOff()           // 0x14b04c
 {
     char buf[32] = "1";
-    FILE *f = fopen("/dev/null", "r");
+    FILE *f = fopen(g_pwmDutyPath, "r");
     if (f == NULL) {
-        printf("Cannot open file: %s\n", "/dev/null");
+        printf("Cannot open file: %s\n", g_pwmDutyPath);
         return false;
     }
     fread(buf, 1, 32, f);

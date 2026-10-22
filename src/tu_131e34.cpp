@@ -42,7 +42,7 @@ int MenuHelper80::put(std::string key, void *value)
     }
     entry.key = key;
     entry.value = value;
-    entries.push_back(entry);
+    entries.push_front(entry);
     SDL_mutexV(mutex);
     return 0;
 }
@@ -55,7 +55,7 @@ void *MenuHelper80::get(std::string key)
             entry.key = key;
             entry.value = it->value;
             entries.erase(it);
-            entries.push_back(entry);
+            entries.push_front(entry);
             SDL_mutexV(mutex);
             return entry.value;
         }

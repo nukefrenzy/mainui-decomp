@@ -255,7 +255,7 @@ int ThemeMenu::vfunc4() {
             loadTheme(&g_themeList[cur-1], &g_fontSize);
             Mix_PlayMusic(g_themeMusic, -1);
         } else {
-            g_themePath = strdup("./");
+            g_themePath = strdup(g_skinSubdir);
             changeLanguageFonts(&g_skin, &g_fontSize);
             freeTheme();
             loadTheme(&g_skin, &g_fontSize);
@@ -265,6 +265,15 @@ int ThemeMenu::vfunc4() {
     }
     return -1;
 }
+
+// Legacy suffix table retained in the target even though fileType reads configured extensions.
+// Original writable pointer table: 0x17e6f0-0x17e764.
+const char *g_legacyExtensions[] = {
+    ".smc", ".fig", ".sfc", ".gd3", ".gd7", ".dx2", ".bsx", ".swc",
+    ".gen", ".md", ".smd", ".32x", ".sms", ".rom", ".gg", ".sg",
+    ".nes", ".fds", ".unf", ".unif", ".gba", ".agb", ".gbz", ".pbp",
+    ".iso", ".cue", ".gb", ".gbc", ".pce"
+};
 
 // 0x2cfc0
 int fileType_2cfc0(const char *name) {

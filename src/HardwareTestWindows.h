@@ -2,6 +2,8 @@
 #pragma once
 #include "TrimusWindow.h"
 #include "SDLTypes.h"
+// Class declaration order also fixes hardware vtable/typeinfo data order.
+#include "KeyTestWindow2.h"
 class SDLKeyTestWindow : public TrimusWindow {
 public:
     SDLKeyTestWindow(const int*,int,int(*)(),const char*,int);
@@ -36,7 +38,6 @@ public:
     bool expecting(int);
     TestKeyImage left,right,up,down,circle,rectangle;
 };
-#include "KeyTestWindow2.h"
 union TestColor { unsigned value; SDL_Color bytes; };
 class LCDTestWindow : public TrimusWindow {
 public:

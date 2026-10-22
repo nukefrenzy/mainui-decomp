@@ -227,19 +227,23 @@ then where the first use of the displaced function happens.
   artificial template instantiation is needed.
 
 - A matching callee can hide a wrong public signedness. The scaler's callers need unsigned
-  dimensions/stride to retain their conversion moves; its implementation needs signed shifts,
-  divisions and row-stride interpretation. A shared unsigned API with explicit signed casts in
-  the implementation preserves both sides. Changing only the caller prototype to signed removed
-  24 bytes from the first unit despite making its link symbol resolve.
+  dimensions/stride to retain their conversion moves. The implementation also needs unsigned
+  counters/division to call __aeabi_uidiv, while retaining its signed row-stride interpretation.
+  A signed implementation passed masked checks but selected __aeabi_idiv. Casting only the
+  divisor to unsigned added a move at each division; declaring cx/cy unsigned preserves the
+  original direct loads into r1 and the 376-byte body. Conversely, panel timing's uint16 operands
+  promote to int: explicit unsigned casts selected the wrong unsigned division helper there.
+  Changing the public caller prototype to signed had removed 24 bytes from the first unit.
 - C and C++ units must share explicit linkage declarations. A masked function proof can pass
   while a C caller references a different symbol from its C++ definition. Use common C-compatible
   headers for the shared entry points (process lookup and streaming zlib here), preserving the
   original code rather than introducing aliases or wrapper functions.
 
 - A const global definition can trigger constant folding even at -O0, including when placed
-  after its consumers in the same file. The three theme colors must be stored in a separate
-  translation unit from setDefaultTheme; otherwise GCC removes 36 bytes of original global
-  loads. Verify data initializers independently through src/data.tsv and linkaudit, including
+  after its consumers in the same file. The three theme colors require SDL_Color struct
+  definitions and byte-member assignments in their original theme unit. Union definitions
+  there removed 36 bytes of original global loads; moving them to another TU hid the type
+  error until read-only data was checked. Verify data initializers through src/data.tsv and linkaudit, including
   relocation targets for string tables; a code-only match cannot prove their contents.
 - A shared address can expose a wrong recovered field type. IconMenuItem's +8/+12 values are
   borrowed background surfaces, not x/y coordinates; their globals are g_gameFocused,
@@ -268,6 +272,60 @@ A valid walk proves a byte arrangement exists, not that actual symbol identities
 
 Use `linkaudit.py --require-link` alongside unitcheck: the final link keeps static relocations
 with `--emit-relocs` and compares actual .text at its original address/size, using the same
-relocation/BL/BLX masks. It also reports raw ARM call/patch differences separately. The retained
-code matches in full, but absolute addresses/call targets remain a separate proof. This is a
+relocation/BL/BLX masks. It also compares raw ARM call/patch words separately, and now fails on
+any difference. The retained code and direct call words match; data addresses and indirect targets
+remain a separate proof. This is a
 cross-object type/identity issue, not a new -O0 instruction idiom.
+
+### Preserve post-build NOPs and inspect wrapper calls
+
+Eight further target patches disable one shadow blit, six Wi-Fi background blit/fill calls and
+one PWM-period write. Simply removing the source calls loses argument setup and code size.
+Use function-scoped GAS bl interception as for createMenu: emit literal 0xe320f000 at only the
+known offsets, omit their relocation, assert the exact count, then purge the macro. No new masks
+are needed, and the NOP words themselves now participate in the code proof.
+
+Equal caller instructions can still select different template operations. FileBrowserCache's two
+row lookups require vector::at rather than operator[]; switching to at restores exception-table
+sizes too. MenuHelper80's insertion wrapper calls begin, proving push_front rather than push_back
+for both put and cache hits. Inspect calls inside generated wrappers as well as handwritten bodies;
+actual linked raw-call comparison catches these differences. No manual template instantiation or
+linker alias is needed.
+
+### Prove literal identity and virtual bindings with read-only data
+
+Instruction matches do not establish literal order or indirect targets. The IME switch
+needed its original source case order even though numeric case order produced matching
+instructions. WifiMenuDrawer needed its renderer in existing slot 7 and pure-virtual event
+slot 15; only raw vtable-pointer comparison established those bindings.
+
+Strings patched in place retain allocation extents and sometimes distinct identities even
+when their text becomes identical. Use readable named arrays with recovered bounds for
+those slots; ordinary literal pooling can shrink the section or merge separate objects.
+Preserve first-use order and deferred function-name strings. Class declaration/include
+order also controls vtable and RTTI emission. Scope assertion diagnostic filenames when
+the original SDK path is embedded, without modifying the fetched dependency.
+
+The full linked .rodata comparison now checks every byte, including relocated pointers,
+without masks. Keep this check alongside unit and linked-text proofs; see
+`docs/rodata-recovery.md` for examples and shared-header changes.
+
+### Recover initialized storage and check unwind section order
+
+A consumed prefix need not be a whole global object. The 116-byte panel prefix extends to
+188 bytes in the SDK layout, followed by a separate 341-byte command stream and 76-byte
+MIPI configuration. Preserve the real pointer relocation and natural alignment; compare
+all initialized bytes instead of adding padding to close a section-size deficit.
+
+GCC can establish an ARM unwind section before emitting its associated template code.
+In the Wi-Fi unit, the initial drawable definitions precede the first body function, and
+menu/action definitions follow it. Splitting the shared item header and including the full
+menu header after wifiMode reproduces this ordering. Other consumers still see all inline
+definitions in their original order. Deferring selected inline definitions without preserving
+other consumers can alter COMDAT retention even when an isolated link probe passes. Require
+the full link, raw vtables and all unit checks before accepting an unwind-order correction.
+
+Local zero definitions can use assembler .comm and be allocated after public objects.
+Check actual symbol addresses, not only the apparent source order or all-zero BSS bytes.
+Do not infer an unknown allocation from the size deficit alone. Details and unresolved
+extents: `docs/writable-data-recovery.md`.

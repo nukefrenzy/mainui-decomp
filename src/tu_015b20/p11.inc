@@ -451,7 +451,7 @@ static int chargingThread(void *arg) {
         if (state != 2 && state != 3) {
             puts("usb unplug, poweroff");
             system("sync");
-            system("mainui_off_order");
+            system(g_powerOffCommand);
         }
         if (battery >= 99) current = 4;
         else if (battery >= 75) current = 3;

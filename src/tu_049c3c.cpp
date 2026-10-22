@@ -121,8 +121,9 @@ int g_lastBattery;
 unsigned long g_lastVolumeTime;
 int g_fontSize=24;
 bool g_audioRun=true;
-int g_lastPlug=-1,g_lastReportedWifiStatus=-1;
+int g_lastPlug=-1;
 unsigned g_lastWifiState=-1;
+int g_lastReportedWifiStatus=-1;
 static int g_loggedWifi;
 void onSIGTERM(int signal) {
     g_running=false;

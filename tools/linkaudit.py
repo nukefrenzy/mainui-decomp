@@ -80,6 +80,45 @@ def compare_dynamic(original, rebuilt):
                 interpreter_matches=original['interpreter'] == rebuilt['interpreter'])
 
 
+def check_initialized_section(original, rebuilt, name):
+    """Compare every initialized section byte, including relocated pointers.
+
+    Unlike the text proof, no relocation or instruction words are masked here.
+    """
+    with open(original, 'rb') as stream:
+        section = ELFFile(stream).get_section_by_name(name)
+        address, expected = section['sh_addr'], section.data()
+    result = dict(status='MISMATCH', address=address, size=len(expected),
+                  sha256=hashlib.sha256(expected).hexdigest(), mismatching_bytes=0,
+                  first_mismatches=[])
+    with open(rebuilt, 'rb') as stream:
+        section = ELFFile(stream).get_section_by_name(name)
+        if section is None:
+            result['error'] = f'missing linked {name}'
+            return result
+        data = section.data()
+        result.update(rebuilt_address=section['sh_addr'], rebuilt_size=len(data),
+                      rebuilt_sha256=hashlib.sha256(data).hexdigest())
+        if section['sh_addr'] != address or len(data) != len(expected):
+            result['error'] = f'linked {name} address or size differs'
+            return result
+        for offset, (a, b) in enumerate(zip(expected, data)):
+            if a != b:
+                result['mismatching_bytes'] += 1
+                if len(result['first_mismatches']) < 16:
+                    result['first_mismatches'].append(address+offset)
+        result['status'] = 'MISMATCH' if result['mismatching_bytes'] else 'MATCH'
+    return result
+
+
+def check_rodata(original, rebuilt):
+    return check_initialized_section(original, rebuilt, '.rodata')
+
+
+def check_data(original, rebuilt):
+    return check_initialized_section(original, rebuilt, '.data')
+
+
 def check_linked_text(original, rebuilt):
     """Check actual ld output, using the existing unit proof's relocation/call-word policy.
 
@@ -463,6 +502,10 @@ def audit(args):
     rebuilt_dynamic = dynamic_metadata(final_output) if final_result.returncode == 0 else None
     dynamic_comparison = compare_dynamic(original_dynamic, rebuilt_dynamic) if rebuilt_dynamic else None
     linked_text = check_linked_text(original, final_output) if rebuilt_dynamic else None
+    rodata = check_rodata(original, final_output) if rebuilt_dynamic else None
+    data = check_data(original, final_output) if rebuilt_dynamic else None
+    unwind = {name: check_initialized_section(original, final_output, name)
+              for name in ('.ARM.extab', '.ARM.exidx')} if rebuilt_dynamic else {}
     placements = []
     if rebuilt_dynamic:
         linked_symbols = {s['name']: s['value'] for s in symbols(final_output)
@@ -560,6 +603,9 @@ def audit(args):
                   library_inputs=library_inputs, rebuilt_dynamic=rebuilt_dynamic,
                   dynamic_comparison=dynamic_comparison, body_placements=placements,
                   linked_text=linked_text,
+                  rodata=rodata,
+                  data=data,
+                  unwind=unwind,
                   partial_link_returncode=result.returncode,
                   final_link_returncode=final_result.returncode,
                   executable_ready=False, unresolved_count=len(records), categories=counts,
@@ -603,8 +649,18 @@ def audit(args):
                   'Link success and matching imports do not establish original layout or device safety.', '']
         lines += [f'Actual linked .text (relocation/call words masked): {linked_text["status"]}; '
                   f'{linked_text["size"]:,} bytes; {linked_text["mismatching_words"]} differing unmasked words.',
-                  f'Raw ARM call/patch differences requiring review: {len(linked_text["control_flow_differences"])}.',
-                  'This checks actual COMDAT retention; absolute relocation/call values remain unproven.', '']
+                  f'Raw ARM call/patch differences: {len(linked_text["control_flow_differences"])} (must be zero).',
+                  'This checks actual COMDAT retention and ARM call/patch words; data addresses and indirect targets remain unproven.', '']
+        lines += [f'Actual linked .rodata (no masks): {rodata["status"]}; {rodata["size"]:,} bytes; '
+                  f'{rodata["mismatching_bytes"]} differing bytes.',
+                  'This includes vtable/typeinfo pointers and literal/data contents, not runtime library compatibility.', '']
+        lines += [f'Actual linked .data (no masks): {data["status"]}; {data["size"]:,} bytes; '
+                  f'{data["mismatching_bytes"]} differing bytes.',
+                  'This checks initial writable contents and pointers; BSS placement and runtime writes remain separate.', '']
+        for name, checked in unwind.items():
+            lines += [f'Actual linked {name} (no masks): {checked["status"]}; '
+                      f'{checked["size"]:,} bytes; {checked["mismatching_bytes"]} differing bytes.']
+        lines += ['']
         first_shift = next((p for p in placements if p['delta']), None)
         if first_shift:
             lines += [f'First displaced TU body anchor: {first_shift["source"]}: '
@@ -623,6 +679,10 @@ def audit(args):
                   or not dynamic_comparison['interpreter_matches']))
               or (args.require_link and final_result.returncode)
               or (linked_text and linked_text['status'] != 'MATCH')
+              or (linked_text and linked_text['control_flow_differences'])
+              or (rodata and rodata['status'] != 'MATCH')
+              or (data and data['status'] != 'MATCH')
+              or any(checked['status'] != 'MATCH' for checked in unwind.values())
               or (args.require_ready and not report['executable_ready']))
     return 1 if failed else 0
 

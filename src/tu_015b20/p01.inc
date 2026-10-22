@@ -38,6 +38,26 @@ void flipDisplay()
 // 0x15d24: draws `text` in `rect` (align 0 left, 1 centred, 3 vertically centred, 4 right and
 // vertically centred, else right), optionally over a shadow; returns the text width. The shadow blit
 // is a NOP in this build.
+// Preserve the target binary's post-build NOP patch(es), including argument setup.
+// Only these function-relative BL sites lose their relocation; other calls are unchanged.
+asm(R"(
+.set .Ldraw_text_nops, 0
+.macro bl target
+    .set .Lskip_patched_call, 0
+    .irp patch, 0x2b0
+        .if (. - _Z8drawTextP11SDL_SurfacePv8SDL_RectPKc9SDL_Colorib) == \patch
+            .set .Lskip_patched_call, 1
+        .endif
+    .endr
+    .if .Lskip_patched_call
+        .inst 0xe320f000
+        .set .Ldraw_text_nops, .Ldraw_text_nops + 1
+    .else
+        .inst 0xebfffffe
+        .reloc . - 4, R_ARM_CALL, \target
+    .endif
+.endm
+)");
 int drawText(SDL_Surface *dst, TTF_Font *font, SDL_Rect rect, const char *text, SDL_Color color,
              int align, bool shadow)
 {
@@ -78,6 +98,13 @@ int drawText(SDL_Surface *dst, TTF_Font *font, SDL_Rect rect, const char *text, 
     SDL_FreeSurface(s);
     return w;
 }
+
+asm(R"(
+.purgem bl
+.if .Ldraw_text_nops != 1
+    .error "target NOP patch count changed"
+.endif
+)");
 
 // 0x16018: splits `text` at `delim` and draws the pieces as rows of equal height.
 int drawTextLines(SDL_Surface *dst, TTF_Font *font, SDL_Rect *rect, const char *text,
@@ -124,6 +151,8 @@ void drawIconOnBg(SDL_Surface *dst, SDL_Surface *bg, SDL_Rect *rect, SDL_Surface
         SDL_BlitSurface(icon, NULL, dst, &r);
     }
 }
+
+extern const char g_skinSubdir[] = "./"; // Original pooled root at 0x151a48.
 
 // 0x163d0: as drawIconOnBg, loading the icon from the theme's skin folder.
 void drawSkinIconOnBg(SDL_Surface *dst, SDL_Surface *bg, SDL_Rect *rect, const char *file)
@@ -191,6 +220,26 @@ int drawKeyStateIndicator(SDL_Surface *dst, int slot, bool focused)
 
 // 0x16788: Wi-Fi status icon (hotspot, or signal level when connected). The background blits
 // are NOPs in this build.
+// Preserve the target binary's post-build NOP patch(es), including argument setup.
+// Only these function-relative BL sites lose their relocation; other calls are unchanged.
+asm(R"(
+.set .Ldraw_wifi_nops, 0
+.macro bl target
+    .set .Lskip_patched_call, 0
+    .irp patch, 0x12c, 0x144, 0x190, 0x2a4, 0x2bc, 0x308
+        .if (. - _Z17drawWifiIndicatorP11SDL_Surfaceib) == \patch
+            .set .Lskip_patched_call, 1
+        .endif
+    .endr
+    .if .Lskip_patched_call
+        .inst 0xe320f000
+        .set .Ldraw_wifi_nops, .Ldraw_wifi_nops + 1
+    .else
+        .inst 0xebfffffe
+        .reloc . - 4, R_ARM_CALL, \target
+    .endif
+.endm
+)");
 int drawWifiIndicator(SDL_Surface *dst, int slot, bool focused)
 {
     int w = 48;
@@ -248,6 +297,13 @@ int drawWifiIndicator(SDL_Surface *dst, int slot, bool focused)
     }
     return -1;
 }
+
+asm(R"(
+.purgem bl
+.if .Ldraw_wifi_nops != 6
+    .error "target NOP patch count changed"
+.endif
+)");
 
 // 0x16b54: headphone icon in slot 2 when sound card 2 has a DSP.
 int drawSoundCardIndicator(SDL_Surface *dst, bool focused)
@@ -429,6 +485,8 @@ void drawScreenFrame(SDL_Surface *dst, const char *title, int unusedArg, bool sh
     drawFooter(dst, languageString(88), languageString(89));
 }
 
+extern const char g_powerOffCommand[32];
+
 // 0x1761c: saves pending settings, then runs the shutdown commands; returns 2 (quit).
 int powerOff(void *arg)
 {
@@ -437,9 +495,12 @@ int powerOff(void *arg)
     puts("poweroff2");
     system("sync");
     system("sleep 1");
-    system("mainui_off_order");
+    system(g_powerOffCommand);
     return 2;
 }
+
+// Patched command retains its original 32-byte slot at 0x151aa8.
+extern const char g_powerOffCommand[32] = "mainui_off_order";
 
 // 0x176a8
 void powerOffNow()
@@ -647,9 +708,9 @@ void showLaunchScreen(const char *cmd)
 }
 
 // 0x18170
-int doNothingAction(void *a, void *b)
+int donoting_action(void *a, void *b)
 {
-    puts("donoting_action");
+    puts(__func__);
     return 1;
 }
 
@@ -716,7 +777,7 @@ int launchApp_buildCommand(AppInfo *app, int type)
     std::string::size_type pos = app->launch.rfind("/");
     if (pos != std::string::npos) {
         dir = app->launch.substr(0, pos);
-        file = "./";
+        file = g_skinSubdir;
         file += app->launch.substr(pos + 1);
     } else {
         return -1;

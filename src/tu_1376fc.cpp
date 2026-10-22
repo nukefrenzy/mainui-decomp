@@ -45,6 +45,8 @@ int g_touchX = -1, g_touchY = -1;
 static_assert(sizeof(KeySettingWindow) == 0x15c, "KeySettingWindow layout");
 static_assert(sizeof(InputEvent) == 20, "SDL event layout");
 
+extern const char g_keyEventReadFormat[44];
+
 int openInputDevice(const char *path)
 {
     int fd = open(path, O_RDWR);
@@ -96,13 +98,13 @@ int touchInputThread(void *)
                     break;
                 }
                 if (input.type == EV_KEY && input.code == BTN_TOUCH) {
-                    printf("read event type=%d, code=%d, value=%d\n", input.type, input.code, input.value);
+                    printf(g_keyEventReadFormat, input.type, input.code, input.value);
                     if (input.value == 1) g_touchPressed = true;
                     else if (input.value == 0) g_touchPressed = false;
                     g_touchX = g_touchY = -1;
                 }
                 if (input.type == EV_ABS && (input.code == 0 || input.code == 1) && g_touchPressed) {
-                    printf("read event type=%d, code=%d, value=%d\n", input.type, input.code, input.value);
+                    printf(g_keyEventReadFormat, input.type, input.code, input.value);
                     if (input.code == 0) g_touchX = input.value;
                     else if (input.code == 1) g_touchY = input.value;
                     if (g_touchX >= 0 && g_touchY >= 0) {
@@ -161,6 +163,9 @@ int waitMappingKey()
     }
     return 0;
 }
+// Original diagnostic allocation at 0x162578 retains 44 bytes.
+extern const char g_keyEventReadFormat[44] = "read event type=%d, code=%d, value=%d\n";
+
 KeySettingWindow::KeySettingWindow() : TrimusWindow(0x6e, 0x19)
 {
     menuIcon = NULL;

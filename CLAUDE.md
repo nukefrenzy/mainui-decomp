@@ -74,9 +74,13 @@ Next: **byte-exact final layout**. `python3 tools/linkaudit.py --require-link` b
 ARM ELF with verified embedded objects and pinned SDK/runtime libraries. All 286 import names and
 versions, 23 DT_NEEDED entries in order and interpreter match. Read `docs/link-audit.md`: the
 COMDAT deficit is fixed (the independent global g_recentList is std::list<int>). Actual linked
-.text now MATCHes all 1,294,000 bytes with existing relocation/call masks. Next review the 14 raw
-call/patch differences, then data/exception/absolute relocation layout. `src/data.tsv` records 53 checked storage extents; read `docs/data-recovery.md` for
-allocation limits. No deployed or device-validated replacement exists yet.
+.text now MATCHes all 1,294,000 bytes with existing relocation/call masks, and raw ARM call/patch
+differences are zero (audit-enforced). All 78,184 .rodata bytes, including pointers, now match
+without masks at 0x1518e8. Read `docs/rodata-recovery.md` for source ordering, fixed literal extents
+and virtual bindings. Linked .data and both ARM exception sections also match without masks; see
+`docs/writable-data-recovery.md`. Next: BSS (160 bytes short) and remaining relocations.
+`src/data.tsv` records 59 checked extents / 9,102 bytes / 185 strings;
+read `docs/data-recovery.md` for allocation limits. No device-validated replacement exists yet.
 
 The starter LD_PRELOAD hook library remains a separate optional feature: same toolchain, wrap
 SDL_PollEvent for a hotkey, compile-test here and device-test by Brad.

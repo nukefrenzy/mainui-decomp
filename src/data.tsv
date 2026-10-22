@@ -1,10 +1,11 @@
 file	symbol	addr	size	kind	evidence
 tu_015b20.cpp	g_skinSubdir	151a48	3	bytes	declared extent; original ELF initial bytes
-tu_015b20.cpp	g_themeGray	161808	4	bytes	declared extent; original ELF initial bytes
-tu_015b20.cpp	g_themeWhite	16180c	4	bytes	declared extent; original ELF initial bytes
-tu_015b20.cpp	g_themeDim	161810	4	bytes	declared extent; original ELF initial bytes
+tu_129f9c.cpp	g_themeGray	161808	4	bytes	declared extent; original ELF initial bytes
+tu_129f9c.cpp	g_themeWhite	16180c	4	bytes	declared extent; original ELF initial bytes
+tu_129f9c.cpp	g_themeDim	161810	4	bytes	declared extent; original ELF initial bytes
 tu_015b20.cpp	g_fbFd	17e488	4	bytes	declared extent; original ELF initial bytes
-tu_015b20.cpp	g_panelInfo	17e48c	116	bytes	only the prefix read by adjustColor; full SDK object extent remains unknown
+tu_015b20.cpp	g_panelInfo	17e48c	188	bytes	full MI_PANEL_ParamConfig_t-compatible object; timing prefix and trailing SDK fields checked
+tu_015b20.cpp	g_panelCommands	17e548	341	bytes	MIPI command/length/payload stream with FE FE delay markers and FF FF terminator
 tu_015b20.cpp	g_customDisplayTiming	17e6ec	1	bytes	declared extent; original ELF initial bytes
 tu_1302cc.cpp	g_lengthBase	17f9c0	124	bytes	declared extent; original ELF initial bytes
 tu_1302cc.cpp	g_lengthExtra	17fa3c	124	bytes	declared extent; original ELF initial bytes
@@ -52,3 +53,8 @@ tu_14f730.c	deviceTx	188a2c	16	bytes	declared extent; original ELF initial bytes
 tu_14f730.c	deviceKeyB	188a3c	8	bytes	declared extent; original ELF initial bytes
 tu_14f730.c	deviceCounter	188a44	2	bytes	declared extent; original ELF initial bytes
 tu_14f730.c	deviceRx	188a48	16	bytes	declared extent; original ELF initial bytes
+tu_129f9c.cpp	g_themeUnusedPalette	161814	36	bytes	Original nine remaining 4-byte palette entries preceding openThemeFont literals
+tu_015b20.cpp	g_legacyExtensions	17e6f0	116	cstring_table	Original 29-entry legacy suffix pointer table, including .unif
+tu_015b20.cpp	g_powerOffCommand	151aa8	32	bytes	Patched shutdown command retains its original 32-byte slot
+tu_1376fc.cpp	g_keyEventReadFormat	162578	44	bytes	Original touch diagnostic string allocation includes trailing zero bytes
+tu_14acfc.c	g_pwmDutyPath	163a10	40	bytes	Patched /dev/null duty path retains original 40-byte allocation

@@ -1,66 +1,7 @@
-// Wi-Fi/hotspot rows, actions and menus; inline definition order fixes the template tail.
+// Wi-Fi/hotspot menus and actions; inline definition order fixes the template tail.
 #pragma once
-#include <stdio.h>
-#include <string>
-#include <vector>
-#include <string.h>
-#include "Action.h"
-#include "TextMenuDrawer.h"
-#include "ImeWindow.h"
+#include "WifiMenuItems.h"
 
-struct WifiAP {
-    char raw0[8]; char ssid[0x58]; int rssi; char raw64[8]; int freq;
-    char raw70[4]; char bssid[0x18]; char flags[0x80]; int secured, current;
-};
-#include "WifiStatus.h"
-extern char *g_themePath;
-extern void *g_imeFont;
-extern SDL_Color g_imeTextColor, g_wifiSelectedColor;
-SDL_Surface *loadImeImage(const char *, const char *, const char *);
-const char *languageString(int);
-int drawText(SDL_Surface *, void *, SDL_Rect, const char *, SDL_Color, int, bool);
-extern "C" int SDL_UpperBlit(SDL_Surface *, SDL_Rect *, SDL_Surface *, SDL_Rect *);
-extern "C" void SDL_FreeSurface(SDL_Surface *);
-extern "C" int TTF_SizeText(void *, const char *, int *, int *);
-extern "C" int getWifiConnected();
-std::string readConfigValue(const std::string &, const std::string &);
-class ItemDrawable {
-public:
-    ItemDrawable(Action *a) : action(a) {}
-    virtual ~ItemDrawable() { if (action) delete action; }
-    virtual int draw(SDL_Surface *, SDL_Rect *, bool) = 0;
-    virtual bool selectable() { return true; }
-    virtual int event(int) { return -1; }
-    Action *action;
-};
-class WifiOnOffLabel : public ItemDrawable {
-public:
-    WifiOnOffLabel(Action *, bool);
-    virtual ~WifiOnOffLabel();
-    virtual int draw(SDL_Surface *, SDL_Rect *, bool);
-    virtual bool selectable() { return enabled; }
-    SDL_Surface *left, *right;
-    bool enabled;
-};
-class WifiLabel : public ItemDrawable {
-public:
-    WifiLabel(Action *);
-    virtual ~WifiLabel();
-    virtual int draw(SDL_Surface *, SDL_Rect *, bool);
-    virtual bool selectable() { return false; }
-};
-class WifiItem : public ItemDrawable {
-public:
-    WifiItem(Action *a, const char *s, int r, int sec, int connected,
-             SDL_Surface *lock, SDL_Surface *check, SDL_Surface *sig)
-        : ItemDrawable(a), ssid(s), rssi(r), secured(sec), connected(connected),
-          lock(lock), check(check), signal(sig) {}
-    virtual ~WifiItem() {}
-    virtual int draw(SDL_Surface *, SDL_Rect *, bool);
-    std::string ssid;
-    int rssi, secured, connected;
-    SDL_Surface *lock, *check, *signal;
-};
 class WifiMenuDrawer : public ListMenu {
 public:
     WifiMenuDrawer();
@@ -71,11 +12,33 @@ public:
     virtual int count();
     virtual void vfunc11() {}
     virtual void vfunc13();
-    void drawItems(SDL_Surface *);
+    void vfunc7(SDL_Surface *) override;
+    int vfunc15(int) override = 0;
     std::vector<ItemDrawable *> items;
     SDL_Surface *background;
     int rowHeight;
 };
+// Original declaration order places menu RTTI/vtables after the action classes.
+class WifiMenu : public WifiMenuDrawer {
+public:
+    WifiMenu();
+    virtual ~WifiMenu();
+    virtual void vfunc7(SDL_Surface *);
+    virtual int vfunc4();
+    virtual int vfunc15(int event);
+    SDL_Surface *lock, *check, *signal2, *signal3, *signal4;
+    WifiAP scan[32];
+    int scanCount, connectingIndex;
+    SDL_Surface *overlay;
+};
+class HotspotMenu : public WifiMenuDrawer {
+public:
+    HotspotMenu();
+    virtual ~HotspotMenu();
+    virtual void vfunc7(SDL_Surface *);
+    virtual int vfunc15(int event);
+};
+
 class WifiConnectAction : public Action {
 public:
     WifiConnectAction(WifiAP *source, const char *password, bool secured)
@@ -138,8 +101,8 @@ class HotspotSwitchItem : public ItemDrawable {
 public:
     HotspotSwitchItem() : ItemDrawable(NULL) {
         action = new HotspotSwitchAction;
-        left = loadImeImage(g_themePath, "./", "skin/icon-left-arrow-24.png");
-        right = loadImeImage(g_themePath, "./", "skin/icon-right-arrow-24.png");
+        left = loadImeImage(g_themePath, g_wifiSkinRoot, g_wifiArrowLeft);
+        right = loadImeImage(g_themePath, g_wifiSkinRoot, g_wifiArrowRight);
     }
     virtual ~HotspotSwitchItem() { if (left) SDL_FreeSurface(left); if (right) SDL_FreeSurface(right); }
     virtual int draw(SDL_Surface *dst, SDL_Rect *r, bool selected) {
@@ -147,7 +110,7 @@ public:
         rect.x += 20; rect.y += 5;
         drawText(dst, g_imeFont, rect, languageString(0x86), selected ? g_wifiSelectedColor : g_imeTextColor, 3, false);
         int on = getWifiConnected();
-        printf("hotspot switch flag %d\n", on);
+        printf(g_hotspotSwitchFormat, on);
         rect.w = 200;
         rect.x = r->x + r->w - rect.w - (right ? right->w : 0) - 40;
         if (on) drawText(dst, g_imeFont, rect, languageString(0x68), selected ? g_wifiSelectedColor : g_imeTextColor, 1, false);
@@ -185,14 +148,14 @@ public:
 };
 class HotspotNameItem : public ItemDrawable {
 public:
-    HotspotNameItem() : ItemDrawable(NULL) { action = new HotspotImePopupAction(0x97, "/etc/wifi/hostapd.conf", "ssid"); }
+    HotspotNameItem() : ItemDrawable(NULL) { action = new HotspotImePopupAction(0x97, g_hotspotConfigPath, g_hotspotSsidKey); }
     virtual ~HotspotNameItem() {}
     virtual int draw(SDL_Surface *dst, SDL_Rect *r, bool selected) {
         SDL_Rect rect = *r;
         rect.x += 20;
         drawText(dst, g_imeFont, rect, languageString(135), g_imeTextColor, 0, selected);
         // Preserve the original temporary-string lifetime.
-        const char *value = readConfigValue("/etc/wifi/hostapd.conf", "ssid").c_str();
+        const char *value = readConfigValue(g_hotspotConfigPath, g_hotspotSsidKey).c_str();
         int width = 0, height = 0;
         TTF_SizeText(g_imeFont, value, &width, &height);
         if (width < 80) width = 80;
@@ -203,14 +166,14 @@ public:
 };
 class HotspotPskItem : public ItemDrawable {
 public:
-    HotspotPskItem() : ItemDrawable(NULL) { action = new HotspotImePopupAction(0x98, "/etc/wifi/hostapd.conf", "wpa_passphrase"); }
+    HotspotPskItem() : ItemDrawable(NULL) { action = new HotspotImePopupAction(0x98, g_hotspotConfigPath, g_hotspotPskKey); }
     virtual ~HotspotPskItem() {}
     virtual int draw(SDL_Surface *dst, SDL_Rect *r, bool selected) {
         SDL_Rect rect = *r;
         rect.x += 20;
         drawText(dst, g_imeFont, rect, languageString(136), g_imeTextColor, 0, selected);
         // Preserve the original temporary-string lifetime.
-        const char *value = readConfigValue("/etc/wifi/hostapd.conf", "wpa_passphrase").c_str();
+        const char *value = readConfigValue(g_hotspotConfigPath, g_hotspotPskKey).c_str();
         int width = 0, height = 0;
         TTF_SizeText(g_imeFont, value, &width, &height);
         if (width < 80) width = 80;
@@ -218,23 +181,4 @@ public:
         drawText(dst, g_imeFont, rect, value, g_imeTextColor, 0, false);
         return 0;
     }
-};
-class WifiMenu : public WifiMenuDrawer {
-public:
-    WifiMenu();
-    virtual ~WifiMenu();
-    virtual void vfunc7(SDL_Surface *);
-    virtual int vfunc4();
-    virtual int vfunc15(int event);
-    SDL_Surface *lock, *check, *signal2, *signal3, *signal4;
-    WifiAP scan[32];
-    int scanCount, connectingIndex;
-    SDL_Surface *overlay;
-};
-class HotspotMenu : public WifiMenuDrawer {
-public:
-    HotspotMenu();
-    virtual ~HotspotMenu();
-    virtual void vfunc7(SDL_Surface *);
-    virtual int vfunc15(int event);
 };

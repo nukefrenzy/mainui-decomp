@@ -33,7 +33,7 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `compareLabels(void const*, void const*)` | 0x17f60 | 96 | tu_015b20.cpp |
 | `writeCmdToRun(const char*)` | 0x17fc0 | 88 | tu_015b20.cpp |
 | `showLaunchScreen(char const*)` | 0x18018 | 344 | tu_015b20.cpp |
-| `doNothingAction(void*, void*)` | 0x18170 | 48 | tu_015b20.cpp |
+| `donoting_action(void*, void*)` | 0x18170 | 48 | tu_015b20.cpp |
 | `launchRom(char const*, EmuInfo*, char const*, char const*, int)` | 0x181a0 | 960 | tu_015b20.cpp |
 | `launchApp_buildCommand(AppInfo*, int)` | 0x18560 | 1052 | tu_015b20.cpp |
 | `EmuAction::execute(void*)` | 0x1897c | 388 | tu_015b20.cpp |
@@ -550,7 +550,7 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `WifiMenuDrawer::vfunc3()` | 0x13a480 | 300 | tu_138c50.cpp |
 | `WifiMenuDrawer::vfunc4()` | 0x13a5ac | 184 | tu_138c50.cpp |
 | `WifiMenuDrawer::getItem(int)` | 0x13a664 | 136 | tu_138c50.cpp |
-| `WifiMenuDrawer::drawItems(SDL_Surface*)` | 0x13a6ec | 1256 | tu_138c50.cpp |
+| `WifiMenuDrawer::vfunc7(SDL_Surface*)` | 0x13a6ec | 1256 | tu_138c50.cpp |
 | `WifiMenuDrawer::count()` | 0x13abd4 | 48 | tu_138c50.cpp |
 | `WifiMenuDrawer::vfunc13()` | 0x13ac04 | 308 | tu_138c50.cpp |
 | `WifiMenu::WifiMenu()` | 0x13ad38 | 832 | tu_138c50.cpp |
