@@ -84,6 +84,10 @@ clean build when `.tmp_update/config/.showExpert` is absent, as it is on that ca
 already runs a file byte-identical to our build. A device test adds information only for a modified
 build: install it as a separate file, keep a backup, and confirm with the user before touching the card.
 
+Device run (2026-10-22): the built binary was copied onto the card as `MainUI-354-clean`, with a
+backup taken first and the copy checked with SHA-256 and `cmp`. Brad booted it and reported that it
+runs great. The original backup was then restored (checked with `cmp`), so the card is as it was.
+
 Remaining candidates, each needing the user's decision: the optional LD_PRELOAD hook library,
 a modified-build target, and the documentation topics listed in `CLAUDE.md`'s roadmap.
 

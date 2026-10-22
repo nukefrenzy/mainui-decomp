@@ -17,6 +17,10 @@ binary, so the device already runs a file byte-identical to our build. Onion's
 `miyoo/app/MainUI`. The card has no `.tmp_update/config/.showExpert`, so it uses the clean build.
 Nothing on the card was changed. A device test adds information only for a modified build.
 
+**2026-10-22: device run.** Brad copied the built `build/link-audit/MainUI` onto the card as
+`MainUI-354-clean` after backing up the original, checked the copy with SHA-256 and `cmp`, then
+booted the device: it **runs great**. Afterwards the original backup was put back (checked with `cmp`).
+
 - **Goal:** complete MainUI source that rebuilds byte-exact with Arm GNU 8.2-2018.08, `-O0 -fsigned-char`,
   worked file by file (one translation unit per `src/tu_<lo>.cpp` or `.c`).
 - **Progress:** all **22 whole units** pass `tools/unitcheck.py`: **2,612 of 2,612 tracked
