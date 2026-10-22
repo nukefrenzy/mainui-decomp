@@ -13,8 +13,6 @@ extern SDL_Surface *g_gameFocused, *g_gameNormal, *g_raRow;
 // 0x1821c0, 0x1821c4, 0x1821d0
 extern SDL_Thread *g_loadingThread;
 // 0x180854
-extern unsigned char g_charging;
-// 0x181914
 extern TTF_Font *g_iconFont;
 // 0x182180
 bool sdCardMounted();

@@ -21,18 +21,20 @@ unsigned char g_deviceId[5]; // 0x17ff48: consumed extent; original full allocat
 char g_launchCmd[2048]; // 0x17ff54
 char g_countBuffer[256]; // 0x180754
 SDL_Thread *g_loadingThread; // 0x180854
-fb_var_screeninfo g_fbVar; // 0x18085c
-bool g_settingsDirty; // 0x1808fc
-int g_powerDownCount; // 0x180900
-bool g_powerSent; // 0x180904
-bool g_startHeld; // 0x180905
-bool g_selectHeld; // 0x180906
-bool g_statusIndicatorFlag; // 0x180907
-char g_cwdBuf[4096]; // 0x180908
-volatile int g_busy; // 0x181908
-volatile int g_progressCur; // 0x18190c
-volatile int g_progressTotal; // 0x181910
-unsigned char g_charging; // 0x181914
+// These TU-local objects follow iostream's local .comm initializer; making them
+// public moved them ahead of it. Original target addresses are listed below.
+static fb_var_screeninfo g_fbVar; // 0x18085c
+static bool g_settingsDirty; // 0x1808fc
+static int g_powerDownCount; // 0x180900
+static bool g_powerSent; // 0x180904
+static bool g_startHeld; // 0x180905
+static bool g_selectHeld; // 0x180906
+static bool g_statusIndicatorFlag; // 0x180907
+static char g_cwdBuf[4096]; // 0x180908
+static volatile int g_busy; // 0x181908
+static volatile int g_progressCur; // 0x18190c
+static volatile int g_progressTotal; // 0x181910
+static unsigned char g_charging; // 0x181914
 int g_fbFd = -1; // 0x17e488
 
 

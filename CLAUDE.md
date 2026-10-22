@@ -66,6 +66,9 @@ export scripts in `tools/ghidra/`). Never downgrade a confirmed name to a guess.
 
 ## Roadmap
 
+For resuming with another agent, read `docs/handoff.md` for current evidence and the user's
+required confirmation before BSS steps 2 and 3.
+
 Done: program map, exact toolchain + flags, match toolkit + CI, window layouts, item/action wiring,
 and all 22 Miyoo translation units (100% tracked code coverage). Settings selectors and the six
 disabled entries are documented in `docs/program-map.md`.

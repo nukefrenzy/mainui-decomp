@@ -167,7 +167,14 @@ Next settle **BSS (160 bytes short)** and remaining GOT/code relocations. The de
 allocation, original iostream initializer placement, a 96-byte unreferenced interval and
 C helper/COMMON ordering remain open. No guessed padding was added. .init_array,
 .fini_array and .data.rel.ro still agree byte-for-byte. No device test or deployment has
-occurred; all current changes remain uncommitted at the user's request.
+occurred. The data/unwind work was committed as `e6e91d9`; the BSS follow-up is recorded in the step 1 commit accompanying [the handoff](handoff.md).
+
+BSS step 1 restores the first-unit iostream/private-state order through TU-local linkage;
+its absolute placement remains four bytes early. Only five device-ID bytes are proven,
+and the four-byte gap before the launch buffer remains unexplained. See
+[bss-step1.md](bss-step1.md). All 22 units, 310 affected function matches and the full link audit pass; BSS is still
+160 bytes short. Steps 2 (the 96-byte interval) and 3 (C helpers/COMMON) await confirmation.
+Read [handoff.md](handoff.md) to resume with another agent.
 
 ## Open findings and questions
 

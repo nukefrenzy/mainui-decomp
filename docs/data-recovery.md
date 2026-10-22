@@ -22,6 +22,9 @@ canonical alias-provider objects. The current emitted definitions comprise 31 BS
 COMMON objects, fourteen initialized data objects and eight read-only objects. Actual final placement/alignment/padding still needs
 an executable linker layout; C COMMON alignment is not a recovered original address.
 
+TU-local first-unit symbols now use their local mangled names in the manifest;
+see [BSS step 1](bss-step1.md) for iostream ordering and the remaining four-byte gap.
+
 One recorded extent remains deliberately limited: `g_deviceId` has five bytes consumed
 by getSerial; its original full allocation size remains unknown. The panel object is now
 fully recovered at 188 bytes, followed by its 341-byte command stream and 76-byte MIPI
@@ -71,18 +74,18 @@ writable .data/.bss addresses or coverage are complete.
 | g_launchCmd | 0x17ff54 | 2048 | bytes | tu_015b20.cpp |
 | g_countBuffer | 0x180754 | 256 | bytes | tu_015b20.cpp |
 | g_loadingThread | 0x180854 | 4 | bytes | tu_015b20.cpp |
-| g_fbVar | 0x18085c | 160 | bytes | tu_015b20.cpp |
-| g_settingsDirty | 0x1808fc | 1 | bytes | tu_015b20.cpp |
-| g_powerDownCount | 0x180900 | 4 | bytes | tu_015b20.cpp |
-| g_powerSent | 0x180904 | 1 | bytes | tu_015b20.cpp |
-| g_startHeld | 0x180905 | 1 | bytes | tu_015b20.cpp |
-| g_selectHeld | 0x180906 | 1 | bytes | tu_015b20.cpp |
-| g_statusIndicatorFlag | 0x180907 | 1 | bytes | tu_015b20.cpp |
-| g_cwdBuf | 0x180908 | 4096 | bytes | tu_015b20.cpp |
-| g_busy | 0x181908 | 4 | bytes | tu_015b20.cpp |
-| g_progressCur | 0x18190c | 4 | bytes | tu_015b20.cpp |
-| g_progressTotal | 0x181910 | 4 | bytes | tu_015b20.cpp |
-| g_charging | 0x181914 | 1 | bytes | tu_015b20.cpp |
+| _ZL7g_fbVar | 0x18085c | 160 | bytes | tu_015b20.cpp |
+| _ZL15g_settingsDirty | 0x1808fc | 1 | bytes | tu_015b20.cpp |
+| _ZL16g_powerDownCount | 0x180900 | 4 | bytes | tu_015b20.cpp |
+| _ZL11g_powerSent | 0x180904 | 1 | bytes | tu_015b20.cpp |
+| _ZL11g_startHeld | 0x180905 | 1 | bytes | tu_015b20.cpp |
+| _ZL12g_selectHeld | 0x180906 | 1 | bytes | tu_015b20.cpp |
+| _ZL21g_statusIndicatorFlag | 0x180907 | 1 | bytes | tu_015b20.cpp |
+| _ZL8g_cwdBuf | 0x180908 | 4096 | bytes | tu_015b20.cpp |
+| _ZL6g_busy | 0x181908 | 4 | bytes | tu_015b20.cpp |
+| _ZL13g_progressCur | 0x18190c | 4 | bytes | tu_015b20.cpp |
+| _ZL15g_progressTotal | 0x181910 | 4 | bytes | tu_015b20.cpp |
+| _ZL10g_charging | 0x181914 | 1 | bytes | tu_015b20.cpp |
 | g_iconFont | 0x182180 | 4 | bytes | tu_129f9c.cpp |
 | g_emptyImage | 0x1821b4 | 4 | bytes | tu_129f9c.cpp |
 | g_gameFocused | 0x1821c0 | 4 | bytes | tu_129f9c.cpp |

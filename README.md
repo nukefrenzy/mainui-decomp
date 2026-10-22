@@ -29,7 +29,7 @@ Its 286 import names/versions and 23-library order match the original. Actual li
 All 78,184 `.rodata` bytes, all 6,828 `.data` bytes and both ARM exception sections now match
 without masks, including pointers. BSS layout, remaining relocations and device behavior remain unproven. The [link audit](docs/link-audit.md) also checks 59 storage extents,
 185 language/suffix strings and 3,095 resolved body-call destinations.
-See [status](docs/status.md).
+See [status](docs/status.md) and the [AI handoff](docs/handoff.md) for the next work and approval boundaries.
 
 ## What's here
 

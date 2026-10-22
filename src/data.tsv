@@ -21,18 +21,18 @@ tu_015b20.cpp	g_deviceId	17ff48	5	bytes	five bytes read by getSerial; original a
 tu_015b20.cpp	g_launchCmd	17ff54	2048	bytes	declared extent; zero-initialized original BSS
 tu_015b20.cpp	g_countBuffer	180754	256	bytes	declared extent; zero-initialized original BSS
 tu_015b20.cpp	g_loadingThread	180854	4	bytes	declared extent; zero-initialized original BSS
-tu_015b20.cpp	g_fbVar	18085c	160	bytes	declared extent; zero-initialized original BSS
-tu_015b20.cpp	g_settingsDirty	1808fc	1	bytes	declared extent; zero-initialized original BSS
-tu_015b20.cpp	g_powerDownCount	180900	4	bytes	declared extent; zero-initialized original BSS
-tu_015b20.cpp	g_powerSent	180904	1	bytes	declared extent; zero-initialized original BSS
-tu_015b20.cpp	g_startHeld	180905	1	bytes	declared extent; zero-initialized original BSS
-tu_015b20.cpp	g_selectHeld	180906	1	bytes	declared extent; zero-initialized original BSS
-tu_015b20.cpp	g_statusIndicatorFlag	180907	1	bytes	declared extent; zero-initialized original BSS
-tu_015b20.cpp	g_cwdBuf	180908	4096	bytes	declared extent; zero-initialized original BSS
-tu_015b20.cpp	g_busy	181908	4	bytes	declared extent; zero-initialized original BSS
-tu_015b20.cpp	g_progressCur	18190c	4	bytes	declared extent; zero-initialized original BSS
-tu_015b20.cpp	g_progressTotal	181910	4	bytes	declared extent; zero-initialized original BSS
-tu_015b20.cpp	g_charging	181914	1	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	_ZL7g_fbVar	18085c	160	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	_ZL15g_settingsDirty	1808fc	1	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	_ZL16g_powerDownCount	180900	4	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	_ZL11g_powerSent	180904	1	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	_ZL11g_startHeld	180905	1	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	_ZL12g_selectHeld	180906	1	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	_ZL21g_statusIndicatorFlag	180907	1	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	_ZL8g_cwdBuf	180908	4096	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	_ZL6g_busy	181908	4	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	_ZL13g_progressCur	18190c	4	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	_ZL15g_progressTotal	181910	4	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	_ZL10g_charging	181914	1	bytes	declared extent; zero-initialized original BSS
 tu_129f9c.cpp	g_iconFont	182180	4	bytes	canonical existing storage for recovered alias; original zero-initialized BSS
 tu_129f9c.cpp	g_emptyImage	1821b4	4	bytes	canonical existing storage for recovered alias; original zero-initialized BSS
 tu_129f9c.cpp	g_gameFocused	1821c0	4	bytes	canonical existing storage for recovered alias; original zero-initialized BSS

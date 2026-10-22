@@ -69,8 +69,10 @@ Specific evidence to investigate next:
 
 - `g_deviceId` still has only its five consumed bytes proven. `g_launchCmd` starts four
   bytes too early; increasing the ID array without evidence would guess its allocation.
-- The original iostream initializer is at 0x180858; it is currently deferred to the
-  end of the first unit's BSS. `g_fbVar` and later fields consequently have wrong addresses.
+- The first-unit iostream order is now corrected by restoring TU-local linkage for
+  framebuffer/private UI state. It is at 0x180854, four bytes before the original
+  0x180858 because the earlier unexplained device-ID interval remains. See
+  [BSS step 1](bss-step1.md); absolute BSS placement is still incomplete.
 - Original 0x181b18–0x181b78 is a 96-byte unreferenced interval between the last volume
   timestamp and Wi-Fi logging state. Its object partition/type is not established.
 - C helper buffers, monitor state and authentication COMMON objects still need their

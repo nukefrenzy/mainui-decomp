@@ -55,7 +55,6 @@ char *SDL_GetError();
 const char *languageString(int id);         // 0x135150
 void saveSystemJson(void *shm, const char *themePath, int fontSize);   // 0x14c5fc
 extern int g_fontSize;                      // 0x17e764
-extern bool g_settingsDirty;                // 0x1808fc, save system.json before power-off
 unsigned long milliseconds();               // 0x1238ac
 int swapSize();                             // 0x11ffa8
 int addRecent(std::list<RecentItem> *list, const char *label, const char *launch,
@@ -63,14 +62,7 @@ int addRecent(std::list<RecentItem> *list, const char *label, const char *launch
 extern std::list<RecentItem> g_recentGames; // 0x18192c
 extern std::vector<TrimusWindow *> *g_windowStack;   // 0x17ff38
 extern char g_launchCmd[0x800];             // 0x17ff54, command written to /tmp/cmd_to_run.sh
-extern char g_cwdBuf[0x1000];               // 0x180908
 extern int g_fbFd;                          // 0x17e488
-extern fb_var_screeninfo g_fbVar;           // 0x18085c
-extern int g_powerDownCount;                // 0x180900, power key repeats while held
-extern bool g_powerSent;                    // 0x180904, power-off dialog already shown
-extern bool g_startHeld;                    // 0x180905
-extern bool g_selectHeld;                   // 0x180906
-extern bool g_statusIndicatorFlag;          // 0x180907, user events 40/41
 extern void *g_themeMusic;                  // 0x182268
 extern void *g_changeSound;                 // 0x18226c
 // SDL 1.2 events as handleGlobalInput reads them.
@@ -301,9 +293,6 @@ bool isFavourite(char *buf, FILE *f, const char *rompath);   // 0x1b210 (p03)
 // p02 render helpers (0x18dd4-0x19acc): busy animation while a background job runs. g_launchCmd
 // doubles as the counter text buffer, g_titleFont/g_wifiEmptyColor/g_background are p01's globals.
 extern "C" void SDL_Delay(unsigned int ms);
-extern volatile int g_busy;                                         // 0x181908  animation runs while set
-extern volatile int g_progressCur;                                  // 0x18190c
-extern volatile int g_progressTotal;                                // 0x181910
 extern SDL_Color g_selectedTextColor;                            // 0x1822a0
 int digitCount(int n);                                       // 0x18dd4
 extern "C" void SDL_FreeSurface(SDL_Surface *s);

@@ -329,3 +329,9 @@ Local zero definitions can use assembler .comm and be allocated after public obj
 Check actual symbol addresses, not only the apparent source order or all-zero BSS bytes.
 Do not infer an unknown allocation from the size deficit alone. Details and unresolved
 extents: `docs/writable-data-recovery.md`.
+
+The first UI unit's iostream object illustrates local .comm ordering: public definitions
+for framebuffer/private state moved ahead of it, whereas TU-local definitions place them
+after it with the original relative offsets. This fixes order without settling an earlier
+four-byte allocation gap. A next-object address bounds an interval; it does not establish
+that every unreferenced byte belongs to the preceding array. See `docs/bss-step1.md`.
