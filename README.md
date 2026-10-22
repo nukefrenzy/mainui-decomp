@@ -22,8 +22,12 @@ byte-identical from their public sources: SQLite 3.30.1 (808,104 bytes) and cJSO
 (23,996 bytes). Every rewrite in `src/` is checked the same way, on every push, by CI.
 
 All **22 Miyoo translation units** now pass whole-unit checks: **2,612 tracked functions,
-458,064 bytes (100%)**. These proofs compare code and linker section order with link-time words
-masked; rebuilding a complete linked ELF is the next milestone. See [status](docs/status.md).
+458,064 bytes (100%)**. These compare code and linker section order with link-time words masked.
+An experimental ARM executable now links with verified SQLite/cJSON and pinned SDK libraries.
+Its 286 import names/versions and 23-library order match the original; final layout and device
+behavior remain unproven. The [link audit](docs/link-audit.md) also checks 53 storage extents,
+156 default-language strings and 3,095 resolved body-call destinations.
+See [status](docs/status.md).
 
 ## What's here
 
@@ -44,6 +48,7 @@ scripts/fetch-mainui.sh                          # fetches MainUI-354-clean from
 scripts/verify.sh                                # checks both against their expected hashes
 scripts/run_matches.sh                           # every rewrite in src/ must report MATCH
 python3 tools/progress.py                        # matched bytes of Miyoo's own code
+python3 tools/linkaudit.py --require-link        # build experimental ELF; check imports/storage
 scripts/verify-libs.sh                           # SQLite and cJSON rebuild byte-identical
 ```
 

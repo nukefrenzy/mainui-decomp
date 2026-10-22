@@ -53,7 +53,7 @@ TestColor g_testGreen= {
 };
 int g_testResults[5];
 // 0x181b7c
-void fillBackground(SDL_Surface*);
+void drawBackground(SDL_Surface*);
 int drawText(SDL_Surface*,void*,SDL_Rect,const char*,SDL_Color,int,bool);
 SDL_Surface*loadSkinImage(const char*,const char*,const char*,SDL_Surface*,bool);
 int saveTestResults(int*);
@@ -190,7 +190,7 @@ int drawHighlightedText(SDL_Surface*dst,void*font,SDL_Rect bounds,const char*tex
 }
 
 int SDLKeyTestWindow::draw(SDL_Surface*dst) {
-    fillBackground(dst);
+    drawBackground(dst);
     SDL_Rect rect;
     rect.x=0;
     rect.y=80;
@@ -296,7 +296,7 @@ bool KeyTestWindow::expecting(int key) {
 }
 
 int KeyTestWindow::draw(SDL_Surface*dst) {
-    fillBackground(dst);
+    drawBackground(dst);
     SDL_Rect rect;
     rect.x=65;
     rect.y=10;
@@ -527,8 +527,8 @@ int keyMaskRect(KeyTestWindow2*window,int key,SDL_Rect*rect) {
 
 extern SDL_Surface*g_keySettingFooter;
 const char*languageString(int);
-void drawTitle(SDL_Surface*,const char*,int);
-void drawIconLabel(SDL_Surface*,SDL_Surface*,int,int,int,const char*);
+void drawTitleBar(SDL_Surface*,const char*,bool);
+int drawIconLabel(SDL_Surface*,SDL_Surface*,int,int,const char*,const char*);
 void drawKeyTestFooter(SDL_Surface*dst) {
     SDL_Surface*icon=NULL;
     int y=420,x=20;
@@ -551,8 +551,8 @@ void drawKeyTestFooter(SDL_Surface*dst) {
 
 int KeyTestWindow2::draw(SDL_Surface*dst) {
     if (background)SDL_UpperBlit(background,NULL,dst,NULL);
-    else fillBackground(dst);
-    drawTitle(dst,getTitle(),1);
+    else drawBackground(dst);
+    drawTitleBar(dst,getTitle(),1);
     drawKeyTestFooter(dst);
     SDL_Surface*mask=NULL;
     int result=-1;
@@ -657,7 +657,7 @@ int SoundTestWindow::handleInput() {
 }
 
 int SoundTestWindow::draw(SDL_Surface*dst) {
-    fillBackground(dst);
+    drawBackground(dst);
     SDL_Rect rect;
     rect.x=0;
     rect.y=60;
@@ -768,7 +768,7 @@ int SDCardTestWindow::handleInput() {
 }
 
 int SDCardTestWindow::draw(SDL_Surface*dst) {
-    fillBackground(dst);
+    drawBackground(dst);
     SDL_Rect rect;
     rect.x=0;
     rect.y=80;
@@ -956,8 +956,8 @@ extern std::vector<TrimusWindow*>*g_windowStack;
 extern SDL_Surface*g_screen;
 extern void*g_titleFont;
 extern SDL_Color g_wifiEmptyColor;
-extern char g_launchCommand[2048];
-void saveLaunchCommand(const char*);
+extern char g_launchCmd[2048];
+void showLaunchScreen(const char*);
 // 0x18018
 extern "C" int SDL_Flip(SDL_Surface*);
 bool isSpinand();
@@ -1009,13 +1009,13 @@ int HardwareTestMenu::vfunc4() {
                 rect.y=0;
                 rect.w=640;
                 rect.h=480;
-                fillBackground(g_backBuffer);
+                drawBackground(g_backBuffer);
                 drawText(g_backBuffer,g_titleFont,rect,"LOADING",g_wifiEmptyColor,1,false);
                 SDL_UpperBlit(g_backBuffer,NULL,g_screen,NULL);
                 SDL_Flip(g_screen);
-                snprintf(g_launchCommand,2048,"cd /usr/trimui/bin/;HOME=/mnt/SDCARD/test/  /usr/trimui/bin/mame4allx /mnt/SDCARD/test/dino.zip");
-                printf("Load test rom %s\n",g_launchCommand);
-                saveLaunchCommand(g_launchCommand);
+                snprintf(g_launchCmd,2048,"cd /usr/trimui/bin/;HOME=/mnt/SDCARD/test/  /usr/trimui/bin/mame4allx /mnt/SDCARD/test/dino.zip");
+                printf("Load test rom %s\n",g_launchCmd);
+                showLaunchScreen(g_launchCmd);
                 FILE*f=fopen("/tmp/.stress_start_time","wb");
                 if (f) {
                     timeval tv;
@@ -1077,7 +1077,7 @@ void HardwareTestMenu::vfunc7(SDL_Surface*dst) {
     int i=pageStart;
     int row=0;
     for (;i<=pageEnd;) {
-        TestMenuItem*item=items[i];
+        TestMenuItem*item=(TestMenuItem*)items[i];
         color=g_imeTextColor;
         int x=rect.x;
         int y=rect.y+2+row*60;
@@ -1124,7 +1124,7 @@ void HardwareTestMenu::vfunc7(SDL_Surface*dst) {
 void HardwareTestMenu::vfunc18() {
     puts("HardwareTestMenu::freeListItem");
     for (int i=0;i<items.size();i++) {
-        TestMenuItem*item=items[i];
+        TestMenuItem*item=(TestMenuItem*)items[i];
         delete item;
     }
     items.clear();

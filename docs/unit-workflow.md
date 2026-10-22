@@ -225,3 +225,34 @@ then where the first use of the displaced function happens.
   preserve tail order. LoadSurfaceWorker's definitions follow p08, after the first implicit
   RomListPosition/xml_document/DeviceInfoItem special-member uses. No class layout change or
   artificial template instantiation is needed.
+
+- A matching callee can hide a wrong public signedness. The scaler's callers need unsigned
+  dimensions/stride to retain their conversion moves; its implementation needs signed shifts,
+  divisions and row-stride interpretation. A shared unsigned API with explicit signed casts in
+  the implementation preserves both sides. Changing only the caller prototype to signed removed
+  24 bytes from the first unit despite making its link symbol resolve.
+- C and C++ units must share explicit linkage declarations. A masked function proof can pass
+  while a C caller references a different symbol from its C++ definition. Use common C-compatible
+  headers for the shared entry points (process lookup and streaming zlib here), preserving the
+  original code rather than introducing aliases or wrapper functions.
+
+- A const global definition can trigger constant folding even at -O0, including when placed
+  after its consumers in the same file. The three theme colors must be stored in a separate
+  translation unit from setDefaultTheme; otherwise GCC removes 36 bytes of original global
+  loads. Verify data initializers independently through src/data.tsv and linkaudit, including
+  relocation targets for string tables; a code-only match cannot prove their contents.
+- A shared address can expose a wrong recovered field type. IconMenuItem's +8/+12 values are
+  borrowed background surfaces, not x/y coordinates; their globals are g_gameFocused,
+  g_gameNormal and g_raRow. Correcting the declarations and callers retains both constructor
+  matches and the complete first-unit proof.
+
+### Check the linked imports and runtime wrappers
+
+A masked MATCH cannot distinguish a call to the wrong same-shaped overload or libc wrapper.
+The executable import audit caught `openThemeFont` using const string::at instead of non-const
+(original PLT 0x14e48), and `zipOpen` using stat instead of lstat (original wrapper 0x1518a0 at
+call 0x14d8dc). Correcting argument constness and the wrapper call preserved every code byte
+outside relocations. Compare original destinations and final per-symbol versions; do not accept
+a new import just because linking succeeds. These are linkage/type corrections, not new -O0
+instruction patterns. Actual COMDAT selection also needs checking after full linking, beyond
+per-unit backtracking: the first linked boundary deficit is currently tu_11cdc8's tail.

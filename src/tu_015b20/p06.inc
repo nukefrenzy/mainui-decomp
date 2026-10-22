@@ -2,8 +2,6 @@
 extern "C" SDL_Thread *SDL_CreateThread(int (*)(void *), void *);
 extern "C" void SDL_WaitThread(SDL_Thread *, int *);
 int removeRecent(std::list<RecentItem>*, const char*);
-int sqlite3_column_type(sqlite3_stmt *, int);
-const unsigned char *sqlite3_column_text(sqlite3_stmt *, int);
 extern SDL_Surface *g_gameIcon; // 0x1821f8
 extern SDL_Surface *g_folderIcon; // 0x1821f4
 
@@ -296,7 +294,7 @@ TextItem::~TextItem() {
     if (field70)SDL_FreeSurface(field70);
 }
 // 0x256f0
-IconMenuItem::IconMenuItem(int id, const char *normal, const char *selected, int bx, int by, int menu, void *arg, bool own) {
+IconMenuItem::IconMenuItem(int id, const char *normal, const char *selected, SDL_Surface *bx, SDL_Surface *by, int menu, void *arg, bool own) {
     labelId = id;
     iconSurface = loadSkinImage(g_themePath, g_skinSubdir, normal, g_backBuffer, false);
     if (!iconSurface)printf("load icon %s fail\n", normal);
@@ -304,23 +302,23 @@ IconMenuItem::IconMenuItem(int id, const char *normal, const char *selected, int
     if (!iconSelectedSurface)printf("load icon %s fail\n", selected);
     icon = normal;
     iconSelected = selected;
-    x = bx;
-    y = by;
+    background = bx;
+    backgroundSelected = by;
     param = arg;
     flag = own;
     menuId = menu;
 }
 
 // 0x258d4
-IconMenuItem::IconMenuItem(const char *text, const char *normal, const char *selected, int bx, int by, int menu, void *arg, bool own) {
+IconMenuItem::IconMenuItem(const char *text, const char *normal, const char *selected, SDL_Surface *bx, SDL_Surface *by, int menu, void *arg, bool own) {
     label = text;
     labelId = -1;
     iconSurface = loadSkinImage(g_themePath, g_skinSubdir, normal, g_backBuffer, false);
     iconSelectedSurface = loadSkinImage(g_themePath, g_skinSubdir, selected, g_backBuffer, false);
     icon = normal;
     iconSelected = selected;
-    x = bx;
-    y = by;
+    background = bx;
+    backgroundSelected = by;
     param = arg;
     flag = own;
     menuId = menu;
@@ -451,11 +449,11 @@ void IconMenu::vfunc7(SDL_Surface *dst) {
             item = (IconMenuItem *)items.at(i);
             if (i == cur) {
                 surface = item->iconSurface;
-                background = (SDL_Surface*)item->x;
+                background = item->background;
                 color = g_textColor;
             } else {
                 surface = item->iconSelectedSurface;
-                background = (SDL_Surface*)item->y;
+                background = item->backgroundSelected;
                 color = g_selectedColor;
             }
             if (background) {

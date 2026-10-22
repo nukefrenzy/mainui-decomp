@@ -9,6 +9,13 @@
 static_assert(sizeof(zhuffman) == 0x7e4 && sizeof(zbuf) == 0x100c, "decoder layouts");
 extern int g_lengthBase[31], g_lengthExtra[31], g_distanceBase[32], g_distanceExtra[32];
 extern unsigned char g_codeLengthOrder[19];
+// Recovered DEFLATE tables (including unused zero entries).
+int g_lengthBase[31] = {3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258, 0, 0}; // 0x17f9c0
+int g_lengthExtra[31] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0, 0, 0}; // 0x17fa3c
+int g_distanceBase[32] = {1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577, 0, 0}; // 0x17fab8
+int g_distanceExtra[32] = {0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 0, 0}; // 0x17fb38
+unsigned char g_codeLengthOrder[19] = {16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15}; // 0x17fbb8
+
 unsigned char g_defaultLength[288], g_defaultDistance[32];
 
 int zerror(const char *message)

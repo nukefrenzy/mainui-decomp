@@ -627,10 +627,7 @@ void saveRomListPositions(std::vector<RomListPosition> *list)
 extern "C" SDL_Surface *SDL_CreateRGBSurface(unsigned flags, int w, int h, int depth, unsigned rMask,
                                              unsigned gMask, unsigned bMask, unsigned aMask);
 SDL_Surface *loadImage(const char *path, SDL_Surface *format, bool debug);  // 0x123a38
-// 0x11cdc8. This unit saw unsigned sizes (each argument gets a conversion move); the definition in
-// tu_11cdc8 matches with int parameters, so the two prototypes mangle differently.
-void scalePixels(int sx, int sy, unsigned sw, unsigned sh, unsigned dw, unsigned dh, unsigned stride,
-                 int padding, int *src, int *dst);
+#include "../PixelScale.h"
 
 // Loads an image as 32-bit RGBA, scaled down to width w (aspect kept) when it is wider.
 SDL_Surface *loadThumbnail(const char *path, int w, int h)

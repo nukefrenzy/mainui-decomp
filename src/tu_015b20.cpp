@@ -13,7 +13,34 @@
 
 // 0x17ff3c, the only global with a constructor (ctor 0x3b130, dtor 0x49be0 via __aeabi_atexit).
 // Declared after the headers and before the body to preserve template first-use order.
+std::vector<TrimusWindow *> *g_windowStack; // 0x17ff38
 std::vector<TrimusWindow *> g_pendingWindows;
+
+// Recovered POD storage. Original addresses describe the target, not this partial link.
+unsigned char g_deviceId[5]; // 0x17ff48: consumed extent; original full allocation size unknown
+char g_launchCmd[2048]; // 0x17ff54
+char g_countBuffer[256]; // 0x180754
+SDL_Thread *g_loadingThread; // 0x180854
+fb_var_screeninfo g_fbVar; // 0x18085c
+bool g_settingsDirty; // 0x1808fc
+int g_powerDownCount; // 0x180900
+bool g_powerSent; // 0x180904
+bool g_startHeld; // 0x180905
+bool g_selectHeld; // 0x180906
+bool g_statusIndicatorFlag; // 0x180907
+char g_cwdBuf[4096]; // 0x180908
+volatile int g_busy; // 0x181908
+volatile int g_progressCur; // 0x18190c
+volatile int g_progressTotal; // 0x181910
+unsigned char g_charging; // 0x181914
+int g_fbFd = -1; // 0x17e488
+bool g_customDisplayTiming = true; // 0x17e6ec
+extern const char g_skinSubdir[] = "./"; // 0x151a48
+
+// Separate from the theme consumers to preserve their original global loads at -O0.
+extern const ThemeColor g_themeGray = {0x00686868}; // 0x161808
+extern const ThemeColor g_themeWhite = {0x00f0f0f0}; // 0x16180c
+extern const ThemeColor g_themeDim = {0x00aaaaaa}; // 0x161810
 
 #include "tu_015b20/p01.inc"
 #include "tu_015b20/p02.inc"

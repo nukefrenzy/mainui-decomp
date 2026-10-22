@@ -173,7 +173,7 @@ int NotifyWindow::draw(SDL_Surface *dst) {
         r.h -= surface30->h/2;
         r.y -= surface30->h/4;
     }
-    drawTextLines(dst, g_titleFont, &r, text.c_str(), "\n", &g_progressColor, 1, false);
+    drawTextLines(dst, g_titleFont, &r, text.c_str(), "\n", &g_selectedTextColor, 1, false);
     if (surface30 && surface2c) {
         r.x = (640-surface30->w)/2;
         r.y = 468-(480-surface2c->h)/2-surface30->h;
@@ -303,7 +303,7 @@ int DialogWindow::drawFallback(SDL_Surface *dst) {
     r.h = 120;
     if (surface1c) SDL_UpperBlit(surface1c, NULL, dst, &r);
     r.h = 90;
-    drawText(dst, g_titleFont, r, languageString(text), g_progressColor, 1, false);
+    drawText(dst, g_titleFont, r, languageString(text), g_selectedTextColor, 1, false);
     for (int i = 0; i < 2; i++) {
         r.x = 200+i*120;
         r.y = 270;
@@ -337,7 +337,7 @@ int DialogWindow::draw(SDL_Surface *dst) {
         drawText(dst, g_titleFont, r, languageString(title), g_emptyColor, 1, false);
         r.y = (480-surface1c->h)/2+50;
         r.h = 100;
-        drawTextLines(dst, g_titleFont, &r, languageString(text), "\n", &g_progressColor, 1, false);
+        drawTextLines(dst, g_titleFont, &r, languageString(text), "\n", &g_selectedTextColor, 1, false);
         r.x = (640-surface1c->w)/2+230;
         r.y = (480-surface1c->h)/2+160;
         r.w = surface1c->w;
@@ -345,13 +345,13 @@ int DialogWindow::draw(SDL_Surface *dst) {
         SDL_UpperBlit(iconA, NULL, dst, &r);
         r.x = r.x+iconA->w+10;
         r.y += 5;
-        drawText(dst, g_titleFont, r, languageString(46), g_shadowColor, 3, false);
+        drawText(dst, g_titleFont, r, languageString(46), g_clearColor, 3, false);
         r.x = (640-surface1c->w)/2+230;
         r.y = (480-surface1c->h)/2+iconA->h+170;
         SDL_UpperBlit(iconB, NULL, dst, &r);
         r.x = r.x+iconB->w+10;
         r.y += 5;
-        drawText(dst, g_titleFont, r, languageString(45), g_shadowColor, 3, false);
+        drawText(dst, g_titleFont, r, languageString(45), g_clearColor, 3, false);
     } else return drawFallback(dst);
     return 0;
 }

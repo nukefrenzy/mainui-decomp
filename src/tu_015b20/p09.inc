@@ -77,13 +77,13 @@ MenuWindow::~MenuWindow() {
 
 int findEmuByLabelPrefix(std::vector<EmuInfo> *, const char *);
 // 0x121074
-extern SDL_Surface *g_romPreviewBackground;
+extern SDL_Surface *g_previewBg;
 // 0x1821fc
-extern SDL_Surface *g_emptyListImage;
+extern SDL_Surface *g_emptyImage;
 // 0x1821b4
-extern SDL_Color g_countColor;
+extern SDL_Color g_listColor;
 // 0x1822ac
-extern SDL_Color g_pathColor;
+extern SDL_Color g_hintColor;
 // 0x1822a8
 extern char g_countBuffer[0x100];
 // 0x180754
@@ -382,7 +382,7 @@ int drawPageDots_311f4(SDL_Surface *dst, int current, int total) {
     int width = drawText(dst, g_labelFont, area, g_countBuffer, g_emptyColor, 2, false);
     area.x = area.x-width;
     snprintf(g_countBuffer, 256, "%d/", current);
-    drawText(dst, g_labelFont, area, g_countBuffer, g_countColor, 2, false);
+    drawText(dst, g_labelFont, area, g_countBuffer, g_listColor, 2, false);
     return 0;
 }
 // 0x31398
@@ -403,18 +403,18 @@ int MenuWindow::draw(SDL_Surface *dst) {
             SDL_Rect bounds;
             SDL_Rect dest;
             SDL_Rect source;
-            if (g_romPreviewBackground) {
+            if (g_previewBg) {
                 source.x = 0;
                 source.y = 0;
-                source.w = g_romPreviewBackground->w;
-                source.h = g_romPreviewBackground->h;
-                dest.x = 640-g_romPreviewBackground->w;
+                source.w = g_previewBg->w;
+                source.h = g_previewBg->h;
+                dest.x = 640-g_previewBg->w;
                 dest.y = 60;
-                SDL_UpperBlit(g_romPreviewBackground, &source, dst, &dest);
+                SDL_UpperBlit(g_previewBg, &source, dst, &dest);
                 bounds.x = dest.x;
                 bounds.y = dest.y;
-                bounds.w = g_romPreviewBackground->w;
-                bounds.h = g_romPreviewBackground->h;
+                bounds.w = g_previewBg->w;
+                bounds.h = g_previewBg->h;
             } else {
                 bounds.x = 390;
                 bounds.y = 60;
@@ -431,10 +431,10 @@ int MenuWindow::draw(SDL_Surface *dst) {
     if (isListMenuId(id)) {
         SDL_Rect area;
         if (menu && menu->count() > 0) drawPageDots_311f4(dst, menu->getCur()+1, menu->count());
-        else if (g_emptyListImage) {
-            area.x = (640-g_emptyListImage->w)/2;
-            area.y = (480-g_emptyListImage->h)/2;
-            SDL_UpperBlit(g_emptyListImage, NULL, dst, &area);
+        else if (g_emptyImage) {
+            area.x = (640-g_emptyImage->w)/2;
+            area.y = (480-g_emptyImage->h)/2;
+            SDL_UpperBlit(g_emptyImage, NULL, dst, &area);
         }
         area.x = area.y = 0;
         area.w = 640;
@@ -456,7 +456,7 @@ int MenuWindow::draw(SDL_Surface *dst) {
                         icon.y = (area.h-iconTF->h)/2;
                         SDL_UpperBlit(iconTF, NULL, dst, &icon);
                         area.x = area.x+iconTF->w+25;
-                        area.x += drawText(dst, g_imeFont, area, ":", g_pathColor, 3, true);
+                        area.x += drawText(dst, g_imeFont, area, ":", g_hintColor, 3, true);
                     }
                     canonical = canonicalize_file_name(emu->path.c_str());
                     relative = NULL;
@@ -465,7 +465,7 @@ int MenuWindow::draw(SDL_Surface *dst) {
                         relative = strstr(canonical, "/mnt/SDCARD");
                         relative += 11;
                     }
-                    if (relative) drawText(dst, g_imeFont, area, relative, g_pathColor, 3, true);
+                    if (relative) drawText(dst, g_imeFont, area, relative, g_hintColor, 3, true);
                     free(canonical);
                 } else {
                     if (path.length() != 0) {

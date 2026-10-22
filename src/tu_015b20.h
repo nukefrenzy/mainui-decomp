@@ -1,6 +1,7 @@
 // Shared declarations for tu_015b20 (0x15b20-0x49c3c): window and menu classes, actions, the window
 // loop and createMenu. Each part file in src/tu_015b20/ adds only the declarations it needs here.
 #pragma once
+#include "PlatformApi.h"
 #include <atomic>
 #include <stdio.h>
 #include <unistd.h>
@@ -117,10 +118,10 @@ extern SDL_Surface *g_battery0, *g_battery1, *g_battery2, *g_battery3, *g_batter
 extern SDL_Surface *g_hotspotIcon;          // 0x182200
 extern SDL_Surface *g_wifi4, *g_wifi3, *g_wifi2;                                     // 0x182204..
 extern SDL_Surface *g_headphoneIcon;        // 0x182210
-extern SDL_Surface *g_keyStateIcons[21];    // 0x182214, indexed by key shm slot 0
+extern SDL_Surface *g_volumeIcons[21];    // 0x182214, indexed by key shm slot 0
 extern void *g_enterSound;                  // 0x182270
 extern SDL_Color g_wifiEmptyColor;          // 0x182274, title text
-extern SDL_Color g_shadowColor;             // 0x182278
+extern SDL_Color g_clearColor;             // 0x182278
 extern SDL_Color g_labelColor;              // 0x18227c
 extern SDL_Color g_selectedColor;           // 0x18229c
 const char *keyEventName(int key);          // 0x15b20, unreferenced
@@ -303,7 +304,7 @@ extern "C" void SDL_Delay(unsigned int ms);
 extern volatile int g_busy;                                         // 0x181908  animation runs while set
 extern volatile int g_progressCur;                                  // 0x18190c
 extern volatile int g_progressTotal;                                // 0x181910
-extern SDL_Color g_progressColor;                            // 0x1822a0
+extern SDL_Color g_selectedTextColor;                            // 0x1822a0
 int digitCount(int n);                                       // 0x18dd4
 extern "C" void SDL_FreeSurface(SDL_Surface *s);
 SDL_Surface *createSurface(int w, int h);                    // 0x1d720 (p03)
@@ -422,25 +423,7 @@ void startBackgroundThread();                                   // 0x38868
 // --- Menus. Bases are in ListMenu.h / TextMenuDrawer.h (p03 ctor/setRect, p04 the rest).
 
 // p05. vtable 0x153da8; sizeof 0x104.
-class TextMenu : public TextMenuDrawer {
-public:
-    TextMenu(bool a, bool b, int c, const char *background);  // 0x20500
-    virtual ~TextMenu();                                       // 0x20570 (D0 0x205c4)
-    virtual void *getItem(int index);                          // 0x20714 slot 5, a TextItem *
-    virtual int  count() { return items.size(); }              // 0x3a6dc, inline
-    virtual void vfunc12(int);                                 // 0x2079c
-    virtual void vfunc13();                                    // 0x206e0
-    virtual void vfunc18();                                    // 0x205f8 slot 18 (new)
-    void addItem(void *item);                              // 0x20898
-    void insertSorted(void *item, int (*cmp)(TextItem *, TextItem *)); // 0x208d0
-    bool addUnique(TextItem *item);                            // 0x20a3c  false if the label is listed
-    std::vector<void *> *getItems()                        // 0x3a70c, inline
-    {
-        printf("TextMenu %p mItemList %p\n", this, &items);
-        return &items;
-    }
-    std::vector<void *> items;  // +0xf8, TextItem / SettingMenuItem / DeviceInfoItem rows
-};
+#include "TextMenu.h"
 
 // p06. vtable 0x153d40; sizeof 0x430 (layout parallels MultiDBCachedTextMenu).
 class DBCacheWorker : public BGWorker {
@@ -515,15 +498,15 @@ public:
 // p06. Not polymorphic; sizeof 0x80.
 class IconMenuItem {
 public:
-    IconMenuItem(int labelId, const char *icon, const char *iconSelected, int x, int y, int menuId,
-                 void *param, bool flag);                         // 0x256f0
-    IconMenuItem(const char *label, const char *icon, const char *iconSelected, int x, int y,
-                 int menuId, void *param, bool flag);             // 0x258d4 (labelId -1)
+    IconMenuItem(int labelId, const char *icon, const char *iconSelected,
+                 SDL_Surface *background, SDL_Surface *backgroundSelected, int menuId, void *param, bool flag);                         // 0x256f0
+    IconMenuItem(const char *label, const char *icon, const char *iconSelected,
+                 SDL_Surface *background, SDL_Surface *backgroundSelected, int menuId, void *param, bool flag);             // 0x258d4 (labelId -1)
     ~IconMenuItem();                                           // 0x25a8c
     void reload();                                            // 0x25b5c
     SDL_Surface *iconSurface;       // +0x00
     SDL_Surface *iconSelectedSurface; // +0x04
-    int          x, y;              // +0x08, +0x0c
+    SDL_Surface *background, *backgroundSelected; // +0x08, +0x0c, borrowed surfaces
     std::string  label;             // +0x10
     std::string  str28;             // +0x28
     int          labelId;           // +0x40

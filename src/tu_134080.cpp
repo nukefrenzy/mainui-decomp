@@ -1,6 +1,7 @@
 // Language loading, built-in fallback and abbreviated language files.
 // Proven 0x134080-0x1376fc: 4,768-byte body plus 110 generated functions.
 // The draft start 0x133f60 was part of the preceding file's allocator tail.
+#include "PlatformApi.h"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>

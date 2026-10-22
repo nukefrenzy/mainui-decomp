@@ -196,7 +196,7 @@ contains a legacy touch worker that reads `/dev/input/event0` and pushes directi
 | 7 | WIN_SETTING (SettingMenu) | 0x13 | ThemeMenu |
 | 0x10 | IconMenu variant | 0x14 | WIN_FIXES (SettingMenu) |
 
-**Main menu items** are `IconMenuItem(labelId, iconFocused, iconNormal, x, y, menuId, param, flag)`,
+**Main menu items** are `IconMenuItem(labelId, iconFocused, iconNormal, background, backgroundSelected, menuId, param, flag)`,
 added in this order: Recent (→ 10), Favourites (→ 2), Games (→ 1), RetroArch, Apps (→ 3),
 Settings (→ 7). Icons come from the theme's `skin/ic-*-f.png` / `ic-*-n.png`.
 
@@ -212,6 +212,10 @@ MenuWindow's secondary popup borrows launch Actions (ownership flag false), and 
 AddFavorite/DeleteRom/Search Actions for ROM rows, RemoveFavorite/ClearFavorite Actions for
 favourites, and ClearRecent for recent rows. Destructive choices are wrapped in PopupDialogAction.
 PopupProgressAction opens ProgressDialog, whose worker executes the supplied Action.
+
+The icon item's +8/+12 fields are borrowed background surfaces, rather than coordinates.
+They share the theme resources g_gameFocused/g_gameNormal/g_raRow. The reconstructed initial
+storage and default-language table are recorded in `src/data.tsv`; see `docs/data-recovery.md`.
 
 **Settings items** are a separate 0x24-byte record. The field at +8 is an integer selector,
 not an Action pointer or function pointer. SettingMenu uses its own input, drawing and freeing

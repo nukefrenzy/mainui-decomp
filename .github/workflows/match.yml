@@ -39,8 +39,11 @@ jobs:
       - name: Check every whole unit (body + template tail) in src/tu_*.cpp
         run: scripts/run_units.sh
 
+      - name: Test relocation, initializer and dynamic-import checks
+        run: python3 -m unittest discover -s tools/tests -v
+
+      - name: Verify embedded libraries, link executable and audit imports/storage
+        run: python3 tools/linkaudit.py --require-link
+
       - name: Progress summary
         run: python3 tools/progress.py --md "$GITHUB_STEP_SUMMARY"
-
-      - name: Rebuild embedded SQLite and cJSON, compare byte for byte
-        run: scripts/verify-libs.sh

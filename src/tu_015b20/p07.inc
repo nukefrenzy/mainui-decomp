@@ -621,10 +621,22 @@ void DeviceInfoMenu::vfunc18() {
 }
 
 struct PanelInfo {
-    char raw[84];
+    unsigned char raw[84];
     unsigned short timing[16];
 };
-extern PanelInfo g_panelInfo; // 0x17e48c
+// Verified 116-byte prefix consumed here; the full SDK object extent is not established.
+PanelInfo g_panelInfo = {
+    {
+        75, 49, 48, 49, 95, 73, 77, 50, 66, 86, 76, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 11, 0, 0, 0, 1, 0, 0, 0,
+        0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1,
+        1, 1, 1, 0, 30, 0, 144, 1, 80, 0, 30, 0,
+    },
+    {20, 22, 5, 13, 40, 18, 640, 480, 0, 780, 0, 0, 515, 0, 0, 26}
+}; // 0x17e48c
 struct DisplayAttr {
     unsigned background;
     int interface, timing;

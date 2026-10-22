@@ -3,6 +3,7 @@
 // Compiled as C (call results are stored straight from r0), so there is no template tail.
 // The C units 0x14acfc-0x14f730 are split where .rodata proves a new file: GCC merges identical
 // string literals within one file even at -O0, and "w", "r" and "%d" each appear more than once.
+#include "PlatformApi.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

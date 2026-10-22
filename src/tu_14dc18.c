@@ -3,6 +3,7 @@
 // Compiled as C (call results are stored straight from r0), so there is no template tail.
 // The C units 0x14acfc-0x14f730 are split where .rodata proves a new file: GCC merges identical
 // string literals within one file even at -O0, and "w", "r" and "%d" each appear more than once.
+#include "PlatformApi.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -111,7 +112,7 @@ unsigned char randomByte()      // 0x14dfc8
     return g_randSeed >> 16;
 }
 
-unsigned char probe_50504(unsigned char *a, unsigned char *b);  // at 0x150504
+unsigned char authenticateDevice(unsigned char *a, unsigned char *b);  // at 0x150504
 
 unsigned char waitForProbe()    // 0x14e054
 {
@@ -120,7 +121,7 @@ unsigned char waitForProbe()    // 0x14e054
     unsigned char b[8];
     unsigned char a[8];
     for (i = 0; i < 20; i++) {
-        ok = probe_50504(a, b);
+        ok = authenticateDevice(a, b);
         if (!ok)
             break;
         putchar('.');

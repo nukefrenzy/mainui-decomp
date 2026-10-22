@@ -5,21 +5,7 @@
 #include <iterator>
 #include "rapidxml.hpp"   // scripts/fetch-rapidxml.sh (deps "rapidxml" in src/matches.tsv)
 
-// SQLite (in the binary at 0x57920-0x11cdc8), declared as tu_1484d4 does; identical redeclarations
-// in other parts are harmless.
-typedef struct sqlite3_stmt sqlite3_stmt;
-int sqlite3_open(const char *filename, sqlite3 **db);
-int sqlite3_close(sqlite3 *db);
-int sqlite3_exec(sqlite3 *db, const char *sql, int (*callback)(void *, int, char **, char **), void *arg,
-                 char **errmsg);
-void sqlite3_free(void *p);
-int sqlite3_prepare_v2(sqlite3 *db, const char *sql, int nbyte, sqlite3_stmt **stmt, const char **tail);
-int sqlite3_bind_text(sqlite3_stmt *stmt, int idx, const char *text, int n, void (*destructor)(void *));
-int sqlite3_bind_int(sqlite3_stmt *stmt, int idx, int value);
-int sqlite3_step(sqlite3_stmt *stmt);
-int sqlite3_column_int(sqlite3_stmt *stmt, int col);
-int sqlite3_finalize(sqlite3_stmt *stmt);
-const char *sqlite3_errmsg(sqlite3 *db);
+#include "../SQLiteApi.h"
 
 const char *getLanguageFile();                                  // 0x14ba18 (tu_14b860)
 char *pinyinInitials(const char *s);                            // 0x143ae4 (tu_143720)

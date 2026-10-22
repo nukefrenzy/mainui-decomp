@@ -1,6 +1,8 @@
 // Device/filesystem support, recent lists, and app/emulator/theme configuration.
 // Proven 0x11cdc8-0x129f9c: 29,296 body bytes (56 written functions and an init pair),
 // followed by 263 generated inline/template functions (24,420 bytes).
+#include "PlatformApi.h"
+#include "PixelScale.h"
 #include <string>
 #include <vector>
 #include <list>
@@ -49,18 +51,19 @@ std::vector<std::string> g_platformPaths; // 0x182064
 static char g_ioBuffer[128],g_pathBuffer[128]; // 0x182070, 0x1820f0
 extern std::vector<EmuInfo> g_romSourcesA,g_romSourcesB;
 // 0x11cdc8
-void scalePixels(int sx,int sy,int sw,int sh,int dw,int dh,int stride,int padding,int *src,int *dst) {
+void scalePixels(int sx,int sy,unsigned sw,unsigned sh,unsigned dw,unsigned dh,unsigned stride,int padding,int *src,int *dst) {
     int cx,cy;
     unsigned x=sx<<16,y=sy<<16;
-    cx=dw;
-    cy=dh;
+    cx=(int)dw;
+    cy=(int)dh;
     // Keep the predecrements in the loop conditions: separate decrement
     // statements emit different Boolean tests at -O0.
-    unsigned stepX=(sw<<16)/cx,stepY=(sh<<16)/cy;
+    // Unsigned API sizes are interpreted as signed for the original division arithmetic.
+    unsigned stepX=((int)sw<<16)/cx,stepY=((int)sh<<16)/cy;
     int *out=dst;
     do {
-        int *row=src+stride*(y>>16);
-        cx=dw;
+        int *row=src+(int)stride*(y>>16);
+        cx=(int)dw;
         x=sx<<16;
         do {
             *out++=row[x>>16];

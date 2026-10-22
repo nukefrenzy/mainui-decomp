@@ -35,10 +35,9 @@ extern SDL_Color g_imeTextColor;
 SDL_Surface *loadSkinImage(const char *, const char *, const char *, SDL_Surface *, bool); // 0x123af0
 const char *languageString(int);
 void drawBackground(SDL_Surface *); // 0x17450
-void drawTitle(SDL_Surface *, const char *, bool); // 0x16f68
-const char *windowTitle(TrimusWindow *); // 0x394f0
-int drawImeText(SDL_Surface *, void *, SDL_Rect, const char *, SDL_Color, int, bool);
-int drawFooterText(SDL_Surface *, SDL_Surface *, int, int, int, const char *); // 0x170f8
+void drawTitleBar(SDL_Surface *, const char *, bool); // 0x16f68
+int drawText(SDL_Surface *, void *, SDL_Rect, const char *, SDL_Color, int, bool);
+int drawIconLabel(SDL_Surface *, SDL_Surface *, int, int, const char *, const char *); // 0x170f8
 
 SDL_Thread *g_touchThread;
 bool g_touchRunning, g_touchPressed;
@@ -211,17 +210,17 @@ void drawKeySettingFooter(SDL_Surface *dst, SDL_Surface *icon)
         source.w = g_keySettingFooter->w; source.h = g_keySettingFooter->h;
         SDL_UpperBlit(g_keySettingFooter, &source, dst, &dest);
     }
-    if (icon) drawFooterText(dst, icon, x, y, 0, languageString(0x70));
+    if (icon) drawIconLabel(dst, icon, x, y, 0, languageString(0x70));
 }
 int KeySettingWindow::draw(SDL_Surface *dst)
 {
     if (background) SDL_UpperBlit(background, NULL, dst, NULL);
     else drawBackground(dst);
-    drawTitle(dst, windowTitle(this), 1);
+    drawTitleBar(dst, getTitle(), 1);
     drawKeySettingFooter(dst, menuIcon);
     SDL_UpperBlit(highlight, NULL, dst, &positions[selected]);
     for (int i = 0; i < 8; i++)
-        drawImeText(dst, g_imeFont, positions[i], keys[i].c_str(), g_imeTextColor, 1, i == selected);
+        drawText(dst, g_imeFont, positions[i], keys[i].c_str(), g_imeTextColor, 1, i == selected);
     return 0;
 }
 void KeySettingWindow::loadResources()

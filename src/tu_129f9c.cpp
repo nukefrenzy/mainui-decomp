@@ -1,5 +1,6 @@
 // Theme fonts, surfaces and sounds, in binary address order.
 // Proven 0x129f9c-0x12ce28: seven functions, 11,916 bytes, no generated tail.
+#include "PlatformApi.h"
 #include <cstdio>
 #include <cstring>
 #include <cstddef>
@@ -59,7 +60,7 @@ SDL_Surface *g_wifi3; // 0x182208
 SDL_Surface *g_wifi2; // 0x18220c
 SDL_Surface *g_headphoneIcon; // 0x182210
 SDL_Color g_wifiEmptyColor; // 0x182274
-unsigned int g_clearColor; // 0x182278
+SDL_Color g_clearColor; // 0x182278
 SDL_Color g_labelColor; // 0x18227c
 SDL_Color g_wifiSelectedColor; // 0x182280
 SDL_Color g_imeTextColor; // 0x182284
@@ -79,7 +80,7 @@ void *g_themeMusic, *g_changeSound, *g_enterSound; // 0x182268, 0x18226c, 0x1822
 extern const ThemeColor g_themeWhite, g_themeGray, g_themeDim; // 0x16180c, 0x161808, 0x161810
 static_assert(sizeof(Theme) == 0x18c && offsetof(Theme, mainSize) == 0x17c, "theme layout");
 
-void *openThemeFont(const std::string &root, const std::string &configured,
+void *openThemeFont(const std::string &root, std::string &configured,
                     const char *fallbackRoot, const char *fallbackFile, int size)
 {
     std::string path(root);
@@ -200,7 +201,7 @@ bool loadTheme(Theme *theme, int *unusedFontSize)
 {
     char filename[128];
     memset(filename, 0, 128);
-    g_clearColor = 0;
+    g_clearColor = {};
     g_wifiEmptyColor = theme->titleColor.bytes;
     g_labelColor = theme->labelColor.bytes;
     g_wifiSelectedColor = theme->wifiColor.bytes;

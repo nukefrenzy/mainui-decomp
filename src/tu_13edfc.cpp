@@ -12,16 +12,28 @@ unsigned int SDL_MapRGB(SDL_PixelFormat *, unsigned char, unsigned char, unsigne
 int SDL_FillRect(SDL_Surface *, SDL_Rect *, unsigned int);
 }
 extern char *g_themePath;
-extern int g_imeKeyMap[10][5]; // 0x17fbd4
+int g_imeKeyMap[10][5] = {
+    {6, 16, 26, 35, 0},
+    {7, 17, 27, 36, 0},
+    {8, 18, 28, 37, 1},
+    {9, 19, 29, 38, 1},
+    {10, 20, 30, 40, 39},
+    {11, 21, 31, 41, 39},
+    {12, 22, 32, 42, 43},
+    {13, 23, 33, 2, 43},
+    {14, 24, 34, 3, 44},
+    {15, 25, 4, 5, 44},
+}; // 0x17fbd4
 extern void *g_imeFont; // 0x18217c
 extern SDL_Color g_imeTextColor; // 0x182284
-extern SDL_Color g_imeInputColor; // 0x182498
+SDL_Color g_imeInputColor; // 0x182498, original zero-initialized BSS
 SDL_Surface *loadImeImage(const char *, const char *, const char *); // 0x12a140
 const char *languageString(int); // 0x135150
-int handleGlobalInput(int);
-void drawWindowFrame(SDL_Surface *, const char *, int, bool); // 0x17568
-int drawImeText(SDL_Surface *, void *, SDL_Rect, const char *, SDL_Color, int, bool); // 0x15d24
-int drawImeInput(SDL_Surface *, void *, SDL_Rect *, char *, const char *, SDL_Color *, int, bool); // 0x16018
+union SDL_Event;
+int handleGlobalInput(SDL_Event *);
+void drawScreenFrame(SDL_Surface *, const char *, int, bool); // 0x17568
+int drawText(SDL_Surface *, void *, SDL_Rect, const char *, SDL_Color, int, bool); // 0x15d24
+int drawTextLines(SDL_Surface *, void *, SDL_Rect *, const char *, const char *, SDL_Color *, int, bool); // 0x16018
 
 static_assert(sizeof(ImeKey) == 100, "ImeKey layout");
 static_assert(sizeof(ImeWindow) == 0xf0, "ImeWindow layout");
@@ -250,19 +262,19 @@ void ImeWindow::drawKeys(SDL_Surface *dst, int x, int y)
             }
         }
         if (keys[i].lower.size() != 0)
-            drawImeText(dst, g_imeFont, keys[i].rect, str, g_imeTextColor, 1, false);
+            drawText(dst, g_imeFont, keys[i].rect, str, g_imeTextColor, 1, false);
     }
 }
 int ImeWindow::draw(SDL_Surface *dst)
 {
-    drawWindowFrame(dst, languageString(titleLabelId), id, true);
+    drawScreenFrame(dst, languageString(titleLabelId), id, true);
     SDL_Rect rect;
     rect.x = 0; rect.y = 62; rect.w = 640; rect.h = 358;
     SDL_FillRect(dst, &rect, SDL_MapRGB(dst->format, 0, 0, 0));
     rect.x = 24; rect.y = 64; rect.w = 592; rect.h = 52;
     if (inputImage) SDL_UpperBlit(inputImage, NULL, dst, &rect);
     rect.x = 40;
-    drawImeInput(dst, g_imeFont, &rect, text, "\n", &g_imeInputColor, 3, false);
+    drawTextLines(dst, g_imeFont, &rect, text, "\n", &g_imeInputColor, 3, false);
     drawKeys(dst, 0, 114);
     return 0;
 }

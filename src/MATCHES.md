@@ -139,8 +139,8 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `DBCachedTextMenu::~DBCachedTextMenu()` | 0x254dc | 52 | tu_015b20.cpp |
 | `TextItem::TextItem(char const*, SDL_Surface*, Action*, bool)` | 0x25510 | 272 | tu_015b20.cpp |
 | `TextItem::~TextItem()` | 0x25620 | 208 | tu_015b20.cpp |
-| `IconMenuItem::IconMenuItem(int, char const*, char const*, int, int, int, void*, bool)` | 0x256f0 | 484 | tu_015b20.cpp |
-| `IconMenuItem::IconMenuItem(char const*, char const*, char const*, int, int, int, void*, bool)` | 0x258d4 | 440 | tu_015b20.cpp |
+| `IconMenuItem::IconMenuItem(int, char const*, char const*, SDL_Surface*, SDL_Surface*, int, void*, bool)` | 0x256f0 | 484 | tu_015b20.cpp |
+| `IconMenuItem::IconMenuItem(char const*, char const*, char const*, SDL_Surface*, SDL_Surface*, int, void*, bool)` | 0x258d4 | 440 | tu_015b20.cpp |
 | `IconMenuItem::~IconMenuItem()` | 0x25a8c | 208 | tu_015b20.cpp |
 | `IconMenuItem::reload()` | 0x25b5c | 268 | tu_015b20.cpp |
 | `defaultIconFont()` | 0x25c68 | 36 | tu_015b20.cpp |
@@ -313,7 +313,7 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `chargingThread(void*)` | 0x389d4 | 1572 | tu_015b20.cpp |
 | `chargingScreenLoop()` | 0x38ff8 | 420 | tu_015b20.cpp |
 | `__static_initialization_and_destruction_0(int, int)` | 0x3919c | 140 | tu_015b20.cpp |
-| `_GLOBAL__sub_I_g_pendingWindows` | 0x39228 | 24 | tu_015b20.cpp |
+| `_GLOBAL__sub_I_g_windowStack` | 0x39228 | 24 | tu_015b20.cpp |
 | `TrimusWindow::animateIn(SDL_Surface*, FlipFn)` | 0x39478 | 40 | tu_015b20.cpp |
 | `TrimusWindow::animateOut(SDL_Surface*, FlipFn)` | 0x394a0 | 40 | tu_015b20.cpp |
 | `TrimusWindow::getId()` | 0x394c8 | 40 | tu_015b20.cpp |
@@ -393,7 +393,7 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `HardwareTestMenu::vfunc7(SDL_Surface*)` | 0x50dd4 | 1468 | tu_04cb68.cpp |
 | `HardwareTestMenu::vfunc18()` | 0x51390 | 196 | tu_04cb68.cpp |
 | `HardwareTestMenu::initializeTests()` | 0x51454 | 540 | tu_04cb68.cpp |
-| `scalePixels(int, int, int, int, int, int, int, int, int*, int*)` | 0x11cdc8 | 376 | tu_11cdc8.cpp |
+| `scalePixels(int, int, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, int, int*, int*)` | 0x11cdc8 | 376 | tu_11cdc8.cpp |
 | `sdCardSpace[abi:cxx11]()` | 0x11cf40 | 600 | tu_11cdc8.cpp |
 | `sdCardFreeMB()` | 0x11d198 | 332 | tu_11cdc8.cpp |
 | `isMounted(char const*)` | 0x11d2e4 | 220 | tu_11cdc8.cpp |
@@ -449,7 +449,7 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `loadSkinImage(char const*, char const*, char const*, SDL_Surface*, bool)` | 0x123af0 | 412 | tu_11cdc8.cpp |
 | `readTextFile(char const*, char*, int)` | 0x123c8c | 156 | tu_11cdc8.cpp |
 | `findProcess(char const*, int)` | 0x123d28 | 620 | tu_11cdc8.cpp |
-| `openThemeFont(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, char const*, char const*, int)` | 0x129f9c | 420 | tu_129f9c.cpp |
+| `openThemeFont(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char const*, char const*, int)` | 0x129f9c | 420 | tu_129f9c.cpp |
 | `loadImeImage(char const*, char const*, char const*)` | 0x12a140 | 316 | tu_129f9c.cpp |
 | `changeLanguageFonts(Theme*, int*)` | 0x12a27c | 1640 | tu_129f9c.cpp |
 | `compositeThemeImage(SDL_Surface*, SDL_Surface*)` | 0x12a8e4 | 384 | tu_129f9c.cpp |
@@ -488,7 +488,7 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `parse_huffman_block(zbuf*, int)` | 0x1312d8 | 876 | tu_1302cc.cpp |
 | `parse_uncompressed_block(zbuf*, int)` | 0x131644 | 352 | tu_1302cc.cpp |
 | `parse_header(zbuf*)` | 0x1317a4 | 708 | tu_1302cc.cpp |
-| `openZlib(unsigned char*, _IO_FILE*, int)` | 0x131a68 | 252 | tu_1302cc.cpp |
+| `openZlib(unsigned char*, FILE*, int)` | 0x131a68 | 252 | tu_1302cc.cpp |
 | `readZlib(zbuf*, void*, int)` | 0x131b64 | 388 | tu_1302cc.cpp |
 | `stbi_zlib_decode_malloc(unsigned char*, int, int*)` | 0x131ce8 | 332 | tu_1302cc.cpp |
 | `MenuHelper80::MenuHelper80(void (*)(SDL_Surface*))` | 0x131e34 | 96 | tu_131e34.cpp |

@@ -127,6 +127,20 @@ original import/link settings, data and relocation targets, then compare the lin
 current proofs compare function code and unit layout with link-time words masked; 100% coverage
 alone does not establish a byte-identical linked ELF or successful operation on hardware.
 
+The [link audit](link-audit.md) now builds an **experimental executable** from all 22 units plus
+strictly verified SQLite/cJSON objects and pinned SDK/runtime libraries. Run
+`python3 tools/linkaudit.py --require-link`. All **286 final import names and versions**, the
+**23-library DT_NEEDED order**, interpreter and entry point agree with the original. The audit
+also verifies **53 storage extents / 8,421 bytes**, **156 strings** and **3,095 resolved body-call
+destinations**, with zero mismatches. The theme filename argument now selects non-const string::at;
+zipOpen uses the original lstat wrapper. All 22 units and 689 function matches are retained.
+
+Final layout remains unproven: .text is **552 bytes short**, with the first displaced TU body at
+**tu_129f9c (556 bytes early)**, after tu_11cdc8's COMDAT tail. Investigate actual kept/discarded
+template sections there next, then remaining data/string/allocation extents and static runtime,
+exception/init-array and relocation layout. [data-recovery.md](data-recovery.md) records the two
+minimum/prefix extent limits. No device test or deployment has occurred.
+
 ## Open findings and questions
 
 - Draft boundaries from `tools/tusplit.py` are unreliable at the tail end (the pilot's tail ran 5

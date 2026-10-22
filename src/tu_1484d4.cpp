@@ -4,22 +4,14 @@
 // Tail order: the C headers come first and define no inline functions, so the tail starts with
 // count() (defined in the class) and then follows first use in the bodies below; it matched as
 // written. The unit is 0x1484d4-0x14acfc: body to 0x149b54, then 60 COMDAT functions.
+#include "PlatformApi.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
 #include "MultiDBCachedTextMenu.h"
 
-extern "C" {
-typedef struct sqlite3_stmt sqlite3_stmt;
-int sqlite3_open(const char *filename, sqlite3 **db);
-int sqlite3_close(sqlite3 *db);
-int sqlite3_prepare_v2(sqlite3 *db, const char *sql, int nbyte, sqlite3_stmt **stmt, const char **tail);
-int sqlite3_step(sqlite3_stmt *stmt);
-int sqlite3_column_int(sqlite3_stmt *stmt, int col);
-int sqlite3_finalize(sqlite3_stmt *stmt);
-const char *sqlite3_errmsg(sqlite3 *db);
-}
+#include "SQLiteApi.h"
 
 // One row of a cached list (0x74 bytes).
 struct TextItem {

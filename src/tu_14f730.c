@@ -1,3 +1,4 @@
+#include "PlatformApi.h"
 // PIC I2C device authentication (0x14f730-0x150ad8).
 // Arm GNU 8.2-2018.08, -O0 -fsigned-char -fPIC. Byte arrays are unsigned.
 // Recovered storage addresses are listed below; the library/vendor is unknown.
@@ -14,6 +15,21 @@ extern byte deviceRx[16];        // 0x188a48
 extern byte deviceInitialized;   // 0x18267c
 extern byte roundTableA[2][8];    // 0x17ff0c
 extern byte roundTableB[2][8];    // 0x17ff1c
+
+byte deviceInitialized; // 0x18267c
+byte deviceKeyA[8]; // 0x188a24
+byte deviceTx[16]; // 0x188a2c
+byte deviceKeyB[8]; // 0x188a3c
+byte deviceCounter[2]; // 0x188a44
+byte deviceRx[16]; // 0x188a48
+byte roundTableA[2][8] = {
+    {0xe8, 0xf6, 0x78, 0x6a, 0x7b, 0x04, 0xf8, 0xd2},
+    {0xff, 0x1e, 0x6f, 0x82, 0x6c, 0xec, 0xef, 0x3a},
+}; // 0x17ff0c
+byte roundTableB[2][8] = {
+    {0x9f, 0xb7, 0xfb, 0x2c, 0xc0, 0x36, 0x0a, 0x1e},
+    {0x09, 0x21, 0x6d, 0xba, 0x56, 0xa0, 0x9c, 0x88},
+}; // 0x17ff1c
 
 byte readDeviceKeys()            // 0x14f730
 {

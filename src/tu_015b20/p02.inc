@@ -70,7 +70,7 @@ void animateBusy(SDL_Surface *bg, SDL_Surface *dot, SDL_Rect bgRect, SDL_Rect ds
                     SDL_UpperBlit(bg, &src, g_backBuffer, &r);
                 }
                 snprintf(g_launchCmd, 0x800, "%*d/%d", digitCount(g_progressTotal), g_progressCur, g_progressTotal);
-                drawText(g_backBuffer, g_titleFont, r, g_launchCmd, g_progressColor, 1, 0);
+                drawText(g_backBuffer, g_titleFont, r, g_launchCmd, g_selectedTextColor, 1, 0);
                 SDL_UpperBlit(g_backBuffer, NULL, g_screen, NULL);
                 SDL_Flip(g_screen);
             } else {
@@ -127,7 +127,7 @@ int busyScreenThread(void *arg)
             rect.h = bg->h;
             SDL_UpperBlit(bg, NULL, g_backBuffer, &rect);
             rect.h = 50;
-            drawText(g_backBuffer, g_imeFont, rect, languageString(0x53), g_progressColor, 1, 0);
+            drawText(g_backBuffer, g_imeFont, rect, languageString(0x53), g_selectedTextColor, 1, 0);
             SDL_UpperBlit(g_backBuffer, NULL, g_screen, NULL);
             SDL_Flip(g_screen);
             SDL_Surface *dot = loadSkinImage(g_themePath, g_skinSubdir, "skin/progress-dot.png", g_backBuffer, 0);

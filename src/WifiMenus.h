@@ -18,7 +18,7 @@ extern void *g_imeFont;
 extern SDL_Color g_imeTextColor, g_wifiSelectedColor;
 SDL_Surface *loadImeImage(const char *, const char *, const char *);
 const char *languageString(int);
-int drawImeText(SDL_Surface *, void *, SDL_Rect, const char *, SDL_Color, int, bool);
+int drawText(SDL_Surface *, void *, SDL_Rect, const char *, SDL_Color, int, bool);
 extern "C" int SDL_UpperBlit(SDL_Surface *, SDL_Rect *, SDL_Surface *, SDL_Rect *);
 extern "C" void SDL_FreeSurface(SDL_Surface *);
 extern "C" int TTF_SizeText(void *, const char *, int *, int *);
@@ -145,13 +145,13 @@ public:
     virtual int draw(SDL_Surface *dst, SDL_Rect *r, bool selected) {
         SDL_Rect rect = *r;
         rect.x += 20; rect.y += 5;
-        drawImeText(dst, g_imeFont, rect, languageString(0x86), selected ? g_wifiSelectedColor : g_imeTextColor, 3, false);
+        drawText(dst, g_imeFont, rect, languageString(0x86), selected ? g_wifiSelectedColor : g_imeTextColor, 3, false);
         int on = getWifiConnected();
         printf("hotspot switch flag %d\n", on);
         rect.w = 200;
         rect.x = r->x + r->w - rect.w - (right ? right->w : 0) - 40;
-        if (on) drawImeText(dst, g_imeFont, rect, languageString(0x68), selected ? g_wifiSelectedColor : g_imeTextColor, 1, false);
-        else drawImeText(dst, g_imeFont, rect, languageString(0x69), selected ? g_wifiSelectedColor : g_imeTextColor, 1, false);
+        if (on) drawText(dst, g_imeFont, rect, languageString(0x68), selected ? g_wifiSelectedColor : g_imeTextColor, 1, false);
+        else drawText(dst, g_imeFont, rect, languageString(0x69), selected ? g_wifiSelectedColor : g_imeTextColor, 1, false);
         if (left && right) {
             rect.y += (60 - left->h) / 2;
             rect.x = rect.x + rect.w - (right ? right->w : 0) - left->w - 240;
@@ -190,14 +190,14 @@ public:
     virtual int draw(SDL_Surface *dst, SDL_Rect *r, bool selected) {
         SDL_Rect rect = *r;
         rect.x += 20;
-        drawImeText(dst, g_imeFont, rect, languageString(135), g_imeTextColor, 0, selected);
+        drawText(dst, g_imeFont, rect, languageString(135), g_imeTextColor, 0, selected);
         // Preserve the original temporary-string lifetime.
         const char *value = readConfigValue("/etc/wifi/hostapd.conf", "ssid").c_str();
         int width = 0, height = 0;
         TTF_SizeText(g_imeFont, value, &width, &height);
         if (width < 80) width = 80;
         rect.x = r->x + r->w - width - 5;
-        drawImeText(dst, g_imeFont, rect, value, g_imeTextColor, 0, false);
+        drawText(dst, g_imeFont, rect, value, g_imeTextColor, 0, false);
         return 0;
     }
 };
@@ -208,14 +208,14 @@ public:
     virtual int draw(SDL_Surface *dst, SDL_Rect *r, bool selected) {
         SDL_Rect rect = *r;
         rect.x += 20;
-        drawImeText(dst, g_imeFont, rect, languageString(136), g_imeTextColor, 0, selected);
+        drawText(dst, g_imeFont, rect, languageString(136), g_imeTextColor, 0, selected);
         // Preserve the original temporary-string lifetime.
         const char *value = readConfigValue("/etc/wifi/hostapd.conf", "wpa_passphrase").c_str();
         int width = 0, height = 0;
         TTF_SizeText(g_imeFont, value, &width, &height);
         if (width < 80) width = 80;
         rect.x = r->x + r->w - width - 5;
-        drawImeText(dst, g_imeFont, rect, value, g_imeTextColor, 0, false);
+        drawText(dst, g_imeFont, rect, value, g_imeTextColor, 0, false);
         return 0;
     }
 };

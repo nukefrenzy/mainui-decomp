@@ -95,21 +95,7 @@ struct TestMenuItem {
     SDL_Surface*icon;
     std::string label;
 };
-class TextMenu : public TextMenuDrawer {
-public:
-    TextMenu(int,int,int,const char*);
-    ~TextMenu() override;
-    int vfunc3() override;
-    void*getItem(int) override;
-    void vfunc7(SDL_Surface*) override;
-    void vfunc11() override;
-    void vfunc12(int) override;
-    void vfunc13() override;
-    int count() override;                 // 0x3a6dc, inline in tu_015b20
-    virtual void vfunc18();
-    void addItem(TestMenuItem*);
-    std::vector<TestMenuItem*>items;
-};
+#include "TextMenu.h"
 #include "HardwareTestMenu.h"
 
 // Inline definitions follow the original object emission order.

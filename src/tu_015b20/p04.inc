@@ -3,7 +3,7 @@
 #include <sys/time.h>   // gettimeofday (no inline functions, so it does not move the tail)
 SDL_Surface *SDL_CreateRGBSurface(unsigned int flags, int w, int h, int depth, unsigned int rmask,
                                   unsigned int gmask, unsigned int bmask, unsigned int amask);
-extern SDL_Color g_listNumberColor;     // 0x18228c (only drawListNumber uses it)
+extern SDL_Color g_highlightColor;     // 0x18228c (only drawListNumber uses it)
 extern SDL_Color g_highlightColor;      // 0x1822b0 (search match in a list row)
 extern "C" int TTF_SizeText(void *font, const char *text, int *w, int *h);
 SDL_Surface *loadImage(const char *path, SDL_Surface *fmt, bool flag); // 0x123a38 (tu_11cdc8)
@@ -270,7 +270,7 @@ int drawListNumber(int n, SDL_Rect *rect, SDL_Surface *dst, TTF_Font *font)
         }
         return g_numberBg->w;
     } else {
-        return drawText(dst, font, *rect, buf, g_listNumberColor, 1, 0);
+        return drawText(dst, font, *rect, buf, g_highlightColor, 1, 0);
     }
 }
 

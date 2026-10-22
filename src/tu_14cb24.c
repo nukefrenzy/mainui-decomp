@@ -203,16 +203,11 @@ fail:
     return -1;
 }
 
-typedef struct Inflater {       // the inflate stream at 0x131a68
-    char raw[0x2c];
-    void *window;               // +0x2c
-} Inflater;
-Inflater *inflaterOpen(void *unused, FILE *fp, int compSize);  // at 0x131a68
-int inflaterRead(Inflater *z, void *buf, int len);              // at 0x131b64
+#include "ZlibDecoder.h"
 
 typedef struct ZipEntry {       // 0x1c bytes
     long pos;                   // +0x00
-    Inflater *z;                // +0x04 (method 8 only)
+    zbuf *z;                // +0x04 (method 8 only)
     FILE *fp;                   // +0x08
     int compSize;               // +0x0c
     int size;                   // +0x10
@@ -249,7 +244,7 @@ ZipEntry *zipOpenEntry(ZipFile *zip, const char *name, unsigned int crc)   // 0x
         e->compSize = compSize;
         e->size = size;
         if (method == 8)
-            e->z = inflaterOpen(NULL, zip->fp, compSize);
+            e->z = openZlib(NULL, zip->fp, compSize);
         e->method = method;
         e->read = 0;
         e->fp = zip->fp;
@@ -265,7 +260,7 @@ int zipRead(ZipEntry *e, void *buf, unsigned int len)  // 0x14d638
     if (e == NULL)
         return -1;
     if (e->method == 8) {
-        n = inflaterRead(e->z, buf, len);
+        n = readZlib(e->z, buf, len);
     } else {
         int remain = e->read - e->size;
         if (len > remain)
@@ -288,7 +283,7 @@ void *zipReadFile(ZipFile *zip, const char *name, unsigned int crc, unsigned int
     if (buf == NULL)
         return NULL;
     if (e->method == 8)
-        n = inflaterRead(e->z, buf, e->size);
+        n = readZlib(e->z, buf, e->size);
     else
         n = fread(buf, 1, e->size, e->fp);
     if (n != e->size)
@@ -303,7 +298,7 @@ void zipCloseEntry(ZipEntry *e)     // 0x14d858
     if (e == NULL)
         return;
     if (e->method == 8)
-        free(e->z->window);
+        free(e->z->history);
     free(e);
 }
 
@@ -311,7 +306,8 @@ ZipFile *zipOpen(const char *path)  // 0x14d8b0
 {
     ZipFile *zip = (ZipFile *)malloc(24);
     struct stat st;
-    if (stat(path, &st) == -1) {
+    // Original call 0x14d8dc reaches the lstat wrapper at 0x1518a0.
+    if (lstat(path, &st) == -1) {
         printf("Couldn't open %s , %d:%s\n", path, errno, strerror(errno));
         free(zip);
         return NULL;

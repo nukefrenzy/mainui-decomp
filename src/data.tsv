@@ -1,0 +1,54 @@
+file	symbol	addr	size	kind	evidence
+tu_015b20.cpp	g_skinSubdir	151a48	3	bytes	declared extent; original ELF initial bytes
+tu_015b20.cpp	g_themeGray	161808	4	bytes	declared extent; original ELF initial bytes
+tu_015b20.cpp	g_themeWhite	16180c	4	bytes	declared extent; original ELF initial bytes
+tu_015b20.cpp	g_themeDim	161810	4	bytes	declared extent; original ELF initial bytes
+tu_015b20.cpp	g_fbFd	17e488	4	bytes	declared extent; original ELF initial bytes
+tu_015b20.cpp	g_panelInfo	17e48c	116	bytes	only the prefix read by adjustColor; full SDK object extent remains unknown
+tu_015b20.cpp	g_customDisplayTiming	17e6ec	1	bytes	declared extent; original ELF initial bytes
+tu_1302cc.cpp	g_lengthBase	17f9c0	124	bytes	declared extent; original ELF initial bytes
+tu_1302cc.cpp	g_lengthExtra	17fa3c	124	bytes	declared extent; original ELF initial bytes
+tu_1302cc.cpp	g_distanceBase	17fab8	128	bytes	declared extent; original ELF initial bytes
+tu_1302cc.cpp	g_distanceExtra	17fb38	128	bytes	declared extent; original ELF initial bytes
+tu_1302cc.cpp	g_codeLengthOrder	17fbb8	19	bytes	declared extent; original ELF initial bytes
+tu_13edfc.cpp	g_imeKeyMap	17fbd4	200	bytes	declared extent; original ELF initial bytes
+tu_14da50.c	g_defaultStrings	17fc9c	624	cstring_table	156 original pointer entries; verify each pointed-to string in order
+tu_14f730.c	roundTableA	17ff0c	16	bytes	declared extent; original ELF initial bytes
+tu_14f730.c	roundTableB	17ff1c	16	bytes	declared extent; original ELF initial bytes
+tu_015b20.cpp	g_windowStack	17ff38	4	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	g_deviceId	17ff48	5	bytes	five bytes read by getSerial; original allocation extent not established
+tu_015b20.cpp	g_launchCmd	17ff54	2048	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	g_countBuffer	180754	256	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	g_loadingThread	180854	4	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	g_fbVar	18085c	160	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	g_settingsDirty	1808fc	1	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	g_powerDownCount	180900	4	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	g_powerSent	180904	1	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	g_startHeld	180905	1	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	g_selectHeld	180906	1	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	g_statusIndicatorFlag	180907	1	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	g_cwdBuf	180908	4096	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	g_busy	181908	4	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	g_progressCur	18190c	4	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	g_progressTotal	181910	4	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	g_charging	181914	1	bytes	declared extent; zero-initialized original BSS
+tu_129f9c.cpp	g_iconFont	182180	4	bytes	canonical existing storage for recovered alias; original zero-initialized BSS
+tu_129f9c.cpp	g_emptyImage	1821b4	4	bytes	canonical existing storage for recovered alias; original zero-initialized BSS
+tu_129f9c.cpp	g_gameFocused	1821c0	4	bytes	canonical existing storage for recovered alias; original zero-initialized BSS
+tu_129f9c.cpp	g_gameNormal	1821c4	4	bytes	canonical existing storage for recovered alias; original zero-initialized BSS
+tu_129f9c.cpp	g_raRow	1821d0	4	bytes	canonical existing storage for recovered alias; original zero-initialized BSS
+tu_129f9c.cpp	g_previewBg	1821fc	4	bytes	canonical existing storage for recovered alias; original zero-initialized BSS
+tu_129f9c.cpp	g_volumeIcons	182214	84	bytes	canonical existing storage for recovered alias; original zero-initialized BSS
+tu_129f9c.cpp	g_clearColor	182278	4	bytes	canonical existing storage for recovered alias; original zero-initialized BSS
+tu_129f9c.cpp	g_highlightColor	18228c	4	bytes	canonical existing storage for recovered alias; original zero-initialized BSS
+tu_129f9c.cpp	g_selectedTextColor	1822a0	4	bytes	canonical existing storage for recovered alias; original zero-initialized BSS
+tu_129f9c.cpp	g_hintColor	1822a8	4	bytes	canonical existing storage for recovered alias; original zero-initialized BSS
+tu_129f9c.cpp	g_listColor	1822ac	4	bytes	canonical existing storage for recovered alias; original zero-initialized BSS
+tu_138c50.cpp	g_wlanStatusBuffer	182418	128	bytes	declared extent; original ELF initial bytes
+tu_13edfc.cpp	g_imeInputColor	182498	4	bytes	declared extent; original ELF initial bytes
+tu_14f730.c	deviceInitialized	18267c	1	bytes	declared extent; original ELF initial bytes
+tu_14f730.c	deviceKeyA	188a24	8	bytes	declared extent; original ELF initial bytes
+tu_14f730.c	deviceTx	188a2c	16	bytes	declared extent; original ELF initial bytes
+tu_14f730.c	deviceKeyB	188a3c	8	bytes	declared extent; original ELF initial bytes
+tu_14f730.c	deviceCounter	188a44	2	bytes	declared extent; original ELF initial bytes
+tu_14f730.c	deviceRx	188a48	16	bytes	declared extent; original ELF initial bytes

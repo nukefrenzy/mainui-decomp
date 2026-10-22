@@ -9,13 +9,13 @@ extern "C" {
 }
 
 extern std::vector<TrimusWindow *> g_pendingWindows;
-extern int g_emuIconX, g_emuIconY, g_rappIconX;
+extern SDL_Surface *g_gameFocused, *g_gameNormal, *g_raRow;
 // 0x1821c0, 0x1821c4, 0x1821d0
 extern SDL_Thread *g_loadingThread;
 // 0x180854
 extern unsigned char g_charging;
 // 0x181914
-extern TTF_Font *g_chargingFont;
+extern TTF_Font *g_iconFont;
 // 0x182180
 bool sdCardMounted();
 int enableSwap();
@@ -276,7 +276,7 @@ ListMenu *createMenu(int id, std::string path) {
         IconMenu *menu = new IconMenu(2, 4, false, false, 10, 10, false);
         menu->setField74(45);
         for (int i = 0; i < g_romSourcesA.size(); i++) {
-            IconMenuItem *item = new IconMenuItem(g_romSourcesA[i].label.c_str(), g_romSourcesA[i].iconSelected.c_str(), g_romSourcesA[i].icon.c_str(), g_emuIconX, g_emuIconY, 5, &g_romSourcesA[i], false);
+            IconMenuItem *item = new IconMenuItem(g_romSourcesA[i].label.c_str(), g_romSourcesA[i].iconSelected.c_str(), g_romSourcesA[i].icon.c_str(), g_gameFocused, g_gameNormal, 5, &g_romSourcesA[i], false);
             item->str28 = g_romSourcesA[i].labelVerbose;
             menu->addItem(item);
         }
@@ -287,7 +287,7 @@ ListMenu *createMenu(int id, std::string path) {
         menu->setFontFn(smallMenuFont);
         menu->setField74(28);
         for (int i = 0; i < g_romSourcesB.size(); i++) {
-            IconMenuItem *item = new IconMenuItem(g_romSourcesB[i].label.c_str(), g_romSourcesB[i].iconSelected.c_str(), g_romSourcesB[i].icon.c_str(), g_rappIconX, 0, 17, &g_romSourcesB[i], false);
+            IconMenuItem *item = new IconMenuItem(g_romSourcesB[i].label.c_str(), g_romSourcesB[i].iconSelected.c_str(), g_romSourcesB[i].icon.c_str(), g_raRow, 0, 17, &g_romSourcesB[i], false);
             item->str28 = g_romSourcesB[i].labelVerbose;
             menu->addItem(item);
         }
@@ -443,7 +443,7 @@ static int chargingThread(void *arg) {
     imageRect.w = 192;
     imageRect.h = 96;
     textRect.w = 640;
-    textRect.h = TTF_FontHeight(g_chargingFont);
+    textRect.h = TTF_FontHeight(g_iconFont);
     textRect.x = 0;
     textRect.y = imageRect.y+20;
     while (g_charging) {
@@ -471,7 +471,7 @@ static int chargingThread(void *arg) {
             SDL_UpperBlit(images[frame%5], NULL, g_backBuffer, &imageRect);
             textRect.y = imageRect.y+imageRect.h+20;
             SDL_FillRect(g_backBuffer, &textRect, SDL_MapRGB(g_backBuffer->format, 0, 0, 0));
-            drawText(g_backBuffer, g_chargingFont, textRect, "Charging...", g_wifiEmptyColor, 1, false);
+            drawText(g_backBuffer, g_iconFont, textRect, "Charging...", g_wifiEmptyColor, 1, false);
             SDL_UpperBlit(g_backBuffer, NULL, g_screen, NULL);
             SDL_UpdateRect(g_screen, 0, 0, 0, 0);
         }

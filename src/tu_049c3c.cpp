@@ -1,6 +1,7 @@
 // Main program and status/hotplug callbacks, in binary address order.
 // Proven 0x049c3c-0x04c418: 4,740 body bytes (10 written functions and an init pair),
 // followed by 93 inline/template functions (5,464 bytes).
+#include "PlatformApi.h"
 #include <atomic>
 #include <list>
 #include <vector>
@@ -80,16 +81,16 @@ extern "C" {
 unsigned long milliseconds();
 bool moduleLoaded(const char*);
 int findProcess(const char*,int);
-int wifiConnectionState();
-void stopSupplicant();
+int wifiMode();
+void swicth2ApMode();
 int loadThemeFolder(std::vector<Theme>*,const char*);
 Theme*findTheme(std::vector<Theme>*,const char*);
 void loadLanguages(const char*);
 void initFramebuffer();
 void chargingScreenLoop();
 void startBackgroundThread();
-void setSwapMode(int);
-void waitBackgroundThread();
+void ensureSwap(void*);
+void stopBackgroundThread();
 void loadPinyinTable();
 int loadRecentList(std::list<RecentItem>*);
 int saveRecentList(std::list<RecentItem>*);
@@ -98,11 +99,11 @@ int loadAppFolder(std::vector<AppInfo>*,const char*);
 void initAudioSettings(void*);
 int restoreWindowState(std::vector<TrimusWindow*>*);
 void createRootWindow(std::vector<TrimusWindow*>*);
-void loadRomListPositions(std::vector<RomListPosition>*);
+int loadRomListPositions(std::vector<RomListPosition>*);
 void runWindowLoop(std::vector<TrimusWindow*>*,std::atomic<bool>*);
-void deleteWindows(std::vector<TrimusWindow*>*);
+void clearWindows(std::vector<TrimusWindow*>*);
 void closeFramebuffer();
-int checkDevice();
+unsigned char waitForProbe();
 int g_statusThreadRun;
 SDL_mutex*g_statusMutex;
 SDL_cond*g_statusCond;
@@ -156,7 +157,7 @@ void pollStatusA_pushEvent() {
 
 void pollStatusB_pushEvent() {
     bool changed=false;
-    int state=wifiConnectionState();
+    int state=wifiMode();
     changed=g_lastWifiState!=state;
     if (state==2&&!changed) {
         WifiStatus*status=getWifiStatus();
@@ -230,7 +231,7 @@ void wifiStatusCallback(WifiStatus*status) {
     }
     if (hotspot) {
         if (findProcess("wpa_supplicant",0)>0) {
-            stopSupplicant();
+            swicth2ApMode();
             system("ifconfig | grep HWaddr | sed 's/[ ]\\+/ /g' | cut -d' ' -f5 > /tmp/wifimac");
         }
     } else {
@@ -242,7 +243,7 @@ int main(int argc,char**argv) {
     printf("%d ui start\n",milliseconds());
     system("echo ondemand > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor");
     system("touch /tmp/stay_awake");
-    if (checkDevice()!=0)return 2;
+    if (waitForProbe()!=0)return 2;
     if (moduleLoaded("8188fu.ko")!=true) {
         if (access("/mnt/SDCARD/8188fu.ko",0)==0) {
             int rc=system("insmod /mnt/SDCARD/8188fu.ko");
@@ -350,8 +351,8 @@ int main(int argc,char**argv) {
     loadAppFolder(&g_appFolder,"/mnt/SDCARD/App");
     loadEmuFolder(&g_romSourcesB,"/mnt/SDCARD/RApp");
     initAudioSettings(g_keyShm);
-    setSwapMode(0);
-    waitBackgroundThread();
+    ensureSwap(0);
+    stopBackgroundThread();
     printf("%d try to restore\n",milliseconds());
     if (restoreWindowState(&windows)<1) {
         printf("%d nothing to restore\n",milliseconds());
@@ -368,7 +369,7 @@ int main(int argc,char**argv) {
     SDL_WaitThread(statusThread,NULL);
     stopHotplug();
     SDL_WaitThread(hotplug,NULL);
-    deleteWindows(&windows);
+    clearWindows(&windows);
     freeTheme();
     SDL_FreeSurface(g_screen);
     SDL_FreeSurface(g_backBuffer);

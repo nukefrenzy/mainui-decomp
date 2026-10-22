@@ -1,6 +1,7 @@
 // Wi-Fi/hotspot menus, actions and drawable rows; source order follows MainUI.
 // Proven 0x138c50-0x13edfc: 14,368-byte body plus 122 inline/template functions.
 // Keep ignored system() result stores and the conditional returns: they affect -O0 layout.
+#include "PlatformApi.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -30,7 +31,7 @@ void saveSystemJson(void *, const char *, int);
 extern char *g_themePath;
 extern char g_keyShm[];
 extern int g_fontSize;
-extern char g_wlanStatusBuffer[128]; // 0x182418
+char g_wlanStatusBuffer[128]; // 0x182418
 extern void *g_imeFont;
 extern SDL_Color g_imeTextColor; // 0x182284
 extern SDL_Color g_wifiSelectedColor; // 0x182280
@@ -39,9 +40,9 @@ extern SDL_Surface *g_listStripe; // 0x1821c8
 extern std::vector<TrimusWindow *> *g_windowStack;
 SDL_Surface *loadImeImage(const char *, const char *, const char *);
 const char *languageString(int);
-int drawImeText(SDL_Surface *, void *, SDL_Rect, const char *, SDL_Color, int, bool);
+int drawText(SDL_Surface *, void *, SDL_Rect, const char *, SDL_Color, int, bool);
 int findProcess(const char *, int);
-unsigned int currentTicks();
+unsigned long milliseconds();
 SDL_Surface *createSurface(int, int);
 void pushWindow(TrimusWindow *);
 struct UserEvent { unsigned char type; int code; void *data1, *data2; };
@@ -57,7 +58,7 @@ public:
 };
 class NotifyWindow : public TrimusWindow {
 public:
-    NotifyWindow(const char *, const char *, const char *, int);
+    NotifyWindow(const char *, const char *, const char *, void (*)());
     virtual ~NotifyWindow();
     virtual int handleInput(); virtual int draw(SDL_Surface *);
     virtual void onHide(); virtual void onShow();
@@ -150,12 +151,12 @@ int WifiOnOffLabel::draw(SDL_Surface *dst, SDL_Rect *r, bool selected)
 {
     SDL_Rect rect = *r;
     rect.x += 20;
-    drawImeText(dst, g_imeFont, rect, languageString(0x83), selected ? g_wifiSelectedColor : g_imeTextColor, 3, false);
+    drawText(dst, g_imeFont, rect, languageString(0x83), selected ? g_wifiSelectedColor : g_imeTextColor, 3, false);
     rect.w = 200;
     rect.x = r->x + r->w - rect.w - (right ? right->w : 0) - 40;
     int on = getWifiOn();
-    if (on) drawImeText(dst, g_imeFont, rect, languageString(0x68), selected ? g_wifiSelectedColor : g_imeTextColor, 1, false);
-    else drawImeText(dst, g_imeFont, rect, languageString(0x69), selected ? g_wifiSelectedColor : g_imeTextColor, 1, false);
+    if (on) drawText(dst, g_imeFont, rect, languageString(0x68), selected ? g_wifiSelectedColor : g_imeTextColor, 1, false);
+    else drawText(dst, g_imeFont, rect, languageString(0x69), selected ? g_wifiSelectedColor : g_imeTextColor, 1, false);
     if (left && right) {
         rect.y = r->y + (60 - left->h) / 2;
         rect.x = r->x + r->w - (right ? right->w : 0) - left->w - 240;
@@ -173,14 +174,14 @@ int WifiLabel::draw(SDL_Surface *dst, SDL_Rect *r, bool selected)
     SDL_Rect rect = *r;
     SDL_FillRect(dst, r, SDL_MapRGBA(dst->format, 255, 255, 255, 255));
     rect.x += 15;
-    drawImeText(dst, g_imeFont, rect, languageString(0x91), g_wifiSelectedColor, 3, false);
+    drawText(dst, g_imeFont, rect, languageString(0x91), g_wifiSelectedColor, 3, false);
     return 0;
 }
 int WifiItem::draw(SDL_Surface *dst, SDL_Rect *r, bool selected)
 {
     SDL_Rect rect = *r;
     rect.x += 20;
-    drawImeText(dst, g_imeFont, rect, ssid.c_str(), selected ? g_wifiSelectedColor : g_imeTextColor, 3, false);
+    drawText(dst, g_imeFont, rect, ssid.c_str(), selected ? g_wifiSelectedColor : g_imeTextColor, 3, false);
     rect.x = r->x + r->w - 20;
     if (signal) {
         rect.y = r->y + (r->h - signal->h) / 2; rect.x -= signal->w;
@@ -274,7 +275,7 @@ int WifiOnOffAction::execute(void *)
         printf("wifi on/off action %d\n", on);
         if (on) {
             setWifiScanEnable(1);
-            unsigned int start = currentTicks();
+            unsigned int start = milliseconds();
             bool done = false;
             InputEvent ev;
             while (SDL_WaitEvent(&ev)) {
@@ -288,7 +289,7 @@ int WifiOnOffAction::execute(void *)
                 default:
                     break;
                 }
-                unsigned int now = currentTicks();
+                unsigned int now = milliseconds();
                 if (now - start > 10000) {
                     puts("wifi on/off timeout"); out.code = 44; break;
                 }
@@ -388,7 +389,7 @@ void WifiMenuDrawer::drawItems(SDL_Surface *dst)
     }
     if (count() <= 1 && getWifiOn()) {
         rect.x = 0; rect.y = 60; rect.w = 640; rect.h = 360;
-        drawImeText(dst, font, rect, languageString(0x8c), g_wifiEmptyColor, 1, false);
+        drawText(dst, font, rect, languageString(0x8c), g_wifiEmptyColor, 1, false);
         return;
     }
 }

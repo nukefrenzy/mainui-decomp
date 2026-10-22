@@ -66,7 +66,7 @@ int drawText(SDL_Surface *dst, TTF_Font *font, SDL_Rect rect, const char *text, 
     r.w = s->w;
     r.h = s->h;
     if (shadow) {
-        SDL_Surface *sh = TTF_RenderUTF8_Blended(font, text, g_shadowColor);
+        SDL_Surface *sh = TTF_RenderUTF8_Blended(font, text, g_clearColor);
         SDL_Rect sr = r;
         sr.x += 1;
         sr.y += 2;
@@ -159,7 +159,7 @@ int drawKeyStateIndicator(SDL_Surface *dst, int slot, bool focused)
         v = 0;
     if (v > 20)
         v = 20;
-    if (g_keyStateIcons[v] == NULL)
+    if (g_volumeIcons[v] == NULL)
         return -1;
     int w;
     int h;
@@ -185,7 +185,7 @@ int drawKeyStateIndicator(SDL_Surface *dst, int slot, bool focused)
         SDL_Rect src = r;
         SDL_BlitSurface(g_titleBar, &src, dst, &r);
     }
-    drawIconOnBg(dst, g_unusedStatus, &r, g_keyStateIcons[v]);
+    drawIconOnBg(dst, g_unusedStatus, &r, g_volumeIcons[v]);
     return slot + 1;
 }
 

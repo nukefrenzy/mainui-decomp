@@ -66,15 +66,19 @@ export scripts in `tools/ghidra/`). Never downgrade a confirmed name to a guess.
 
 ## Roadmap
 
-Done: program map, exact toolchain + flags, match toolkit + CI, phase 2 option 1 (window layout).
+Done: program map, exact toolchain + flags, match toolkit + CI, window layouts, item/action wiring,
+and all 22 Miyoo translation units (100% tracked code coverage). Settings selectors and the six
+disabled entries are documented in `docs/program-map.md`.
 
-Next, in order:
-2. **Item and action wiring.** Known so far: `IconMenuItem` ctor 0x256f0 (labelId +0x40, param +0x44, menuId +0x4c,
-   icons as strings at +0x50/+0x68); `SettingMenuItem` ctor 0x282d0 (labelId, icon, handler?); item list push 0x27a30;
-   `Action::execute` = slot 2. To do: full item layouts, how a selected item becomes an Action, settings handlers and
-   label IDs, the five unconstructed settings entries.
-3. **Starter LD_PRELOAD hook library.** Same toolchain; wrap `SDL_PollEvent` for a hotkey; inline-hook an internal
-   function at a fixed address. Compile-tested here, device-tested by Brad.
+Next: **byte-exact final layout**. `python3 tools/linkaudit.py --require-link` builds an experimental
+ARM ELF with verified embedded objects and pinned SDK/runtime libraries. All 286 import names and
+versions, 23 DT_NEEDED entries in order and interpreter match. Read `docs/link-audit.md`: the first
+layout deficit is tu_11cdc8's linked COMDAT tail (next TU is 556 bytes early); final .text is 552
+bytes short. `src/data.tsv` records 53 checked storage extents; read `docs/data-recovery.md` for
+allocation limits. No deployed or device-validated replacement exists yet.
+
+The starter LD_PRELOAD hook library remains a separate optional feature: same toolchain, wrap
+SDL_PollEvent for a hotkey, compile-test here and device-test by Brad.
 
 Later candidates: input/hotkeys, status bar indicators, ROM lists + DB, launching, themes, settings shared memory,
 Wi-Fi, the `librsautil` + UUID device check, and a diff against stock Miyoo (June 10 2023 build).
