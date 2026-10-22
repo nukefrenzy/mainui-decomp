@@ -153,6 +153,14 @@ literal words; no additional masking is needed.
   NOP/branch layout. A return after an if/else can likewise retain a branch-end NOP that an
   early return inside the branch removes (DialogWindow::draw).
 
+- `std::atomic<bool>`'s implicit conversion to bool takes only `this`; `load()` passes the default
+  memory-order argument as well. The window loop uses `*running`, which emits the 96-byte inline
+  conversion, rather than the similar 100-byte load wrapper.
+- A known post-compilation NOP patch must be checked literally. The matcher's BL/relocation mask
+  can otherwise accept a restored call in place of a disabled instruction. createMenu scopes an
+  assembler macro around its twelve patched calls, retaining GCC's argument/cleanup code and
+  asserting the patch count; each resulting word is also compared without the call mask.
+
 ## Tail order
 
 GCC 8 at `-O0` emits COMDAT functions in call-graph node order:

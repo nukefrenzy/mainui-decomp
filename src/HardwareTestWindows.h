@@ -110,16 +110,7 @@ public:
     void addItem(TestMenuItem*);
     std::vector<TestMenuItem*>items;
 };
-class HardwareTestMenu : public TextMenu {
-public:
-    HardwareTestMenu();
-    ~HardwareTestMenu() override;
-    int vfunc4() override;
-    void vfunc7(SDL_Surface*) override;
-    void vfunc18() override;
-    void initializeTests();
-    int stressSeconds;
-};
+#include "HardwareTestMenu.h"
 
 // Inline definitions follow the original object emission order.
 inline void SDLKeyTestWindow::saveState(cJSON*) {  }

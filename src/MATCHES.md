@@ -8,7 +8,7 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | Function | Address | Size | File |
 | --- | --- | --- | --- |
 | `keyEventName(int)` | 0x15b20 | 480 | tu_015b20.cpp |
-| `flipScreen()` | 0x15d00 | 36 | tu_015b20.cpp |
+| `flipDisplay()` | 0x15d00 | 36 | tu_015b20.cpp |
 | `drawText(SDL_Surface*, void*, SDL_Rect, char const*, SDL_Color, int, bool)` | 0x15d24 | 756 | tu_015b20.cpp |
 | `drawTextLines(SDL_Surface*, void*, SDL_Rect*, char const*, char const*, SDL_Color*, int, bool)` | 0x16018 | 532 | tu_015b20.cpp |
 | `drawIconOnBg(SDL_Surface*, SDL_Surface*, SDL_Rect*, SDL_Surface*)` | 0x1622c | 420 | tu_015b20.cpp |
@@ -139,8 +139,8 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `DBCachedTextMenu::~DBCachedTextMenu()` | 0x254dc | 52 | tu_015b20.cpp |
 | `TextItem::TextItem(char const*, SDL_Surface*, Action*, bool)` | 0x25510 | 272 | tu_015b20.cpp |
 | `TextItem::~TextItem()` | 0x25620 | 208 | tu_015b20.cpp |
-| `IconMenuItem::IconMenuItem(int, char const*, char const*, int, int, int, int, bool)` | 0x256f0 | 484 | tu_015b20.cpp |
-| `IconMenuItem::IconMenuItem(char const*, char const*, char const*, int, int, int, int, bool)` | 0x258d4 | 440 | tu_015b20.cpp |
+| `IconMenuItem::IconMenuItem(int, char const*, char const*, int, int, int, void*, bool)` | 0x256f0 | 484 | tu_015b20.cpp |
+| `IconMenuItem::IconMenuItem(char const*, char const*, char const*, int, int, int, void*, bool)` | 0x258d4 | 440 | tu_015b20.cpp |
 | `IconMenuItem::~IconMenuItem()` | 0x25a8c | 208 | tu_015b20.cpp |
 | `IconMenuItem::reload()` | 0x25b5c | 268 | tu_015b20.cpp |
 | `defaultIconFont()` | 0x25c68 | 36 | tu_015b20.cpp |
@@ -190,7 +190,7 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `ColorMenu::vfunc4()` | 0x2c73c | 36 | tu_015b20.cpp |
 | `ColorMenu::vfunc18()` | 0x2c760 | 196 | tu_015b20.cpp |
 | `ColorMenu::loadItems()` | 0x2c824 | 300 | tu_015b20.cpp |
-| `LanguageMenu::LanguageMenu(std::vector<LanguageChoice, std::allocator<LanguageChoice> > const&)` | 0x2c950 | 344 | tu_015b20.cpp |
+| `LanguageMenu::LanguageMenu(std::vector<LanguageChoice, std::allocator<LanguageChoice> >)` | 0x2c950 | 344 | tu_015b20.cpp |
 | `LanguageMenu::~LanguageMenu()` | 0x2caa8 | 76 | tu_015b20.cpp |
 | `LanguageMenu::~LanguageMenu()` | 0x2caf4 | 52 | tu_015b20.cpp |
 | `LanguageMenu::vfunc4()` | 0x2cb28 | 236 | tu_015b20.cpp |
@@ -288,6 +288,32 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `GameDetailWindow::animateOut(SDL_Surface*, void (*)())` | 0x36534 | 552 | tu_015b20.cpp |
 | `GameDetailWindow::captureBackground(SDL_Surface*)` | 0x3675c | 124 | tu_015b20.cpp |
 | `detailTimeout(unsigned int, void*)` | 0x367d8 | 96 | tu_015b20.cpp |
+| `ADCInfoWindow::ADCInfoWindow(int, int)` | 0x36838 | 128 | tu_015b20.cpp |
+| `ADCInfoWindow::~ADCInfoWindow()` | 0x368b8 | 92 | tu_015b20.cpp |
+| `ADCInfoWindow::~ADCInfoWindow() (deleting)` | 0x36914 | 52 | tu_015b20.cpp |
+| `ADCInfoWindow::handleInput()` | 0x36948 | 72 | tu_015b20.cpp |
+| `ADCInfoWindow::draw(SDL_Surface*)` | 0x36990 | 472 | tu_015b20.cpp |
+| `clearWindows(std::vector<TrimusWindow*, std::allocator<TrimusWindow*> >*)` | 0x36b68 | 184 | tu_015b20.cpp |
+| `flipScreen()` | 0x36c20 | 56 | tu_015b20.cpp |
+| `updateScreen()` | 0x36c58 | 96 | tu_015b20.cpp |
+| `flushPendingWindows()` | 0x36cb8 | 208 | tu_015b20.cpp |
+| `pushWindow(TrimusWindow*)` | 0x36d88 | 52 | tu_015b20.cpp |
+| `initFramebuffer()` | 0x36dbc | 244 | tu_015b20.cpp |
+| `closeFramebuffer()` | 0x36eb0 | 56 | tu_015b20.cpp |
+| `runWindowLoop(std::vector<TrimusWindow*, std::allocator<TrimusWindow*> >*, std::atomic<bool>*)` | 0x36ee8 | 1244 | tu_015b20.cpp |
+| `createRootWindow(std::vector<TrimusWindow*, std::allocator<TrimusWindow*> >*)` | 0x373c4 | 248 | tu_015b20.cpp |
+| `files_374bc(int)` | 0x374bc | 340 | tu_015b20.cpp |
+| `createRomListMenu(EmuInfo*, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*)` | 0x37610 | 336 | tu_015b20.cpp |
+| `smallMenuFont()` | 0x37760 | 36 | tu_015b20.cpp |
+| `createMenu(int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)` | 0x37784 | 4272 | tu_015b20.cpp |
+| `enableSwapAction(void*)` | 0x38834 | 52 | tu_015b20.cpp |
+| `startBackgroundThread()` | 0x38868 | 64 | tu_015b20.cpp |
+| `stopBackgroundThread()` | 0x388a8 | 72 | tu_015b20.cpp |
+| `ensureSwap(void*)` | 0x388f0 | 228 | tu_015b20.cpp |
+| `chargingThread(void*)` | 0x389d4 | 1572 | tu_015b20.cpp |
+| `chargingScreenLoop()` | 0x38ff8 | 420 | tu_015b20.cpp |
+| `__static_initialization_and_destruction_0(int, int)` | 0x3919c | 140 | tu_015b20.cpp |
+| `_GLOBAL__sub_I_g_pendingWindows` | 0x39228 | 24 | tu_015b20.cpp |
 | `TrimusWindow::animateIn(SDL_Surface*, FlipFn)` | 0x39478 | 40 | tu_015b20.cpp |
 | `TrimusWindow::animateOut(SDL_Surface*, FlipFn)` | 0x394a0 | 40 | tu_015b20.cpp |
 | `TrimusWindow::getId()` | 0x394c8 | 40 | tu_015b20.cpp |

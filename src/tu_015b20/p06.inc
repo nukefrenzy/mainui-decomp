@@ -296,7 +296,7 @@ TextItem::~TextItem() {
     if (field70)SDL_FreeSurface(field70);
 }
 // 0x256f0
-IconMenuItem::IconMenuItem(int id, const char *normal, const char *selected, int bx, int by, int menu, int arg, bool own) {
+IconMenuItem::IconMenuItem(int id, const char *normal, const char *selected, int bx, int by, int menu, void *arg, bool own) {
     labelId = id;
     iconSurface = loadSkinImage(g_themePath, g_skinSubdir, normal, g_backBuffer, false);
     if (!iconSurface)printf("load icon %s fail\n", normal);
@@ -312,7 +312,7 @@ IconMenuItem::IconMenuItem(int id, const char *normal, const char *selected, int
 }
 
 // 0x258d4
-IconMenuItem::IconMenuItem(const char *text, const char *normal, const char *selected, int bx, int by, int menu, int arg, bool own) {
+IconMenuItem::IconMenuItem(const char *text, const char *normal, const char *selected, int bx, int by, int menu, void *arg, bool own) {
     label = text;
     labelId = -1;
     iconSurface = loadSkinImage(g_themePath, g_skinSubdir, normal, g_backBuffer, false);

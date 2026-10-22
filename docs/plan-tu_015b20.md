@@ -1,6 +1,6 @@
 # Plan: the first file, tu_015b20
 
-The last unproven unit, and the largest: 0x15b20–0x49c3c, 212 KB, about 46% of Miyoo's code. It holds
+The last unproven unit, and the largest: 0x15b20–0x49c3c, 213,276 bytes, about 47% of Miyoo's code. It holds
 the window and menu classes, the actions, the window loop and `createMenu`. Read `docs/unit-workflow.md`
 first; this file only adds what is different about a unit this size.
 
@@ -8,8 +8,8 @@ first; this file only adds what is different about a unit this size.
 
 | Part | Range | Functions | Bytes |
 | --- | --- | --- | --- |
-| Body (own functions, source order) | 0x15b20–0x39240 | 303 | 144,704 |
-| Static-init pair (end of body) | 0x39228–0x39240 | 2 | |
+| Body (own functions, source order) | 0x15b20–0x39240 | 307 ranges / 359 symbols including aliases | 145,184 |
+| Static-init pair (included in body above) | 0x3919c–0x39240 | 2 | 164 |
 | Tail (template + inline) | 0x39240–0x49c3c | 796 | 68,092 |
 
 - 553 tail functions are known `std::` template shapes and come free. The other ~240 are inline class
@@ -333,7 +333,7 @@ TextItem-to-Action selection cast. A/keys 1 and 4 call `select`; each opened win
 Volume changes cancel the old 150-ms preview timer, stop its channel, then schedule a new one.
 The destructor frees rows/resources, saves system.json, clears the dirty flag, and restores
 volume after cancelling a pending preview. The Wi-Fi row displays the connection IP (not SSID) when mode is 2 and state is 4.
-The five allocated-but-unconstructed settings entries still need the p11 `createMenu` caller, which supplies the menu's rows. An unused helper invokes
+The five allocated-but-unconstructed settings entries are now identified by p11's createMenu caller; see the disabled-item table below. An unused helper invokes
 `reboot efex`; this reconstruction only compiles these actions and never executes them.
 
 **Device info.** Rows are a part-local 0x30-byte `DeviceInfoItem` (two strings), with their own
@@ -544,6 +544,98 @@ width arithmetic uses the original integer x, not the already truncated short re
 The last input switch case falls through to `default: break`; adding its own break changes the
 NOP/branch layout. Themed DialogWindow drawing returns 0 after its conditional, rather than
 inside the branch, to retain the trailing NOP.
+
+
+## p11 findings (0x36838–0x39240, done)
+
+All 26 function ranges match (10,760 bytes): ADCInfoWindow's five ranges, window cleanup and
+presentation, pending-window handling, framebuffer init/close, runWindowLoop, createRootWindow,
+menu labels, ROM-list loading, smallMenuFont, createMenu, swap/loading helpers, the charging
+thread/loop, and the compiler-generated init pair. The complete body is now **0x15b20–0x39240**,
+145,184 bytes, 307 distinct starts / 359 symbols including aliases. All 689 registered matches
+and 21 proven unit checks pass. Added two function starts missing from names.tsv: 0x37760 (the
+font callback, also absent from the Ghidra export) and 0x39228 (the compiler's init wrapper).
+The earlier body estimate omitted the 480-byte keyEventName function; the shape table is corrected.
+
+**The whole unit is not proven.** `unitcheck --end 49c3c` confirms the entire body but reports
+RESULT MISMATCH in the tail, starting at 0x39240 with std::exception::exception rather than the
+expected atomic helpers. The current diagnostic finds 99 mismatched sections and the first
+unproduced gap at 0x3b310; merely finding identical sections elsewhere does not prove their order
+or complete extent. Integration must arrange includes and inline definitions, settle the
+remaining template types/overloads and first-use order, and finish the strict walk at 0x49c3c.
+Do not mark UNIT_FIXED or remove PARTIAL yet. No matcher changes were needed.
+
+**Window loop.** The running argument is `std::atomic<bool>*`; the source uses its implicit bool
+conversion (the 96-byte inline function at 0x3937c), not load(memory_order), which adds an argument.
+The loop drains startup events, updates/animates/draws the top window, draws status indicators
+except for ids 25/-1, and presents the back buffer. pushWindow first discards any pending windows
+and queues its argument. The loop calls the queued window's onShow before moving it onto the
+stack, then clears any remaining pending windows. Input result 1 closes a non-root window; 4
+closes even the root. Result 3 closes negative-id windows and exits the loop; 2 exits directly.
+Exit saves window state and ROM positions, calls onHide/deletes the remaining windows, and only
+unlinks /tmp/cmd_to_run.sh when the final result is 1. The original potentially uninitialized
+result when the loop never runs is retained. ADCInfoWindow's +0xc field is a 500-ms refresh timer,
+removed by its destructor; its status-label switch starts from the original constant 2.
+
+**Menu factory and selection.** Root IconMenu rows open recent (only when nonempty), favourites,
+games, apps and settings. Games/expert rows carry EmuInfo* in IconMenuItem::param and copy the
+verbose label into str28. ROM folder loading tests EmuInfo::path, starts a busy thread around
+buildRomList_23318, then joins it. Favourites, apps, the file browser and recent use the same busy
+thread pattern; the browser chooses /mnt/SDCARD unless dualPartition is true, then /mnt/P2EXT.
+The factory also constructs settings/fixes, device info, hardware test, language (only with more
+than one choice), colour and theme menus. LanguageMenu receives a vector by value: this caller's
+copy/destruction settles p08's formerly ambiguous reference signature.
+
+**The six disabled items are real binary patches.** The original still allocates each object and
+sets up its constructor/append arguments, but replaces both calls with `mov r0,r0` NOPs. The
+objects remain unconstructed and unlisted; preserve this behavior, including the leaked allocation.
+
+| Item | Label id | Selector/menu id | Disabled call addresses |
+| --- | --- | --- | --- |
+| Root RetroArch | 0 | menu 16 | 0x37994, 0x379a0 |
+| Key settings | 22 | selector 0 | 0x381d0, 0x381dc |
+| Theme (conditional on themes being nonempty) | 125 | selector 15 | 0x38268, 0x38274 |
+| Fixes | 130 | selector 16 | 0x382e4, 0x382f0 |
+| Factory reset | 28 | selector 5 | 0x3831c, 0x38328 |
+| Key test | 31 | selector 8 | 0x3838c, 0x38398 |
+
+A part-local assembler BL macro scoped to createMenu preserves those twelve post-compilation
+patches while letting GCC generate the original argument setup and exception cleanup. Other BLs
+retain their normal R_ARM_CALL relocations. Assembly asserts that twelve sites were patched;
+separate validation checks the literal 0xe1a00000 words and absence of relocations at every site.
+A normal call at those positions could falsely pass the checker's call mask and re-enable items.
+Separately checked 60 string references, 28 switch-table entries, 305 known direct calls, 103
+references consistent with earlier parts, and the remaining 20 inline/template callee bodies at
+the original destinations. The last comparison does not establish tail sizes or layout.
+
+**Charging.** The animation loads five skin frames, chooses a starting frame from battery charge
+(25/50/75/99 percent thresholds), presents frames every 150 ms, and issues the existing shutdown
+commands if USB is unplugged. ChargingScreenLoop starts it and waits for power-key events; a
+sufficient repeat count triggers the original reboot commands. These routines are only compiled
+and compared here. No hardware or shutdown command is executed by verification.
+
+**Shared declaration changes.**
+
+- ADCInfoWindow::surface becomes its actual opaque timer pointer. runWindowLoop and
+  createRootWindow use vector/atomic pointers, consistent with their already proven main caller.
+- Renamed p01's 0x15d00 helper to flipDisplay; flipScreen at 0x36c20 blits before calling it. The
+  former shared placeholder accidentally gave two different functions the same C++ name.
+- IconMenuItem's ctor argument and +0x44 member become void*; passing EmuInfo* directly removes
+  the extra pointer-to-int move. Both p06 ctor bodies and existing callers keep their bytes.
+- LanguageMenu takes its choices vector by value; the p08 body keeps its bytes. Updated all three
+  constructor manifest symbols/signatures and the display-helper entry.
+- Extracted the unchanged HardwareTestMenu declaration into HardwareTestMenu.h, shared with
+  HardwareTestWindows.h. This avoids including that header's alternate TextMenu declaration in
+  the factory. The strict hardware unit still passes. All layouts/virtual slots remain unchanged.
+- Part-local declarations cover the charging/loading globals, presentation/event APIs and swap
+  helpers. The final template-tail integration remains a separate task.
+
+**-O0 details.** Implicit `atomic<bool>` conversion and an explicit load() have different call ABIs.
+Keep the pending-window branch's continue and assignment inside the handleInput result condition.
+The charging event loop needs nested switches with explicit inner default breaks and outer
+fallthrough to default; changing the braces/breaks moves NOPs. Its rectangle centering uses the
+already truncated width/height fields. By-value language choices are settled by the caller,
+while the callee's bytes alone cannot distinguish them from a reference.
 
 ## Shared declarations (header pass, before p03-p11)
 

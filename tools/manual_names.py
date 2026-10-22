@@ -478,6 +478,37 @@ M.update({
     '000367d8': ('detailTimeout', 'windows', 'confirmed', 'Byte-exact tu_015b20 p10.'),
 })
 
+# Verified tu_015b20 p11 body and corrected display helper name.
+M.update({
+    '00036838': ('ADCInfoWindow::ADCInfoWindow', 'windows', 'confirmed', 'Byte-exact tu_015b20 p11.'),
+    '000368b8': ('ADCInfoWindow::~ADCInfoWindow', 'windows', 'confirmed', 'Byte-exact tu_015b20 p11.'),
+    '00036914': ('ADCInfoWindow::deletingDtor', 'windows', 'confirmed', 'Byte-exact tu_015b20 p11.'),
+    '00036948': ('ADCInfoWindow::handleInput', 'windows', 'confirmed', 'Byte-exact tu_015b20 p11.'),
+    '00036990': ('ADCInfoWindow::draw', 'windows', 'confirmed', 'Byte-exact tu_015b20 p11.'),
+    '00036b68': ('clearWindows', 'core', 'confirmed', 'Byte-exact tu_015b20 p11.'),
+    '00036c20': ('flipScreen', 'core', 'confirmed', 'Byte-exact tu_015b20 p11.'),
+    '00036c58': ('updateScreen', 'core', 'confirmed', 'Byte-exact tu_015b20 p11.'),
+    '00036cb8': ('flushPendingWindows', 'core', 'confirmed', 'Byte-exact tu_015b20 p11.'),
+    '00036d88': ('pushWindow', 'core', 'confirmed', 'Byte-exact tu_015b20 p11.'),
+    '00036dbc': ('initFramebuffer', 'core', 'confirmed', 'Byte-exact tu_015b20 p11.'),
+    '00036eb0': ('closeFramebuffer', 'core', 'confirmed', 'Byte-exact tu_015b20 p11.'),
+    '00036ee8': ('runWindowLoop', 'core', 'confirmed', 'Byte-exact tu_015b20 p11.'),
+    '000373c4': ('createRootWindow', 'core', 'confirmed', 'Byte-exact tu_015b20 p11.'),
+    '000374bc': ('files_374bc', 'core', 'confirmed', 'Byte-exact tu_015b20 p11.'),
+    '00037610': ('createRomListMenu', 'core', 'confirmed', 'Byte-exact tu_015b20 p11.'),
+    '00037760': ('smallMenuFont', 'core', 'confirmed', 'Byte-exact tu_015b20 p11.'),
+    '00037784': ('createMenu', 'core', 'confirmed', 'Byte-exact tu_015b20 p11.'),
+    '00038834': ('enableSwapAction', 'core', 'confirmed', 'Byte-exact tu_015b20 p11.'),
+    '00038868': ('startBackgroundThread', 'core', 'confirmed', 'Byte-exact tu_015b20 p11.'),
+    '000388a8': ('stopBackgroundThread', 'core', 'confirmed', 'Byte-exact tu_015b20 p11.'),
+    '000388f0': ('ensureSwap', 'core', 'confirmed', 'Byte-exact tu_015b20 p11.'),
+    '000389d4': ('chargingThread', 'core', 'confirmed', 'Byte-exact tu_015b20 p11.'),
+    '00038ff8': ('chargingScreenLoop', 'core', 'confirmed', 'Byte-exact tu_015b20 p11.'),
+    '0003919c': ('__static_initialization_and_destruction_0', 'core', 'confirmed', 'Byte-exact tu_015b20 p11.'),
+    '00039228': ('_GLOBAL__sub_I_g_pendingWindows', 'core', 'confirmed', 'Byte-exact tu_015b20 p11 compiler-generated init wrapper.'),
+    '00015d00': ('flipDisplay', 'render', 'confirmed', 'Byte-exact SDL_Flip(g_screen); distinct from flipScreen at 0x36c20, which first blits g_backBuffer.'),
+})
+
 for a, (nm, sub, conf, cmt) in M.items():
     names[a] = {"name": nm, "subsystem": sub, "confidence": conf, "comment": cmt}
 

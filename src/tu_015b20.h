@@ -1,6 +1,7 @@
 // Shared declarations for tu_015b20 (0x15b20-0x49c3c): window and menu classes, actions, the window
 // loop and createMenu. Each part file in src/tu_015b20/ adds only the declarations it needs here.
 #pragma once
+#include <atomic>
 #include <stdio.h>
 #include <unistd.h>
 #include "TrimusWindow.h"
@@ -384,8 +385,8 @@ ListMenu *createMenu(int id, std::string path);                 // 0x37784  path
 void flipScreen();                                              // 0x36c20
 void flushPendingWindows();                                     // 0x36cb8
 void initFramebuffer();                                         // 0x36dbc
-void runWindowLoop(int a, int b);                               // 0x36ee8  unverified arguments
-void createRootWindow(int arg);                                 // 0x373c4  unverified argument
+void runWindowLoop(std::vector<TrimusWindow *> *, std::atomic<bool> *); // 0x36ee8
+void createRootWindow(std::vector<TrimusWindow *> *);          // 0x373c4
 void startBackgroundThread();                                   // 0x38868
 // pushWindow 0x36d88 and enableSwapAction 0x38834 are declared with p01 above.
 // Inline in the tail (0x3ad44), called by MenuWindow::onShow/draw: menu ids with a ROM/app list.
@@ -454,9 +455,9 @@ public:
 class IconMenuItem {
 public:
     IconMenuItem(int labelId, const char *icon, const char *iconSelected, int x, int y, int menuId,
-                 int param, bool flag);                         // 0x256f0
+                 void *param, bool flag);                         // 0x256f0
     IconMenuItem(const char *label, const char *icon, const char *iconSelected, int x, int y,
-                 int menuId, int param, bool flag);             // 0x258d4 (labelId -1)
+                 int menuId, void *param, bool flag);             // 0x258d4 (labelId -1)
     ~IconMenuItem();                                           // 0x25a8c
     void reload();                                            // 0x25b5c
     SDL_Surface *iconSurface;       // +0x00
@@ -465,7 +466,7 @@ public:
     std::string  label;             // +0x10
     std::string  str28;             // +0x28
     int          labelId;           // +0x40
-    int          param;             // +0x44
+    void        *param;             // +0x44
     bool         flag;              // +0x48
     int          menuId;            // +0x4c  createMenu id opened by IconMenu::onSelect
     std::string  icon;              // +0x50
@@ -565,7 +566,7 @@ public:
 // p08. vtable 0x153ba0; sizeof 0x110.
 class LanguageMenu : public TextMenu {
 public:
-    LanguageMenu(const std::vector<LanguageChoice> &languages); // 0x2c950
+    LanguageMenu(std::vector<LanguageChoice> languages); // 0x2c950
     virtual ~LanguageMenu();                                   // 0x2caa8 (D0 0x2caf4)
     virtual int  vfunc4();                                     // 0x2cb28
     std::vector<LanguageChoice> languages; // +0x104  filename/name pairs
@@ -799,7 +800,7 @@ public:
     virtual void saveState(cJSON *obj) {}                      // 0x3ac54, inline
     virtual int  restoreState(cJSON *obj) { return 0; }        // 0x3ac78, inline
     virtual void update() {}                                   // 0x3aca0, inline
-    SDL_Surface *surface;           // +0x0c
+    void *timer;                    // +0x0c  SDL timer
 };
 
 // Sizes from operator new / operator delete, offsets from the constructors.

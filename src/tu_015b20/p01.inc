@@ -30,7 +30,7 @@ const char *keyEventName(int key)
 }
 
 // 0x15d00
-void flipScreen()
+void flipDisplay()
 {
     SDL_Flip(g_screen);
 }

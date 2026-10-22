@@ -212,7 +212,7 @@ void ColorMenu::loadItems() {
 }
 
 // 0x2c950
-LanguageMenu::LanguageMenu(const std::vector<LanguageChoice> &choices) : TextMenu(false, true, 6, NULL) {
+LanguageMenu::LanguageMenu(std::vector<LanguageChoice> choices) : TextMenu(false, true, 6, NULL) {
     languages = choices;
     for (int i = 0; i < languages.size(); i++) addItem(new TextItem(languages[i].name.c_str(), NULL, NULL, true));
 }
