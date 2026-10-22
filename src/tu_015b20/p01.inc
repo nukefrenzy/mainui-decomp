@@ -765,7 +765,7 @@ int EmuAction::execute(void *param)
 }
 
 // 0x18b00: opens the game detail window for list item `item` (a TextItem *).
-int EmuAction::progress(int *item, int *arg)
+int EmuAction::progress(int *item, int arg)
 {
     TextItem *ti = (TextItem *)item;
     if (detail) {

@@ -230,59 +230,59 @@ addr	name	subsystem	confidence	comment
 000320f0	FloatWindow::deletingDtor	windows	confirmed	Byte-exact tu_015b20 p09.
 00032124	FloatWindow::draw	windows	confirmed	Byte-exact tu_015b20 p09.
 00032160	FloatWindow::onShow	windows	confirmed	Byte-exact tu_015b20 p09.
-0003225c	PopUpWindow::ctor_or_dtor_3225c	ui_framework	likely	
-0003247c	PopUpWindow::dtor	render	confirmed	
-00032534	PopUpWindow::deletingDtor	ui_framework	confirmed	
-00032568	PopUpWindow::onHide	ui_framework	inferred	
-00032588	PopUpWindow::draw	render	confirmed	
-00032784	PopUpWindow::handleInput	ui_framework	confirmed	
-000327e4	NotifyWindow::ctor_or_dtor_327e4	render	likely	
-00032920	NotifyWindow::dtor	render	confirmed	
-000329cc	NotifyWindow::deletingDtor	ui_framework	confirmed	
-00032a00	misc_Failed_32a00	misc	guess	
-00032aa0	NotifyWindow::onShow	render	confirmed	
-00032d0c	NotifyWindow::handleInput	ui_framework	confirmed	
-00032d74	NotifyWindow::draw	render	confirmed	
-00033060	CountDownWindow::ctor_or_dtor_33060	render	likely	
-000330fc	CountDownWindow::dtor	ui_framework	confirmed	
-00033158	CountDownWindow::deletingDtor	ui_framework	confirmed	
-0003318c	misc_Failed_3318c	misc	guess	
-000331ec	CountDownWindow::onShow	ui_framework	confirmed	
-000332d8	CountDownWindow::handleInput	ui_framework	confirmed	
-000333ec	DialogWindow::ctor_or_dtor_333ec	render	likely	
-00033570	DialogWindow::dtor	render	confirmed	
-00033630	DialogWindow::deletingDtor	ui_framework	confirmed	
-00033664	DialogWindow::onShow	render	confirmed	
-00033934	render_SDL_UpperBlit_33934	render	inferred	
-00033bac	DialogWindow::draw	render	confirmed	
-0003400c	DialogWindow::handleInput	ui_framework	confirmed	
-00034134	misc_34134	misc	guess	
-00034184	ProgressDialog::ctor_or_dtor_34184	render	likely	
-000342ac	ProgressDialog::dtor	render	confirmed	
-0003437c	ProgressDialog::deletingDtor	ui_framework	confirmed	
-000343b0	ProgressDialog::onShow	ui_framework	confirmed	
-000343f4	misc_343f4	misc	guess	
-00034438	ProgressDialog::onHide	ui_framework	inferred	
-00034468	ProgressDialog::draw	render	confirmed	
-000349f0	ProgressDialog::handleInput	ui_framework	confirmed	
-00034a14	GameDetailWindow::ctor_or_dtor_34a14	ui_framework	likely	
-00034b1c	GameDetailWindow::ctor_or_dtor_34b1c	ui_framework	likely	
-00034d0c	GameDetailWindow::dtor	ui_framework	confirmed	
-00034d98	GameDetailWindow::deletingDtor	ui_framework	confirmed	
-00034dcc	GameDetailWindow::onHide	render	inferred	
-00034e6c	GameDetailWindow::onShow	render	confirmed	
-00034f84	GameDetailWindow::update	ui_framework	inferred	
-00035080	render_operator_35080	render	guess	
-000353a0	render_skin_353a0	render	inferred	
-00035538	ui_framework_string_35538	ui_framework	guess	
-000356e4	GameDetailWindow::draw	render	confirmed	
-00035bbc	GameDetailWindow::handleInput	ui_framework	confirmed	
-00035fe4	GameDetailWindow::saveState	ui_framework	confirmed	
-00036140	GameDetailWindow::restoreState	ui_framework	confirmed	
-00036288	GameDetailWindow::animateIn	render	inferred	
-00036534	GameDetailWindow::animateOut	render	inferred	
-0003675c	render_SDL_UpperBlit_3675c	render	inferred	
-000367d8	misc_Failed_367d8	misc	guess	
+0003225c	PopUpWindow::PopUpWindow	windows	confirmed	Byte-exact tu_015b20 p10.
+0003247c	PopUpWindow::~PopUpWindow	windows	confirmed	Byte-exact tu_015b20 p10.
+00032534	PopUpWindow::deletingDtor	windows	confirmed	Byte-exact tu_015b20 p10.
+00032568	PopUpWindow::onHide	windows	confirmed	Byte-exact tu_015b20 p10.
+00032588	PopUpWindow::draw	windows	confirmed	Byte-exact tu_015b20 p10.
+00032784	PopUpWindow::handleInput	windows	confirmed	Byte-exact tu_015b20 p10.
+000327e4	NotifyWindow::NotifyWindow	windows	confirmed	Byte-exact tu_015b20 p10.
+00032920	NotifyWindow::~NotifyWindow	windows	confirmed	Byte-exact tu_015b20 p10.
+000329cc	NotifyWindow::deletingDtor	windows	confirmed	Byte-exact tu_015b20 p10.
+00032a00	notifyTimeout	windows	confirmed	Byte-exact tu_015b20 p10.
+00032aa0	NotifyWindow::onShow	windows	confirmed	Byte-exact tu_015b20 p10.
+00032d0c	NotifyWindow::handleInput	windows	confirmed	Byte-exact tu_015b20 p10.
+00032d74	NotifyWindow::draw	windows	confirmed	Byte-exact tu_015b20 p10.
+00033060	CountDownWindow::CountDownWindow	windows	confirmed	Byte-exact tu_015b20 p10.
+000330fc	CountDownWindow::~CountDownWindow	windows	confirmed	Byte-exact tu_015b20 p10.
+00033158	CountDownWindow::deletingDtor	windows	confirmed	Byte-exact tu_015b20 p10.
+0003318c	countdownTick	windows	confirmed	Byte-exact tu_015b20 p10.
+000331ec	CountDownWindow::onShow	windows	confirmed	Byte-exact tu_015b20 p10.
+000332d8	CountDownWindow::handleInput	windows	confirmed	Byte-exact tu_015b20 p10.
+000333ec	DialogWindow::DialogWindow	windows	confirmed	Byte-exact tu_015b20 p10.
+00033570	DialogWindow::~DialogWindow	windows	confirmed	Byte-exact tu_015b20 p10.
+00033630	DialogWindow::deletingDtor	windows	confirmed	Byte-exact tu_015b20 p10.
+00033664	DialogWindow::onShow	windows	confirmed	Byte-exact tu_015b20 p10.
+00033934	DialogWindow::drawFallback	windows	confirmed	Byte-exact tu_015b20 p10.
+00033bac	DialogWindow::draw	windows	confirmed	Byte-exact tu_015b20 p10.
+0003400c	DialogWindow::handleInput	windows	confirmed	Byte-exact tu_015b20 p10.
+00034134	progressThread	windows	confirmed	Byte-exact tu_015b20 p10.
+00034184	ProgressDialog::ProgressDialog	windows	confirmed	Byte-exact tu_015b20 p10.
+000342ac	ProgressDialog::~ProgressDialog	windows	confirmed	Byte-exact tu_015b20 p10.
+0003437c	ProgressDialog::deletingDtor	windows	confirmed	Byte-exact tu_015b20 p10.
+000343b0	ProgressDialog::onShow	windows	confirmed	Byte-exact tu_015b20 p10.
+000343f4	ProgressDialog::runAction	windows	confirmed	Byte-exact tu_015b20 p10.
+00034438	ProgressDialog::onHide	windows	confirmed	Byte-exact tu_015b20 p10.
+00034468	ProgressDialog::draw	windows	confirmed	Byte-exact tu_015b20 p10.
+000349f0	ProgressDialog::handleInput	windows	confirmed	Byte-exact tu_015b20 p10.
+00034a14	GameDetailWindow::GameDetailWindow_empty	windows	confirmed	Byte-exact tu_015b20 p10.
+00034b1c	GameDetailWindow::GameDetailWindow	windows	confirmed	Byte-exact tu_015b20 p10.
+00034d0c	GameDetailWindow::~GameDetailWindow	windows	confirmed	Byte-exact tu_015b20 p10.
+00034d98	GameDetailWindow::deletingDtor	windows	confirmed	Byte-exact tu_015b20 p10.
+00034dcc	GameDetailWindow::onHide	windows	confirmed	Byte-exact tu_015b20 p10.
+00034e6c	GameDetailWindow::onShow	windows	confirmed	Byte-exact tu_015b20 p10.
+00034f84	GameDetailWindow::update	windows	confirmed	Byte-exact tu_015b20 p10.
+00035080	GameDetailWindow::loadInfo	windows	confirmed	Byte-exact tu_015b20 p10.
+000353a0	GameDetailWindow::resetDetails	windows	confirmed	Byte-exact tu_015b20 p10.
+00035538	GameDetailWindow::resetFromItem	windows	confirmed	Byte-exact tu_015b20 p10.
+000356e4	GameDetailWindow::draw	windows	confirmed	Byte-exact tu_015b20 p10.
+00035bbc	GameDetailWindow::handleInput	windows	confirmed	Byte-exact tu_015b20 p10.
+00035fe4	GameDetailWindow::saveState	windows	confirmed	Byte-exact tu_015b20 p10.
+00036140	GameDetailWindow::restoreState	windows	confirmed	Byte-exact tu_015b20 p10.
+00036288	GameDetailWindow::animateIn	windows	confirmed	Byte-exact tu_015b20 p10.
+00036534	GameDetailWindow::animateOut	windows	confirmed	Byte-exact tu_015b20 p10.
+0003675c	GameDetailWindow::captureBackground	windows	confirmed	Byte-exact tu_015b20 p10.
+000367d8	detailTimeout	windows	confirmed	Byte-exact tu_015b20 p10.
 00036838	ADCInfoWindow::ctor_or_dtor_36838	hardware_test	likely	
 000368b8	ADCInfoWindow::dtor	hardware_test	confirmed	
 00036914	ADCInfoWindow::deletingDtor	hardware_test	confirmed	

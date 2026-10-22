@@ -152,7 +152,7 @@ public:
           isDir(isDir) {}
     virtual ~EmuAction() {}
     virtual int execute(void *param);           // 0x1897c, param: the TextItem
-    virtual int progress(int *item, int *arg);  // 0x18b00, opens the game detail window
+    virtual int progress(int *item, int index);  // 0x18b00, opens the game detail window
     virtual int finished() { return isDir == 0; }
     EmuInfo *emu;           // +0x08
     std::string imgpath;    // +0x0c
@@ -209,7 +209,7 @@ public:
     AppAction(AppInfo *app, bool detail, int result) : Action(result) { this->app = app; this->detail = detail; } // 0x3984c
     virtual ~AppAction() {}
     virtual int execute(void *param);                        // 0x18c54
-    virtual int progress(int *item, int *arg);               // 0x18c94, opens the detail window
+    virtual int progress(int *item, int index);               // 0x18c94, opens the detail window
     virtual int finished() { return 1; }                     // 0x39924
     AppInfo *app;       // +0x08
     bool detail;        // +0x0c
@@ -675,12 +675,12 @@ public:
 // p10. vtable 0x153a60; sizeof 0x18. Created by MenuWindow::handleInput.
 class PopUpWindow : public FloatWindow {
 public:
-    PopUpWindow(int titleLabelId, TextMenuDrawer *menu, const char *background); // 0x3225c
+    PopUpWindow(int titleLabelId, TextMenu *menu, const char *background); // 0x3225c
     virtual ~PopUpWindow();                                    // 0x3247c (D0 0x32534)
     virtual int  handleInput();                                // 0x32784
     virtual int  draw(SDL_Surface *dst);                       // 0x32588
     virtual void onHide();                                     // 0x32568
-    TextMenuDrawer *menu;           // +0x10
+    TextMenu *menu;                 // +0x10
     SDL_Surface  *background;       // +0x14
 };
 
@@ -692,7 +692,7 @@ public:
     virtual int  handleInput();                                // 0x32d0c
     virtual int  draw(SDL_Surface *dst);                       // 0x32d74
     virtual void onShow();                                     // 0x32aa0
-    int          field10;           // +0x10  0
+    void        *field10;           // +0x10  SDL timer
     std::string  text;              // +0x14
     SDL_Surface *surface2c;         // +0x2c
     SDL_Surface *surface30;         // +0x30
@@ -708,10 +708,10 @@ public:
     virtual int  handleInput();                                // 0x332d8
     virtual void onShow();                                     // 0x331ec
     int          title;             // +0x3c
-    int          field40;           // +0x40  0
+    void        *field40;           // +0x40  countdown tick timer
     int          seconds;           // +0x44  10
     void       (*onCancel)();       // +0x48
-    char         raw4c[0xcc - 0x4c]; // unverified (text buffer?)
+    char         raw4c[0xcc - 0x4c]; // +0x4c  formatted countdown text
 };
 
 // p10. vtable 0x1539c4; sizeof 0x34.
@@ -724,6 +724,7 @@ public:
     virtual void onShow();                                     // 0x33664
     int          title;             // +0x10
     int          text;              // +0x14
+    int drawFallback(SDL_Surface *);                           // 0x33934
     int          selected;          // +0x18  1; name unverified
     SDL_Surface *surface1c;         // +0x1c
     SDL_Surface *surface20;         // +0x20
@@ -743,12 +744,13 @@ public:
     virtual int  draw(SDL_Surface *dst);                       // 0x34468
     virtual void onHide();                                     // 0x34438
     virtual void onShow();                                     // 0x343b0
+    void runAction();                                          // 0x343f4
     int          title;             // +0x10
     std::string  text;              // +0x14
     SDL_Surface *surface2c;         // +0x2c
     SDL_Surface *surface30;         // +0x30
     Action      *action;            // +0x34
-    int          field38;           // +0x38  0
+    SDL_Thread  *field38;           // +0x38  action worker
 };
 
 // p10. vtable 0x15395c; sizeof 0x9c.
@@ -756,7 +758,7 @@ class GameDetailWindow : public TrimusWindow {
 public:
     GameDetailWindow(int title, int id);                       // 0x34a14
     GameDetailWindow(int title, int id, const char *name, const char *item, const char *launch,
-                     const char *icon, int *param, int type, bool favorite); // 0x34b1c
+                     const char *icon, int param, int type, bool favorite); // 0x34b1c
     virtual ~GameDetailWindow();                               // 0x34d0c (D0 0x34d98)
     virtual int  handleInput();                                // 0x35bbc
     virtual int  draw(SDL_Surface *dst);                       // 0x356e4
@@ -767,19 +769,22 @@ public:
     virtual void update();                                     // 0x34f84
     virtual void animateIn(SDL_Surface *dst, FlipFn flip);     // 0x36288
     virtual void animateOut(SDL_Surface *dst, FlipFn flip);    // 0x36534
-    void loadInfo();                                           // 0x35080, end of the full ctor; name unverified
+    void loadInfo();                                           // 0x35080, wrap title lines
+    void resetDetails(const char *, const char *, const char *, const char *, int, int, bool); // 0x353a0
+    void resetFromItem(TextItem *, int);                        // 0x35538
+    void captureBackground(SDL_Surface *);                     // 0x3675c
     std::string  name;              // +0x0c
     std::string  item;              // +0x24
     std::string  thumbPath;         // +0x3c  makeThumbPath(launch, icon)
     std::string  launch;            // +0x54
-    std::vector<SDL_Surface *> images; // +0x6c  unverified element type
-    int         *param;             // +0x78
+    std::vector<std::string> images; // +0x6c  wrapped title lines
+    int          param;             // +0x78  item index
     int          type;              // +0x7c
     bool         favorite;          // +0x80
-    int          field84, field88, field8c; // 0
-    int         *param90;           // +0x90  ctor param again
+    SDL_Surface *field84, *field88, *field8c; // thumbnail, favourite mark, animation capture
+    int          param90;           // +0x90  ctor param again
     bool         flag94;            // +0x94  true
-    int          field98;           // +0x98  0
+    TextMenuDrawer *field98;        // +0x98  parent text/ROM menu
 };
 
 // p11. vtable 0x153928; sizeof 0x10.

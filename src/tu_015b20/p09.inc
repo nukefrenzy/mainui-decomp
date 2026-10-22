@@ -339,7 +339,7 @@ int MenuWindow::handleInput() {
                 if (field54) {
                     TextItem *item = (TextItem*)menu->getItem(menu->getCur());
                     void *data = menu->vfunc6(menu->getCur());
-                    if (item && item->action) return item->action->progress((int*)item, (int*)menu->getCur());
+                    if (item && item->action) return item->action->progress((int*)item, menu->getCur());
                 } else field54 = true;
             }
         } else if (key == 5) {

@@ -85,7 +85,7 @@ public:
     }
     virtual ~WifiConnectAction() {}
     virtual int execute(void *);
-    virtual int progress(int *, int *) { return -1; }
+    virtual int progress(int *, int) { return -1; }
     virtual int finished() { return 0; }
     WifiAP ap; std::string psk; bool secured;
 };
@@ -94,7 +94,7 @@ public:
     WifiConnectDialogAction(WifiAP *source) : Action(-1), ap(*source) {}
     virtual ~WifiConnectDialogAction() {}
     virtual int execute(void *);
-    virtual int progress(int *, int *) { return -1; }
+    virtual int progress(int *, int) { return -1; }
     virtual int finished() { return 0; }
     WifiAP ap;
 };
@@ -103,7 +103,7 @@ public:
     WifiItemAction(WifiAP *source) : Action(-1), ap(*source) {}
     virtual ~WifiItemAction() {}
     virtual int execute(void *);
-    virtual int progress(int *, int *) { return -1; }
+    virtual int progress(int *, int) { return -1; }
     virtual int finished() { return 0; }
     WifiAP ap;
 };
@@ -112,7 +112,7 @@ public:
     WifiOnOffAction() : Action(-1) {}
     virtual ~WifiOnOffAction() {}
     virtual int execute(void *);
-    virtual int progress(int *, int *) { return -1; }
+    virtual int progress(int *, int) { return -1; }
     virtual int finished() { return 0; }
 
 };
@@ -121,7 +121,7 @@ public:
     WifiOnOffDialogAction() : Action(-1) {}
     virtual ~WifiOnOffDialogAction() {}
     virtual int execute(void *);
-    virtual int progress(int *, int *) { return -1; }
+    virtual int progress(int *, int) { return -1; }
     virtual int finished() { return 0; }
 
 };
@@ -130,7 +130,7 @@ public:
     HotspotSwitchAction() : Action(-1) {}
     virtual ~HotspotSwitchAction() {}
     virtual int execute(void *);
-    virtual int progress(int *, int *) { return -1; }
+    virtual int progress(int *, int) { return -1; }
     virtual int finished() { return 0; }
 
 };
@@ -169,7 +169,7 @@ public:
     HotspotWriteAction(const std::string &f, const std::string &k) : Action(-1), file(f), key(k) {}
     virtual ~HotspotWriteAction() {}
     virtual int execute(void *);
-    virtual int progress(int *, int *) { return -1; }
+    virtual int progress(int *, int) { return -1; }
     virtual int finished() { return 0; }
     std::string file, key;
 };
@@ -178,7 +178,7 @@ public:
     HotspotImePopupAction(int t, const char *f, const char *k) : Action(-1), file(f), key(k), title(t) {}
     virtual ~HotspotImePopupAction() {}
     virtual int execute(void *);
-    virtual int progress(int *, int *) { return -1; }
+    virtual int progress(int *, int) { return -1; }
     virtual int finished() { return 0; }
     std::string file, key;
     int title;

@@ -37,9 +37,9 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `launchRom(char const*, EmuInfo*, char const*, char const*, int)` | 0x181a0 | 960 | tu_015b20.cpp |
 | `launchApp_buildCommand(AppInfo*, int)` | 0x18560 | 1052 | tu_015b20.cpp |
 | `EmuAction::execute(void*)` | 0x1897c | 388 | tu_015b20.cpp |
-| `EmuAction::progress(int*, int*)` | 0x18b00 | 340 | tu_015b20.cpp |
+| `EmuAction::progress(int*, int)` | 0x18b00 | 340 | tu_015b20.cpp |
 | `AppAction::execute(void*)` | 0x18c54 | 64 | tu_015b20.cpp |
-| `AppAction::progress(int*, int*)` | 0x18c94 | 320 | tu_015b20.cpp |
+| `AppAction::progress(int*, int)` | 0x18c94 | 320 | tu_015b20.cpp |
 | `digitCount(int)` | 0x18dd4 | 104 | tu_015b20.cpp |
 | `animateBusy(SDL_Surface*, SDL_Surface*, SDL_Rect, SDL_Rect, bool)` | 0x18e3c | 1388 | tu_015b20.cpp |
 | `busyScreenThread(void*)` | 0x193a8 | 1280 | tu_015b20.cpp |
@@ -235,10 +235,62 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `FloatWindow::~FloatWindow()` | 0x320f0 | 52 | tu_015b20.cpp |
 | `FloatWindow::draw(SDL_Surface*)` | 0x32124 | 60 | tu_015b20.cpp |
 | `FloatWindow::onShow()` | 0x32160 | 252 | tu_015b20.cpp |
+| `PopUpWindow::PopUpWindow(int, TextMenu*, char const*)` | 0x3225c | 544 | tu_015b20.cpp |
+| `PopUpWindow::~PopUpWindow()` | 0x3247c | 184 | tu_015b20.cpp |
+| `PopUpWindow::~PopUpWindow() (deleting)` | 0x32534 | 52 | tu_015b20.cpp |
+| `PopUpWindow::onHide()` | 0x32568 | 32 | tu_015b20.cpp |
+| `PopUpWindow::draw(SDL_Surface*)` | 0x32588 | 508 | tu_015b20.cpp |
+| `PopUpWindow::handleInput()` | 0x32784 | 96 | tu_015b20.cpp |
+| `NotifyWindow::NotifyWindow(char const*, char const*, char const*, void (*)())` | 0x327e4 | 316 | tu_015b20.cpp |
+| `NotifyWindow::~NotifyWindow()` | 0x32920 | 172 | tu_015b20.cpp |
+| `NotifyWindow::~NotifyWindow() (deleting)` | 0x329cc | 52 | tu_015b20.cpp |
+| `notifyTimeout(unsigned int, void*)` | 0x32a00 | 160 | tu_015b20.cpp |
+| `NotifyWindow::onShow()` | 0x32aa0 | 620 | tu_015b20.cpp |
+| `NotifyWindow::handleInput()` | 0x32d0c | 104 | tu_015b20.cpp |
+| `NotifyWindow::draw(SDL_Surface*)` | 0x32d74 | 748 | tu_015b20.cpp |
+| `CountDownWindow::CountDownWindow(int, void (*)(), void (*)())` | 0x33060 | 156 | tu_015b20.cpp |
+| `CountDownWindow::~CountDownWindow()` | 0x330fc | 92 | tu_015b20.cpp |
+| `CountDownWindow::~CountDownWindow() (deleting)` | 0x33158 | 52 | tu_015b20.cpp |
+| `countdownTick(unsigned int, void*)` | 0x3318c | 96 | tu_015b20.cpp |
+| `CountDownWindow::onShow()` | 0x331ec | 236 | tu_015b20.cpp |
+| `CountDownWindow::handleInput()` | 0x332d8 | 276 | tu_015b20.cpp |
+| `DialogWindow::DialogWindow(int, int, bool, Action*)` | 0x333ec | 388 | tu_015b20.cpp |
+| `DialogWindow::~DialogWindow()` | 0x33570 | 192 | tu_015b20.cpp |
+| `DialogWindow::~DialogWindow() (deleting)` | 0x33630 | 52 | tu_015b20.cpp |
+| `DialogWindow::onShow()` | 0x33664 | 720 | tu_015b20.cpp |
+| `DialogWindow::drawFallback(SDL_Surface*)` | 0x33934 | 632 | tu_015b20.cpp |
+| `DialogWindow::draw(SDL_Surface*)` | 0x33bac | 1120 | tu_015b20.cpp |
+| `DialogWindow::handleInput()` | 0x3400c | 296 | tu_015b20.cpp |
+| `progressThread(void*)` | 0x34134 | 80 | tu_015b20.cpp |
+| `ProgressDialog::ProgressDialog(int, Action*)` | 0x34184 | 296 | tu_015b20.cpp |
+| `ProgressDialog::~ProgressDialog()` | 0x342ac | 208 | tu_015b20.cpp |
+| `ProgressDialog::~ProgressDialog() (deleting)` | 0x3437c | 52 | tu_015b20.cpp |
+| `ProgressDialog::onShow()` | 0x343b0 | 68 | tu_015b20.cpp |
+| `ProgressDialog::runAction()` | 0x343f4 | 68 | tu_015b20.cpp |
+| `ProgressDialog::onHide()` | 0x34438 | 48 | tu_015b20.cpp |
+| `ProgressDialog::draw(SDL_Surface*)` | 0x34468 | 1416 | tu_015b20.cpp |
+| `ProgressDialog::handleInput()` | 0x349f0 | 36 | tu_015b20.cpp |
 | `GameDetailWindow::GameDetailWindow(int, int)` | 0x34a14 | 264 | tu_015b20.cpp |
+| `GameDetailWindow::GameDetailWindow(int, int, char const*, char const*, char const*, char const*, int, int, bool)` | 0x34b1c | 496 | tu_015b20.cpp |
+| `GameDetailWindow::~GameDetailWindow()` | 0x34d0c | 140 | tu_015b20.cpp |
+| `GameDetailWindow::~GameDetailWindow() (deleting)` | 0x34d98 | 52 | tu_015b20.cpp |
+| `GameDetailWindow::onHide()` | 0x34dcc | 160 | tu_015b20.cpp |
+| `GameDetailWindow::onShow()` | 0x34e6c | 280 | tu_015b20.cpp |
+| `GameDetailWindow::update()` | 0x34f84 | 252 | tu_015b20.cpp |
+| `GameDetailWindow::loadInfo()` | 0x35080 | 800 | tu_015b20.cpp |
+| `GameDetailWindow::resetDetails(char const*, char const*, char const*, char const*, int, int, bool)` | 0x353a0 | 408 | tu_015b20.cpp |
+| `GameDetailWindow::resetFromItem(TextItem*, int)` | 0x35538 | 428 | tu_015b20.cpp |
+| `GameDetailWindow::draw(SDL_Surface*)` | 0x356e4 | 1240 | tu_015b20.cpp |
+| `GameDetailWindow::handleInput()` | 0x35bbc | 1064 | tu_015b20.cpp |
+| `GameDetailWindow::saveState(cJSON*)` | 0x35fe4 | 348 | tu_015b20.cpp |
+| `GameDetailWindow::restoreState(cJSON*)` | 0x36140 | 328 | tu_015b20.cpp |
+| `GameDetailWindow::animateIn(SDL_Surface*, void (*)())` | 0x36288 | 684 | tu_015b20.cpp |
+| `GameDetailWindow::animateOut(SDL_Surface*, void (*)())` | 0x36534 | 552 | tu_015b20.cpp |
+| `GameDetailWindow::captureBackground(SDL_Surface*)` | 0x3675c | 124 | tu_015b20.cpp |
+| `detailTimeout(unsigned int, void*)` | 0x367d8 | 96 | tu_015b20.cpp |
 | `TrimusWindow::animateIn(SDL_Surface*, FlipFn)` | 0x39478 | 40 | tu_015b20.cpp |
 | `TrimusWindow::animateOut(SDL_Surface*, FlipFn)` | 0x394a0 | 40 | tu_015b20.cpp |
-| `TrimusWindow::getId()` | 0x394c8 | 40 | TrimusWindow.cpp |
+| `TrimusWindow::getId()` | 0x394c8 | 40 | tu_015b20.cpp |
 | `onSIGTERM(int)` | 0x49c3c | 44 | tu_049c3c.cpp |
 | `appExit(int)` | 0x49c68 | 88 | tu_049c3c.cpp |
 | `pollStatusA_pushEvent()` | 0x49cc0 | 356 | tu_049c3c.cpp |

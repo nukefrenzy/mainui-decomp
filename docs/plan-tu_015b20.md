@@ -92,10 +92,9 @@ ignore it, phase 3 arranges the includes.
 **Moved matches.** `keyEventName` and `writeCmdToRun` are in p01, the `TrimusWindow` ctor/dtor in p03,
 the `MenuWindow` ctor and both dtors in p09; `src/MenuWindow.cpp` and `src/writeCmdToRun.cpp` are gone.
 `animateIn`/`animateOut` are now inline in `TrimusWindow.h` (emitted here through the vtable; the
-other units still pass, their copies are kept from earlier). `getId` must also become inline, but an
-unused inline function is not emitted and its callers (0x35054 in p10; 0x37004, 0x372b8 in p11) are not
-written, so it stays matched on its own in `src/TrimusWindow.cpp` until then. Whoever writes the first
-caller moves it into the header and points its `matches.tsv` row at `tu_015b20.cpp`.
+other units still pass, their copies are kept from earlier). p10 supplies the first caller of
+`getId` and `getTitle`; both are now inline, with `getId` defined first as the tail requires. The
+`getId` manifest entry now points at `tu_015b20.cpp`. `src/TrimusWindow.cpp` is obsolete.
 
 **Body check.** `python3 tools/unitcheck.py src/tu_015b20.cpp --body-only` now reports
 `PREFIX 0x15b20-0x15d00 matches: 1 whole functions`, next ours `writeCmdToRun`, original
@@ -116,7 +115,7 @@ PopupSearchIME, PopupDialog, PopupProgress, General, ClearFavorite, ClearRecent,
 **How actions execute.** `Action` (`src/Action.h`) is `{vtable, int result}`; `result` (+4) is
 really a constructor argument whose meaning varies (AppAction: passed to the launcher;
 AddFavoriteAction: the window id it was opened from). Slots: 2 `execute(void *param)`,
-3 `progress(int *, int *)`, 4 `finished()`. Slots 3/4 are inline in `Action` itself
+3 `progress(int *, int)` (index type settled by p10), 4 `finished()`. Slots 3/4 are inline in `Action` itself
 (0x397fc returns -1, 0x39828 returns 0): every action here shares them, except `AppAction`
 (slot 3 opens the detail window, slot 4 returns 1). Return codes seen (matching the window
 `handleInput` codes in `TrimusWindow.h`):
@@ -485,6 +484,67 @@ key changes the frame and branch layout. Use an unsigned byte for the local fini
 snapshot (no int-to-bool normalization). Reuse the same rectangle for the empty-list image and
 header, and preserve `area.x = area.y = 0`; separate zero assignments remove the reload.
 
+
+## p10 findings (0x3225c–0x36838, done)
+
+All 53 function ranges match (17,884 bytes), including the previously registered empty
+GameDetailWindow constructor. There are 52 new manifest entries and 17,620 newly counted bytes.
+The body prefix reaches **0x36838**: 331 function symbols including aliases and 134,424 consecutive
+bytes from 0x15b20. The next unwritten function is ADCInfoWindow's constructor in p11; the static
+init and inline/template tail remain for integration. All registered matches and proven unit
+checks pass. Separately checked: 44 string references, 15 switch-table entries, 332 known direct
+calls, 102 global/vtable references consistent with earlier parts, and five timer/thread callback
+references. The 13 remaining distinct direct callees also match their original template bodies;
+final template-tail order remains unproven.
+
+**Popups and actions.** PopUpWindow owns a TextMenu and forwards input/drawing to it. Its row
+height comes from the popup background height minus eight, divided by the row count when there
+is more than one row; without a background the menu rectangle is 120×75. DialogWindow executes
+its Action only when the confirm selection is active; other acceptance/cancellation returns 1.
+It supports both the themed popup and a generated bordered fallback with two choices.
+ProgressDialog starts an SDL thread onShow, executes its Action there while g_busy is set, draws
+four animation phases until g_busy clears, and joins the thread onHide. The destructors own and
+delete their Actions. NotifyWindow posts a user event after five seconds and invokes its optional
+callback. CountDownWindow replaces that timeout with ten seconds and a repeating one-second tick;
+other input invokes its cancel callback. Timer callback event locals are the 16-byte SDL user
+event prefix, distinct from the 20-byte worker event and the full input event union.
+
+**Game details and the progress index.** EmuAction/AppAction's progress methods receive the
+current item index as an integer, not a pointer. GameDetailWindow stores it at +0x78 and remembers
+the initial value at +0x90. It loads a 250×360 thumbnail (or the default image), wraps the UTF-8
+title into up to four lines, and marks favourites. update borrows the preceding MenuWindow's
+TextMenuDrawer when the stack has more than two entries. Previous/next input moves that menu's
+cursor and resets the detail strings and thumbnail from its TextItem. App rows use AppInfo's
+label, launch and selected icon; ROM rows use EmuInfo's label and EmuAction's ROM/image paths.
+Accepting ROM types 5/17 finds their emulator by label and calls launchRom; unsupported types
+retain the original diagnostic and close result. State JSON stores name, launch, thumbnail,
+index, type and favourite. The two twenty-frame slide animations run only while the selected
+index still equals its initial value and a captured background is available.
+
+**Shared declaration changes.**
+
+- Action::progress and all overrides take `(int*, int)`; the first item-pointer placeholder is
+  unchanged. Updated EmuAction/AppAction definitions and manifest symbols, the MenuWindow caller,
+  and the eight Wi-Fi overrides. Their bytes and the complete Wi-Fi unit remain unchanged.
+- PopUpWindow's argument/member are TextMenu*. NotifyWindow and CountDownWindow timer fields are
+  pointers; ProgressDialog's worker is SDL_Thread*. Added non-virtual drawFallback and runAction.
+- GameDetailWindow's constructor/index fields use int, its +0x6c vector holds strings (wrapped
+  title lines), +0x84/+0x88/+0x8c are surfaces, and +0x98 is the borrowed TextMenuDrawer*. Added
+  resetDetails, resetFromItem and captureBackground declarations. All class sizes/slots stay fixed.
+- TrimusWindow getId/getTitle and MenuWindow getMenu are defined inline in original tail order;
+  moved the old standalone getId match into the whole TU and removed the obsolete source file.
+  The final tail arrangement still belongs to integration. No matching-tool changes were needed.
+
+**-O0 details.** Inherited methods can reveal a pointer's derived type through an extra move,
+even with a zero-offset base conversion: TextMenu makes the popup's inherited setRowHeight,
+draw and input calls match; TextMenuDrawer does the same for the detail menu's previous/next.
+Keep the same SDL_Rect for ProgressDialog's three animation branches. Animation expressions
+use double `0.05` and `1.0` for easing, then float `640.0f` for the pixel coordinate. Rectangle
+width arithmetic uses the original integer x, not the already truncated short rectangle field.
+The last input switch case falls through to `default: break`; adding its own break changes the
+NOP/branch layout. Themed DialogWindow drawing returns 0 after its conditional, rather than
+inside the branch, to retain the trailing NOP.
+
 ## Shared declarations (header pass, before p03-p11)
 
 p01 and p02 each declared the same classes differently in `tu_015b20.h` and had to be reconciled at
@@ -628,7 +688,7 @@ partly guesses.
 | p07 | 0x2849c–0x2b788 | 13.0 KB | `SettingMenu`, `DeviceInfoMenu` |
 | p08 | 0x2b788–0x2e424 | 11.4 KB | `ColorMenu`, `LanguageMenu`, `ThemeMenu`, `FileAction`, `FileBrowserMenu`, `LoadSurfaceWorker` |
 | p09 | 0x2e424–0x3225c | 15.9 KB | `MenuWindow`, `FloatWindow` |
-| p10 | 0x3225c–0x36838 | 18.3 KB | `PopUpWindow`, `NotifyWindow`, `CountDownWindow`, `DialogWindow`, `ProgressDialog`, `GameDetailWindow` |
+| p10 | 0x3225c–0x36838 | 17.9 KB | `PopUpWindow`, `NotifyWindow`, `CountDownWindow`, `DialogWindow`, `ProgressDialog`, `GameDetailWindow` |
 | p11 | 0x36838–0x39240 | 10.8 KB | `ADCInfoWindow`, window stack and loop, `createRootWindow`, `createMenu`; then the static-init pair |
 
 p06 is the "item and action wiring" core (how an item becomes an `Action`), together with p02 and p07.

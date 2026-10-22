@@ -139,6 +139,20 @@ literal words; no additional masking is needed.
   Defining the color constants in this same file also folds their values at -O0 and removes
   36 bytes, so retain the external declarations seen by the original compiler.
 
+- A zero-offset base conversion can still add a move before an inherited method call. In the
+  popup, TextMenu* is required: TextMenuDrawer* removes moves around inherited setRowHeight,
+  draw and input calls, while the redeclared count call stays unchanged. The detail parent menu
+  is TextMenuDrawer*, whose inherited previous/next calls show the same conversion.
+- Floating-point literal suffixes matter at -O0. GameDetailWindow eases with double `0.05` and
+  `1.0`, narrows the result to float, then multiplies by `640.0f`; unsuffixed `640.0` changes the
+  VFP instructions. Keep integer rectangle arithmetic on the original x, not a truncated short
+  SDL_Rect field: reloading the field changes both instructions and, for out-of-range values,
+  behavior.
+- A final switch case can fall through to `default: break`, producing a shared NOP block.
+  GameDetailWindow's last case needs this form; an explicit break in that case changes the
+  NOP/branch layout. A return after an if/else can likewise retain a branch-end NOP that an
+  early return inside the branch removes (DialogWindow::draw).
+
 ## Tail order
 
 GCC 8 at `-O0` emits COMDAT functions in call-graph node order:

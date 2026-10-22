@@ -5,6 +5,7 @@
 struct SDL_Surface;
 typedef void (*FlipFn)();
 struct cJSON;
+const char *languageString(int);
 
 class TrimusWindow {
 public:
@@ -25,8 +26,8 @@ public:
     {
     }
 
-    const char *getTitle();                            // 0x394f0, languageString(titleLabelId)
-    int getId();                                      // 0x394c8, inline in the tail; see TrimusWindow.cpp
+    int getId() { return id; }                         // 0x394c8, inline tail
+    const char *getTitle() { return languageString(titleLabelId); } // 0x394f0
     void dump();                                      // 0x1d898 printf("title %s, type %d"); name unverified
 
     // Public: saveWindowState (0x1c544) reads both fields directly.

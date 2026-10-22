@@ -8,7 +8,7 @@ int AppAction::execute(void *param)
 }
 
 // 0x18c94: open the detail window for the selected item.
-int AppAction::progress(int *a, int *b)
+int AppAction::progress(int *a, int b)
 {
     TextItem *item = (TextItem *)a;
     if (detail) {

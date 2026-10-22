@@ -23,6 +23,7 @@ public:
     void updateThumbnail();                            // 0x2f6c4
     void cacheBackground();                            // 0x310ac
     void setHeaderIcon(SDL_Surface *, const char *, bool, bool); // 0x31ed4
+    ListMenu *getMenu() { return menu; }                 // 0x3aad4
     void setStrB4(const std::string &s) { strB4 = s; }   // 0x3aafc, inline
     void setPath(const std::string &p) { path = p; }   // 0x3ab30, inline (search string for ROM lists)
 
