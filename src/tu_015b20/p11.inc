@@ -140,7 +140,7 @@ void runWindowLoop(std::vector<TrimusWindow *> *windows, std::atomic<bool> *runn
             if (next >= 0) slot = next;
             next = drawWifiIndicator(g_backBuffer, slot, true);
             if (next >= 0) slot = next;
-            if (g_statusIndicatorFlag) drawKeyStateIndicator(g_backBuffer, slot, true);
+            if (g_volumeIndicatorVisible) drawKeyStateIndicator(g_backBuffer, slot, true);
         }
         flipScreen();
         if (g_pendingWindows.size() != 0) {

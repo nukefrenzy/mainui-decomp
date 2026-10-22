@@ -27,7 +27,7 @@ tu_015b20.cpp	_ZL16g_powerDownCount	180900	4	bytes	declared extent; zero-initial
 tu_015b20.cpp	_ZL11g_powerSent	180904	1	bytes	declared extent; zero-initialized original BSS
 tu_015b20.cpp	_ZL11g_startHeld	180905	1	bytes	declared extent; zero-initialized original BSS
 tu_015b20.cpp	_ZL12g_selectHeld	180906	1	bytes	declared extent; zero-initialized original BSS
-tu_015b20.cpp	_ZL21g_statusIndicatorFlag	180907	1	bytes	declared extent; zero-initialized original BSS
+tu_015b20.cpp	_ZL24g_volumeIndicatorVisible	180907	1	bytes	declared extent; zero-initialized original BSS
 tu_015b20.cpp	_ZL8g_cwdBuf	180908	4096	bytes	declared extent; zero-initialized original BSS
 tu_015b20.cpp	_ZL6g_busy	181908	4	bytes	declared extent; zero-initialized original BSS
 tu_015b20.cpp	_ZL13g_progressCur	18190c	4	bytes	declared extent; zero-initialized original BSS

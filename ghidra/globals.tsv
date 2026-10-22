@@ -16,6 +16,6 @@ addr	name	comment
 00181944	g_emuFolder	/mnt/SDCARD/Emu
 00181938	g_appFolder	/mnt/SDCARD/App
 00181950	g_rappFolder	/mnt/SDCARD/RApp
-00180907	g_statusIndicatorFlag	enables statusBar_drawIndicatorC
+00180907	g_volumeIndicatorVisible	volume indicator shown (EVENT_VOLUME_SHOWN/HIDDEN); enables statusBar_drawIndicatorC
 00181908	g_searchBusy	set while global search builds results
 00151a48	g_skinSubdir	second argument of every loadSkinImage call

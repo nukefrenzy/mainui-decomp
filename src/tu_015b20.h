@@ -24,6 +24,8 @@ class TextItem;
 #include <stdlib.h>
 #include <vector>
 #include "SDLTypes.h"
+#include "Input.h"
+#include "ShmVar.h"
 #include "ConfigTypes.h"
 typedef void TTF_Font;
 extern "C" {

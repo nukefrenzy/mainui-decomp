@@ -1,9 +1,16 @@
-// tu_14b860: system settings (0x14b860-0x14cb24): whole-file reads, language and keymap names,
-// the Wi-Fi switch, and /mnt/SDCARD/system.json load/save through the shared settings memory.
+// tu_14b860 (0x14b860-0x14cb24): system settings.
+//
+// /mnt/SDCARD/system.json holds the user's settings (volume, brightness, display colour, theme,
+// language, button keymap, Wi-Fi switch, ...). loadSystemJson copies them into the memory that
+// MainUI shares with the keymon daemon (see ShmVar.h), which applies them to the hardware;
+// saveSystemJson writes the shared values back. The language, keymap and Wi-Fi switch are kept
+// here in file-local variables with small get/set functions.
+//
 // Compiled as C (call results are stored straight from r0), so there is no template tail.
 // The C units 0x14acfc-0x14f730 are split where .rodata proves a new file: GCC merges identical
 // string literals within one file even at -O0, and "w", "r" and "%d" each appear more than once.
 #include "PlatformApi.h"
+#include "ShmVar.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,6 +18,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
+// cJSON 1.7.10 (compiled into MainUI): the node layout and the type flags tested below.
 typedef struct cJSON {
     struct cJSON *next, *prev, *child;
     int type;
@@ -19,6 +27,8 @@ typedef struct cJSON {
     double valuedouble;
     char *string;
 } cJSON;
+#define cJSON_Number 8
+#define cJSON_String 16
 cJSON *cJSON_Parse(const char *value);
 cJSON *cJSON_GetObjectItem(const cJSON *object, const char *string);
 int cJSON_IsNumber(const cJSON *item);
@@ -29,14 +39,16 @@ cJSON *cJSON_CreateString(const char *string);
 void cJSON_AddItemToObject(cJSON *object, const char *string, cJSON *item);
 char *cJSON_Print(const cJSON *item);
 
+// libshmvar; `shm` is MainUI's handle (g_keyShm), `key` a MonitorValue.
 int SetKeyShm(void *shm, int key, int value);
 int GetKeyShm(void *shm, int key);
 
-static char g_language[64];         // 0x1825b8
-static char g_keymap[64];           // 0x1825f8
-static int g_wifiOn;                // 0x182638
+static char g_language[64];         // 0x1825b8: language file name, "" = default
+static char g_keymap[64];           // 0x1825f8: button keymap string, "" = default
+static int g_wifiOn;                // 0x182638: Wi-Fi switch from system.json
 static int g_wifiConnected;         // 0x18263c
 
+// Size of an open file in bytes; leaves the position at the start.
 long fileSize(FILE *f)          // 0x14b860
 {
     fseek(f, 0, SEEK_END);
@@ -45,7 +57,8 @@ long fileSize(FILE *f)          // 0x14b860
     return size;
 }
 
-// Reads the whole file f (named name, for messages) into a new NUL-terminated buffer *out.
+// Reads the whole file f into a new NUL-terminated buffer *out (the caller frees it); name is
+// only used in error messages. Files must be under 128 KiB. Returns 0, or -1 on error.
 int readWholeFile(const char *name, FILE *f, char **out)   // 0x14b8a4
 {
     int i;
@@ -56,6 +69,7 @@ int readWholeFile(const char *name, FILE *f, char **out)   // 0x14b8a4
         return -1;
     }
     *out = (char *)malloc(size + 1);
+    // fread may return short counts; give it up to ten tries.
     for (i = 0; i < 10 && total < size; i++)
         total += fread(*out + total, 1, size - total, f);
     if (total != size) {
@@ -66,11 +80,13 @@ int readWholeFile(const char *name, FILE *f, char **out)   // 0x14b8a4
     return 0;
 }
 
+// The language file to load (system.json "language"), default English.
 const char *getLanguageFile()   // 0x14ba18
 {
     return g_language[0] == 0 ? "en.lang" : g_language;
 }
 
+// Sets the language file name; NULL selects the default.
 void setLanguageFile(const char *lang)  // 0x14ba58
 {
     if (lang) {
@@ -81,11 +97,14 @@ void setLanguageFile(const char *lang)  // 0x14ba58
     }
 }
 
+// The button keymap (system.json "keymap"): eight comma-separated button names that tell the
+// kernel's button driver which physical button reports as which. KeySettingWindow edits it.
 const char *getKeymap()         // 0x14bab8
 {
     return g_keymap[0] == 0 ? "L2,L,R2,R,X,A,B,Y" : g_keymap;
 }
 
+// Sets the keymap string; NULL selects the default. Takes effect through setupKeymap.
 void setKeymap(const char *keymap)  // 0x14baf8
 {
     if (keymap) {
@@ -97,6 +116,7 @@ void setKeymap(const char *keymap)  // 0x14baf8
     }
 }
 
+// Applies a keymap: hands the string (with its NUL) to the gpio_keys_polled kernel driver.
 void setupKeymap(const char *keymap)    // 0x14bb64
 {
     FILE *f = fopen("/sys/module/gpio_keys_polled/parameters/button_config", "w");
@@ -112,6 +132,7 @@ int getWifiOn()                 // 0x14bbdc
     return g_wifiOn;
 }
 
+// Turning Wi-Fi on starts out disconnected.
 void setWifiOn(int on)          // 0x14bc00
 {
     g_wifiOn = on;
@@ -129,7 +150,10 @@ void setWifiConnected(int connected)    // 0x14bc78
     g_wifiConnected = connected;
 }
 
-// Loads /mnt/SDCARD/system.json into the shared settings, with defaults for missing keys.
+// Loads /mnt/SDCARD/system.json into the shared settings. A missing or invalid key gets its
+// default; display colour values must be 0-20. Also returns the theme path (a strdup, or NULL if
+// unset or the folder no longer exists) and font size when theme/fontSize are not NULL. If the
+// file cannot be read or parsed, every setting gets its default and the keymap is cleared.
 void loadSystemJson(void *shm, char **theme, int *fontSize)    // 0x14bca8
 {
     int failed = 1;
@@ -140,64 +164,66 @@ void loadSystemJson(void *shm, char **theme, int *fontSize)    // 0x14bca8
             cJSON *root = cJSON_Parse(json);
             if (root) {
                 cJSON *vol = cJSON_GetObjectItem(root, "vol");
-                if (vol && vol->type == 8)
-                    SetKeyShm(shm, 0, vol->valueint);
+                if (vol && vol->type == cJSON_Number)
+                    SetKeyShm(shm, MONITOR_VOLUME, vol->valueint);
                 else
-                    SetKeyShm(shm, 0, 20);
+                    SetKeyShm(shm, MONITOR_VOLUME, 20);
                 cJSON *keymap = cJSON_GetObjectItem(root, "keymap");
-                if (keymap && keymap->type == 16)
+                if (keymap && keymap->type == cJSON_String)
                     setKeymap(keymap->valuestring);
+                // Original bug, kept as-is: the mute flag is taken from "vol", not "mute" (and
+                // a file with "mute" but no "vol" would dereference NULL).
                 cJSON *mute = cJSON_GetObjectItem(root, "mute");
-                if (mute && mute->type == 8)
-                    SetKeyShm(shm, 3, vol->valueint != 0);
+                if (mute && mute->type == cJSON_Number)
+                    SetKeyShm(shm, MONITOR_MUTE, vol->valueint != 0);
                 else
-                    SetKeyShm(shm, 3, 0);
+                    SetKeyShm(shm, MONITOR_MUTE, 0);
                 cJSON *bgmvol = cJSON_GetObjectItem(root, "bgmvol");
-                if (bgmvol && bgmvol->type == 8)
-                    SetKeyShm(shm, 5, bgmvol->valueint);
+                if (bgmvol && bgmvol->type == cJSON_Number)
+                    SetKeyShm(shm, MONITOR_BGM_VOLUME, bgmvol->valueint);
                 else
-                    SetKeyShm(shm, 5, 8);
+                    SetKeyShm(shm, MONITOR_BGM_VOLUME, 8);
                 cJSON *brightness = cJSON_GetObjectItem(root, "brightness");
-                if (brightness && brightness->type == 8)
-                    SetKeyShm(shm, 1, brightness->valueint);
+                if (brightness && brightness->type == cJSON_Number)
+                    SetKeyShm(shm, MONITOR_BRIGHTNESS, brightness->valueint);
                 else
-                    SetKeyShm(shm, 1, 7);
+                    SetKeyShm(shm, MONITOR_BRIGHTNESS, 7);
                 cJSON *hibernate = cJSON_GetObjectItem(root, "hibernate");
-                if (hibernate && hibernate->type == 8) {
-                    SetKeyShm(shm, 6, hibernate->valueint);
+                if (hibernate && hibernate->type == cJSON_Number) {
+                    SetKeyShm(shm, MONITOR_HIBERNATE_DELAY, hibernate->valueint);
                     printf("set hibernate to %d\n", hibernate->valueint);
                 } else {
-                    SetKeyShm(shm, 6, 0);
+                    SetKeyShm(shm, MONITOR_HIBERNATE_DELAY, 0);
                     printf("set hibernate to default %d\n", 0);
                 }
                 cJSON *language = cJSON_GetObjectItem(root, "language");
-                if (language && language->type == 16)
+                if (language && language->type == cJSON_String)
                     setLanguageFile(language->valuestring);
                 cJSON *lumination = cJSON_GetObjectItem(root, "lumination");
-                if (lumination && lumination->type == 8 && lumination->valueint >= 0 && lumination->valueint <= 20) {
+                if (lumination && lumination->type == cJSON_Number && lumination->valueint >= 0 && lumination->valueint <= 20) {
                     printf("set lumination to %d\n", lumination->valueint);
-                    SetKeyShm(shm, 8, lumination->valueint);
+                    SetKeyShm(shm, MONITOR_LUMINATION, lumination->valueint);
                 } else {
-                    SetKeyShm(shm, 8, 7);
+                    SetKeyShm(shm, MONITOR_LUMINATION, 7);
                 }
                 cJSON *hue = cJSON_GetObjectItem(root, "hue");
-                if (hue && hue->type == 8 && hue->valueint >= 0 && hue->valueint <= 20)
-                    SetKeyShm(shm, 9, hue->valueint);
+                if (hue && hue->type == cJSON_Number && hue->valueint >= 0 && hue->valueint <= 20)
+                    SetKeyShm(shm, MONITOR_HUE, hue->valueint);
                 else
-                    SetKeyShm(shm, 9, 10);
+                    SetKeyShm(shm, MONITOR_HUE, 10);
                 cJSON *saturation = cJSON_GetObjectItem(root, "saturation");
-                if (saturation && saturation->type == 8 && saturation->valueint >= 0 && saturation->valueint <= 20)
-                    SetKeyShm(shm, 10, saturation->valueint);
+                if (saturation && saturation->type == cJSON_Number && saturation->valueint >= 0 && saturation->valueint <= 20)
+                    SetKeyShm(shm, MONITOR_SATURATION, saturation->valueint);
                 else
-                    SetKeyShm(shm, 10, 10);
+                    SetKeyShm(shm, MONITOR_SATURATION, 10);
                 cJSON *contrast = cJSON_GetObjectItem(root, "contrast");
-                if (contrast && contrast->type == 8 && contrast->valueint >= 0 && contrast->valueint <= 20)
-                    SetKeyShm(shm, 11, contrast->valueint);
+                if (contrast && contrast->type == cJSON_Number && contrast->valueint >= 0 && contrast->valueint <= 20)
+                    SetKeyShm(shm, MONITOR_CONTRAST, contrast->valueint);
                 else
-                    SetKeyShm(shm, 11, 10);
+                    SetKeyShm(shm, MONITOR_CONTRAST, 10);
                 cJSON *themeItem = cJSON_GetObjectItem(root, "theme");
                 if (theme) {
-                    if (themeItem && themeItem->type == 16) {
+                    if (themeItem && themeItem->type == cJSON_String) {
                         if (access(themeItem->valuestring, F_OK) == 0)
                             *theme = strdup(themeItem->valuestring);
                         else
@@ -207,15 +233,15 @@ void loadSystemJson(void *shm, char **theme, int *fontSize)    // 0x14bca8
                     }
                 }
                 cJSON *fontsize = cJSON_GetObjectItem(root, "fontsize");
-                if (fontSize && fontsize && fontsize->type == 8)
+                if (fontSize && fontsize && fontsize->type == cJSON_Number)
                     *fontSize = fontsize->valueint;
                 cJSON *audiofix = cJSON_GetObjectItem(root, "audiofix");
-                if (audiofix && audiofix->type == 8)
-                    SetKeyShm(shm, 13, audiofix->valueint);
+                if (audiofix && audiofix->type == cJSON_Number)
+                    SetKeyShm(shm, MONITOR_AUDIOFIX, audiofix->valueint);
                 else
-                    SetKeyShm(shm, 13, 1);
+                    SetKeyShm(shm, MONITOR_AUDIOFIX, 1);
                 cJSON *wifi = cJSON_GetObjectItem(root, "wifi");
-                if (wifi && wifi->type == 8)
+                if (wifi && wifi->type == cJSON_Number)
                     g_wifiOn = wifi->valueint;
                 cJSON_Delete(root);
                 failed = 0;
@@ -226,16 +252,17 @@ void loadSystemJson(void *shm, char **theme, int *fontSize)    // 0x14bca8
         fclose(f);
     }
     if (failed) {
-        SetKeyShm(shm, 0, 20);
-        SetKeyShm(shm, 3, 0);
-        SetKeyShm(shm, 5, 8);
-        SetKeyShm(shm, 1, 7);
-        SetKeyShm(shm, 6, 0);
-        SetKeyShm(shm, 8, 7);
-        SetKeyShm(shm, 9, 10);
-        SetKeyShm(shm, 10, 10);
-        SetKeyShm(shm, 11, 10);
-        SetKeyShm(shm, 13, 1);
+        // Defaults (the font size default, 24, is only applied here).
+        SetKeyShm(shm, MONITOR_VOLUME, 20);
+        SetKeyShm(shm, MONITOR_MUTE, 0);
+        SetKeyShm(shm, MONITOR_BGM_VOLUME, 8);
+        SetKeyShm(shm, MONITOR_BRIGHTNESS, 7);
+        SetKeyShm(shm, MONITOR_HIBERNATE_DELAY, 0);
+        SetKeyShm(shm, MONITOR_LUMINATION, 7);
+        SetKeyShm(shm, MONITOR_HUE, 10);
+        SetKeyShm(shm, MONITOR_SATURATION, 10);
+        SetKeyShm(shm, MONITOR_CONTRAST, 10);
+        SetKeyShm(shm, MONITOR_AUDIOFIX, 1);
         if (fontSize)
             *fontSize = 24;
         printf("set hibernate to default %d\n", 0);
@@ -243,7 +270,8 @@ void loadSystemJson(void *shm, char **theme, int *fontSize)    // 0x14bca8
     }
 }
 
-// Reads theme and font size from /mnt/SDCARD/system.json.
+// Reads only the theme path and font size from /mnt/SDCARD/system.json, with the same rules as
+// loadSystemJson; leaves both untouched if the file cannot be read.
 void loadThemeAndFontSize(char **theme, int *fontSize)     // 0x14c460
 {
     FILE *f = fopen("/mnt/SDCARD/system.json", "r");
@@ -254,7 +282,7 @@ void loadThemeAndFontSize(char **theme, int *fontSize)     // 0x14c460
             if (root) {
                 cJSON *themeItem = cJSON_GetObjectItem(root, "theme");
                 if (theme) {
-                    if (themeItem && themeItem->type == 16) {
+                    if (themeItem && themeItem->type == cJSON_String) {
                         if (access(themeItem->valuestring, F_OK) == 0)
                             *theme = strdup(themeItem->valuestring);
                         else
@@ -264,7 +292,7 @@ void loadThemeAndFontSize(char **theme, int *fontSize)     // 0x14c460
                     }
                 }
                 cJSON *fontsize = cJSON_GetObjectItem(root, "fontsize");
-                if (fontSize && fontsize && fontsize->type == 8)
+                if (fontSize && fontsize && fontsize->type == cJSON_Number)
                     *fontSize = fontsize->valueint;
                 cJSON_Delete(root);
             }
@@ -275,7 +303,11 @@ void loadThemeAndFontSize(char **theme, int *fontSize)     // 0x14c460
     }
 }
 
-// Writes the shared settings back to /mnt/SDCARD/system.json.
+// Writes the shared settings, keymap, language, theme, font size and Wi-Fi switch to
+// /mnt/SDCARD/system.json, then syncs the SD card. Nothing is written if any of the main
+// values could not be created.
+// Original behaviour, kept as-is: the file is opened without O_TRUNC, so if the new text is
+// shorter than the old file, the old file's tail remains after it.
 void saveSystemJson(void *shm, const char *theme, int fontSize)    // 0x14c5fc
 {
     cJSON *themeItem;
@@ -283,24 +315,25 @@ void saveSystemJson(void *shm, const char *theme, int fontSize)    // 0x14c5fc
     if (fd >= 0) {
         cJSON *root = cJSON_CreateObject();
         if (root) {
-            cJSON *vol = cJSON_CreateNumber(GetKeyShm(shm, 0));
+            cJSON *vol = cJSON_CreateNumber(GetKeyShm(shm, MONITOR_VOLUME));
             cJSON *keymap = cJSON_CreateString(getKeymap());
-            cJSON *mute = cJSON_CreateNumber(GetKeyShm(shm, 3) ? 1 : 0);
-            cJSON *bgmvol = cJSON_CreateNumber(GetKeyShm(shm, 5));
-            cJSON *brightness = cJSON_CreateNumber(GetKeyShm(shm, 1));
-            cJSON *hibernate = cJSON_CreateNumber(GetKeyShm(shm, 6));
+            cJSON *mute = cJSON_CreateNumber(GetKeyShm(shm, MONITOR_MUTE) ? 1 : 0);
+            cJSON *bgmvol = cJSON_CreateNumber(GetKeyShm(shm, MONITOR_BGM_VOLUME));
+            cJSON *brightness = cJSON_CreateNumber(GetKeyShm(shm, MONITOR_BRIGHTNESS));
+            cJSON *hibernate = cJSON_CreateNumber(GetKeyShm(shm, MONITOR_HIBERNATE_DELAY));
             cJSON *language = cJSON_CreateString(getLanguageFile());
-            cJSON *lumination = cJSON_CreateNumber(GetKeyShm(shm, 8));
-            cJSON *hue = cJSON_CreateNumber(GetKeyShm(shm, 9));
-            cJSON *saturation = cJSON_CreateNumber(GetKeyShm(shm, 10));
-            cJSON *contrast = cJSON_CreateNumber(GetKeyShm(shm, 11));
-            cJSON *audiofix = cJSON_CreateNumber(GetKeyShm(shm, 13));
+            cJSON *lumination = cJSON_CreateNumber(GetKeyShm(shm, MONITOR_LUMINATION));
+            cJSON *hue = cJSON_CreateNumber(GetKeyShm(shm, MONITOR_HUE));
+            cJSON *saturation = cJSON_CreateNumber(GetKeyShm(shm, MONITOR_SATURATION));
+            cJSON *contrast = cJSON_CreateNumber(GetKeyShm(shm, MONITOR_CONTRAST));
+            cJSON *audiofix = cJSON_CreateNumber(GetKeyShm(shm, MONITOR_AUDIOFIX));
             themeItem = NULL;
             cJSON *fontsize = cJSON_CreateNumber(fontSize);
             cJSON *wifi = cJSON_CreateNumber(getWifiOn());
             if (theme)
                 themeItem = cJSON_CreateString(theme);
             if (vol && keymap && mute && bgmvol && brightness && language && lumination && hue && saturation && contrast) {
+                // root takes ownership of every item; a NULL theme is simply skipped by cJSON.
                 cJSON_AddItemToObject(root, "vol", vol);
                 cJSON_AddItemToObject(root, "keymap", keymap);
                 cJSON_AddItemToObject(root, "mute", mute);
@@ -320,6 +353,7 @@ void saveSystemJson(void *shm, const char *theme, int fontSize)    // 0x14c5fc
                 write(fd, text, strlen(text));
                 free(text);
             } else {
+                // Free whatever was created (the original misses "hibernate" here).
                 if (vol)
                     cJSON_Delete(vol);
                 if (keymap)

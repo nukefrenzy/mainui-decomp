@@ -1,5 +1,11 @@
-// Key mapping window and its legacy touch-input worker, in binary address order.
-// Proven 0x1376fc-0x138c50: 5,288 body bytes plus five inline virtuals.
+// tu_1376fc (0x1376fc-0x138c50): the button-mapping screen, and a touch-panel input thread.
+//
+// KeySettingWindow lets the user choose which physical button reports as which (L, L2, R, R2, X,
+// A, B, Y): each press assigns the pressed button's name to the highlighted slot, and MENU saves
+// the result as the keymap (setKeymap/saveSystemJson in tu_14b860.c), which the kernel's button
+// driver applies. The touch thread turns taps near the screen edges into arrow-button events; it
+// is leftover code: nothing in this build starts it (startTouchInput has no caller).
+// Body 5,288 bytes plus five inline virtuals; functions in address order.
 #include <iostream>
 #include <sstream>
 #include <cstdio>
@@ -12,8 +18,10 @@
 #include <poll.h>
 #include <linux/input.h>
 #include "KeySettingWindow.h"
+#include "Input.h"
 
 struct SDL_Thread;
+// The SDL 1.2 SDL_Event members this file uses (20 bytes).
 struct KeyEvent { unsigned char type, which, state, padding; unsigned char scancode; int sym, mod; unsigned short unicode; };
 struct UserEvent { unsigned char type; int code; void *data1, *data2; };
 union InputEvent { unsigned char type; KeyEvent key; UserEvent user; char storage[20]; };
@@ -39,6 +47,7 @@ void drawTitleBar(SDL_Surface *, const char *, bool); // 0x16f68
 int drawText(SDL_Surface *, void *, SDL_Rect, const char *, SDL_Color, int, bool);
 int drawIconLabel(SDL_Surface *, SDL_Surface *, int, int, const char *, const char *); // 0x170f8
 
+// Touch thread state: last touch position, -1 until both axes are known for the current touch.
 SDL_Thread *g_touchThread;
 bool g_touchRunning, g_touchPressed;
 int g_touchX = -1, g_touchY = -1;
@@ -47,6 +56,8 @@ static_assert(sizeof(InputEvent) == 20, "SDL event layout");
 
 extern const char g_keyEventReadFormat[44];
 
+// Opens a Linux evdev input device and logs its identity (bus, vendor, name, ...).
+// Returns the file descriptor, or -1 if it cannot be opened or is not an input device.
 int openInputDevice(const char *path)
 {
     int fd = open(path, O_RDWR);
@@ -78,6 +89,10 @@ int openInputDevice(const char *path)
     printf("  version:  %d.%d.%d\n", version >> 16, (version >> 8) & 255, version & 255);
     return fd;
 }
+// Thread body: reads touch events from /dev/input/event0 until stopTouchInput, and posts an
+// arrow button for a touch in one of the four edge bands of the 640x480 screen (left/right:
+// x < 100 or x > 540; top/bottom: y < 100 or y > 380; corners excluded). The event goes out as a
+// user event whose code is the button, which handleGlobalInput passes through as the button.
 int touchInputThread(void *)
 {
     int fd = openInputDevice("/dev/input/event0");
@@ -90,7 +105,7 @@ int touchInputThread(void *)
         fds[0].fd = fd;
         fds[0].events = POLLIN;
         while (g_touchRunning) {
-            result = poll(fds, count, 500);
+            result = poll(fds, count, 500);   // wake twice a second to check g_touchRunning
             if (fds[0].revents & POLLIN) {
                 result = read(fds[0].fd, &input, sizeof(input));
                 if (result < (int)sizeof(input)) {
@@ -99,26 +114,27 @@ int touchInputThread(void *)
                 }
                 if (input.type == EV_KEY && input.code == BTN_TOUCH) {
                     printf(g_keyEventReadFormat, input.type, input.code, input.value);
+                    // Finger down or up; either way the next position starts over.
                     if (input.value == 1) g_touchPressed = true;
                     else if (input.value == 0) g_touchPressed = false;
                     g_touchX = g_touchY = -1;
                 }
-                if (input.type == EV_ABS && (input.code == 0 || input.code == 1) && g_touchPressed) {
+                if (input.type == EV_ABS && (input.code == ABS_X || input.code == ABS_Y) && g_touchPressed) {
                     printf(g_keyEventReadFormat, input.type, input.code, input.value);
-                    if (input.code == 0) g_touchX = input.value;
-                    else if (input.code == 1) g_touchY = input.value;
+                    if (input.code == ABS_X) g_touchX = input.value;
+                    else if (input.code == ABS_Y) g_touchY = input.value;
                     if (g_touchX >= 0 && g_touchY >= 0) {
                         if (g_touchX < 100 && g_touchY > 100 && g_touchY < 380) {
-                            event.type = 24; event.user.code = 7; SDL_PushEvent(&event);
+                            event.type = SDL_USEREVENT; event.user.code = BUTTON_LEFT; SDL_PushEvent(&event);
                         }
                         if (g_touchX > 540 && g_touchY > 100 && g_touchY < 380) {
-                            event.type = 24; event.user.code = 8; SDL_PushEvent(&event);
+                            event.type = SDL_USEREVENT; event.user.code = BUTTON_RIGHT; SDL_PushEvent(&event);
                         }
                         if (g_touchY < 100 && g_touchX > 100 && g_touchX < 540) {
-                            event.type = 24; event.user.code = 5; SDL_PushEvent(&event);
+                            event.type = SDL_USEREVENT; event.user.code = BUTTON_UP; SDL_PushEvent(&event);
                         }
                         if (g_touchY > 380 && g_touchX > 100 && g_touchX < 540) {
-                            event.type = 24; event.user.code = 6; SDL_PushEvent(&event);
+                            event.type = SDL_USEREVENT; event.user.code = BUTTON_DOWN; SDL_PushEvent(&event);
                         }
                     }
                 }
@@ -129,6 +145,7 @@ int touchInputThread(void *)
     }
     return 0;
 }
+// Starts and stops the touch thread (stop waits for it; it notices within half a second).
 void startTouchInput()
 {
     g_touchRunning = true;
@@ -139,22 +156,33 @@ void stopTouchInput()
     g_touchRunning = false;
     SDL_WaitThread(g_touchThread, NULL);
 }
+// Codes returned by waitMappingKey. A, B, X, Y and MENU are the usual button codes, but the
+// shoulder buttons are numbered L1, L2, R1, R2 here, unlike BUTTON_HOTKEY1-4 (L2, R2, L1, R1).
+enum MappingKey {
+    MAPPING_L1 = 12,
+    MAPPING_L2 = 13,
+    MAPPING_R1 = 14,
+    MAPPING_R2 = 15,
+};
+
+// Waits for a button release and returns its code (MappingKey or BUTTON_A/B/X/Y/MENU); other
+// buttons and events are ignored. Returns 0 if SDL stops delivering events.
 int waitMappingKey()
 {
     InputEvent event;
     while (SDL_WaitEvent(&event)) {
         switch (event.type) {
-        case 3:
+        case SDL_KEYUP:
             switch (event.key.sym) {
-            case 32: return 1;
-            case 306: return 2;
-            case 304: return 3;
-            case 308: return 4;
-            case 101: return 12;
-            case 116: return 14;
-            case 9: return 13;
-            case 8: return 15;
-            case 27: return 11;
+            case MIYOO_KEY_A: return BUTTON_A;
+            case MIYOO_KEY_B: return BUTTON_B;
+            case MIYOO_KEY_X: return BUTTON_X;
+            case MIYOO_KEY_Y: return BUTTON_Y;
+            case MIYOO_KEY_L1: return MAPPING_L1;
+            case MIYOO_KEY_R1: return MAPPING_R1;
+            case MIYOO_KEY_L2: return MAPPING_L2;
+            case MIYOO_KEY_R2: return MAPPING_R2;
+            case MIYOO_KEY_MENU: return BUTTON_MENU;
             default: break;
             }
             // Falls through to the shared default exit of the outer switch.
@@ -163,9 +191,11 @@ int waitMappingKey()
     }
     return 0;
 }
-// Original diagnostic allocation at 0x162578 retains 44 bytes.
+// Defined after use to keep the original .rodata order; its original allocation (0x162578) is
+// 44 bytes, longer than the text.
 extern const char g_keyEventReadFormat[44] = "read event type=%d, code=%d, value=%d\n";
 
+// Title: language string 0x6e; window id 0x19.
 KeySettingWindow::KeySettingWindow() : TrimusWindow(0x6e, 0x19)
 {
     menuIcon = NULL;
@@ -180,31 +210,35 @@ KeySettingWindow::~KeySettingWindow()
     if (highlight) SDL_FreeSurface(highlight);
     if (background) SDL_FreeSurface(background);
 }
+// One button press. MENU saves the mapping and closes the window (returns 1); any mapped button
+// assigns its name to the selected slot and moves to the next slot (returns -1: stay open).
 int KeySettingWindow::handleInput()
 {
     int key = waitMappingKey();
     switch (key) {
-    case 11:
+    case BUTTON_MENU:
+        // Back to driver order: the first two pairs are swapped on screen (see loadResources).
         snprintf(keymap, 64, "%s,%s,%s,%s,%s,%s,%s,%s", keys[1].c_str(), keys[0].c_str(),
                  keys[3].c_str(), keys[2].c_str(), keys[4].c_str(), keys[5].c_str(), keys[6].c_str(), keys[7].c_str());
         setKeymap(keymap);
         saveSystemJson(g_keyShm, g_themePath, g_fontSize);
         sync();
         return 1;
-    case 1: keys[selected] = "A"; break;
-    case 2: keys[selected] = "B"; break;
-    case 3: keys[selected] = "X"; break;
-    case 4: keys[selected] = "Y"; break;
-    case 12: keys[selected] = "L"; break;
-    case 13: keys[selected] = "L2"; break;
-    case 14: keys[selected] = "R"; break;
-    case 15: keys[selected] = "R2"; break;
+    case BUTTON_A: keys[selected] = "A"; break;
+    case BUTTON_B: keys[selected] = "B"; break;
+    case BUTTON_X: keys[selected] = "X"; break;
+    case BUTTON_Y: keys[selected] = "Y"; break;
+    case MAPPING_L1: keys[selected] = "L"; break;
+    case MAPPING_L2: keys[selected] = "L2"; break;
+    case MAPPING_R1: keys[selected] = "R"; break;
+    case MAPPING_R2: keys[selected] = "R2"; break;
     }
     printf("set key[%d] to %s\n", selected, keys[selected].c_str());
     selected++;
     if (selected > 7) selected = 0;
     return -1;
 }
+// Footer bar at y 420 with the MENU icon and its label (language string 0x70).
 void drawKeySettingFooter(SDL_Surface *dst, SDL_Surface *icon)
 {
     int y = 420;
@@ -217,6 +251,7 @@ void drawKeySettingFooter(SDL_Surface *dst, SDL_Surface *icon)
     }
     if (icon) drawIconLabel(dst, icon, x, y, 0, languageString(0x70));
 }
+// Background, title, footer, the highlight behind the selected slot, then the eight button names.
 int KeySettingWindow::draw(SDL_Surface *dst)
 {
     if (background) SDL_UpperBlit(background, NULL, dst, NULL);
@@ -228,6 +263,8 @@ int KeySettingWindow::draw(SDL_Surface *dst)
         drawText(dst, g_imeFont, positions[i], keys[i].c_str(), g_imeTextColor, 1, i == selected);
     return 0;
 }
+// Loads the skin images and the slot positions (two on the left of the screen, six on the right),
+// and splits the current keymap into the eight slots.
 void KeySettingWindow::loadResources()
 {
     background = loadSkinImage(g_themePath, "./", "skin/bg-keysetting.png", g_backBuffer, 0);
@@ -246,6 +283,7 @@ void KeySettingWindow::loadResources()
     std::string part;
     int i = 0;
     while (std::getline(stream, part, ',') && i < 8) keys[i++] = part;
+    // The keymap lists L2,L,R2,R first; the screen shows L,L2,R,R2.
     std::string temp;
     temp = keys[0]; keys[0] = keys[1]; keys[1] = temp;
     temp = keys[2]; keys[2] = keys[3]; keys[3] = temp;

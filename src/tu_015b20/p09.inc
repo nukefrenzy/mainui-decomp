@@ -365,7 +365,7 @@ void MenuWindow::cacheBackground() {
         x = drawBatteryIndicator(surface58, true);
         next = drawWifiIndicator(g_backBuffer, x, true);
         if (next >= 0) x = next;
-        if (g_statusIndicatorFlag) drawKeyStateIndicator(g_backBuffer, x, true);
+        if (g_volumeIndicatorVisible) drawKeyStateIndicator(g_backBuffer, x, true);
     }
 }
 // 0x311f4

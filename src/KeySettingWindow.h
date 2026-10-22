@@ -1,4 +1,4 @@
-// Key remapping screen: recovered 0x15c-byte layout.
+// Button-mapping screen (see tu_1376fc.cpp): recovered 0x15c-byte layout.
 #pragma once
 #include <string>
 #include "TrimusWindow.h"
@@ -17,9 +17,9 @@ public:
     virtual void update() {}
     void loadResources();
 
-    SDL_Surface *menuIcon, *highlight, *background; // +0x0c
-    int selected; // +0x18
-    std::string keys[8]; // +0x1c
-    SDL_Rect positions[8]; // +0xdc
-    char keymap[64]; // +0x11c
+    SDL_Surface *menuIcon, *highlight, *background; // +0x0c: footer MENU icon, slot highlight, screen background
+    int selected; // +0x18: slot the next press assigns (0-7)
+    std::string keys[8]; // +0x1c: button name per slot, in screen order L, L2, R, R2, X, A, B, Y
+    SDL_Rect positions[8]; // +0xdc: screen rectangle of each slot
+    char keymap[64]; // +0x11c: keymap string built on save
 };

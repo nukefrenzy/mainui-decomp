@@ -181,8 +181,10 @@ bytes each. The legacy `getWifiConnected`/`setWifiConnected` names in `tu_14b860
 The key-mapping screen is proven at 0x1376fc–0x138c50. `KeySettingWindow` (id 0x19)
 is 0x15c bytes: three surface pointers at +0x0c, selected index at +0x18, eight `std::string`
 key names at +0x1c, eight SDL rectangles at +0xdc, and a 64-byte keymap at +0x11c. It captures
-SDL key releases; Escape serializes the mapping, saves system settings, and closes. The file also
-contains a legacy touch worker that reads `/dev/input/event0` and pushes directional user events.
+SDL key releases; MENU (Escape) serializes the mapping, saves system settings, and closes. The file also
+contains a touch worker that reads `/dev/input/event0` and pushes directional user events; nothing
+in this build starts it. Commented source: `src/tu_1376fc.cpp`; the keymap itself is applied by
+`setupKeymap` in `src/tu_14b860.c`.
 
 **createMenu IDs:**
 
@@ -302,7 +304,10 @@ the original order without clearing the globals.
   writes volume changes back to shared memory.
 - **hotplugThread** (0x4a170) pushes an SDL event on device hotplug.
 - **Wi-Fi monitor** (`startWifiMonitor`, a pthread) runs `wifiStatusCallback` for udhcpc and wpa_supplicant.
-- **handleGlobalInput** (0x17744) is the shared key handler: key sounds, the power key, START/SELECT translation.
+- **handleGlobalInput** (0x17744) is the shared key handler: it turns SDL key events into MainUI's button
+  codes, plays key sounds, handles the power key and passes MainUI's own user events through. The
+  button, key and event codes are named in `src/Input.h` (original names from `keyEventName`), the
+  shared-memory settings in `src/ShmVar.h`; the commented function is in `src/tu_015b20/p01.inc`.
 
 **Launching a game or app** doesn't happen inside MainUI. `AppAction::execute` calls
 `launchApp_buildCommand` (0x18560), which builds
@@ -368,6 +373,5 @@ arm-linux-gnueabihf-g++ -O0 -fsigned-char      # Arm GNU Toolchain 8.2-2018.08 (
 ## Open questions
 
 - The `librsautil` + UUID device check
-- `handleGlobalInput` in detail
 - What each status-bar indicator draws
 - The MenuWindow strings whose purpose isn't traced yet

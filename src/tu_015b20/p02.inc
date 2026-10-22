@@ -102,7 +102,7 @@ int busyScreenThread(void *arg)
     r = drawWifiIndicator(g_backBuffer, x, 1);
     if (r >= 0)
         x = r;
-    if (g_statusIndicatorFlag)
+    if (g_volumeIndicatorVisible)
         drawKeyStateIndicator(g_backBuffer, x, 1);
     SDL_Surface *dim = createSurface(640, 480);
     if (dim != NULL) {

@@ -30,7 +30,7 @@ static int g_powerDownCount; // 0x180900
 static bool g_powerSent; // 0x180904
 static bool g_startHeld; // 0x180905
 static bool g_selectHeld; // 0x180906
-static bool g_statusIndicatorFlag; // 0x180907
+static bool g_volumeIndicatorVisible; // 0x180907
 static char g_cwdBuf[4096]; // 0x180908
 static volatile int g_busy; // 0x181908
 static volatile int g_progressCur; // 0x18190c
