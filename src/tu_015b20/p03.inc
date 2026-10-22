@@ -29,7 +29,7 @@ int DeleteRomAction::execute(void *param)
 }
 
 // Rewrites a favourites file from a list: one JSON object per line.
-void power_label_1a4bc(const char *path, std::vector<TextItem *> *items)
+void power_label_1a4bc(const char *path, std::vector<void *> *items)
 {
     FILE *f = fopen(path, "w");
     if (f != NULL) {
@@ -37,7 +37,7 @@ void power_label_1a4bc(const char *path, std::vector<TextItem *> *items)
         if (obj != NULL) {
             if (items != NULL) {
                 for (int i = 0; i < items->size(); i++) {
-                    TextItem *item = (*items)[i];
+                    TextItem *item = (TextItem *)items->at(i);
                     cJSON_AddStringToObject(obj, "label", item->label.c_str());
                     if (item->action->result == 3) {
                         AppAction *action = (AppAction *)item->action;
@@ -176,13 +176,13 @@ TextMenu *buildMenu_1a924(const char *path)
         }
         if (repeat) {
             puts("need to format favourit file");
-            std::vector<TextItem *> *items = menu->getItems();
+            std::vector<void *> *items = menu->getItems();
             if (items != NULL) {
                 cJSON *obj = cJSON_CreateObject();
                 rewind(f);
                 if (obj != NULL) {
                     for (int i = 0; i < items->size(); i++) {
-                        TextItem *it = (*items)[i];
+                        TextItem *it = (TextItem *)items->at(i);
                         if (it->action->result == 5 || it->action->result == 0x11) {
                             EmuAction *action = (EmuAction *)it->action;
                             if (action->emu != NULL) {
@@ -381,12 +381,12 @@ bool refreshMenu_1c0ac(void *menu, int id)
     bool changed = false;
     if (id == 2) {
         TextMenu *textMenu = (TextMenu *)menu;
-        std::vector<TextItem *> *items = textMenu->getItems();
+        std::vector<void *> *items = textMenu->getItems();
         if (items != NULL) {
             int unused = 0;
-            std::vector<TextItem *>::iterator it = items->begin();
+            std::vector<void *>::iterator it = items->begin();
             while (it != items->end()) {
-                TextItem *item = *it;
+                TextItem *item = (TextItem *)*it;
                 printf("refresh %s removed %d\n", item->label.c_str(), item->removed);
                 if (item->removed) {
                     changed = true;
@@ -483,7 +483,7 @@ void saveWindowState(std::vector<TrimusWindow *> *stack, const char *path)
             cJSON *windows = cJSON_AddArrayToObject(root, "list");
             if (windows != NULL) {
                 for (int i = 0; i < stack->size(); i++) {
-                    TrimusWindow *w = (*stack)[i];
+                    TrimusWindow *w = stack->at(i);
                     printf("save state for window %p\n", w);
                     cJSON *obj = cJSON_CreateObject();
                     cJSON *title = cJSON_CreateNumber(w->titleLabelId);
@@ -588,7 +588,7 @@ int loadRomListPositions(std::vector<RomListPosition> *list)
 
 extern "C" cJSON *cJSON_CreateString(const char *string);
 
-void saveRomListPositions(const std::vector<RomListPosition> *list)
+void saveRomListPositions(std::vector<RomListPosition> *list)
 {
     printf("%d idxs need to be saved\n", list->size());
     FILE *f = fopen("/appconfigs/romwinidx.json", "w+");
@@ -599,7 +599,7 @@ void saveRomListPositions(const std::vector<RomListPosition> *list)
             cJSON *entries = cJSON_AddArrayToObject(root, "list");
             if (entries != NULL) {
                 for (unsigned int i = 0; i < list->size(); i++) {
-                    pos = (*list)[i];
+                    pos = list->at(i);
                     cJSON *obj = cJSON_CreateObject();
                     cJSON *rompath = cJSON_CreateString(pos.path.c_str());
                     cJSON_AddItemToObject(obj, "rompath", rompath);

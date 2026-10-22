@@ -21,6 +21,10 @@ The compiler and flags are proven, not guessed. The two libraries compiled into 
 byte-identical from their public sources: SQLite 3.30.1 (808,104 bytes) and cJSON 1.7.10
 (23,996 bytes). Every rewrite in `src/` is checked the same way, on every push, by CI.
 
+All **22 Miyoo translation units** now pass whole-unit checks: **2,612 tracked functions,
+458,064 bytes (100%)**. These proofs compare code and linker section order with link-time words
+masked; rebuilding a complete linked ELF is the next milestone. See [status](docs/status.md).
+
 ## What's here
 
 | Path | Contents |

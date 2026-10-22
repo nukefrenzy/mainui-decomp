@@ -1,9 +1,9 @@
 lo	hi	name	confidence	evidence	label
 014d20	015b20	runtime	fixed	PLT, _start, crtbegin	
-015b20	049c3c	tu_015b20	review	end of C runtime; string spans 0x16b54-0x4846c; 1099 fns, 553 template, static init at 0x39228	FileBrowserMenu, DBCachedTextMenu, GameDetailWindow
+015b20	049c3c	tu_015b20	proven	unitcheck --end 49c3c: src/tu_015b20.cpp; complete main UI body (145184 bytes) and 798 inline/template sections (68092 bytes); string spans 0x16b54-0x4846c; 1103 fns, 553 template, static init at 0x39228	GameDetailWindow, DBCachedTextMenu, FileBrowserMenu
 049c3c	04c418	tu_049c3c	proven	unitcheck --end 4c418: src/tu_049c3c.cpp body + 93 inline/template functions fill exactly 0x049c3c-0x04c418; main, status and hotplug callbacks; string spans 0x49cc0-0x49f24 0x4a19c-0x4a2fc; 105 fns, 74 template, static init at 0x4aea8	onSIGTERM, appExit, pollStatusA_pushEvent
 04c418	04cb68	tu_04c418	proven	unitcheck --end 4cb68: src/tu_04c418.cpp fills exactly 0x04c418-0x04cb68; ten circular-list helpers, no tail; 10 fns, 0 template	ringAt, ringCount
-04cb68	051b5c	tu_04cb68	proven	unitcheck --end 51b5c: src/tu_04cb68.cpp; hardware-test windows, 27 inline tail functions; four zero padding bytes before cJSON; string spans 0x4d6f8-0x4f7f0 0x4f860-0x4fa44 0x4ffd8-0x5020c 0x50674-0x5084c; 85 fns, 11 template	SDLKeyTestWindow, KeyTestWindow2, LCDTestWindow
+04cb68	051b5c	tu_04cb68	proven	unitcheck --end 51b5c: src/tu_04cb68.cpp; hardware-test windows, 27 inline tail functions; four zero padding bytes before cJSON; string spans 0x4d6f8-0x4f7f0 0x4f860-0x4fa44 0x4ffd8-0x5020c 0x50674-0x5084c; 85 fns, 11 template	SDLKeyTestWindow, KeyTestWindow2, SDCardTestWindow
 051b60	057920	lib_cjson	fixed	cJSON 1.7.10, byte-exact (verify-libs.sh)	
 057920	11cdc8	lib_sqlite	fixed	SQLite 3.30.1, byte-exact (verify-libs.sh)	
 11cdc8	129f9c	tu_11cdc8	proven	unitcheck --end 129f9c: src/tu_11cdc8.cpp body + 263 inline/template functions fill exactly 0x11cdc8-0x129f9c; shared device/configuration helpers; string spans 0x11cf40-0x11e2ac 0x11e390-0x11f790 0x1208a0-0x12329c 0x123444-0x123658 0x125070-0x1269d8; 321 fns, 161 template, static init at 0x124020	files_SDCARD_1cf40, files_SDCARD_1d198, device_proc_1d2e4

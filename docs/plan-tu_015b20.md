@@ -1,6 +1,6 @@
 # Plan: the first file, tu_015b20
 
-The last unproven unit, and the largest: 0x15b20–0x49c3c, 213,276 bytes, about 47% of Miyoo's code. It holds
+The largest unit (now proven by integration below): 0x15b20–0x49c3c, 213,276 bytes, about 47% of Miyoo's code. It holds
 the window and menu classes, the actions, the window loop and `createMenu`. Read `docs/unit-workflow.md`
 first; this file only adds what is different about a unit this size.
 
@@ -557,7 +557,7 @@ and 21 proven unit checks pass. Added two function starts missing from names.tsv
 font callback, also absent from the Ghidra export) and 0x39228 (the compiler's init wrapper).
 The earlier body estimate omitted the 480-byte keyEventName function; the shape table is corrected.
 
-**The whole unit is not proven.** `unitcheck --end 49c3c` confirms the entire body but reports
+**Historical p11 checkpoint (resolved by integration below).** The whole unit was not yet proven. `unitcheck --end 49c3c` confirms the entire body but reports
 RESULT MISMATCH in the tail, starting at 0x39240 with std::exception::exception rather than the
 expected atomic helpers. The current diagnostic finds 99 mismatched sections and the first
 unproduced gap at 0x3b310; merely finding identical sections elsewhere does not prove their order
@@ -636,6 +636,50 @@ The charging event loop needs nested switches with explicit inner default breaks
 fallthrough to default; changing the braces/breaks moves NOPs. Its rectangle centering uses the
 already truncated width/height fields. By-value language choices are settled by the caller,
 while the callee's bytes alone cannot distinguish them from a reference.
+
+## Integration (complete, 2026-10-21)
+
+`python3 tools/unitcheck.py src/tu_015b20.cpp --end 49c3c` prints **RESULT MATCH**:
+0x15b20–0x39240 body (145,184 bytes, 359 symbols including aliases), then **798 sections in
+object order, zero kept from earlier files**, ending exactly at **0x49c3c** (213,276 bytes total).
+All 22 units and 689 registered individual matches pass. No unmatched range remains in this unit.
+UNIT_FIXED and the regenerated TU map record the proof; the partial-unit exception is removed.
+
+**Header order.** Include `<string>` before the standard headers, then `<atomic>`, `<vector>`,
+the UI declarations, and only then `<iostream>`. The latter's system-error helpers otherwise
+instantiate string concatenation before the ListMenu destructor and TextMenu count templates.
+Separate BGWorker and TextMenuDrawer headers let their inline definitions appear at the original
+positions. ListMenu virtual declarations keep slot order; out-of-class inline definitions keep
+emission order. Actions precede TextMenuDrawer, DBCacheWorker precedes DBCachedTextMenu, and
+MenuWindow precedes FloatWindow. rapidxml, isListMenuId and BusyData follow ADCInfoWindow.
+LoadSurfaceWorker's inline ctor/dtor definitions follow its p08 bodies, allowing the compiler's
+RomListPosition, xml_document and DeviceInfoItem special members to appear first.
+
+**Shared declarations and overloads.**
+
+- TextMenu, IconMenu and FileBrowserCache rows share `std::vector<void*>`; consumers cast to
+  TextItem, IconMenuItem or SettingMenuItem. Their append arguments, TextMenu sorted-insert
+  argument, cache accessors and directory helper signatures now agree. The earlier separate
+  typed vectors produced duplicate template families. The void-pointer spelling is supported
+  by the heterogeneous rows and the shared callee destinations; bytes alone cannot recover
+  an original source typedef. Existing layouts, virtual slots and all other unit proofs remain.
+- The favourites writer and formatter, IconMenu row access, and saved window-state access use
+  `at()`. TextMenu's unchecked accesses still use `operator[]`. The identical caller instruction
+  sequence concealed the different callee bodies while call relocations were masked.
+- `saveRomListPositions` takes a non-const vector and uses non-const `at()`, proven by the
+  tail wrapper calling the already emitted non-const index helper. Updated manifest symbols
+  for the changed public signatures; all existing function code remains matched.
+- unitcheck now searches through a required end by default. An explicit `--window` still caps
+  the search. This tail is 68,092 bytes, larger than the former fixed 64 KiB default; the strict
+  required end and all relocation/call masks remain unchanged.
+
+All 2,142 direct branches to functions defined in the unit were resolved through the final
+section layout and agree with the original destinations (no call-mask ambiguity remains for
+those targets). The twelve literal disabled-call NOPs in createMenu are retained and independently
+checked, including the absence of relocations at those sites.
+The selected-icon/settings/action findings from p06–p11 are incorporated into docs/program-map.md.
+Coverage reaches 100% of the tracked Miyoo code; linking/import/data reconstruction is a separate
+milestone from these relocation-masked code and layout proofs.
 
 ## Shared declarations (header pass, before p03-p11)
 

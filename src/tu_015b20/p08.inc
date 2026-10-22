@@ -500,3 +500,10 @@ void LoadSurfaceWorker::finished() {
     event.user.code = 24;
     SDL_PushEvent(&event);
 }
+
+// Inline definitions follow the record destructors first used by p03-p07.
+inline LoadSurfaceWorker::LoadSurfaceWorker(std::string path, MenuHelper80 *cache) {
+    this->cache = cache;
+    this->path = path;
+}
+inline LoadSurfaceWorker::~LoadSurfaceWorker() {}

@@ -6,7 +6,7 @@ windows: `main` sets up hardware and SDL, then `runWindowLoop` draws whichever w
 and hands it input until the stack empties or the program is told to quit.
 
 All addresses are for this exact binary (SHA-256 `98c85f6c…0c94`). It is not
-position-independent, so they never move.
+position-independent as a whole, so its internal addresses are fixed for this build.
 
 ## At a glance
 
@@ -34,12 +34,16 @@ either open another window or write a launch command and exit.
 
 | Part | Address range | Functions | Size |
 | --- | --- | --- | --- |
-| Miyoo launcher code | 0x14d20–0x51b60 and 0x11cdc8–0x150000 | ~2,520 | ~430 KB |
+| Miyoo launcher code (22 units proven) | 0x15b20–0x51b5c and 0x11cdc8–0x150ad8 | 2,612 tracked | 458,064 bytes |
 | cJSON 1.7.10, compiled as C++ (byte-exact) | 0x51b60–0x57920 | 104 | 24 KB |
 | SQLite 3.30.1 (byte-exact) | 0x57920–0x11cdc8 | 2,126 | 808 KB |
-| stb_image zlib decoder | around 0x1303b0 | 11 | 4 KB |
+| stb streaming zlib decoder (included in launcher total) | 0x1302cc–0x131e34 | 19 | 7,016 bytes |
 | tiny-utf8 4.4.x (header-only `tiny_utf8::string`) | template code in the files that use it, e.g. 0x143ea4–0x1484d4 | ~100+ | |
-| libgcc / C runtime helpers | 0x150000 and up | 22 | 5 KB |
+| libgcc helpers / C startup | from 0x150ad8 / before 0x15b20 | | |
+
+All tracked launcher code now passes whole-unit code/layout checks. Link-time words are masked;
+a complete linked executable, data layout and import/relocation targets remain to be reconstructed.
+The I2C authentication unit at 0x14f730–0x150ad8 uses `-fPIC`; the main UI is fixed-address code.
 
 tiny-utf8 (github.com/DuffsDevice/tiny-utf8) is identified by its error messages and by code: under
 MainUI's flags v4.4.1–v4.4.3 compile identically, and `scripts/fetch-tinyutf8.sh` pins v4.4.3. Being
@@ -196,10 +200,53 @@ contains a legacy touch worker that reads `/dev/input/event0` and pushes directi
 added in this order: Recent (→ 10), Favourites (→ 2), Games (→ 1), RetroArch, Apps (→ 3),
 Settings (→ 7). Icons come from the theme's `skin/ic-*-f.png` / `ic-*-n.png`.
 
-**Settings items** are `SettingMenuItem(labelId, icon, x)`: Shutdown, Brightness, Wi-Fi, Color,
-Language (conditional), Sound, Device info, plus one more with the device-info icon. Five more
-entries are allocated but never constructed, consistent with being patched out like the
-RetroArch icon (not yet checked against stock).
+**Rows and selection.** TextMenu, IconMenu and FileBrowserCache use the same raw-pointer vector
+specialization. A TextItem (0x74 bytes) owns its Action only when flag1c is true; its +0x20 value
+is an SDL surface, not an integer setting. Accepting a text row runs Action::execute; ordinary
+icons directly open their MenuWindow. Global-search icon id 24 instead prepares the ROM caches
+and opens ImeWindow with GlobalSearchAction. SearchAction opens a search MenuWindow after IME
+acceptance. EmuAction distinguishes ROM launches from folders; AppAction builds app commands.
+The progress method receives the current integer index and can open GameDetailWindow.
+
+MenuWindow's secondary popup borrows launch Actions (ownership flag false), and creates owned
+AddFavorite/DeleteRom/Search Actions for ROM rows, RemoveFavorite/ClearFavorite Actions for
+favourites, and ClearRecent for recent rows. Destructive choices are wrapped in PopupDialogAction.
+PopupProgressAction opens ProgressDialog, whose worker executes the supplied Action.
+
+**Settings items** are a separate 0x24-byte record. The field at +8 is an integer selector,
+not an Action pointer or function pointer. SettingMenu uses its own input, drawing and freeing
+methods on these inherited TextMenu rows. Accept (keys 1/4) calls select; left/right adjusts
+values. Newly opened windows receive onShow and are pushed directly onto the window stack.
+
+| Selector | Behavior |
+| --- | --- |
+| 0 | KeySettingWindow |
+| 1 / 2 / 3 | Left/right: volume 0–20, music/effects volume 0–20, backlight 1–10 |
+| 4 / 5 | Confirmation → PopupProgressAction → GeneralAction: reset emulator databases/configs / reset system settings |
+| 7 / 8 / 9 | Device-info menu 9 / KeyTestWindow2 / ADCInfoWindow 12 |
+| 11 / 13 / 15 / 16 | Language / colour / theme / fixes menus (14 / 18 / 19 / 20) |
+| 12 | Left/right cycle idle setting 0 → 5 → 15 → 30 → 0 |
+| 17 | Toggle audio-server flag and `/tmp/no_audioserver` |
+| 18 | Shutdown confirmation with GeneralAction(powerOff) |
+| 19 / 20 | Wi-Fi / hotspot menus (21 / 23) |
+
+Volume preview is delayed 150 ms; changing volume cancels the preceding timer/channel. The
+settings destructor saves system.json, clears the dirty flag and restores volume. Colour rows
+use selectors 1–4 for shared-memory keys 8–11; themes switch skins, and language rows select
+filename/name pairs from the by-value language-choice vector.
+
+**Disabled factory entries.** This Clean binary allocates these six objects and prepares their
+arguments, but both the constructor and append calls are literal `mov r0,r0` NOPs. They remain
+unconstructed and unlisted; the matching source preserves all twelve sites and leaked allocations.
+
+| Item | Label ID | Menu/selector | NOP addresses |
+| --- | --- | --- | --- |
+| RetroArch | 0 | menu 16 | 0x37994, 0x379a0 |
+| Key settings | 22 | selector 0 | 0x381d0, 0x381dc |
+| Theme (when themes exist) | 125 | selector 15 | 0x38268, 0x38274 |
+| Fixes | 130 | selector 16 | 0x382e4, 0x382f0 |
+| Factory reset | 28 | selector 5 | 0x3831c, 0x38328 |
+| Key test | 31 | selector 8 | 0x3838c, 0x38398 |
 
 **Clean vs Expert:** exactly two instructions in `createMenu` differ, at 0x37994 and 0x379a0.
 Clean replaces the RetroArch item's constructor call and its add-to-menu call with NOPs
@@ -227,7 +274,8 @@ read memory or a `FILE*`; input/output bytes have different signed types under t
 
 The file-browser helper is proven at 0x12ce28–0x1302cc. `FileBrowserCache` is 0x1c bytes:
 a path-stack vector at +0, cached-directory vector at +0x0c, and Boolean filter callback at +0x18.
-Each cached directory is a string path plus a pointer to a vector of `TextItem*` (28 bytes).
+Each cached directory is a string path plus a pointer to a `vector<void*>` of TextItem rows
+(28 bytes for the directory record).
 Loads stop at 20,000 items; navigation reuses cached vectors and moves hits to the front. Old
 vectors are removed from the back when cached items exceed 40,000 before loading another
 directory. Recursive counts include a nonempty subdirectory as an extra entry. `FileAction`
@@ -294,7 +342,7 @@ and restarts MainUI, which restores its windows from `/tmp/state.json`.
 | Overlay or new status-bar icon | after the indicator calls in `runWindowLoop`, before `flipScreen` (0x36c20) | Draw onto `g_backBuffer` (0x181928, 640×480 ARGB) |
 | React to settings changes | `statusPollThread` (0x4a050) or `GetKeyShm`/`SetKeyShm` | Settings live in shared memory |
 | Add a main-menu icon | `createMenu` case 0 (0x37784) | Add an `IconMenuItem` pointing at a new menu id |
-| Add a Settings entry | `createMenu` case 7 (`SettingMenuItem`, 0x282d0) | Needs the label and handler meanings traced first |
+| Add a Settings entry | `createMenu` case 7 (`SettingMenuItem`, 0x282d0) | Use an integer selector handled by SettingMenu::select (table above) |
 | A whole new screen | your own `TrimusWindow` subclass + `pushWindow` (0x36d88) | Layout is exact; subclass in C++ with the same toolchain |
 
 ## Exact toolchain and compiler flags
@@ -311,12 +359,10 @@ arm-linux-gnueabihf-g++ -O0 -fsigned-char      # Arm GNU Toolchain 8.2-2018.08 (
   differ because the original loads `char` as signed (`ldrsb`). With `-O0 -fsigned-char`, all
   2,126 functions and 808,104 bytes are identical at 0x57920.
 - **cJSON 1.7.10** matches only when compiled as C++: all 104 functions, 23,996 bytes at 0x51b60.
-- **Miyoo's own C++** matches with the same flags (see `src/MATCHES.md`).
+- **Miyoo's own C++** matches with the same flags (see `src/MATCHES.md`); the final C authentication unit additionally requires `-fPIC`.
 
 ## Open questions
 
-- Settings item handlers and label IDs
-- The ROM-list database code
 - The `librsautil` + UUID device check
 - `handleGlobalInput` in detail
 - What each status-bar indicator draws

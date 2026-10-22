@@ -7,15 +7,16 @@ method: `docs/unit-workflow.md`. Update this file when a unit is proven or the p
 
 - **Goal:** complete MainUI source that rebuilds byte-exact with Arm GNU 8.2-2018.08, `-O0 -fsigned-char`,
   worked file by file (one translation unit per `src/tu_<lo>.cpp` or `.c`).
-- **Progress:** 21 whole units proven by `tools/unitcheck.py`, plus 310 matched function ranges in
-  `tu_015b20`: 1,820 of 2,612 Miyoo functions, 390,092 of 458,064 bytes (85.16%). CI checks every
-  match and every unit on each push. Parts p01–p11 match the complete body through 0x39240 (359 function
-  symbols including aliases, 145,184 bytes); the inline/template tail remains unfinished.
+- **Progress:** all **22 whole units** pass `tools/unitcheck.py`: **2,612 of 2,612 tracked
+  Miyoo functions, 458,064 of 458,064 bytes (100.00%)**. The final unit, `tu_015b20`, matches
+  0x15b20–0x49c3c: 145,184 body bytes and 798 inline/template sections (68,092 bytes).
+  All 689 registered individual matches remain checked by `scripts/run_matches.sh`.
 - **Embedded libraries:** SQLite 3.30.1 and cJSON 1.7.10 rebuild byte-exact (`scripts/verify-libs.sh`);
   tiny-utf8 4.4.x is header-only and appears in the template tails of the files that use it.
 
 | Proven unit | Range | What it is |
 | --- | --- | --- |
+| tu_015b20 (C++) | 0x015b20–0x049c3c | Complete launcher UI: parts p01–p11, compiler init pair, 798 inline/template sections |
 | tu_04cb68 (C++) | 0x04cb68–0x051b5c | Hardware diagnostics: 56 written functions, constructor/destructor variants, 27 inline tail functions |
 | tu_049c3c (C++) | 0x049c3c–0x04c418 | Main program, status/hotplug/Wi-Fi callbacks: ten written functions, init pair, 93 inline/template functions |
 | tu_04c418 (C++) | 0x04c418–0x04cb68 | Ten circular singly linked-list helpers, no tail |
@@ -115,24 +116,16 @@ The written functions cover USB/device keyboards, key masks, LCD colors, sound, 
 and the hardware-test menu. All 108 string-literal references were checked separately.
 The SD-card workers retain the original use of an uninitialized end timestamp inside the loop.
 
-## Next units, in order
+## Next steps
 
-Work outward from proven units: a proven neighbour fixes one boundary for free. One fresh session per
-unit, each in its own worktree; merge their branches into `main` one at a time.
+The tracked Miyoo code is fully covered by proven units. `tu_015b20` integration is complete;
+`docs/plan-tu_015b20.md` records the header order, shared row vector and bounds-checked overloads.
+The program map now incorporates the item/action wiring, settings selectors and disabled entries.
 
-1. **tu_015b20 last:** the first file, 213,276 bytes, about 47% of all bytes (all window/menu classes,
-   actions, createMenu). It benefits from the class headers the other units produce. The original
-   "item and action wiring" question is answered inside it. Plan and part ranges:
-   `docs/plan-tu_015b20.md`. The skeleton is in place: `src/tu_015b20.cpp` includes the part files
-   `src/tu_015b20/p01.inc`..`p11.inc`; check a growing body with `unitcheck --body-only`
-   (`scripts/run_units.sh` runs it that way until the unit is complete). Parts p01–p11 are complete.
-   **Integration is next: prove the inline/template tail, 0x39240–0x49c3c.** Start with include
-   order and then the missing/mismatched template types and overloads; the full check currently
-   fails at the first tail section. Keep the original twelve disabled call sites in createMenu.
-   Once the strict whole-unit check passes, update UNIT_FIXED, remove the partial-unit exception,
-   regenerate the TU map, and update the program map from the part findings. Two more starts
-   recorded in p11 (smallMenuFont and the compiler init wrapper) raise the function denominator
-   from 2,610 to 2,612.
+The next engineering milestone is a complete linked executable: resolve cross-unit declarations,
+original import/link settings, data and relocation targets, then compare the linked output. The
+current proofs compare function code and unit layout with link-time words masked; 100% coverage
+alone does not establish a byte-identical linked ELF or successful operation on hardware.
 
 ## Open findings and questions
 
@@ -142,9 +135,9 @@ unit, each in its own worktree; merge their branches into `main` one at a time.
   `src/tu_14e0cc.c`.
 - `ghidra/names.tsv` misses some function starts (template functions, PIC code); tools that need
   every start scan the binary or also read the Ghidra export.
-- Not done: a `librsautil` + `MI_SYS_ReadUuid` device check, `handleGlobalInput` details, the
-  program-map integration of the proven action/status details, and a diff against stock Miyoo
-  MainUI (June 10 2023 build). The five disabled settings entries are now identified in the p11 plan.
+- Further analysis: a `librsautil` + `MI_SYS_ReadUuid` device-check explanation, fuller hotkey/status
+  documentation, and a diff against stock Miyoo MainUI (June 10 2023 build). The settings selectors
+  and six disabled items are documented in the program map.
 
 ## Deferred tooling
 

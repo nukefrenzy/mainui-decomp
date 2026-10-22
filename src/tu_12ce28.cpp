@@ -32,15 +32,15 @@ int compareFileItems(TextItem *left, TextItem *right)
         return right->action->result - left->action->result;
     return strcmp(left->label.c_str(), right->label.c_str());
 }
-void insertFileItem(std::vector<TextItem *> *items, TextItem *item)
+void insertFileItem(std::vector<void *> *items, TextItem *item)
 {
     int i = 0;
     while (i < items->size()) {
-        if (compareFileItems(item, (*items)[i]) <= 0) break;
+        if (compareFileItems(item, (TextItem *)(*items)[i]) <= 0) break;
         i++;
     }
-    if (i < items->size()) items->insert(items->begin() + i, (TextItem *)item);
-    else items->push_back((TextItem *)item);
+    if (i < items->size()) items->insert(items->begin() + i, (void *)item);
+    else items->push_back((void *)item);
 }
 int countDirectory(std::string path, FileFilter filter, bool nested, char *buffer)
 {
@@ -80,7 +80,7 @@ int countDirectoryItems(std::string path, FileFilter filter)
     }
     return result;
 }
-int loadDirectory(std::vector<TextItem *> *items, const char *path, FileFilter filter, int limit, int parent)
+int loadDirectory(std::vector<void *> *items, const char *path, FileFilter filter, int limit, int parent)
 {
     int count = 0;
     char *buffer = (char *)malloc(strlen(path) + 256);
@@ -114,10 +114,10 @@ int loadDirectory(std::vector<TextItem *> *items, const char *path, FileFilter f
     free(buffer);
     return count;
 }
-void FileBrowserCache::freeItems(std::vector<TextItem *> *items)
+void FileBrowserCache::freeItems(std::vector<void *> *items)
 {
     for (int i = 0; i < items->size(); i++) {
-        TextItem *item = (*items)[i];
+        TextItem *item = (TextItem *)(*items)[i];
         delete item;
     }
     items->clear();
@@ -143,7 +143,7 @@ int FileBrowserCache::trim()
     }
     return 0;
 }
-std::vector<TextItem *> *FileBrowserCache::find(const char *path)
+std::vector<void *> *FileBrowserCache::find(const char *path)
 {
     DirectoryItems entry;
     for (int i = 0; i < directories.size(); i++) {
@@ -157,29 +157,29 @@ std::vector<TextItem *> *FileBrowserCache::find(const char *path)
     }
     return NULL;
 }
-std::vector<TextItem *> *FileBrowserCache::open(const char *path)
+std::vector<void *> *FileBrowserCache::open(const char *path)
 {
     clear();
     paths.clear();
     paths.push_back(std::string(path));
     DirectoryItems entry;
     entry.path = path;
-    entry.items = new std::vector<TextItem *>;
+    entry.items = new std::vector<void *>;
     int count = loadDirectory(entry.items, path, filter, 20000, 0);
     directories.push_back(entry);
     return entry.items;
 }
-std::vector<TextItem *> *FileBrowserCache::parent()
+std::vector<void *> *FileBrowserCache::parent()
 {
     if (paths.size() > 1) paths.pop_back();
     std::string path(paths.back());
-    std::vector<TextItem *> *items = find(path.c_str());
+    std::vector<void *> *items = find(path.c_str());
     if (items) return items;
     {
         trim();
         DirectoryItems entry;
         entry.path = path;
-        entry.items = new std::vector<TextItem *>;
+        entry.items = new std::vector<void *>;
         int count = loadDirectory(entry.items, path.c_str(), filter, 20000, paths.size() > 1);
         directories.insert(directories.begin(), entry);
         printf("parentdir %s return %p\n", path.c_str(), entry.items);
@@ -187,16 +187,16 @@ std::vector<TextItem *> *FileBrowserCache::parent()
     }
     return items;
 }
-std::vector<TextItem *> *FileBrowserCache::child(const char *path)
+std::vector<void *> *FileBrowserCache::child(const char *path)
 {
     paths.push_back(std::string(path));
-    std::vector<TextItem *> *items = find(path);
+    std::vector<void *> *items = find(path);
     if (items) return items;
     {
         trim();
         DirectoryItems entry;
         entry.path = path;
-        entry.items = new std::vector<TextItem *>;
+        entry.items = new std::vector<void *>;
         int count = loadDirectory(entry.items, path, filter, 20000, 1);
         directories.insert(directories.begin(), entry);
         printf("childdir %s return %p\n", path, entry.items);

@@ -55,7 +55,7 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `ClearRecentAction::execute(void*)` | 0x19fd8 | 84 | tu_015b20.cpp |
 | `AddFavoriteAction::execute(void*)` | 0x1a02c | 1056 | tu_015b20.cpp |
 | `DeleteRomAction::execute(void*)` | 0x1a44c | 112 | tu_015b20.cpp |
-| `power_label_1a4bc(char const*, std::vector<TextItem*>*)` | 0x1a4bc | 672 | tu_015b20.cpp |
+| `power_label_1a4bc(char const*, std::vector<void*>*)` | 0x1a4bc | 672 | tu_015b20.cpp |
 | `launch_label_1a75c(char const*, char const*)` | 0x1a75c | 456 | tu_015b20.cpp |
 | `buildMenu_1a924(char const*)` | 0x1a924 | 2284 | tu_015b20.cpp |
 | `isFavourite(char*, FILE*, char const*)` | 0x1b210 | 632 | tu_015b20.cpp |
@@ -69,7 +69,7 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `setRomListPosition(std::vector<RomListPosition>*, std::string const&, int, int, int)` | 0x1c760 | 368 | tu_015b20.cpp |
 | `getRomListPosition(std::vector<RomListPosition>*, std::string, RomListPosition*)` | 0x1c8d0 | 196 | tu_015b20.cpp |
 | `loadRomListPositions(std::vector<RomListPosition>*)` | 0x1c994 | 764 | tu_015b20.cpp |
-| `saveRomListPositions(std::vector<RomListPosition> const*)` | 0x1cc90 | 592 | tu_015b20.cpp |
+| `saveRomListPositions(std::vector<RomListPosition>*)` | 0x1cc90 | 592 | tu_015b20.cpp |
 | `loadThumbnail(char const*, int, int)` | 0x1cee0 | 1080 | tu_015b20.cpp |
 | `makeThumbPath(std::string*, char const*)` | 0x1d318 | 1032 | tu_015b20.cpp |
 | `createSurface(int, int)` | 0x1d720 | 188 | tu_015b20.cpp |
@@ -107,8 +107,8 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `TextMenu::vfunc13()` | 0x206e0 | 52 | tu_015b20.cpp |
 | `TextMenu::getItem(int)` | 0x20714 | 136 | tu_015b20.cpp |
 | `TextMenu::vfunc12(int)` | 0x2079c | 252 | tu_015b20.cpp |
-| `TextMenu::addItem(TextItem*)` | 0x20898 | 56 | tu_015b20.cpp |
-| `TextMenu::insertSorted(TextItem*, int (*)(TextItem*, TextItem*))` | 0x208d0 | 364 | tu_015b20.cpp |
+| `TextMenu::addItem(void*)` | 0x20898 | 56 | tu_015b20.cpp |
+| `TextMenu::insertSorted(void*, int (*)(TextItem*, TextItem*))` | 0x208d0 | 364 | tu_015b20.cpp |
 | `TextMenu::addUnique(TextItem*)` | 0x20a3c | 224 | tu_015b20.cpp |
 | `database_strlen_20b1c(char*)` | 0x20b1c | 184 | tu_015b20.cpp |
 | `importGameList(char const*, int, char const*, sqlite3*)` | 0x20bd4 | 3140 | tu_015b20.cpp |
@@ -152,7 +152,7 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `prepareGlobalRomCache()` | 0x27014 | 1808 | tu_015b20.cpp |
 | `IconMenu::vfunc4()` | 0x27724 | 600 | tu_015b20.cpp |
 | `IconMenu::freeItems()` | 0x2797c | 180 | tu_015b20.cpp |
-| `IconMenu::addItem(IconMenuItem*)` | 0x27a30 | 56 | tu_015b20.cpp |
+| `IconMenu::addItem(void*)` | 0x27a30 | 56 | tu_015b20.cpp |
 | `IconMenu::vfunc11()` | 0x27a68 | 348 | tu_015b20.cpp |
 | `IconMenu::vfunc3()` | 0x27bc4 | 1804 | tu_015b20.cpp |
 | `SettingMenuItem::SettingMenuItem(int, char const*, int)` | 0x282d0 | 232 | tu_015b20.cpp |
@@ -460,11 +460,11 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `FileBrowserCache::~FileBrowserCache()` | 0x12ce74 | 68 | tu_12ce28.cpp |
 | `FileBrowserCache::clear()` | 0x12ceb8 | 256 | tu_12ce28.cpp |
 | `compareFileItems(TextItem*, TextItem*)` | 0x12cfb8 | 148 | tu_12ce28.cpp |
-| `insertFileItem(std::vector<TextItem*, std::allocator<TextItem*> >*, TextItem*)` | 0x12d04c | 320 | tu_12ce28.cpp |
+| `insertFileItem(std::vector<void*, std::allocator<void*> >*, TextItem*)` | 0x12d04c | 320 | tu_12ce28.cpp |
 | `countDirectory(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, bool (*)(char const*, char const*), bool, char*)` | 0x12d18c | 628 | tu_12ce28.cpp |
 | `countDirectoryItems(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, bool (*)(char const*, char const*))` | 0x12d400 | 180 | tu_12ce28.cpp |
-| `loadDirectory(std::vector<TextItem*, std::allocator<TextItem*> >*, char const*, bool (*)(char const*, char const*), int, int)` | 0x12d4b4 | 792 | tu_12ce28.cpp |
-| `FileBrowserCache::freeItems(std::vector<TextItem*, std::allocator<TextItem*> >*)` | 0x12d7cc | 164 | tu_12ce28.cpp |
+| `loadDirectory(std::vector<void*, std::allocator<void*> >*, char const*, bool (*)(char const*, char const*), int, int)` | 0x12d4b4 | 792 | tu_12ce28.cpp |
+| `FileBrowserCache::freeItems(std::vector<void*, std::allocator<void*> >*)` | 0x12d7cc | 164 | tu_12ce28.cpp |
 | `FileBrowserCache::totalItems()` | 0x12d870 | 168 | tu_12ce28.cpp |
 | `FileBrowserCache::trim()` | 0x12d918 | 272 | tu_12ce28.cpp |
 | `FileBrowserCache::find(char const*)` | 0x12da28 | 464 | tu_12ce28.cpp |

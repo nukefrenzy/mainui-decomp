@@ -46,7 +46,7 @@ ap.add_argument("--orig", default=os.path.join(ROOT, "MainUI-354-clean"))
 ap.add_argument("--flags", default="-O0 -fsigned-char")
 ap.add_argument("--verbose", action="store_true")
 ap.add_argument("--body-only", action="store_true", help="compare .text only and report the matching prefix")
-ap.add_argument("--window", type=lambda x: int(x, 0), default=0x10000, help="how far past .text to look for the tail")
+ap.add_argument("--window", type=lambda x: int(x, 0), default=None, help="tail search size (default: required end, or 0x10000 without one)")
 a = ap.parse_args()
 
 units = {}
@@ -189,7 +189,8 @@ if idx is not None:
     cur += len(data)
 tail_lo = cur
 # every word in the window is a candidate start: names.tsv does not list every function
-region_end = min(tail_lo + a.window, TB + len(TD))
+window = a.window if a.window is not None else max(0x10000, (required_end or tail_lo) - tail_lo)
+region_end = min(tail_lo + window, TB + len(TD))
 if required_end is not None:
     region_end = min(region_end, required_end)
 

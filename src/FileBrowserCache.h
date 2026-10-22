@@ -33,20 +33,20 @@ public:
 };
 struct DirectoryItems {
     std::string path;
-    std::vector<TextItem *> *items;
+    std::vector<void *> *items;
 };
 class FileBrowserCache {
 public:
     FileBrowserCache(FileFilter);
     ~FileBrowserCache();
     void clear();
-    void freeItems(std::vector<TextItem *> *);
+    void freeItems(std::vector<void *> *);
     int totalItems();
     int trim();
-    std::vector<TextItem *> *find(const char *);
-    std::vector<TextItem *> *open(const char *);
-    std::vector<TextItem *> *parent();
-    std::vector<TextItem *> *child(const char *);
+    std::vector<void *> *find(const char *);
+    std::vector<void *> *open(const char *);
+    std::vector<void *> *parent();
+    std::vector<void *> *child(const char *);
     std::vector<std::string> paths;
     std::vector<DirectoryItems> directories;
     FileFilter filter;

@@ -4,15 +4,13 @@
 #include <atomic>
 #include <stdio.h>
 #include <unistd.h>
+#include "BGWorker.h"
 #include "TrimusWindow.h"
-#include "MenuWindow.h"
 #include <list>
-#include "Action.h"
 #include "ConfigTypes.h"
-#include "MultiDBCachedTextMenu.h"   // EmuInfo
+struct EmuInfo;
+class TextItem;
 #include "ListMenu.h"
-#include "FileBrowserCache.h"
-#include "ImeWindow.h"
 
 // p01
 #include <string>
@@ -26,7 +24,6 @@
 #include <vector>
 #include "SDLTypes.h"
 #include "ConfigTypes.h"
-#include "MultiDBCachedTextMenu.h"   // EmuInfo
 typedef void TTF_Font;
 extern "C" {
 int SDL_Flip(SDL_Surface *s);
@@ -132,19 +129,17 @@ int powerOff(void *arg);                    // 0x1761c
 void powerOffNow();                         // 0x176a8
 void pushWindow(TrimusWindow *w);           // 0x36d88 (p11)
 #include "Action.h"
-class GeneralAction : public Action {
+class AppAction : public Action {
 public:
-    GeneralAction(int result, int (*fn)(void *), void *arg) : Action(result) { this->fn = fn; this->arg = arg; verbose = false; } // 0x39bac
-    virtual ~GeneralAction() {}
-    virtual int execute(void *param);                        // 0x19ecc
-    int (*fn)(void *);  // +0x08
-    void *arg;          // +0x0c
-    bool verbose;       // +0x10
+    AppAction(AppInfo *app, bool detail, int result) : Action(result) { this->app = app; this->detail = detail; } // 0x3984c
+    virtual ~AppAction() {}
+    virtual int execute(void *param);                        // 0x18c54
+    virtual int progress(int *item, int index);               // 0x18c94, opens the detail window
+    virtual int finished() { return 1; }                     // 0x39924
+    AppInfo *app;       // +0x08
+    bool detail;        // +0x0c
 };
-int enableSwapAction(void *arg);            // 0x38834 (p11)
-#include "FileBrowserCache.h"               // TextItem
-// A ROM (or ROM folder) in a list; sizeof == 0x74. Ctor 0x39948, dtors 0x39ac4/0x39b34 and
-// finished 0x39b6c are inline in the tail.
+
 class EmuAction : public Action {
 public:
     EmuAction(EmuInfo *emu, const char *label, const char *rompath, const char *imgpath, int result,
@@ -163,6 +158,125 @@ public:
     int isDir;              // +0x58  opens a ROM folder instead of launching
     std::string folderArg;  // +0x5c  handed to the folder window (MenuWindow::strB4)
 };
+
+class GeneralAction : public Action {
+public:
+    GeneralAction(int result, int (*fn)(void *), void *arg) : Action(result) { this->fn = fn; this->arg = arg; verbose = false; } // 0x39bac
+    virtual ~GeneralAction() {}
+    virtual int execute(void *param);                        // 0x19ecc
+    int (*fn)(void *);  // +0x08
+    void *arg;          // +0x0c
+    bool verbose;       // +0x10
+};
+
+class MenuAction : public Action {
+public:
+    MenuAction(ListMenu *menu, int result) : Action(result) { this->menu = menu; field0c = 0; }
+    virtual ~MenuAction() {}
+    ListMenu *menu;     // +0x08
+    int field0c;        // +0x0c
+};
+
+class DeleteRomAction : public MenuAction {
+public:
+    DeleteRomAction(ListMenu *menu, int result) : MenuAction(menu, result) {} // 0x39d5c
+    virtual ~DeleteRomAction() {}
+    virtual int execute(void *param);                        // 0x1a44c (p03)
+};
+
+class ClearFavoriteAction : public MenuAction {
+public:
+    ClearFavoriteAction(ListMenu *menu, int result) : MenuAction(menu, result) {} // 0x39e18
+    virtual ~ClearFavoriteAction() {}
+    virtual int execute(void *param);                        // 0x19f64
+};
+
+class ClearRecentAction : public MenuAction {
+public:
+    ClearRecentAction(ListMenu *menu, int result) : MenuAction(menu, result) {} // 0x39ed4
+    virtual ~ClearRecentAction() {}
+    virtual int execute(void *param);                        // 0x19fd8
+};
+
+class MenuItemAction : public Action {
+public:
+    MenuItemAction(TextItem *item, int result) : Action(result) { this->item = item; }
+    virtual ~MenuItemAction() {}
+    TextItem *item;     // +0x08
+};
+
+class AddFavoriteAction : public MenuItemAction {
+public:
+    AddFavoriteAction(TextItem *item, int result) : MenuItemAction(item, result) {} // 0x3a054
+    virtual ~AddFavoriteAction() {}
+    virtual int execute(void *param);                        // 0x1a02c
+};
+
+class RemoveFavoriteAction : public MenuItemAction {
+public:
+    RemoveFavoriteAction(TextItem *item, int result) : MenuItemAction(item, result) {} // 0x3a110
+    virtual ~RemoveFavoriteAction() {}
+    virtual int execute(void *param);                        // 0x19acc
+};
+
+#include "FileBrowserCache.h"
+
+class SearchAction : public Action {
+public:
+    SearchAction(ListMenu *arg, int id, void *emu) : Action(-1) { this->arg = arg; this->id = id; this->emu = emu; } // 0x3a24c
+    virtual ~SearchAction() {}
+    virtual int execute(void *param);                        // 0x19b04
+    ListMenu *arg;      // +0x08  originating menu
+    int id;             // +0x0c  menu id of the result window
+    void *emu;          // +0x10
+};
+
+class GlobalSearchAction : public Action {
+public:
+    GlobalSearchAction() : Action(-1) {}                     // 0x3a32c
+    virtual ~GlobalSearchAction() {}
+    virtual int execute(void *param);                        // 0x19c18
+};
+
+class PopupSearchIME : public Action {
+public:
+    PopupSearchIME(ListMenu *arg, int id, void *emu) : Action(-1) { this->arg = arg; this->id = id; this->emu = emu; } // 0x3a3dc
+    virtual ~PopupSearchIME() {}
+    virtual int execute(void *param);                        // 0x19d24
+    ListMenu *arg;      // +0x08  originating menu
+    int id;             // +0x0c
+    void *emu;          // +0x10
+};
+
+class PopupDialogAction : public Action {
+public:
+    PopupDialogAction(int title, int text, bool flag, Action *action) : Action(-1) { this->title = title; this->text = text; this->flag = flag; this->action = action; } // 0x3a4bc
+    virtual ~PopupDialogAction() {}
+    virtual int execute(void *param);                        // 0x19dc0
+    int title;          // +0x08
+    int text;           // +0x0c
+    bool flag;          // +0x10
+    Action *action;     // +0x14  run by the dialog
+};
+
+class PopupProgressAction : public Action {
+public:
+    PopupProgressAction(int title, Action *action) : Action(-1) { this->title = title; this->action = action; } // 0x3a5a8
+    virtual ~PopupProgressAction() {}
+    virtual int execute(void *param);                        // 0x19e44
+    int title;          // +0x08
+    Action *action;     // +0x0c
+};
+
+#include "TextMenuDrawer.h"
+#include "MultiDBCachedTextMenu.h"
+#include "ImeWindow.h"
+
+
+int enableSwapAction(void *arg);            // 0x38834 (p11)
+// A ROM (or ROM folder) in a list; sizeof == 0x74. Ctor 0x39948, dtors 0x39ac4/0x39b34 and
+// finished 0x39b6c are inline in the tail.
+
 // The p10 windows p01 constructs (GameDetailWindow, ProgressDialog, DialogWindow, CountDownWindow)
 // are declared with the other windows at the end of this file.
 void writeCmdToRun(const char *cmd);        // 0x17fc0
@@ -196,112 +310,25 @@ SDL_Surface *createSurface(int w, int h);                    // 0x1d720 (p03)
 // Argument of the busy-screen thread (SDL_CreateThread from IconMenu::onSelect, createMenu, ...).
 // The {0, -1, 0} ctor at 0x3adc4 (tail) is called by exactly the busyScreenThread users, so it is
 // taken to be this struct's; the third field is unverified.
-struct BusyData {
-    BusyData() { title = 0; type = -1; field8 = 0; }        // 0x3adc4, inline; unverified
-    const char *title;      // "sdata->title"
-    int type;
-    int field8;             // unverified
-};
+
 int busyScreenThread(void *arg);                             // 0x193a8
 int loadingScreenThread(void *arg);                          // 0x198a8
 
-class AppAction : public Action {
-public:
-    AppAction(AppInfo *app, bool detail, int result) : Action(result) { this->app = app; this->detail = detail; } // 0x3984c
-    virtual ~AppAction() {}
-    virtual int execute(void *param);                        // 0x18c54
-    virtual int progress(int *item, int index);               // 0x18c94, opens the detail window
-    virtual int finished() { return 1; }                     // 0x39924
-    AppInfo *app;       // +0x08
-    bool detail;        // +0x0c
-};
+
 // Base (RTTI "MenuAction", ctor 0x39c8c, vtable 0x1546e0) of the actions that reload a list afterwards.
-class MenuAction : public Action {
-public:
-    MenuAction(ListMenu *menu, int result) : Action(result) { this->menu = menu; field0c = 0; }
-    virtual ~MenuAction() {}
-    ListMenu *menu;     // +0x08
-    int field0c;        // +0x0c
-};
-class DeleteRomAction : public MenuAction {
-public:
-    DeleteRomAction(ListMenu *menu, int result) : MenuAction(menu, result) {} // 0x39d5c
-    virtual ~DeleteRomAction() {}
-    virtual int execute(void *param);                        // 0x1a44c (p03)
-};
-class ClearFavoriteAction : public MenuAction {
-public:
-    ClearFavoriteAction(ListMenu *menu, int result) : MenuAction(menu, result) {} // 0x39e18
-    virtual ~ClearFavoriteAction() {}
-    virtual int execute(void *param);                        // 0x19f64
-};
-class ClearRecentAction : public MenuAction {
-public:
-    ClearRecentAction(ListMenu *menu, int result) : MenuAction(menu, result) {} // 0x39ed4
-    virtual ~ClearRecentAction() {}
-    virtual int execute(void *param);                        // 0x19fd8
-};
+
+
+
+
 // Base (RTTI "MenuItemAction", ctor 0x39f90, vtable 0x1546c4) of the actions on one list item.
-class MenuItemAction : public Action {
-public:
-    MenuItemAction(TextItem *item, int result) : Action(result) { this->item = item; }
-    virtual ~MenuItemAction() {}
-    TextItem *item;     // +0x08
-};
-class AddFavoriteAction : public MenuItemAction {
-public:
-    AddFavoriteAction(TextItem *item, int result) : MenuItemAction(item, result) {} // 0x3a054
-    virtual ~AddFavoriteAction() {}
-    virtual int execute(void *param);                        // 0x1a02c
-};
-class RemoveFavoriteAction : public MenuItemAction {
-public:
-    RemoveFavoriteAction(TextItem *item, int result) : MenuItemAction(item, result) {} // 0x3a110
-    virtual ~RemoveFavoriteAction() {}
-    virtual int execute(void *param);                        // 0x19acc
-};
-class SearchAction : public Action {
-public:
-    SearchAction(ListMenu *arg, int id, void *emu) : Action(-1) { this->arg = arg; this->id = id; this->emu = emu; } // 0x3a24c
-    virtual ~SearchAction() {}
-    virtual int execute(void *param);                        // 0x19b04
-    ListMenu *arg;      // +0x08  originating menu
-    int id;             // +0x0c  menu id of the result window
-    void *emu;          // +0x10
-};
-class GlobalSearchAction : public Action {
-public:
-    GlobalSearchAction() : Action(-1) {}                     // 0x3a32c
-    virtual ~GlobalSearchAction() {}
-    virtual int execute(void *param);                        // 0x19c18
-};
-class PopupSearchIME : public Action {
-public:
-    PopupSearchIME(ListMenu *arg, int id, void *emu) : Action(-1) { this->arg = arg; this->id = id; this->emu = emu; } // 0x3a3dc
-    virtual ~PopupSearchIME() {}
-    virtual int execute(void *param);                        // 0x19d24
-    ListMenu *arg;      // +0x08  originating menu
-    int id;             // +0x0c
-    void *emu;          // +0x10
-};
-class PopupDialogAction : public Action {
-public:
-    PopupDialogAction(int title, int text, bool flag, Action *action) : Action(-1) { this->title = title; this->text = text; this->flag = flag; this->action = action; } // 0x3a4bc
-    virtual ~PopupDialogAction() {}
-    virtual int execute(void *param);                        // 0x19dc0
-    int title;          // +0x08
-    int text;           // +0x0c
-    bool flag;          // +0x10
-    Action *action;     // +0x14  run by the dialog
-};
-class PopupProgressAction : public Action {
-public:
-    PopupProgressAction(int title, Action *action) : Action(-1) { this->title = title; this->action = action; } // 0x3a5a8
-    virtual ~PopupProgressAction() {}
-    virtual int execute(void *param);                        // 0x19e44
-    int title;          // +0x08
-    Action *action;     // +0x0c
-};
+
+
+
+
+
+
+
+
 
 // p09
 extern "C" void SDL_FreeSurface(SDL_Surface *s);
@@ -344,7 +371,7 @@ char *GetGameName(const char *langFile, const char *name);
 
 // Non-member functions called across parts (p01/p02 functions are defined before every later part).
 // p03
-void power_label_1a4bc(const char *path, std::vector<TextItem *> *items); // 0x1a4bc  writes a favourites file
+void power_label_1a4bc(const char *path, std::vector<void *> *items); // 0x1a4bc  writes a favourites file
 void launch_label_1a75c(const char *label, const char *path);   // 0x1a75c  removes a favourite
 TextMenu *buildMenu_1a924(const char *path);                    // 0x1a924  favourites list
 TextMenu *buildMenu_1b488(std::list<RecentItem> *list);         // 0x1b488  recent games
@@ -359,7 +386,7 @@ void setRomListPosition(std::vector<RomListPosition> *list, const std::string &p
 int getRomListPosition(std::vector<RomListPosition> *list, std::string path,
                        RomListPosition *out);                   // 0x1c8d0
 int loadRomListPositions(std::vector<RomListPosition> *list);   // 0x1c994
-void saveRomListPositions(const std::vector<RomListPosition> *list); // 0x1cc90
+void saveRomListPositions(std::vector<RomListPosition> *list); // 0x1cc90
 SDL_Surface *loadThumbnail(const char *path, int w, int h);     // 0x1cee0
 std::string makeThumbPath(std::string *game, const char *img);  // 0x1d318
 // createSurface 0x1d720 and isFavourite 0x1b210 are declared with p02 above.
@@ -390,12 +417,9 @@ void createRootWindow(std::vector<TrimusWindow *> *);          // 0x373c4
 void startBackgroundThread();                                   // 0x38868
 // pushWindow 0x36d88 and enableSwapAction 0x38834 are declared with p01 above.
 // Inline in the tail (0x3ad44), called by MenuWindow::onShow/draw: menu ids with a ROM/app list.
-inline bool isListMenuId(int id)                                // name unverified
-{
-    return id == 5 || id == 17 || id == 2 || id == 10 || id == 3 || id == 4 || id == 24;
-}
 
-// --- Menus. ListMenu and TextMenuDrawer are in ListMenu.h (owners: p03 ctor/setRect, p04 the rest).
+
+// --- Menus. Bases are in ListMenu.h / TextMenuDrawer.h (p03 ctor/setRect, p04 the rest).
 
 // p05. vtable 0x153da8; sizeof 0x104.
 class TextMenu : public TextMenuDrawer {
@@ -407,18 +431,55 @@ public:
     virtual void vfunc12(int);                                 // 0x2079c
     virtual void vfunc13();                                    // 0x206e0
     virtual void vfunc18();                                    // 0x205f8 slot 18 (new)
-    void addItem(TextItem *item);                              // 0x20898
-    void insertSorted(TextItem *item, int (*cmp)(TextItem *, TextItem *)); // 0x208d0
+    void addItem(void *item);                              // 0x20898
+    void insertSorted(void *item, int (*cmp)(TextItem *, TextItem *)); // 0x208d0
     bool addUnique(TextItem *item);                            // 0x20a3c  false if the label is listed
-    std::vector<TextItem *> *getItems()                        // 0x3a70c, inline
+    std::vector<void *> *getItems()                        // 0x3a70c, inline
     {
         printf("TextMenu %p mItemList %p\n", this, &items);
         return &items;
     }
-    std::vector<TextItem *> items;  // +0xf8
+    std::vector<void *> items;  // +0xf8, TextItem / SettingMenuItem / DeviceInfoItem rows
 };
 
 // p06. vtable 0x153d40; sizeof 0x430 (layout parallels MultiDBCachedTextMenu).
+class DBCacheWorker : public BGWorker {
+public:
+    DBCacheWorker(sqlite3 *db, const std::string &dbName, const std::string &table, int offset, int len,
+                  int x, MenuHelper80 *items, MenuHelper80 *data, EmuInfo *emu, std::string *dir,
+                  std::string *search, bool flag)                // 0x3a74c
+    {
+        this->db = db;
+        this->dbName = dbName;
+        this->table = table;
+        this->offset = offset;
+        this->len = len;
+        this->x = x;
+        this->items = items;
+        this->data = data;
+        this->emu = emu;
+        this->dir = *dir;
+        this->search = *search;
+        this->flag = flag;
+    }
+    virtual ~DBCacheWorker() {}                                // 0x3a8d8 (D0 0x3a954)
+    virtual void run();                                        // 0x23548
+    virtual void finished();                                   // 0x2407c
+    char          raw04[0x200];     // +0x04  SQL/cache-key formatting buffer
+    sqlite3      *db;               // +0x204
+    std::string   dbName;           // +0x208
+    std::string   table;            // +0x220
+    std::string   dir;              // +0x238
+    std::string   search;           // +0x250
+    bool          flag;             // +0x268
+    int           offset;           // +0x26c
+    int           len;              // +0x270
+    int           x;                // +0x274
+    MenuHelper80 *items;            // +0x278
+    MenuHelper80 *data;             // +0x27c
+    EmuInfo      *emu;              // +0x280
+};
+
 class DBCachedTextMenu : public TextMenuDrawer {
 public:
     DBCachedTextMenu(const char *dbName, EmuInfo *emu, int arg174, std::string search); // 0x25240; emu is stored at +0x414
@@ -485,11 +546,11 @@ public:
     virtual int  count() { return items.size(); }              // 0x3a9e0, inline
     virtual void vfunc11();                                    // 0x27a68
     void freeItems();                                          // 0x2797c
-    void addItem(IconMenuItem *item);                          // 0x27a30
+    void addItem(void *item);                          // 0x27a30
     void setField68(int a, int b) { field68 = a; field6c = b; } // 0x3aa10, inline; name unverified
     void setFontFn(TTF_Font *(*fn)()) { fontFn = fn; }         // 0x3aa50, inline; name unverified
     void setField74(int v) { field74 = v; }                    // 0x3aa80, inline; name unverified
-    std::vector<IconMenuItem *> items; // +0x48
+    std::vector<void *> items; // +0x48, IconMenuItem rows; shared specialization with TextMenu
     int          field54;           // +0x54
     int          field58;           // +0x58
     bool         flag5c;            // +0x5c
@@ -592,7 +653,7 @@ public:
     virtual int  count();                                      // 0x2da8c
     SDL_Surface *itemIcon(TextItem *item);                     // 0x2dc14
     FileBrowserCache cache;         // +0x48  filter 0x2d574
-    std::vector<TextItem *> *dirItems; // +0x64  cache.open(path)
+    std::vector<void *> *dirItems; // +0x64  cache.open(path)
     std::vector<SDL_Surface *> icons;  // +0x68  unverified element type
     SDL_Surface *surface74;         // +0x74
     SDL_Surface *surface78;         // +0x78
@@ -602,63 +663,17 @@ public:
 // --- Background workers (BGWorker is in MenuHelpers.h).
 
 // p06 (run/finished); ctor and dtors inline in the tail (0x3a74c-0x3a954). sizeof 0x284.
-class DBCacheWorker : public BGWorker {
-public:
-    DBCacheWorker(sqlite3 *db, const std::string &dbName, const std::string &table, int offset, int len,
-                  int x, MenuHelper80 *items, MenuHelper80 *data, EmuInfo *emu, std::string *dir,
-                  std::string *search, bool flag)                // 0x3a74c
-    {
-        this->db = db;
-        this->dbName = dbName;
-        this->table = table;
-        this->offset = offset;
-        this->len = len;
-        this->x = x;
-        this->items = items;
-        this->data = data;
-        this->emu = emu;
-        this->dir = *dir;
-        this->search = *search;
-        this->flag = flag;
-    }
-    virtual ~DBCacheWorker() {}                                // 0x3a8d8 (D0 0x3a954)
-    virtual void run();                                        // 0x23548
-    virtual void finished();                                   // 0x2407c
-    char          raw04[0x200];     // +0x04  SQL/cache-key formatting buffer
-    sqlite3      *db;               // +0x204
-    std::string   dbName;           // +0x208
-    std::string   table;            // +0x220
-    std::string   dir;              // +0x238
-    std::string   search;           // +0x250
-    bool          flag;             // +0x268
-    int           offset;           // +0x26c
-    int           len;              // +0x270
-    int           x;                // +0x274
-    MenuHelper80 *items;            // +0x278
-    MenuHelper80 *data;             // +0x27c
-    EmuInfo      *emu;              // +0x280
-};
+
 
 // p08 (run/finished); created by MenuWindow (p09, 0x2f6c4). Ctor and dtors inline (0x3af38-0x3b01c).
 // sizeof 0x24.
-class LoadSurfaceWorker : public BGWorker {
-public:
-    LoadSurfaceWorker(std::string path, MenuHelper80 *cache) // 0x3af38  cache unverified
-    {
-        this->cache = cache;
-        this->path = path;
-    }
-    virtual ~LoadSurfaceWorker() {}                            // 0x3afd0 (D0 0x3b01c)
-    virtual void run();                                        // 0x2e344
-    virtual void finished();                                   // 0x2e3ec
-    std::string   path;             // +0x04
-    MenuHelper80 *cache;            // +0x1c
-    int           field20;          // +0x20  unverified
-};
+
 
 // --- Windows (TrimusWindow.h; MenuWindow.h is p09's).
 
 // p09. vtable 0x153a94; sizeof 0x10. Ctor 0x32040: TrimusWindow(title, -1).
+#include "MenuWindow.h"
+
 class FloatWindow : public TrimusWindow {
 public:
     FloatWindow(int titleLabelId);                             // 0x32040
@@ -801,6 +816,31 @@ public:
     virtual int  restoreState(cJSON *obj) { return 0; }        // 0x3ac78, inline
     virtual void update() {}                                   // 0x3aca0, inline
     void *timer;                    // +0x0c  SDL timer
+};
+
+#include <rapidxml.hpp>
+
+inline bool isListMenuId(int id)                                // name unverified
+{
+    return id == 5 || id == 17 || id == 2 || id == 10 || id == 3 || id == 4 || id == 24;
+}
+
+struct BusyData {
+    BusyData() { title = 0; type = -1; field8 = 0; }        // 0x3adc4, inline; unverified
+    const char *title;      // "sdata->title"
+    int type;
+    int field8;             // unverified
+};
+
+class LoadSurfaceWorker : public BGWorker {
+public:
+    inline LoadSurfaceWorker(std::string path, MenuHelper80 *cache); // 0x3af38
+    inline virtual ~LoadSurfaceWorker();                           // 0x3afd0
+    virtual void run();                                        // 0x2e344
+    virtual void finished();                                   // 0x2e3ec
+    std::string   path;             // +0x04
+    MenuHelper80 *cache;            // +0x1c
+    int           field20;          // +0x20  unverified
 };
 
 // Sizes from operator new / operator delete, offsets from the constructors.

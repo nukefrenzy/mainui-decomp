@@ -212,3 +212,16 @@ then where the first use of the displaced function happens.
 - Returning a virtual call's result directly can differ from storing it in the common result
   local and returning later. MenuWindow's progress dispatch needs the direct return; the latter
   adds a store and moves branches even though the result is identical.
+
+- Standard-header order can control template first use as well as inline emission. In the first
+  UI unit, `<string>` precedes the UI declarations and `<iostream>` follows them; system-error
+  string concatenation otherwise jumps ahead of the vector destructor/size templates.
+- Masked caller matches cannot distinguish `vector::at()` from `operator[]`, or two pointer
+  vector specializations. Trace original callee destinations and match the complete tail:
+  shared TextMenu/IconMenu row helpers expose their common `vector<void*>`, while `at()` adds
+  a range-check wrapper and changes later template order. Keep rvalue/const-reference append
+  overloads as well as element types consistent.
+- An inline special member can be declared in its class and defined later in the same TU to
+  preserve tail order. LoadSurfaceWorker's definitions follow p08, after the first implicit
+  RomListPosition/xml_document/DeviceInfoItem special-member uses. No class layout change or
+  artificial template instantiation is needed.

@@ -8,7 +8,7 @@ O=${1:-$ROOT/MainUI-354-clean}
 # Units still being written: only their body prefix is reported (unitcheck --body-only); a short prefix is
 # not a failure, a compile error is.
 # Remove a unit from this list once it is complete.
-PARTIAL="tu_015b20"
+PARTIAL=""
 fails=
 for f in "$ROOT"/src/tu_*.cpp "$ROOT"/src/tu_*.c; do
     [ -e "$f" ] || continue

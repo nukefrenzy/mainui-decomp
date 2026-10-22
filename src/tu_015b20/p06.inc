@@ -448,7 +448,7 @@ void IconMenu::vfunc7(SDL_Surface *dst) {
             index = i-pageStart;
             row = index/field54;
             column = index-row*field54;
-            item = items[i];
+            item = (IconMenuItem *)items.at(i);
             if (i == cur) {
                 surface = item->iconSurface;
                 background = (SDL_Surface*)item->x;
@@ -520,7 +520,7 @@ void IconMenu::vfunc7(SDL_Surface *dst) {
 
 // 0x26fa0
 void *IconMenu::getItem(int index) {
-    if (items.size() != 0)return items[index];
+    if (items.size() != 0)return items.at(index);
     return NULL;
 }
 
@@ -607,13 +607,13 @@ int IconMenu::vfunc4() {
 void IconMenu::freeItems() {
     puts("IconMenu::freeListItem");
     for (int i = 0;i<items.size();i++) {
-        IconMenuItem *item = items[i];
+        IconMenuItem *item = (IconMenuItem *)items.at(i);
         delete item;
     }
 }
 
 // 0x27a30
-void IconMenu::addItem(IconMenuItem *item) {
+void IconMenu::addItem(void *item) {
     items.push_back(item);
 }
 
@@ -621,7 +621,7 @@ void IconMenu::addItem(IconMenuItem *item) {
 void IconMenu::vfunc11() {
     if (str78.compare(g_themePath) != 0) {
         for (int i = 0;i<items.size();i++) {
-            IconMenuItem *item = items[i];
+            IconMenuItem *item = (IconMenuItem *)items.at(i);
             item->reload();
         }
         str78 = g_themePath;

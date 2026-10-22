@@ -41,7 +41,7 @@ TextMenu::~TextMenu()
 void TextMenu::vfunc18()
 {
     for (int i = 0; i < items.size(); i++) {
-        TextItem *item = items[i];
+        TextItem *item = (TextItem *)items[i];
         printf("TextMenu::freeListItem %d %s\n", i, item->label.c_str());
         delete item;
     }
@@ -68,24 +68,24 @@ void *TextMenu::getItem(int index)
 void TextMenu::vfunc12(int index)
 {
     if (index >= 0 && index < items.size()) {
-        TextItem *item = items[index];
+        TextItem *item = (TextItem *)items[index];
         items.erase(items.begin() + index);
         delete item;
     }
 }
 
 // 0x20898
-void TextMenu::addItem(TextItem *item)
+void TextMenu::addItem(void *item)
 {
     items.push_back(item);
 }
 
 // 0x208d0: insert before the first item cmp() does not rank after.
-void TextMenu::insertSorted(TextItem *item, int (*cmp)(TextItem *, TextItem *))
+void TextMenu::insertSorted(void *item, int (*cmp)(TextItem *, TextItem *))
 {
     int i = 0;
     while (i < items.size()) {
-        if (cmp(item, items[i]) <= 0)
+        if (cmp((TextItem *)item, (TextItem *)items[i]) <= 0)
             break;
         i++;
     }
@@ -99,10 +99,10 @@ void TextMenu::insertSorted(TextItem *item, int (*cmp)(TextItem *, TextItem *))
 bool TextMenu::addUnique(TextItem *item)
 {
     for (int i = 0; i < items.size(); i++) {
-        if (item->label.compare(items[i]->label) == 0)
+        if (item->label.compare(((TextItem *)items[i])->label) == 0)
             return false;
     }
-    items.push_back((TextItem *)item);
+    items.push_back((void *)item);
     return true;
 }
 
