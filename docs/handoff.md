@@ -33,8 +33,8 @@ a new request. If committing, use both author and committer
   **310/310 affected first-unit matches**, **22/22 whole units** and the full link audit
   passed. The remaining 379 registered functions were unchanged. The six ARM tooling
   tests passed during the preceding data/unwind recovery; tools did not change in step 1.
-- No whole-ELF byte identity or hardware/device validation is claimed. Do not deploy
-  the experimental audit ELF as MainUI.
+- At the time of step 1, no whole-ELF byte identity or hardware/device validation was
+  claimed. Both are now settled: see "Next work".
 
 ## Step 1 findings: preserve these
 
@@ -75,9 +75,17 @@ GOT offsets in code literals, not by GOT slot address.
 ## Next work
 
 The byte-identical build is complete and enforced (`scripts/build-mainui.sh`,
-`tools/linkaudit.py --require-ready`, CI). Remaining candidates, each needing the user's decision:
-a device test of the built binary (by the user), the optional LD_PRELOAD hook library, and the
-documentation topics listed in `CLAUDE.md`'s roadmap.
+`tools/linkaudit.py --require-ready`, CI).
+
+Device check (2026-10-22): the MainUI that Brad's Miyoo Mini Plus runs,
+`.tmp_update/bin/MainUI-354-clean` on the Onion SD card, has SHA-256 `98c85f6c…0c94`, the same as
+the built binary. Onion's `runtime.sh` bind-mounts it over the 0-byte `miyoo/app/MainUI`, picking the
+clean build when `.tmp_update/config/.showExpert` is absent, as it is on that card. So the device
+already runs a file byte-identical to our build. A device test adds information only for a modified
+build: install it as a separate file, keep a backup, and confirm with the user before touching the card.
+
+Remaining candidates, each needing the user's decision: the optional LD_PRELOAD hook library,
+a modified-build target, and the documentation topics listed in `CLAUDE.md`'s roadmap.
 
 ## Reproduce the environment and checks
 

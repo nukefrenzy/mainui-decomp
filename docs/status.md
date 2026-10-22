@@ -10,6 +10,13 @@ byte-identical to `MainUI-354-clean` (SHA-256 `98c85f6c…0c94`); CI requires it
 [byte-identical-build.md](byte-identical-build.md). The notes below record how the project got
 there.
 
+**2026-10-22: device check.** On Brad's Miyoo Mini Plus SD card (Onion OS), the MainUI that
+runs is `.tmp_update/bin/MainUI-354-clean`. Its SHA-256 is `98c85f6c…0c94`, the same as the built
+binary, so the device already runs a file byte-identical to our build. Onion's
+`runtime.sh` (`mount_main_ui`) bind-mounts `MainUI-$DEVICE_ID-<clean|expert>` over the 0-byte
+`miyoo/app/MainUI`. The card has no `.tmp_update/config/.showExpert`, so it uses the clean build.
+Nothing on the card was changed. A device test adds information only for a modified build.
+
 - **Goal:** complete MainUI source that rebuilds byte-exact with Arm GNU 8.2-2018.08, `-O0 -fsigned-char`,
   worked file by file (one translation unit per `src/tu_<lo>.cpp` or `.c`).
 - **Progress:** all **22 whole units** pass `tools/unitcheck.py`: **2,612 of 2,612 tracked
