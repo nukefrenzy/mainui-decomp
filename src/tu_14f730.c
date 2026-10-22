@@ -16,7 +16,7 @@ extern byte deviceInitialized;   // 0x18267c
 extern byte roundTableA[2][8];    // 0x17ff0c
 extern byte roundTableB[2][8];    // 0x17ff1c
 
-byte deviceInitialized; // 0x18267c
+byte deviceInitialized = 0; // 0x18267c, ordinary .bss: the explicit zero keeps it out of COMMON (public, so -fPIC GOT access is unchanged)
 byte deviceKeyA[8]; // 0x188a24
 byte deviceTx[16]; // 0x188a2c
 byte deviceKeyB[8]; // 0x188a3c

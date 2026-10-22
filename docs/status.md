@@ -173,8 +173,20 @@ BSS step 1 restores the first-unit iostream/private-state order through TU-local
 its absolute placement remains four bytes early. Only five device-ID bytes are proven,
 and the four-byte gap before the launch buffer remains unexplained. See
 [bss-step1.md](bss-step1.md). All 22 units, 310 affected function matches and the full link audit pass; BSS is still
-160 bytes short. Steps 2 (the 96-byte interval) and 3 (C helpers/COMMON) await confirmation.
-Read [handoff.md](handoff.md) to resume with another agent.
+160 bytes short.
+
+BSS step 2 proves the 96-byte interval at 0x181b18 is zero storage in `tu_049c3c` that no
+code references or initializes, in this build and in a second (stock) Miyoo build; its name,
+type and partition are unrecoverable, and no placeholder was added. See
+[bss-step2.md](bss-step2.md). BSS step 3 puts the C units' file-local statics in the original
+`.bss` order, gives four objects the original COMMON linkage and `deviceInitialized` its
+ordinary `.bss` slot; every object before the COMMON block now sits at a constant offset from
+its original. ld orders COMMON per file in link order and by name hash within a file, so the
+remaining COMMON order depends on the (stripped) names. The whole 160-byte deficit is
+accounted for as unreferenced slots (4 + 96 + 4 + 4 + 4 + 48). All matches, 22 units, tooling
+tests and the full link audit pass. See [bss-step3.md](bss-step3.md). Open decisions: names
+for the within-file COMMON order, placeholders for unreferenced storage, then GOT/code
+relocations. Read [handoff.md](handoff.md) to resume with another agent.
 
 ## Open findings and questions
 

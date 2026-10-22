@@ -23,7 +23,7 @@ char *cJSON_GetStringValue(cJSON *item);
 
 int readWholeFile(const char *name, FILE *f, char **out);  // 0x14b8a4
 
-static char g_langPath[128];    // 0x182680
+char g_langPath[128];           // 0x182680, COMMON
 const char *g_defaultStrings[156] = { // 0x17fc9c, built-in English strings
     "RetroArch", // 0
     "Favorite", // 1

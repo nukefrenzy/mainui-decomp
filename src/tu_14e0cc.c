@@ -41,7 +41,17 @@ int readFileTo(const char *path, void *buf)     // 0x14e184
     return n;
 }
 
-static int g_wifiScanEnable;    // 0x182664
+// File-local statics go to .bss in declaration order (GCC 8 C, -O0); this is the original order.
+// The original has 4 more bytes at 0x182670 that nothing references (not reproduced).
+struct WifiStatus;
+static int g_apCount;               // 0x182644
+static int g_wifiBusy;              // 0x182648
+static pthread_mutex_t g_apMutex;   // 0x18264c
+static int g_wifiScanEnable;        // 0x182664
+static int g_wifiConnecting;        // 0x182668
+static pthread_t g_monitorThread;   // 0x18266c
+static int g_monitorRunning;        // 0x182674
+static void (*g_statusCallback)(struct WifiStatus *); // 0x182678
 
 int setWifiScanEnable(int on)   // 0x14e220
 {
@@ -49,8 +59,6 @@ int setWifiScanEnable(int on)   // 0x14e220
     printf("rx_wifi_scan_enable %d\n", on);
 }
 
-static int g_wifiBusy;          // 0x182648
-static int g_wifiConnecting;    // 0x182668
 
 int wifiConnectOpen(const char *ssid)   // 0x14e260
 {
@@ -144,7 +152,7 @@ typedef struct WifiStatus {
     int id;                     // +0x70
 } WifiStatus;
 
-static WifiStatus g_wifiStatus; // 0x1889b0
+WifiStatus g_wifiStatus;        // 0x1889b0, COMMON
 
 WifiStatus *getWifiStatus()     // 0x14e564
 {
@@ -254,9 +262,7 @@ int parseScanLine(const char *text, WifiAP *ap)     // 0x14e824
     return field;
 }
 
-static int g_apCount;               // 0x182644
-static pthread_mutex_t g_apMutex;   // 0x18264c
-static volatile WifiAP g_aps[32];   // 0x182730, filled by the monitor thread
+volatile WifiAP g_aps[32];          // 0x182730, COMMON, filled by the monitor thread
 
 int isScannedSsid(const char *ssid)     // 0x14eacc
 {
@@ -283,7 +289,7 @@ int copyScanResults(WifiAP *out, int max)  // 0x14eb9c
     return n;
 }
 
-static char g_scanBuf[0x4000];  // 0x1849b0
+char g_scanBuf[0x4000];         // 0x1849b0, COMMON
 
 WifiStatus queryWifiStatus();   // 0x14ef98
 
@@ -413,9 +419,6 @@ WifiStatus queryWifiStatus()    // 0x14ef98
 }
 
 int findProcess(const char *name, int flags);  // at 0x123d28
-static pthread_t g_monitorThread;              // 0x18266c
-static int g_monitorRunning;                   // 0x182674
-static void (*g_statusCallback)(WifiStatus *); // 0x182678
 
 void *wifiMonitorThread(void *arg)  // 0x14f530
 {

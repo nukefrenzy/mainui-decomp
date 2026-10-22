@@ -1,19 +1,19 @@
 # Handoff: linked-image recovery
 
 Snapshot: 2026-10-22. Start here, then read `CLAUDE.md`, `docs/status.md`,
-`docs/unit-workflow.md`, `docs/link-audit.md`, `docs/writable-data-recovery.md` and
-`docs/bss-step1.md`. Read current branch/commit state from Git rather than old chat.
-This handoff accompanies the BSS step 1 commit following `e6e91d9`.
+`docs/unit-workflow.md`, `docs/link-audit.md`, `docs/writable-data-recovery.md`,
+`docs/bss-step1.md`, `docs/bss-step2.md` and `docs/bss-step3.md`. Read current branch/commit
+state from Git rather than old chat. Updated for the BSS steps 2 and 3 commit following `b24cb99`.
 
 ## Authorization and stopping points
 
 The user requested three BSS steps, **stopping for confirmation before each next
-step**. Only step 1 has been worked on; it is partially resolved. Steps 2 and 3
-have not begun. The latest request authorizes committing, merging and pushing the
-completed work and preparing this handoff; it does not approve starting step 2.
-Ask for confirmation before step 2 unless the new user's resume instruction
-explicitly approves it. Stop again before step 3. Do not commit, merge or push
-additional work without a new request. If committing, use both author and committer
+step**. All three have been worked on and committed locally (not pushed): step 1 is
+partially resolved, step 2 is fully investigated (no source change, by the user's choice),
+and step 3's approved fixes are applied. No further step is approved. Renaming objects to
+reproduce COMMON order, adding placeholder storage, and the GOT/relocation audit each need
+the user's explicit decision. Do not commit, merge or push additional work without a new
+request. If committing, use both author and committer
 `nukefrenzy <nukefrenzy@users.noreply.github.com>`.
 
 ## Proven state and limits
@@ -27,7 +27,9 @@ additional work without a new request. If committing, use both author and commit
 - **286 import names/versions**, interpreter and **23-library DT_NEEDED order** agree;
   **3,095 body calls** and **59 storage extents / 9,102 bytes / 185 strings** pass.
 - BSS is **35,464 versus 35,624 bytes**, still **160 bytes short**, at the correct
-  section base 0x17ff30. Equal zero bytes would not prove its object allocation/order.
+  section base 0x17ff30. The deficit is fully accounted for as unreferenced slots
+  (4 + 96 + 4 + 4 + 4 + 48, see `docs/bss-step3.md`); equal zero bytes alone would not prove
+  object allocation/order.
 - Init/fini arrays and `.data.rel.ro` also agree; these are observations, not additional
   enforced whole-section checks. GOT and code relocation values remain incomplete.
 - The last full individual sweep passed **689/689** before BSS step 1. After step 1,
@@ -57,20 +59,30 @@ before `g_fbVar` (**0x18085c**, rebuilt **0x180858**). The remaining first-unit 
 and the next TU's status flag are consequently four bytes early. Details and exact
 addresses are in `docs/bss-step1.md`. Step 1 did not reduce the total BSS deficit.
 
-## Next work, after confirmation
+## Steps 2 and 3: done, preserve these
 
-**Step 2:** investigate the **0x181b18–0x181b78** interval between the original last
-volume timestamp and Wi-Fi logging state. Its size is 96 bytes; its object partition
-and type are unknown. Treat “unreferenced” in older notes as a hypothesis to verify.
-Trace original references/initialization and compare named object placement. Do not
-substitute an unexplained reserve array for recovered storage. Stop for review before
-starting step 3, and report unresolved evidence honestly.
+**Step 2** (`docs/bss-step2.md`): 0x181b18–0x181b78 is 96 bytes of zero storage in
+`tu_049c3c`, between `g_lastVolumeTime` and the file-local `g_loggedWifi`, that no code
+references or initializes. A stock Miyoo MainUI (private, `~/mainui-stock/`, SHA-256
+`607dacd9…fd2bc`) has the same unused 96 bytes at the same position. Name, type and partition
+are unrecoverable; the user chose not to add a placeholder.
 
-**Step 3, separately approved:** reconcile C helper buffers, monitor state and
-I2C authentication COMMON objects. Relevant files are `tu_14acfc.c`, `tu_14b860.c`,
-`tu_14da50.c`, `tu_14dc18.c`, `tu_14e0cc.c` and `tu_14f730.c`. Do not assume current
-source order equals emitted BSS/COMMON order. After BSS is established, audit the
-remaining GOT and code relocation values.
+**Step 3** (`docs/bss-step3.md`): file-local statics in `tu_14acfc.c` and `tu_14e0cc.c` are in
+the original `.bss` order; `g_aps`, `g_scanBuf`, `g_wifiStatus` and `g_langPath` are public
+(COMMON); `deviceInitialized` is `= 0` (ordinary `.bss`, still public so `-fPIC` code is
+unchanged). Every object before the COMMON block now has a constant offset from its original.
+Rules verified with probes: C statics follow declaration order; ld places COMMON per file in
+link order, by `bfd_hash` name order within a file. For the PIC unit, pair objects through the
+GOT offsets in code literals, not by GOT slot address.
+
+## Next work, each needing the user's decision
+
+- **Within-file COMMON order:** needs names for `tu_14e0cc`'s three and `tu_14f730`'s five
+  COMMON objects whose hash order matches the original (the originals are stripped).
+- **Unreferenced storage:** placeholders for the device-ID slack, step 2's 96 bytes, and the
+  4 + 4 + 48 bytes in the C units would make BSS size and addresses exact; their names and
+  partition would remain unknown.
+- **After BSS:** audit the remaining GOT and code relocation values.
 
 For direct ARM MOVW/MOVT address scans, use the opcode mask **0x0ff00000** with
 0x03000000 / 0x03400000. **0x0fff0000 is wrong**: it includes immediate bits and

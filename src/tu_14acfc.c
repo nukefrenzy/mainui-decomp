@@ -35,17 +35,18 @@ SDL_cond *SDL_CreateCond(void);
 int SDL_CondWaitTimeout(SDL_cond *cond, SDL_mutex *mutex, unsigned int ms);
 void SDL_DestroyCond(SDL_cond *cond);
 
-static char g_tinymixCmd[64];   // 0x182538
+// File-local statics go to .bss in declaration order (GCC 8 C, -O0); this is the original order.
 static char g_pwrKeyBuf[64];    // 0x1824b8
 static char g_axpBuf[64];       // 0x1824f8
+static char g_tinymixCmd[64];   // 0x182538
 
 struct FdList {                 // 0x182580
     int fd[12];
     int count;
 };
-static struct FdList g_fds;
 static SDL_mutex *g_hotplugMutex;   // 0x182578
 static SDL_cond *g_hotplugCond;     // 0x18257c
+static struct FdList g_fds;         // 0x182580
 static int g_hotplugRunning;        // 0x1825b4
 
 int stub_4acfc()                // 0x14acfc
