@@ -14,8 +14,8 @@ tu_1302cc.cpp	g_distanceExtra	17fb38	128	bytes	declared extent; original ELF ini
 tu_1302cc.cpp	g_codeLengthOrder	17fbb8	19	bytes	declared extent; original ELF initial bytes
 tu_13edfc.cpp	g_imeKeyMap	17fbd4	200	bytes	declared extent; original ELF initial bytes
 tu_14da50.c	g_defaultStrings	17fc9c	624	cstring_table	156 original pointer entries; verify each pointed-to string in order
-tu_14f730.c	roundTableA	17ff0c	16	bytes	declared extent; original ELF initial bytes
-tu_14f730.c	roundTableB	17ff1c	16	bytes	declared extent; original ELF initial bytes
+tu_14f730.c	cipherKeys1	17ff0c	16	bytes	declared extent; original ELF initial bytes
+tu_14f730.c	cipherKeys2	17ff1c	16	bytes	declared extent; original ELF initial bytes
 tu_015b20.cpp	g_windowStack	17ff38	4	bytes	declared extent; zero-initialized original BSS
 tu_015b20.cpp	g_deviceId	17ff48	5	bytes	five bytes read by getSerial; original allocation extent not established
 tu_015b20.cpp	g_launchCmd	17ff54	2048	bytes	declared extent; zero-initialized original BSS
@@ -47,12 +47,12 @@ tu_129f9c.cpp	g_hintColor	1822a8	4	bytes	canonical existing storage for recovere
 tu_129f9c.cpp	g_listColor	1822ac	4	bytes	canonical existing storage for recovered alias; original zero-initialized BSS
 tu_138c50.cpp	g_wlanStatusBuffer	182418	128	bytes	declared extent; original ELF initial bytes
 tu_13edfc.cpp	g_imeInputColor	182498	4	bytes	declared extent; original ELF initial bytes
-tu_14f730.c	deviceInitialized	18267c	1	bytes	declared extent; original ELF initial bytes
+tu_14f730.c	deviceHasInit	18267c	1	bytes	declared extent; original ELF initial bytes
 tu_14f730.c	deviceKeyA	188a24	8	bytes	declared extent; original ELF initial bytes
-tu_14f730.c	deviceTx	188a2c	16	bytes	declared extent; original ELF initial bytes
+tu_14f730.c	deviceTxData	188a2c	16	bytes	declared extent; original ELF initial bytes
 tu_14f730.c	deviceKeyB	188a3c	8	bytes	declared extent; original ELF initial bytes
-tu_14f730.c	deviceCounter	188a44	2	bytes	declared extent; original ELF initial bytes
-tu_14f730.c	deviceRx	188a48	16	bytes	declared extent; original ELF initial bytes
+tu_14f730.c	deviceCounterBuf	188a44	2	bytes	declared extent; original ELF initial bytes
+tu_14f730.c	deviceRecvBuf	188a48	16	bytes	declared extent; original ELF initial bytes
 tu_129f9c.cpp	g_themeUnusedPalette	161814	36	bytes	Original nine remaining 4-byte palette entries preceding openThemeFont literals
 tu_015b20.cpp	g_legacyExtensions	17e6f0	116	cstring_table	Original 29-entry legacy suffix pointer table, including .unif
 tu_015b20.cpp	g_powerOffCommand	151aa8	32	bytes	Patched shutdown command retains its original 32-byte slot

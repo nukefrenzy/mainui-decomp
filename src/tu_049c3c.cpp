@@ -119,6 +119,7 @@ std::vector<RomListPosition> g_romListPositions;
 std::atomic<bool> g_running;
 int g_lastBattery;
 unsigned long g_lastVolumeTime;
+unsigned char g_unrefBss_181b18[96]; // 0x181b18: unreferenced storage at this address in the Onion and stock builds; size and position proven, name, type and partition unknown
 int g_fontSize=24;
 bool g_audioRun=true;
 int g_lastPlug=-1;

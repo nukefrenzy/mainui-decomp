@@ -254,6 +254,17 @@ relocation/call values; the separate raw ARM call/patch comparison now also pass
 All 53 storage checks, 156 strings, 3,095 resolved body calls and final import/version/order checks
 continue to pass.
 
+## Production executable and --require-ready
+
+After the audit link, the same command is run without `--emit-relocs` or a map and the result is
+stripped with `strip --strip-all` into `build/link-audit/MainUI`. Its SHA-256 is compared with the
+original; `executable_ready` is true only when they are equal and every other check passes, and
+`--require-ready` fails otherwise. It now passes: the production executable is byte-identical. The
+link places static `-lgcc` immediately before `libgcc_s.so.1` (as the gcc driver does), which
+reproduces `.dynstr`; `.dynstr` and `.dynamic` are enforced raw. `tu_14f730` is compiled with GCC
+7.3.0 (`deps` `gcc73`), which supplies the original's second `.comment` string. See
+[byte-identical-build.md](byte-identical-build.md).
+
 ## Unmasked code addresses in relocated words
 
 The masked proof ignores every relocated word, so a jump table or function-pointer literal could

@@ -27,6 +27,17 @@ jobs:
       - name: Fetch and verify toolchain (Arm GNU 8.2-2018.08)
         run: echo "MIYOO_TC=$(scripts/fetch-toolchain.sh)" >> "$GITHUB_ENV"
 
+      - name: Cache GCC 7.3.0 cross compiler (built from pinned upstream sources)
+        uses: actions/cache@v6
+        with:
+          path: build/gcc73/install
+          key: gcc73-${{ hashFiles('scripts/fetch-gcc73.sh') }}-arm-gnu-8.2-2018.08
+
+      - name: Fetch and build GCC 7.3.0 (compiles tu_14f730; stamped in MainUI's .comment)
+        run: |
+          command -v m4 >/dev/null || (sudo apt-get update && sudo apt-get install -y --no-install-recommends m4)
+          scripts/fetch-gcc73.sh
+
       - name: Fetch and verify MainUI-354-clean (Onion commit 07505ea)
         run: scripts/fetch-mainui.sh
 
@@ -42,8 +53,8 @@ jobs:
       - name: Test relocation, initializer and dynamic-import checks
         run: python3 -m unittest discover -s tools/tests -v
 
-      - name: Verify embedded libraries, link executable and audit imports/storage
-        run: python3 tools/linkaudit.py --require-link
+      - name: Build MainUI and require it byte-identical to the original (full link audit)
+        run: python3 tools/linkaudit.py --require-ready
 
       - name: Progress summary
         run: python3 tools/progress.py --md "$GITHUB_STEP_SUMMARY"

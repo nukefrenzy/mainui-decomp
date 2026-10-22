@@ -431,16 +431,16 @@ void drawFooter(SDL_Surface *dst, const char *textA, const char *textB)
     int unused = 0;
     int y = 420;
     int x = 20;
-    if (g_navItem != NULL) {
+    if (g_keySettingFooter != NULL) {
         SDL_Rect dr;
         dr.x = 0;
         dr.y = y;
         SDL_Rect sr;
         sr.x = 0;
         sr.y = 0;
-        sr.w = g_navItem->w;
-        sr.h = g_navItem->h;
-        SDL_BlitSurface(g_navItem, &sr, dst, &dr);
+        sr.w = g_keySettingFooter->w;
+        sr.h = g_keySettingFooter->h;
+        SDL_BlitSurface(g_keySettingFooter, &sr, dst, &dr);
     }
     x = 20;
     if (textA != NULL && g_iconA != NULL)

@@ -50,7 +50,7 @@ scripts/fetch-mainui.sh                          # fetches MainUI-354-clean from
 scripts/verify.sh                                # checks both against their expected hashes
 scripts/run_matches.sh                           # every rewrite in src/ must report MATCH
 python3 tools/progress.py                        # matched bytes of Miyoo's own code
-python3 tools/linkaudit.py --require-link        # build experimental ELF; check imports/storage
+scripts/build-mainui.sh                          # build MainUI from src/; must equal the original byte for byte
 scripts/verify-libs.sh                           # SQLite and cJSON rebuild byte-identical
 ```
 

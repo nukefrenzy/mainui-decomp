@@ -18,6 +18,7 @@ std::vector<TrimusWindow *> g_pendingWindows;
 
 // Recovered POD storage. Original addresses describe the target, not this partial link.
 unsigned char g_deviceId[5]; // 0x17ff48: consumed extent; original full allocation size unknown
+unsigned int g_unrefBss_17ff50; // 0x17ff50: unreferenced storage at this address in the Onion and stock builds; size and position proven, name, type and partition unknown
 char g_launchCmd[2048]; // 0x17ff54
 char g_countBuffer[256]; // 0x180754
 SDL_Thread *g_loadingThread; // 0x180854

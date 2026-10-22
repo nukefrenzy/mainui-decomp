@@ -36,6 +36,7 @@ int SDL_CondWaitTimeout(SDL_cond *cond, SDL_mutex *mutex, unsigned int ms);
 void SDL_DestroyCond(SDL_cond *cond);
 
 // File-local statics go to .bss in declaration order (GCC 8 C, -O0); this is the original order.
+static int s_unrefBss_1824b4;   // 0x1824b4: unreferenced storage at this address in the Onion and stock builds; size and position proven, name, type and partition unknown
 static char g_pwrKeyBuf[64];    // 0x1824b8
 static char g_axpBuf[64];       // 0x1824f8
 static char g_tinymixCmd[64];   // 0x182538

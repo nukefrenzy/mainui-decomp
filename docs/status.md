@@ -5,6 +5,11 @@ method: `docs/unit-workflow.md`. Update this file when a unit is proven or the p
 
 ## Where things stand
 
+**2026-10-22: byte-identical build.** `scripts/build-mainui.sh` builds MainUI from `src/` and it is
+byte-identical to `MainUI-354-clean` (SHA-256 `98c85f6c…0c94`); CI requires it. See
+[byte-identical-build.md](byte-identical-build.md). The notes below record how the project got
+there.
+
 - **Goal:** complete MainUI source that rebuilds byte-exact with Arm GNU 8.2-2018.08, `-O0 -fsigned-char`,
   worked file by file (one translation unit per `src/tu_<lo>.cpp` or `.c`).
 - **Progress:** all **22 whole units** pass `tools/unitcheck.py`: **2,612 of 2,612 tracked

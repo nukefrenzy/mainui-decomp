@@ -34,7 +34,7 @@ Ghidra 12.1.4: import with defaults, auto-analyze, run `ghidra/ApplyMainUINames.
 1. Write it in `src/` against the existing headers (`TrimusWindow.h`, `MenuWindow.h`).
 2. `python3 tools/matchfn.py src/File.cpp <name|mangled> <hexaddr> --orig MainUI-354-clean` must print `MATCH`.
    Use mangled names to pick a specific ctor/dtor variant (C2/D2 = base, D0 = deleting).
-3. Add one line to `src/matches.tsv` (file, symbol, addr, size, deps, cflags, signature; deps is `-` or `tinyutf8`,
+3. Add one line to `src/matches.tsv` (file, symbol, addr, size, deps, cflags, signature; deps is `-` or a comma list of `tinyutf8`, `rapidxml`, `gcc73` (compile the file with GCC 7.3.0),
    cflags is `-` or per-file extra flags such as `-fPIC`, identical for all rows of that file), then run
    `python3 tools/progress.py --matches-md src/MATCHES.md`. CI (`.github/workflows/match.yml`) re-checks all of them
    and posts the progress summary.
@@ -66,24 +66,13 @@ export scripts in `tools/ghidra/`). Never downgrade a confirmed name to a guess.
 
 ## Roadmap
 
-For resuming with another agent, read `docs/handoff.md` for current evidence and the user's
-required confirmation before BSS steps 2 and 3.
+For resuming with another agent, read `docs/handoff.md`.
 
 Done: program map, exact toolchain + flags, match toolkit + CI, window layouts, item/action wiring,
-and all 22 Miyoo translation units (100% tracked code coverage). Settings selectors and the six
-disabled entries are documented in `docs/program-map.md`.
-
-Next: **byte-exact final layout**. `python3 tools/linkaudit.py --require-link` builds an experimental
-ARM ELF with verified embedded objects and pinned SDK/runtime libraries. All 286 import names and
-versions, 23 DT_NEEDED entries in order and interpreter match. Read `docs/link-audit.md`: the
-COMDAT deficit is fixed (the independent global g_recentList is std::list<int>). Actual linked
-.text now MATCHes all 1,294,000 bytes with existing relocation/call masks, and raw ARM call/patch
-differences are zero (audit-enforced). All 78,184 .rodata bytes, including pointers, now match
-without masks at 0x1518e8. Read `docs/rodata-recovery.md` for source ordering, fixed literal extents
-and virtual bindings. Linked .data and both ARM exception sections also match without masks; see
-`docs/writable-data-recovery.md`. Next: BSS (160 bytes short) and remaining relocations.
-`src/data.tsv` records 59 checked extents / 9,102 bytes / 185 strings;
-read `docs/data-recovery.md` for allocation limits. No device-validated replacement exists yet.
+all 22 Miyoo translation units, and a **byte-identical build**: `scripts/build-mainui.sh` builds
+MainUI from `src/` and requires its SHA-256 to equal the original's (CI runs it via
+`tools/linkaudit.py --require-ready`). Read `docs/byte-identical-build.md`. The built binary stays in
+`build/` and is never committed or published. No device-validated replacement exists yet.
 
 The starter LD_PRELOAD hook library remains a separate optional feature: same toolchain, wrap
 SDL_PollEvent for a hotkey, compile-test here and device-test by Brad.

@@ -42,7 +42,6 @@ int readFileTo(const char *path, void *buf)     // 0x14e184
 }
 
 // File-local statics go to .bss in declaration order (GCC 8 C, -O0); this is the original order.
-// The original has 4 more bytes at 0x182670 that nothing references (not reproduced).
 struct WifiStatus;
 static int g_apCount;               // 0x182644
 static int g_wifiBusy;              // 0x182648
@@ -50,6 +49,7 @@ static pthread_mutex_t g_apMutex;   // 0x18264c
 static int g_wifiScanEnable;        // 0x182664
 static int g_wifiConnecting;        // 0x182668
 static pthread_t g_monitorThread;   // 0x18266c
+static int s_unrefBss_182670;       // 0x182670: unreferenced storage at this address in the Onion and stock builds; size and position proven, name, type and partition unknown
 static int g_monitorRunning;        // 0x182674
 static void (*g_statusCallback)(struct WifiStatus *); // 0x182678
 
@@ -152,11 +152,11 @@ typedef struct WifiStatus {
     int id;                     // +0x70
 } WifiStatus;
 
-WifiStatus g_wifiStatus;        // 0x1889b0, COMMON
+WifiStatus g_connStatus;        // 0x1889b0, COMMON; name chosen so ld's within-file COMMON (hash) order matches the original; the original name is stripped
 
 WifiStatus *getWifiStatus()     // 0x14e564
 {
-    return &g_wifiStatus;
+    return &g_connStatus;
 }
 
 unsigned char hexDigit(unsigned char v)     // 0x14e584
@@ -229,7 +229,7 @@ int parseScanLine(const char *text, WifiAP *ap)     // 0x14e824
             case 4:
                 strcpy(ap->ssid, tok);
                 unescapeSsid(ap->ssid, strlen(ap->ssid));
-                if (g_wifiStatus.ssid[0] && strcmp(ap->ssid, g_wifiStatus.ssid) == 0)
+                if (g_connStatus.ssid[0] && strcmp(ap->ssid, g_connStatus.ssid) == 0)
                     ap->current = 1;
                 else
                     ap->current = 0;
@@ -289,7 +289,7 @@ int copyScanResults(WifiAP *out, int max)  // 0x14eb9c
     return n;
 }
 
-char g_scanBuf[0x4000];         // 0x1849b0, COMMON
+char g_scanBuffer[0x4000];         // 0x1849b0, COMMON; name chosen so ld's within-file COMMON (hash) order matches the original; the original name is stripped
 
 WifiStatus queryWifiStatus();   // 0x14ef98
 
@@ -304,17 +304,17 @@ void parseScanResults()         // 0x14ec28
     int n;
     int fields;
     char unused[0x4000];
-    g_wifiStatus = queryWifiStatus();
-    printf("parse current wifi [%s]: ip:[%s] rssi:%d\n", g_wifiStatus.ssid, g_wifiStatus.ip, g_wifiStatus.rssi);
+    g_connStatus = queryWifiStatus();
+    printf("parse current wifi [%s]: ip:[%s] rssi:%d\n", g_connStatus.ssid, g_connStatus.ip, g_connStatus.rssi);
     g_apCount = 0;
-    memset(g_scanBuf, 0, 0x4000);
-    n = readFileTo("/tmp/wpa_scan.txt", g_scanBuf);
+    memset(g_scanBuffer, 0, 0x4000);
+    n = readFileTo("/tmp/wpa_scan.txt", g_scanBuffer);
     if (n <= 0)
         return;
     count = 0;
     fields = 0;
     char delim[3] = "\r\n";
-    char *p = g_scanBuf;
+    char *p = g_scanBuffer;
     memset((void *)g_aps, 0, sizeof(g_aps));
     tok = strsep(&p, delim);
     while (tok) {
@@ -425,9 +425,9 @@ void *wifiMonitorThread(void *arg)  // 0x14f530
     printThreadInfo("new thread_wifi_monitor:");
     while (g_monitorRunning) {
         if (findProcess("wpa_supplicant", 0) >= 0) {
-            g_wifiStatus = queryWifiStatus();
+            g_connStatus = queryWifiStatus();
             if (g_statusCallback)
-                g_statusCallback(&g_wifiStatus);
+                g_statusCallback(&g_connStatus);
         }
         if (g_wifiScanEnable)
             rx_wifi_do_scan();
@@ -442,7 +442,7 @@ void *wifiMonitorThread(void *arg)  // 0x14f530
 
 void startWifiMonitor(void (*callback)(WifiStatus *))  // 0x14f634
 {
-    memset(&g_wifiStatus, 0, sizeof(g_wifiStatus));
+    memset(&g_connStatus, 0, sizeof(g_connStatus));
     g_statusCallback = callback;
     if (g_monitorRunning) {
         printf("wifi monitor already started.");

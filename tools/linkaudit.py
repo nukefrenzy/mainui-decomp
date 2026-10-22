@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Compile the proven launcher units, partially link them, and inventory final-link blockers.
 
-This builds an experimental executable, not a verified replacement. --require-ready still fails
-until final layout is proven. Known internal-call/SQLite linkage errors and recovered-storage mismatches
+It also builds the production executable (the same link without --emit-relocs, then
+strip --strip-all) as build/link-audit/MainUI and compares its SHA-256 with the original;
+--require-ready fails unless that binary is byte-identical and every other check passes. Known internal-call/SQLite linkage errors and recovered-storage mismatches
 always fail. No stubs, forced duplicate definitions or ignored unresolved symbols are used.
 Outputs (objects, linker log, JSON/TSV/Markdown reports) stay in the ignored build directory.
 """
@@ -476,7 +477,8 @@ def audit(args):
     out.mkdir(parents=True, exist_ok=True)
     # A failed rebuild must not leave reports or linked artifacts from a previous successful audit.
     for name in ('launcher.o', 'MainUI.audit.elf', 'audit.json', 'report.md', 'unresolved.tsv',
-                 'commands.txt', 'partial-link.log', 'launcher.map', 'final-link.log', 'final-link.map'):
+                 'commands.txt', 'partial-link.log', 'launcher.map', 'final-link.log', 'final-link.map',
+                 'MainUI', 'MainUI.unstripped', 'production-link.log'):
         (out/name).unlink(missing_ok=True)
     tc = os.environ.get('MIYOO_TC')
     if not tc:
@@ -518,8 +520,17 @@ def audit(args):
         if len(flags) != 1:
             raise ValueError(f'{source}: missing or inconsistent per-file cflags')
         deps = sorted({d for r in rows for d in r['deps'].split(',') if d != '-'})
-        cmd = [pre + ('g++' if source.suffix == '.cpp' else 'gcc'), '-O0', '-fsigned-char']
+        compiler = pre
+        if 'gcc73' in deps:  # built with the GCC 7.3.0 cross compiler (its .comment stamp is in MainUI)
+            if source.suffix != '.c':
+                raise ValueError(f'{source}: the GCC 7.3.0 compiler is built for C only')
+            if 'gcc73' not in fetch:
+                fetch['gcc73'] = subprocess.check_output(['scripts/fetch-gcc73.sh'], text=True).strip()
+            compiler = str(Path(fetch['gcc73']) / 'arm-linux-gnueabihf-')
+        cmd = [compiler + ('g++' if source.suffix == '.cpp' else 'gcc'), '-O0', '-fsigned-char']
         for dep in deps:
+            if dep == 'gcc73':
+                continue
             if dep not in ('tinyutf8', 'rapidxml'):
                 raise ValueError(f'unknown dependency: {dep}')
             if dep not in fetch:
@@ -572,16 +583,44 @@ def audit(args):
     if final_output.exists():
         final_output.unlink()
     # Original arithmetic helpers are static libgcc code, but exception unwinding uses libgcc_s.
-    # Select arithmetic objects before dynamic libgcc_s can satisfy their references.
-    final_cmd = [pre+'g++', *(u['object'] for u in objects), '-lgcc', '-Wl,--emit-relocs',
+    # Select arithmetic objects before dynamic libgcc_s can satisfy their references. Placing
+    # -lgcc after the other shared libraries (as the gcc driver does) also reproduces .dynstr:
+    # libgcc's divide-by-zero helper first references raise there, so raise follows libmad.so.0
+    # instead of being imported early through libpthread. .text is unchanged by this position.
+    link_libraries = []
+    for name in original_dynamic['needed']:
+        if name.startswith('libgcc_s'):
+            link_libraries.append('-lgcc')
+        link_libraries.append('-l:'+name)
+    if '-lgcc' not in link_libraries:
+        raise ValueError('original DT_NEEDED has no libgcc_s entry to place static -lgcc before')
+    final_cmd = [pre+'g++', *(u['object'] for u in objects), '-Wl,--emit-relocs',
                  '-L'+str(target_dir), '-Wl,-rpath-link,'+str(target_dir), '-Wl,--no-as-needed',
-                 *('-l:'+name for name in original_dynamic['needed']),
+                 *link_libraries,
                  '-Wl,-Map='+str(out/'final-link.map'), '-o', str(final_output)]
     commands.append(final_cmd)
     final_result = subprocess.run(final_cmd, capture_output=True, text=True)
     (out/'final-link.log').write_text(final_result.stdout+final_result.stderr)
     if final_result.returncode:
         final_output.unlink(missing_ok=True)
+    # Production executable: the audit link without static relocations or a map, then stripped
+    # like the original. Only this binary is compared as a whole file.
+    production = dict(status='NOT BUILT', path=str((out/'MainUI').relative_to(ROOT)))
+    if final_result.returncode == 0:
+        unstripped = out/'MainUI.unstripped'
+        production_cmd = [a for a in final_cmd if a != '-Wl,--emit-relocs' and not a.startswith('-Wl,-Map=')]
+        production_cmd[production_cmd.index('-o')+1] = str(unstripped)
+        strip_cmd = [pre+'strip', '--strip-all', '-o', str(out/'MainUI'), str(unstripped)]
+        commands += [production_cmd, strip_cmd]
+        built = subprocess.run(production_cmd, capture_output=True, text=True)
+        stripped = subprocess.run(strip_cmd, capture_output=True, text=True) if built.returncode == 0 else built
+        (out/'production-link.log').write_text(built.stdout+built.stderr+stripped.stdout+stripped.stderr)
+        if built.returncode == 0 and stripped.returncode == 0:
+            binary = (out/'MainUI').read_bytes()
+            production.update(size=len(binary), sha256=hashlib.sha256(binary).hexdigest())
+            production['status'] = 'MATCH' if production['sha256'] == SHA else 'MISMATCH'
+        else:
+            production['status'] = 'FAILED'
     rebuilt_dynamic = dynamic_metadata(final_output) if final_result.returncode == 0 else None
     dynamic_comparison = compare_dynamic(original_dynamic, rebuilt_dynamic) if rebuilt_dynamic else None
     linked_text = check_linked_text(original, final_output) if rebuilt_dynamic else None
@@ -589,7 +628,7 @@ def audit(args):
     rodata = check_rodata(original, final_output) if rebuilt_dynamic else None
     data = check_data(original, final_output) if rebuilt_dynamic else None
     unwind = {name: check_initialized_section(original, final_output, name)
-              for name in ('.ARM.extab', '.ARM.exidx')} if rebuilt_dynamic else {}
+              for name in ('.ARM.extab', '.ARM.exidx', '.dynstr', '.dynamic')} if rebuilt_dynamic else {}
     placements = []
     if rebuilt_dynamic:
         linked_symbols = {s['name']: s['value'] for s in symbols(final_output)
@@ -683,6 +722,20 @@ def audit(args):
     storage = check_storage(compiled, original, ROOT/'src/data.tsv')
     storage_errors = [r for r in storage if r['status'] != 'MATCH']
     counts = dict(sorted(Counter(r['category'] for r in records).items()))
+    checks_failed = bool(result.returncode or resolved_mismatches or storage_errors
+              or counts.get('internal_call_mismatch') or counts.get('embedded_library_declaration')
+              or (dynamic_comparison and (dynamic_comparison['added_imports']
+                  or dynamic_comparison['missing_imports'] or dynamic_comparison['version_mismatches']
+                  or not dynamic_comparison['needed_order_matches']
+                  or not dynamic_comparison['interpreter_matches']))
+              or (args.require_link and final_result.returncode)
+              or (linked_text and linked_text['status'] != 'MATCH')
+              or (linked_text and linked_text['control_flow_differences'])
+              or (code_addresses and code_addresses['status'] != 'MATCH')
+              or (rodata and rodata['status'] != 'MATCH')
+              or (data and data['status'] != 'MATCH')
+              or any(checked['status'] != 'MATCH' for checked in unwind.values()))
+    executable_ready = production['status'] == 'MATCH' and not checks_failed
     report = dict(original_sha256=SHA, compiler=version, units=len(compiled), embedded_libraries=libraries,
                   library_inputs=library_inputs, rebuilt_dynamic=rebuilt_dynamic,
                   dynamic_comparison=dynamic_comparison, body_placements=placements,
@@ -693,7 +746,8 @@ def audit(args):
                   unwind=unwind,
                   partial_link_returncode=result.returncode,
                   final_link_returncode=final_result.returncode,
-                  executable_ready=False, unresolved_count=len(records), categories=counts,
+                  executable_ready=executable_ready, production=production,
+                  unresolved_count=len(records), categories=counts,
                   duplicate_definitions=duplicates, compile_warnings=warnings, unresolved=records,
                   storage=storage, storage_mismatches=storage_errors,
                   resolved_body_calls_checked=resolved_checked,
@@ -741,6 +795,9 @@ def audit(args):
                   f'{code_addresses["checked_words"]:,} words; {code_addresses["mismatching_words"]} differing.',
                   f'Other relocated .text words still differing, by target: {pending}.',
                   'Jump tables and function-pointer literals are proven here; data addresses wait on BSS/GOT layout.', '']
+        lines += [f'Production executable {production["path"]} (stripped, whole file): {production["status"]}'
+                  + (f'; {production["size"]:,} bytes; SHA-256 {production["sha256"]}' if 'sha256' in production else '')
+                  + '.', f'Executable ready (byte-identical and every check passing): {executable_ready}.', '']
         lines += [f'Actual linked .rodata (no masks): {rodata["status"]}; {rodata["size"]:,} bytes; '
                   f'{rodata["mismatching_bytes"]} differing bytes.',
                   'This includes vtable/typeinfo pointers and literal/data contents, not runtime library compatibility.', '']
@@ -761,20 +818,7 @@ def audit(args):
     print(f'Reports: {out.relative_to(ROOT)}/report.md, audit.json, unresolved.tsv')
     if dynamic_comparison:
         print('\n'.join(lines[-5:]), flush=True)
-    failed = (result.returncode or resolved_mismatches or storage_errors
-              or counts.get('internal_call_mismatch') or counts.get('embedded_library_declaration')
-              or (dynamic_comparison and (dynamic_comparison['added_imports']
-                  or dynamic_comparison['missing_imports'] or dynamic_comparison['version_mismatches']
-                  or not dynamic_comparison['needed_order_matches']
-                  or not dynamic_comparison['interpreter_matches']))
-              or (args.require_link and final_result.returncode)
-              or (linked_text and linked_text['status'] != 'MATCH')
-              or (linked_text and linked_text['control_flow_differences'])
-              or (code_addresses and code_addresses['status'] != 'MATCH')
-              or (rodata and rodata['status'] != 'MATCH')
-              or (data and data['status'] != 'MATCH')
-              or any(checked['status'] != 'MATCH' for checked in unwind.values())
-              or (args.require_ready and not report['executable_ready']))
+    failed = checks_failed or (args.require_ready and not executable_ready)
     return 1 if failed else 0
 
 
@@ -783,7 +827,7 @@ def main():
     parser.add_argument('--orig', default=str(ROOT/'MainUI-354-clean'))
     parser.add_argument('--out', default=str(ROOT/'build/link-audit'))
     parser.add_argument('--require-link', action='store_true', help='also fail if executable linking fails')
-    parser.add_argument('--require-ready', action='store_true', help='also require proven final layout (not yet implemented)')
+    parser.add_argument('--require-ready', action='store_true', help='also require the production executable to be byte-identical to the original')
     args = parser.parse_args()
     try:
         return audit(args)

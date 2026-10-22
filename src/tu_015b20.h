@@ -100,7 +100,8 @@ extern char g_keyShm[];                    // 0x181968
 extern SDL_Surface *g_background;           // 0x182190
 extern SDL_Surface *g_unusedIndicator;      // 0x182194, bottom bar
 extern SDL_Surface *g_unusedStatus;         // 0x182198, status-icon frame (48x48 when absent)
-extern SDL_Surface *g_navItem;              // 0x18219c, footer background
+extern SDL_Surface *g_navItem;              // 0x18219c
+extern SDL_Surface *g_keySettingFooter;     // 0x1821ac, footer background drawn by drawFooter
 extern SDL_Surface *g_titleBar;             // 0x1821a8
 extern SDL_Surface *g_miniLogo;             // 0x1821b0
 extern SDL_Surface *g_listStripe;           // 0x1821c8

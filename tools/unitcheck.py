@@ -98,6 +98,9 @@ if "rapidxml" in deps:
                                        text=True, check=True).stdout.strip())
 
 tc = os.environ.get("MIYOO_TC", "")
+if "gcc73" in deps:   # this file was built with the GCC 7.3.0 cross compiler (scripts/fetch-gcc73.sh)
+    tc = subprocess.run([os.path.join(ROOT, "scripts/fetch-gcc73.sh")], capture_output=True,
+                        text=True, check=True).stdout.strip()
 pre = os.path.join(tc, "arm-linux-gnueabihf-") if tc else "arm-linux-gnueabihf-"
 cc = pre + ("g++" if a.source.endswith((".cpp", ".cc", ".cxx")) else "gcc")
 obj = tempfile.mktemp(suffix=".o")

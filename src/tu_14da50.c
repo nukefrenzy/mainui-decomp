@@ -24,6 +24,7 @@ char *cJSON_GetStringValue(cJSON *item);
 int readWholeFile(const char *name, FILE *f, char **out);  // 0x14b8a4
 
 char g_langPath[128];           // 0x182680, COMMON
+char g_unrefCommon_182700[48];  // 0x182700, COMMON: unreferenced storage at this address in the Onion and stock builds; size and position proven, name, type and partition unknown; hashes after g_langPath
 const char *g_defaultStrings[156] = { // 0x17fc9c, built-in English strings
     "RetroArch", // 0
     "Favorite", // 1

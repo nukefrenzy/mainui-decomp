@@ -8,25 +8,27 @@ extern byte i2cWrite(byte, byte, byte *, int);
 extern void msleep(int);
 extern byte randomByte();
 extern byte deviceKeyA[8];       // 0x188a24
-extern byte deviceTx[16];        // 0x188a2c
+extern byte deviceTxData[16];        // 0x188a2c
 extern byte deviceKeyB[8];       // 0x188a3c
-extern byte deviceCounter[2];    // 0x188a44
-extern byte deviceRx[16];        // 0x188a48
-extern byte deviceInitialized;   // 0x18267c
-extern byte roundTableA[2][8];    // 0x17ff0c
-extern byte roundTableB[2][8];    // 0x17ff1c
+extern byte deviceCounterBuf[2];    // 0x188a44
+extern byte deviceRecvBuf[16];        // 0x188a48
+extern byte deviceHasInit;   // 0x18267c
+extern byte cipherKeys1[2][8];    // 0x17ff0c
+extern byte cipherKeys2[2][8];    // 0x17ff1c
 
-byte deviceInitialized = 0; // 0x18267c, ordinary .bss: the explicit zero keeps it out of COMMON (public, so -fPIC GOT access is unchanged)
+byte deviceHasInit = 0; // 0x18267c, ordinary .bss: the explicit zero keeps it out of COMMON (public, so -fPIC GOT access is unchanged); name chosen so ld's GOT (hash) order matches the original; the original name is stripped
 byte deviceKeyA[8]; // 0x188a24
-byte deviceTx[16]; // 0x188a2c
+byte deviceTxData[16]; // 0x188a2c, COMMON; name chosen so ld's within-file COMMON (hash) order matches the original; the original name is stripped
 byte deviceKeyB[8]; // 0x188a3c
-byte deviceCounter[2]; // 0x188a44
-byte deviceRx[16]; // 0x188a48
-byte roundTableA[2][8] = {
+byte deviceCounterBuf[2]; // 0x188a44, COMMON; name chosen so ld's within-file COMMON (hash) order matches the original; the original name is stripped
+byte deviceRecvBuf[16]; // 0x188a48, COMMON; name chosen so ld's within-file COMMON (hash) order matches the original; the original name is stripped
+// 0x17ff0c: name chosen so ld's GOT (hash) order matches the original; the original name is stripped
+byte cipherKeys1[2][8] = {
     {0xe8, 0xf6, 0x78, 0x6a, 0x7b, 0x04, 0xf8, 0xd2},
     {0xff, 0x1e, 0x6f, 0x82, 0x6c, 0xec, 0xef, 0x3a},
 }; // 0x17ff0c
-byte roundTableB[2][8] = {
+// 0x17ff1c: name chosen so ld's GOT (hash) order matches the original; the original name is stripped
+byte cipherKeys2[2][8] = {
     {0x9f, 0xb7, 0xfb, 0x2c, 0xc0, 0x36, 0x0a, 0x1e},
     {0x09, 0x21, 0x6d, 0xba, 0x56, 0xa0, 0x9c, 0x88},
 }; // 0x17ff1c
@@ -94,13 +96,13 @@ void transformDeviceBlock(byte *input, byte *output, byte *seed,
     for (i = 0; i < 8; i++) output[i] = input[i];
     for (round = 0; round < rounds; round++) {
         if (mode == 0) {
-            for (i = 0; i < 8; i++) key[i] = roundTableA[round][i];
+            for (i = 0; i < 8; i++) key[i] = cipherKeys1[round][i];
         } else {
             for (i = 0; i < 8; i++)
-                key[i] = roundTableB[round][i] ^ deviceKeyA[i] ^ deviceKeyB[i];
+                key[i] = cipherKeys2[round][i] ^ deviceKeyA[i] ^ deviceKeyB[i];
         }
         for (i = 0; i < 2; i++) key[i] = key[i] ^ seed[i];
-        for (i = 0; i < 2; i++) key[i + 2] = key[i + 2] ^ deviceCounter[i];
+        for (i = 0; i < 2; i++) key[i + 2] = key[i + 2] ^ deviceCounterBuf[i];
         for (step = 0; step < bits - 1; step++) {
             saved = key[0];
             for (i = 0; i < 7; i++) key[i] = (key[i] << 3) | (key[i + 1] >> 5);
@@ -125,28 +127,28 @@ byte beginDeviceAuth()           // 0x1500b4
     byte output[8];
     byte input[8];
     byte seed[2];
-    status = i2cRead(0x7a, 0x30, deviceRx, 16);
+    status = i2cRead(0x7a, 0x30, deviceRecvBuf, 16);
     if (status) return status;
     for (i = 0; i < 8; i += 2) {
-        input[i] = deviceRx[i * 2];
-        input[i + 1] = deviceRx[i * 2 + 1];
+        input[i] = deviceRecvBuf[i * 2];
+        input[i + 1] = deviceRecvBuf[i * 2 + 1];
     }
-    seed[0] = deviceRx[11];
-    seed[1] = deviceRx[2];
-    deviceCounter[0] = 0;
-    deviceCounter[1] = 1;
+    seed[0] = deviceRecvBuf[11];
+    seed[1] = deviceRecvBuf[2];
+    deviceCounterBuf[0] = 0;
+    deviceCounterBuf[1] = 1;
     transformDeviceBlock(input, output, seed, 2, 32, 0);
-    for (i = 0; i < 8; i++) deviceTx[i * 2] = output[i];
-    deviceTx[0] = ~(deviceTx[0] ^ 0x5f);
-    deviceTx[1] = 0;
-    deviceTx[3] = 0x52;
-    deviceTx[5] = 0x47;
-    deviceTx[7] = 0x4c;
-    deviceTx[9] = 0x29;
-    deviceTx[11] = 0x22;
-    deviceTx[13] = 0x3a;
-    deviceTx[15] = 0xc6;
-    status = i2cWrite(0x7a, 0x30, deviceTx, 16);
+    for (i = 0; i < 8; i++) deviceTxData[i * 2] = output[i];
+    deviceTxData[0] = ~(deviceTxData[0] ^ 0x5f);
+    deviceTxData[1] = 0;
+    deviceTxData[3] = 0x52;
+    deviceTxData[5] = 0x47;
+    deviceTxData[7] = 0x4c;
+    deviceTxData[9] = 0x29;
+    deviceTxData[11] = 0x22;
+    deviceTxData[13] = 0x3a;
+    deviceTxData[15] = 0xc6;
+    status = i2cWrite(0x7a, 0x30, deviceTxData, 16);
     if (status) return status;
     msleep(42);
     return 0;
@@ -165,10 +167,10 @@ byte sendDeviceKey()             // 0x150320
     key[5] = deviceKeyB[5] ^ 0x31;
     key[6] = ~(deviceKeyB[6] ^ 0x34);
     key[7] = ~(deviceKeyB[7] ^ 0x18);
-    deviceCounter[1] += 2;
-    for (i = 1; i < 8; i += 2) deviceTx[i * 2] = randomByte();
-    for (i = 0; i < 8; i++) deviceTx[i * 2] = key[i];
-    status = i2cWrite(0x7a, 0x40, deviceTx, 16);
+    deviceCounterBuf[1] += 2;
+    for (i = 1; i < 8; i += 2) deviceTxData[i * 2] = randomByte();
+    for (i = 0; i < 8; i++) deviceTxData[i * 2] = key[i];
+    status = i2cWrite(0x7a, 0x40, deviceTxData, 16);
     if (status) return status;
     return 0;
 }
@@ -185,14 +187,14 @@ byte authenticateDevice(byte *challenge, byte *response) // 0x150504
     byte input[8];
     byte seed[2];
     firstReg = 0xe9;
-    if (deviceInitialized == 0) {
-        for (i = 0; i < 16; i++) deviceTx[i] = 0;
-        i2cWrite(0x7a, 0x80, deviceTx, 8);
+    if (deviceHasInit == 0) {
+        for (i = 0; i < 16; i++) deviceTxData[i] = 0;
+        i2cWrite(0x7a, 0x80, deviceTxData, 8);
         msleep(1);
-        i2cWrite(0x7a, 0x20, deviceTx, 1);
+        i2cWrite(0x7a, 0x20, deviceTxData, 1);
         msleep(1);
-        deviceTx[0] = 0x83;
-        i2cWrite(0x7a, 0x22, deviceTx, 1);
+        deviceTxData[0] = 0x83;
+        i2cWrite(0x7a, 0x22, deviceTxData, 1);
         msleep(1);
         status = beginDeviceAuth();
         if (status) return status;
@@ -201,44 +203,44 @@ byte authenticateDevice(byte *challenge, byte *response) // 0x150504
         if (status) return status;
         status = sendDeviceKey();
         if (status) return status;
-        deviceInitialized = 1;
+        deviceHasInit = 1;
     }
     for (attempt = 0; attempt < 2; attempt++) {
         if (attempt == 0) reg = firstReg;
         else reg = 0x87;
         for (i = 0; i < 8; i++) {
-            deviceTx[i * 2] = challenge[i];
-            deviceTx[i * 2 + 1] = randomByte();
+            deviceTxData[i * 2] = challenge[i];
+            deviceTxData[i * 2 + 1] = randomByte();
         }
         if (attempt == 0) {
-            status = i2cRead(0x7a, reg, deviceRx, 16);
+            status = i2cRead(0x7a, reg, deviceRecvBuf, 16);
             if (status) return status;
             for (i = 0; i < 8; i += 2) {
-                input[i] = deviceRx[i * 2];
-                input[i + 1] = deviceRx[i * 2 + 1];
+                input[i] = deviceRecvBuf[i * 2];
+                input[i + 1] = deviceRecvBuf[i * 2 + 1];
             }
-            seed[0] = deviceRx[11];
-            seed[1] = deviceRx[2];
-            deviceTx[0] = ~seed[0];
-            deviceTx[14] = seed[1];
-            challenge[0] = deviceTx[0];
-            challenge[7] = deviceTx[14];
+            seed[0] = deviceRecvBuf[11];
+            seed[1] = deviceRecvBuf[2];
+            deviceTxData[0] = ~seed[0];
+            deviceTxData[14] = seed[1];
+            challenge[0] = deviceTxData[0];
+            challenge[7] = deviceTxData[14];
         }
-        status = i2cWrite(0x7a, reg, deviceTx, 16);
+        status = i2cWrite(0x7a, reg, deviceTxData, 16);
         if (status) return status;
         msleep(5);
-        status = i2cRead(0x7a, reg, deviceRx, 16);
+        status = i2cRead(0x7a, reg, deviceRecvBuf, 16);
         if (status) return status;
         for (i = 0; i < 8; i += 2) {
-            input[i] = deviceRx[i * 2];
-            input[i + 1] = deviceRx[i * 2 + 1];
+            input[i] = deviceRecvBuf[i * 2];
+            input[i + 1] = deviceRecvBuf[i * 2 + 1];
         }
-        seed[0] = deviceRx[11];
-        seed[1] = deviceRx[2];
-        if (deviceCounter[1] == 255) {
-            deviceCounter[0]++;
-            deviceCounter[1] = 0;
-        } else deviceCounter[1]++;
+        seed[0] = deviceRecvBuf[11];
+        seed[1] = deviceRecvBuf[2];
+        if (deviceCounterBuf[1] == 255) {
+            deviceCounterBuf[0]++;
+            deviceCounterBuf[1] = 0;
+        } else deviceCounterBuf[1]++;
         iterations = 1;
         for (i = 0; i < iterations; i++) {
             transformDeviceBlock(input, response, seed, 2, 32, 2);

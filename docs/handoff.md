@@ -3,18 +3,15 @@
 Snapshot: 2026-10-22. Start here, then read `CLAUDE.md`, `docs/status.md`,
 `docs/unit-workflow.md`, `docs/link-audit.md`, `docs/writable-data-recovery.md`,
 `docs/bss-step1.md`, `docs/bss-step2.md` and `docs/bss-step3.md`. Read current branch/commit
-state from Git rather than old chat. Updated for the BSS steps 2 and 3 commit following `b24cb99`.
+state from Git rather than old chat. **The build is now byte-identical to the original**: read
+`docs/byte-identical-build.md` first.
 
 ## Authorization and stopping points
 
-The user requested three BSS steps, **stopping for confirmation before each next
-step**. All three have been worked on and committed locally (not pushed): step 1 is
-partially resolved, step 2 is fully investigated (no source change, by the user's choice),
-and step 3's approved fixes are applied. No further step is approved. Renaming objects to
-reproduce COMMON order, adding placeholder storage, and the GOT/relocation audit each need
-the user's explicit decision. Do not commit, merge or push additional work without a new
-request. If committing, use both author and committer
-`nukefrenzy <nukefrenzy@users.noreply.github.com>`.
+The BSS steps, the follow-up renames/placeholders, the GCC 7.3.0 compiler and the permanent build
+were each approved by the user step by step. Do not commit, merge or push additional work without
+a new request. If committing, use both author and committer
+`nukefrenzy <nukefrenzy@users.noreply.github.com>`. Never commit or publish the built binary.
 
 ## Proven state and limits
 
@@ -68,26 +65,19 @@ references or initializes. A stock Miyoo MainUI (private, `~/mainui-stock/`, SHA
 are unrecoverable; the user chose not to add a placeholder.
 
 **Step 3** (`docs/bss-step3.md`): file-local statics in `tu_14acfc.c` and `tu_14e0cc.c` are in
-the original `.bss` order; `g_aps`, `g_scanBuf`, `g_wifiStatus` and `g_langPath` are public
+the original `.bss` order; `g_aps`, `g_scanBuffer` (was `g_scanBuf`), `g_connStatus` (was `g_wifiStatus`) and `g_langPath` are public
 (COMMON); `deviceInitialized` is `= 0` (ordinary `.bss`, still public so `-fPIC` code is
 unchanged). Every object before the COMMON block now has a constant offset from its original.
 Rules verified with probes: C statics follow declaration order; ld places COMMON per file in
 link order, by `bfd_hash` name order within a file. For the PIC unit, pair objects through the
 GOT offsets in code literals, not by GOT slot address.
 
-## Next work, each needing the user's decision
+## Next work
 
-- **Within-file COMMON order:** needs names for `tu_14e0cc`'s three and `tu_14f730`'s five
-  COMMON objects whose hash order matches the original (the originals are stripped).
-- **Unreferenced storage:** placeholders for the device-ID slack, step 2's 96 bytes, and the
-  4 + 4 + 48 bytes in the C units would make BSS size and addresses exact; their names and
-  partition would remain unknown.
-- **After BSS:** audit the remaining GOT and code relocation values.
-
-For direct ARM MOVW/MOVT address scans, use the opcode mask **0x0ff00000** with
-0x03000000 / 0x03400000. **0x0fff0000 is wrong**: it includes immediate bits and
-misses references. `tools/linkaudit.py:source_evidence` already uses the correct
-mask. Earlier ad hoc gap classifications should be rechecked with the correct mask.
+The byte-identical build is complete and enforced (`scripts/build-mainui.sh`,
+`tools/linkaudit.py --require-ready`, CI). Remaining candidates, each needing the user's decision:
+a device test of the built binary (by the user), the optional LD_PRELOAD hook library, and the
+documentation topics listed in `CLAUDE.md`'s roadmap.
 
 ## Reproduce the environment and checks
 

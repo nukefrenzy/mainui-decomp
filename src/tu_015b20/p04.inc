@@ -4,7 +4,7 @@
 SDL_Surface *SDL_CreateRGBSurface(unsigned int flags, int w, int h, int depth, unsigned int rmask,
                                   unsigned int gmask, unsigned int bmask, unsigned int amask);
 extern SDL_Color g_highlightColor;     // 0x18228c (only drawListNumber uses it)
-extern SDL_Color g_highlightColor;      // 0x1822b0 (search match in a list row)
+extern SDL_Color g_accentColor;         // 0x1822b0 (search match in a list row)
 extern "C" int TTF_SizeText(void *font, const char *text, int *w, int *h);
 SDL_Surface *loadImage(const char *path, SDL_Surface *fmt, bool flag); // 0x123a38 (tu_11cdc8)
 int pinyinFind(const char *text, const char *initials, const char *key, const char **start,
@@ -310,7 +310,7 @@ int truncateUtf8(char *s, int len, int width)
 }
 
 // 0x1ede4: draw a row label with the part matching the search `key` (found through the pinyin
-// `initials`) in g_highlightColor. Align 0/3 draws left to right, 2/4 right to left, anything else
+// `initials`) in g_accentColor. Align 0/3 draws left to right, 2/4 right to left, anything else
 // centred (pieces drawn with align 3).
 void TextMenuDrawer::drawHighlighted(SDL_Surface *dst, TTF_Font *font, SDL_Rect rect,
                                      const char *text, SDL_Color color, int align, bool shadow,
@@ -334,7 +334,7 @@ void TextMenuDrawer::drawHighlighted(SDL_Surface *dst, TTF_Font *font, SDL_Rect 
                 }
                 strA0 = start;
                 strA0 = strA0.substr(0, len);
-                tw = drawText(dst, font, r, strA0.c_str(), g_highlightColor, align, shadow);
+                tw = drawText(dst, font, r, strA0.c_str(), g_accentColor, align, shadow);
                 r.x += tw;
                 if (strlen(text) > start - text + len) {
                     strA0 = start + len;
@@ -348,7 +348,7 @@ void TextMenuDrawer::drawHighlighted(SDL_Surface *dst, TTF_Font *font, SDL_Rect 
                 }
                 strA0 = start;
                 strA0 = strA0.substr(0, len);
-                tw = drawText(dst, font, r, strA0.c_str(), g_highlightColor, align, shadow);
+                tw = drawText(dst, font, r, strA0.c_str(), g_accentColor, align, shadow);
                 r.w -= tw;
                 if (text < start) {
                     strA0 = text;
@@ -365,7 +365,7 @@ void TextMenuDrawer::drawHighlighted(SDL_Surface *dst, TTF_Font *font, SDL_Rect 
                 }
                 strA0 = start;
                 strA0 = strA0.substr(0, len);
-                tw = drawText(dst, font, r, strA0.c_str(), g_highlightColor, 3, shadow);
+                tw = drawText(dst, font, r, strA0.c_str(), g_accentColor, 3, shadow);
                 r.x += tw;
                 if (strlen(text) > start - text + len) {
                     strA0 = start + len;

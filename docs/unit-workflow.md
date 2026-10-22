@@ -76,7 +76,7 @@ literal words; no additional masking is needed.
   `byte table[2][8]; table[round][i]` adds the table base to the scaled round before adding `i`.
   A flat `table[round * 8 + i]` computes the combined index first and does not match.
 - A saved index in `r5` across a call can expose the callee's return type. In the PIC C unit,
-  `deviceTx[i * 2] = randomByte()` matches with an `unsigned char` return declaration; an `int`
+  `deviceTxData[i * 2] = randomByte()` matches with an `unsigned char` return declaration; an `int`
   declaration changes evaluation order, adds truncation, and removes the saved index.
 - A `mov r3, r0` before a byte store does not alone establish C++: the PIC C unit also emits
   it for byte-returning I2C calls. Here both `int` and `unsigned char` return declarations produce

@@ -1,5 +1,8 @@
 # BSS step 3: C helper buffers, monitor state and COMMON objects
 
+> Names below are those used during step 3. Five objects were renamed afterwards to reproduce
+> the original COMMON order; see [Final BSS reconstruction](#final-bss-reconstruction).
+
 2026-10-22, after `b24cb99` and [step 2](bss-step2.md). Scope: the BSS of the C units
 `tu_14acfc`, `tu_14b860`, `tu_14da50`, `tu_14dc18`, `tu_14e0cc` and `tu_14f730`. The changes
 below are uncommitted at the time of writing. No objects were renamed and no placeholder
@@ -93,3 +96,49 @@ Analysis aids in ignored `build/bss-step3/`: `pair.py` (site pairing of BSS refe
 the original and the audit ELF), `bfdhash.py` (binutils' `bfd_hash`), `probe/` (GCC and ld
 probes), and the pairing outputs. They are optional; the link audit and unit checks are the
 proof.
+
+## Final BSS reconstruction
+
+Approved by the user after step 3: placeholders for the proven unreferenced storage, and
+renames that reproduce the original within-file COMMON order. No original names exist for any
+of these objects (none appears in either binary); every name here is a reconstruction.
+
+**Placeholders** (comment on each: unreferenced storage at this address in the Onion and stock
+builds; size and position proven, name, type and partition unknown):
+
+| Original | Bytes | File | Definition |
+| --- | ---: | --- | --- |
+| 0x17ff50 | 4 | `tu_015b20.cpp` | `unsigned int g_unrefBss_17ff50;` after `g_deviceId` (moves `g_launchCmd` to 0x17ff54) |
+| 0x181b18 | 96 | `tu_049c3c.cpp` | `unsigned char g_unrefBss_181b18[96];` after `g_lastVolumeTime` ([step 2](bss-step2.md)) |
+| 0x1824b4 | 4 | `tu_14acfc.c` | `static int s_unrefBss_1824b4;` before `g_pwrKeyBuf` |
+| 0x182670 | 4 | `tu_14e0cc.c` | `static int s_unrefBss_182670;` between `g_monitorThread` and `g_monitorRunning` |
+| 0x182700 | 48 | `tu_14da50.c` | `char g_unrefCommon_182700[48];` (COMMON, hashes after `g_langPath`) |
+
+**Renames** (comment on each definition: name chosen so ld's within-file COMMON hash order
+matches the original): `g_scanBuf` → `g_scanBuffer` and `g_wifiStatus` → `g_connStatus`
+(`tu_14e0cc.c`); `deviceTx` → `deviceTxData`, `deviceCounter` → `deviceCounterBuf`, `deviceRx` →
+`deviceRecvBuf` (`tu_14f730.c`, `src/data.tsv`). `g_aps`, `deviceKeyA` and `deviceKeyB` keep their
+names. All references changed with them; addresses are link-time words, so matches are unaffected.
+
+**Two source errors exposed** once BSS addresses lined up (the masked checks could not see them):
+`drawFooter` blitted `g_navItem` where the original reads the footer image `g_keySettingFooter`
+(0x1821ac), and `TextMenuDrawer::drawHighlighted` drew search matches in `g_highlightColor` where
+the original uses `g_accentColor` (0x1822b0); `p04.inc` had declared `g_highlightColor` twice.
+
+**Result:** `.bss` is **35,624 bytes**, the original size, and every relocated `.text` word that
+targets BSS now matches. All matches, 22/22 units, 7/7 tooling tests and the full link audit pass.
+A stripped final link (the audit command without `--emit-relocs`, then `strip --strip-all`) has
+the original section list, program headers, `.bss`, `.dynsym` and data segment. It differs only in:
+
+- **GOT slot order — resolved:** ld assigns global GOT slots in hash-table order across the whole
+  link (verified: the rebuilt order was exactly the bucket order). With `__gmon_start__` fixed, three
+  more hash-chosen names reproduce the original order: `deviceInitialized` → `deviceHasInit`,
+  `roundTableA` → `cipherKeys1`, `roundTableB` → `cipherKeys2` (same comment as the other renames).
+  Every relocated `.text` word now matches without masks.
+- **`.comment`**: the original's extra `GCC: (GNU) 7.3.0` string (17 bytes); the plan is to compile
+  the likely source unit with a real GCC 7.3.0 toolchain.
+
+Region-by-region proof: every byte before `.comment` is identical (the ELF header differs only in
+`e_shoff`); the rebuilt `.comment` equals the original's minus `GCC: (GNU) 7.3.0\0`;
+`.ARM.attributes` and `.shstrtab` are identical bytes 17 bytes earlier; the only differing section
+header fields are `.comment`'s size and those two offsets.
