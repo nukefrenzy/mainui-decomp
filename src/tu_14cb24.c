@@ -75,34 +75,34 @@ void readFields(FILE *f, const char *fmt, ...)  // 0x14cd40
     va_start(ap, fmt);
     while (*fmt) {
         switch (*fmt++) {
-        case ' ':
-            break;
-        case '1': {
-            unsigned char *p = va_arg(ap, unsigned char *);
-            if (p)
-                *p = readByte(f);
-            else
-                skipBytes(f, 1);
-            break;
-        }
-        case '2': {
-            unsigned short *p = va_arg(ap, unsigned short *);
-            if (p)
-                *p = readU16LE(f);
-            else
-                skipBytes(f, 2);
-            break;
-        }
-        case '4': {
-            unsigned int *p = va_arg(ap, unsigned int *);
-            if (p)
-                *p = readU32LE(f);
-            else
-                skipBytes(f, 4);
-            break;
-        }
-        default:
-            return;
+            case ' ':
+                break;
+            case '1': {
+                unsigned char *p = va_arg(ap, unsigned char *);
+                if (p)
+                    *p = readByte(f);
+                else
+                    skipBytes(f, 1);
+                break;
+            }
+            case '2': {
+                unsigned short *p = va_arg(ap, unsigned short *);
+                if (p)
+                    *p = readU16LE(f);
+                else
+                    skipBytes(f, 2);
+                break;
+            }
+            case '4': {
+                unsigned int *p = va_arg(ap, unsigned int *);
+                if (p)
+                    *p = readU32LE(f);
+                else
+                    skipBytes(f, 4);
+                break;
+            }
+            default:
+                return;
         }
     }
     va_end(ap);

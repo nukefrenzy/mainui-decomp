@@ -1,0 +1,21 @@
+# House style for src/ (clang-format). Whitespace only: include order is never changed (it fixes
+# the -O0 template-tail order) and comments keep their wording and their hand-aligned columns.
+BasedOnStyle: LLVM
+IndentWidth: 4
+ColumnLimit: 0
+SortIncludes: Never
+ReflowComments: false
+AlignTrailingComments:
+  Kind: Leave
+BreakBeforeBraces: Linux
+PointerAlignment: Right
+IndentCaseLabels: true
+IndentExternBlock: NoIndent
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortLoopsOnASingleLine: true
+AllowShortBlocksOnASingleLine: Always
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortEnumsOnASingleLine: false
+AccessModifierOffset: -4
+MaxEmptyLinesToKeep: 2

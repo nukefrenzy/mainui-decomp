@@ -2,7 +2,10 @@
 #pragma once
 #include <string>
 #include "SDLTypes.h"
-union ThemeColor { unsigned int value; SDL_Color bytes; };
+union ThemeColor {
+    unsigned int value;
+    SDL_Color bytes;
+};
 struct Theme {
     std::string name, root;
     std::string titleFontMulti, titleFontEnglish;

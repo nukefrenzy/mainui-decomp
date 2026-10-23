@@ -4,16 +4,17 @@ extern Theme g_skin; // 0x181974
 Theme *findTheme(std::vector<Theme> *, const char *);
 unsigned sdCardFreeMB();
 extern "C" {
-    struct ZipFile;
-    struct ZipEntry;
-    ZipFile *zipOpen(const char *); // 0x14d8b0
-    ZipEntry *zipOpenEntry(ZipFile *, const char *, unsigned); // 0x14d418
-    void zipCloseEntry(ZipEntry *); // 0x14d858
-    void zipClose(ZipFile *); // 0x14da1c
+struct ZipFile;
+struct ZipEntry;
+ZipFile *zipOpen(const char *); // 0x14d8b0
+ZipEntry *zipOpenEntry(ZipFile *, const char *, unsigned); // 0x14d418
+void zipCloseEntry(ZipEntry *); // 0x14d858
+void zipClose(ZipFile *); // 0x14da1c
 }
 
 // 0x2b788: the display colour menu (WIN_COLOR): lightness, hue, saturation and contrast, each 0-20.
-ColorMenu::ColorMenu() : TextMenu(false, true, 6, NULL) {
+ColorMenu::ColorMenu() : TextMenu(false, true, 6, NULL)
+{
     loadItems();
     leftArrow = loadSkinImage(g_themePath, g_skinSubdir, "skin/icon-left-arrow-24.png", g_backBuffer, false);
     colorRightArrow = loadSkinImage(g_themePath, g_skinSubdir, "skin/icon-right-arrow-24.png", g_backBuffer, false);
@@ -21,7 +22,8 @@ ColorMenu::ColorMenu() : TextMenu(false, true, 6, NULL) {
 }
 
 // 0x2b8bc (D0 0x2b96c)
-ColorMenu::~ColorMenu() {
+ColorMenu::~ColorMenu()
+{
     freeListItem();
     if (leftArrow) SDL_FreeSurface(leftArrow);
     if (colorRightArrow) SDL_FreeSurface(colorRightArrow);
@@ -32,13 +34,13 @@ ColorMenu::~ColorMenu() {
 }
 
 // 0x2b9a0: draws the four rows with their values between left/right arrows.
-void ColorMenu::drawList(SDL_Surface *dst) {
+void ColorMenu::drawList(SDL_Surface *dst)
+{
     int height = TTF_FontHeight(g_imeFont);
     SDL_Rect area;
     SDL_Color color;
     char text[32] = {
-        0
-    };
+        0};
     SDL_Rect dest;
     if (pageStart == 0 && pageEnd == 0) pageEnd = 5;
     if (cur < pageStart) {
@@ -47,53 +49,54 @@ void ColorMenu::drawList(SDL_Surface *dst) {
     }
     if (cur > pageEnd) {
         pageEnd = cur;
-        pageStart = pageEnd-5;
+        pageStart = pageEnd - 5;
     }
     if (pageStart < 0) pageStart = 0;
-    if ((unsigned) pageEnd >= items.size()-1) pageEnd = items.size()-1;
+    if ((unsigned)pageEnd >= items.size() - 1) pageEnd = items.size() - 1;
     int i = pageStart;
     int row = 0;
     for (; i <= pageEnd;) {
-        SettingMenuItem *item = (SettingMenuItem*)items[i];
+        SettingMenuItem *item = (SettingMenuItem *)items[i];
         color = g_imeTextColor;
         int x = rect.x;
-        int y = rect.y + 2 + row*60;
+        int y = rect.y + 2 + row * 60;
         if (row < 5 && g_listStripe) {
             dest.x = 0;
-            dest.y = (row + 2)*60;
+            dest.y = (row + 2) * 60;
             SDL_UpperBlit(g_listStripe, NULL, dst, &dest);
         }
-        if (surface48) {
+        if (rowBackground) {
             dest.x = x;
-            dest.y = (60-surface48->h)/2 + y;
+            dest.y = (60 - rowBackground->h) / 2 + y;
             area.x = 0;
             area.y = 0;
             area.w = rect.w;
             area.h = rect.h;
-            SDL_UpperBlit(surface48, &area, dst, &dest);
+            SDL_UpperBlit(rowBackground, &area, dst, &dest);
         }
         if (i == cur) {
             if (selectedBackground) {
                 dest.x = x;
-                dest.y = (60-selectedBackground->h)/2 + y;
+                dest.y = (60 - selectedBackground->h) / 2 + y;
                 area.x = 0;
                 area.y = 0;
                 area.w = rect.w;
                 area.h = rect.h;
                 SDL_UpperBlit(selectedBackground, &area, dst, &dest);
-            } else color = g_wifiSelectedColor;
+            } else
+                color = g_wifiSelectedColor;
         }
         area.x = x + 20;
         if (item->iconSurface) {
-            area.y = (60-item->iconSurface->h)/2 + y;
+            area.y = (60 - item->iconSurface->h) / 2 + y;
             SDL_UpperBlit(item->iconSurface, NULL, dst, &area);
             area.x = area.x + item->iconSurface->w + 5;
         }
         area.y = y;
-        area.w = rect.w-(leftArrow?leftArrow->w:0)-(colorRightArrow?colorRightArrow->w:0)-20;
+        area.w = rect.w - (leftArrow ? leftArrow->w : 0) - (colorRightArrow ? colorRightArrow->w : 0) - 20;
         area.h = 60;
-        drawText(dst, g_imeFont, area, languageString(item->labelId), color, 3, shadowSelected?i == cur:false);
-        area.x = rect.w + x-(colorRightArrow?colorRightArrow->w:0)-240;
+        drawText(dst, g_imeFont, area, languageString(item->labelId), color, 3, shadowSelected ? i == cur : false);
+        area.x = rect.w + x - (colorRightArrow ? colorRightArrow->w : 0) - 240;
         area.w = 200;
         int type = item->handler;
         int level;
@@ -103,7 +106,8 @@ void ColorMenu::drawList(SDL_Surface *dst) {
         } else if (type == 2) {
             level = GetKeyShm(g_keyShm, MONITOR_HUE);
             snprintf(text, 32, "%02d/%02d", level, 20);
-        } else if (type == 3) snprintf(text, 32, "%02d/%02d", GetKeyShm(g_keyShm, MONITOR_SATURATION), 20);
+        } else if (type == 3)
+            snprintf(text, 32, "%02d/%02d", GetKeyShm(g_keyShm, MONITOR_SATURATION), 20);
         else if (type == 4) {
             level = GetKeyShm(g_keyShm, MONITOR_CONTRAST);
             snprintf(text, 32, "%02d/%02d", level, 20);
@@ -111,13 +115,13 @@ void ColorMenu::drawList(SDL_Surface *dst) {
         area.y += 2;
         drawText(dst, g_imeFont, area, text, color, 1, false);
         if (leftArrow) {
-            area.y = (60-leftArrow->h)/2 + y;
-            area.x = rect.w + x-(colorRightArrow?colorRightArrow->w:0)-leftArrow->w-240;
+            area.y = (60 - leftArrow->h) / 2 + y;
+            area.x = rect.w + x - (colorRightArrow ? colorRightArrow->w : 0) - leftArrow->w - 240;
             SDL_UpperBlit(leftArrow, NULL, dst, &area);
         }
         if (colorRightArrow) {
-            area.y = (60-colorRightArrow->h)/2 + y;
-            area.x = rect.w + x-colorRightArrow->w-40;
+            area.y = (60 - colorRightArrow->h) / 2 + y;
+            area.x = rect.w + x - colorRightArrow->w - 40;
             SDL_UpperBlit(colorRightArrow, NULL, dst, &area);
         }
         i++;
@@ -127,10 +131,11 @@ void ColorMenu::drawList(SDL_Surface *dst) {
 
 // 0x2c274: left/right change the selected value and apply all four to the panel (the first change
 // also reprograms the panel timing); closing shows a "reboot to apply changes" note.
-int ColorMenu::handleKey() {
+int ColorMenu::handleKey()
+{
     int level;
     int key = ListMenu::handleKey();
-    SettingMenuItem *item = (SettingMenuItem*)items[cur];
+    SettingMenuItem *item = (SettingMenuItem *)items[cur];
     if (item == NULL) return 0;
     int type = item->handler;
     if (key == LIST_LEFT) {
@@ -190,70 +195,81 @@ int ColorMenu::handleKey() {
 }
 
 // 0x2c73c: A does nothing here.
-int ColorMenu::onSelect() {
+int ColorMenu::onSelect()
+{
     return 0;
 }
 
 // 0x2c760: deletes every row.
-void ColorMenu::freeListItem() {
+void ColorMenu::freeListItem()
+{
     puts("ColorMenu::freeListItem");
     for (int i = 0; i < items.size(); i++) {
-        SettingMenuItem *item = (SettingMenuItem*)items[i];
+        SettingMenuItem *item = (SettingMenuItem *)items[i];
         delete item;
     }
     items.clear();
 }
 
 // 0x2c824: the four rows (their handler numbers 1-4 are local to this menu).
-void ColorMenu::loadItems() {
-    addItem((TextItem*)new SettingMenuItem(STR_LIGHTNESS, NULL, 1));
-    addItem((TextItem*)new SettingMenuItem(STR_HUE, NULL, 2));
-    addItem((TextItem*)new SettingMenuItem(STR_SATURATION, NULL, 3));
-    addItem((TextItem*)new SettingMenuItem(STR_CONTRAST, NULL, 4));
+void ColorMenu::loadItems()
+{
+    addItem((TextItem *)new SettingMenuItem(STR_LIGHTNESS, NULL, 1));
+    addItem((TextItem *)new SettingMenuItem(STR_HUE, NULL, 2));
+    addItem((TextItem *)new SettingMenuItem(STR_SATURATION, NULL, 3));
+    addItem((TextItem *)new SettingMenuItem(STR_CONTRAST, NULL, 4));
 }
 
 // 0x2c950: one row per language offered (languageChoices).
-LanguageMenu::LanguageMenu(std::vector<LanguageChoice> choices) : TextMenu(false, true, 6, NULL) {
+LanguageMenu::LanguageMenu(std::vector<LanguageChoice> choices) : TextMenu(false, true, 6, NULL)
+{
     languages = choices;
     for (int i = 0; i < languages.size(); i++) addItem(new TextItem(languages[i].name.c_str(), NULL, NULL, true));
 }
 
 // 0x2caa8 (D0 0x2caf4)
-LanguageMenu::~LanguageMenu() {
+LanguageMenu::~LanguageMenu()
+{
 }
 
 // 0x2cb28: switch to the selected language and reopen the theme's fonts for it.
-int LanguageMenu::onSelect() {
+int LanguageMenu::onSelect()
+{
     if ((unsigned)cur < languages.size()) {
         setLanguageFile(languages[cur].file.c_str());
         Theme *theme = findTheme(&g_themeList, g_themePath);
-        if (theme) changeLanguageFonts(theme, &g_fontSize);
-        else changeLanguageFonts(&g_skin, &g_fontSize);
+        if (theme)
+            changeLanguageFonts(theme, &g_fontSize);
+        else
+            changeLanguageFonts(&g_skin, &g_fontSize);
         return 1;
     }
     return -1;
 }
 
 // 0x2cc14: the built-in theme ("Default") and one row per installed theme.
-ThemeMenu::ThemeMenu() : TextMenu(false, true, 6, NULL) {
+ThemeMenu::ThemeMenu() : TextMenu(false, true, 6, NULL)
+{
     addItem(new TextItem(languageString(STR_DEFAULT), NULL, NULL, true));
     for (int i = 0; i < g_themeList.size(); i++) addItem(new TextItem(g_themeList[i].name.c_str(), NULL, NULL, true));
 }
 
 // 0x2cd80 (D0 0x2cdbc)
-ThemeMenu::~ThemeMenu() {
+ThemeMenu::~ThemeMenu()
+{
 }
 
 // 0x2cdf0: switch to the selected theme: reload fonts, images and sounds and restart the music.
-int ThemeMenu::onSelect() {
+int ThemeMenu::onSelect()
+{
     if ((unsigned)cur < g_themeList.size() + 1) {
         if (g_themePath) free(g_themePath);
         int unused = 0; // Retained original stack local.
         if (cur > 0) {
-            g_themePath = strdup(g_themeList[cur-1].root.c_str());
-            changeLanguageFonts(&g_themeList[cur-1], &g_fontSize);
+            g_themePath = strdup(g_themeList[cur - 1].root.c_str());
+            changeLanguageFonts(&g_themeList[cur - 1], &g_fontSize);
             freeTheme();
-            loadTheme(&g_themeList[cur-1], &g_fontSize);
+            loadTheme(&g_themeList[cur - 1], &g_fontSize);
             Mix_PlayMusic(g_themeMusic, -1);
         } else {
             g_themePath = strdup(g_skinSubdir);
@@ -273,12 +289,12 @@ const char *g_legacyExtensions[] = {
     ".smc", ".fig", ".sfc", ".gd3", ".gd7", ".dx2", ".bsx", ".swc",
     ".gen", ".md", ".smd", ".32x", ".sms", ".rom", ".gg", ".sg",
     ".nes", ".fds", ".unf", ".unif", ".gba", ".agb", ".gbz", ".pbp",
-    ".iso", ".cue", ".gb", ".gbc", ".pce"
-};
+    ".iso", ".cue", ".gb", ".gbc", ".pce"};
 
 // 0x2cfc0: index of the emulator (Emu folder) whose extension list contains this file's extension,
 // or -1.
-int findEmuForFile(const char *name) {
+int findEmuForFile(const char *name)
+{
     const char *suffix = strrchr(name, '.');
     if (suffix == NULL) return -1;
     {
@@ -293,8 +309,9 @@ int findEmuForFile(const char *name) {
 
 // 0x2d158: confirmed system update: write the zip's path to /tmp/.try_upgrade_file and quit MainUI
 // (result 3), so the shell script can run the update.
-static int requestUpgrade(void *arg) {
-    const char *path = (const char*)arg;
+static int requestUpgrade(void *arg)
+{
+    const char *path = (const char *)arg;
     FILE *file = fopen("/tmp/.try_upgrade_file", "w+");
     if (file) {
         fputs(path, file);
@@ -306,8 +323,9 @@ static int requestUpgrade(void *arg) {
 // 0x2d1bc: A on a file-browser row: a TrimuiUpdate*.zip asks to update the system (needs 500 MB
 // free), another file starts in the emulator that handles its extension; a folder posts
 // EVENT_OPEN_DIRECTORY.
-int FileAction::execute(void *param) {
-    TextItem *item = (TextItem*)param;
+int FileAction::execute(void *param)
+{
+    TextItem *item = (TextItem *)param;
     if (kind == FILE_KIND_FILE) {
         const char *suffix = strrchr(path.c_str(), '.');
         if (suffix == NULL) {
@@ -320,12 +338,12 @@ int FileAction::execute(void *param) {
                 strcpy(g_launchCmd, path.c_str());
                 DialogWindow *window = new DialogWindow(STR_UPGRADE, STR_UPDATE_SYSTEM, false, new GeneralAction(-1, requestUpgrade, g_launchCmd));
                 window->onShow();
-                g_windowStack->push_back((TrimusWindow*)window);
+                g_windowStack->push_back((TrimusWindow *)window);
             } else {
                 snprintf(g_launchCmd, 0x800, languageString(STR_SD_SPACE_LOW), freeMB);
                 NotifyWindow *window = new NotifyWindow(g_launchCmd, languageString(STR_OK), "skin/bg-button-f.png", NULL);
                 window->onShow();
-                g_windowStack->push_back((TrimusWindow*)window);
+                g_windowStack->push_back((TrimusWindow *)window);
             }
         } else {
             int type = findEmuForFile(path.c_str());
@@ -339,7 +357,7 @@ int FileAction::execute(void *param) {
         } event;
         event.type = SDL_USEREVENT;
         event.code = EVENT_OPEN_DIRECTORY;
-        event.data1 = (void*)path.c_str();
+        event.data1 = (void *)path.c_str();
         if (SDL_PushEvent(&event) < 0) puts("Failed to push SDL event");
     }
     return 0;
@@ -347,7 +365,8 @@ int FileAction::execute(void *param) {
 
 // 0x2d574: which files the browser lists: ROMs of a known extension, update zips that contain an
 // "updater" entry, and licence files.
-static bool fileBrowserFilter(const char *name, const char *path) {
+static bool fileBrowserFilter(const char *name, const char *path)
+{
     if (findEmuForFile(name) >= 0) return true;
     const char *suffix = strrchr(name, '.');
     if (strncasecmp(name, "TrimuiUpdate", 12) == 0 && suffix && strncasecmp(suffix, ".zip", 4) == 0) {
@@ -370,7 +389,8 @@ static bool fileBrowserFilter(const char *name, const char *path) {
 }
 
 // 0x2d700: the file browser (WIN_FILES), starting at path.
-FileBrowserMenu::FileBrowserMenu(const char *path) : ListMenu(false), cache(fileBrowserFilter) {
+FileBrowserMenu::FileBrowserMenu(const char *path) : ListMenu(false), cache(fileBrowserFilter)
+{
     fileIcon = loadSkinImage(g_themePath, g_skinSubdir, "skin/icon-game.png", g_backBuffer, false);
     icons.push_back(loadSkinImage(g_themePath, g_skinSubdir, "skin/icon-game.png", g_backBuffer, false));
     icons.push_back(loadSkinImage(g_themePath, g_skinSubdir, "skin/icon-folder.png", g_backBuffer, false));
@@ -380,23 +400,27 @@ FileBrowserMenu::FileBrowserMenu(const char *path) : ListMenu(false), cache(file
 }
 
 // 0x2d908 (D0 0x2da58)
-FileBrowserMenu::~FileBrowserMenu() {
+FileBrowserMenu::~FileBrowserMenu()
+{
     // Original iterates an empty local vector, leaving the icon entries unfreed.
     std::vector<SDL_Surface *> surfaces;
-    for (int i = 0; i < surfaces.size(); i++) if (surfaces[i]) SDL_FreeSurface(surfaces[i]);
+    for (int i = 0; i < surfaces.size(); i++)
+        if (surfaces[i]) SDL_FreeSurface(surfaces[i]);
     if (fileIcon) SDL_FreeSurface(fileIcon);
     if (selectionBar) SDL_FreeSurface(selectionBar);
 }
 
 // 0x2da8c: rows in the current folder.
-int FileBrowserMenu::count() {
+int FileBrowserMenu::count()
+{
     if (dirItems) return dirItems->size();
     return 0;
 }
 
 // 0x2dad4: A on a row: run its FileAction.
-int FileBrowserMenu::onSelect() {
-    TextItem *item = (TextItem*)getItem(cur);
+int FileBrowserMenu::onSelect()
+{
+    TextItem *item = (TextItem *)getItem(cur);
     if (item && item->action) {
         int result;
         if ((result = item->action->execute(item)) >= 0) return result;
@@ -405,21 +429,24 @@ int FileBrowserMenu::onSelect() {
 }
 
 // 0x2db8c: the row at index.
-void *FileBrowserMenu::getItem(int index) {
+void *FileBrowserMenu::getItem(int index)
+{
     if (index >= 0 && (unsigned)index < dirItems->size()) return (*dirItems)[index];
     return NULL;
 }
 
 // 0x2dc14: the icon for a row: file or folder.
-SDL_Surface *FileBrowserMenu::itemIcon(TextItem *item) {
-    FileAction *action = (FileAction*)item->action;
+SDL_Surface *FileBrowserMenu::itemIcon(TextItem *item)
+{
+    FileAction *action = (FileAction *)item->action;
     int index = action->kind - FILE_KIND_FILE;
     if (index >= 0 && (unsigned)index < icons.size()) return icons[index];
     return fileIcon;
 }
 
 // 0x2dcbc: draws the visible rows: highlight, icon and name.
-void FileBrowserMenu::drawList(SDL_Surface *dst) {
+void FileBrowserMenu::drawList(SDL_Surface *dst)
+{
     int height = TTF_FontHeight(g_imeFont);
     SDL_Rect area;
     SDL_Color color;
@@ -431,39 +458,40 @@ void FileBrowserMenu::drawList(SDL_Surface *dst) {
     }
     if (cur > pageEnd) {
         pageEnd = cur;
-        pageStart = pageEnd-5;
+        pageStart = pageEnd - 5;
     }
     if (pageStart < 0) pageStart = 0;
-    if ((unsigned) pageEnd >= dirItems->size()-1) pageEnd = dirItems->size()-1;
+    if ((unsigned)pageEnd >= dirItems->size() - 1) pageEnd = dirItems->size() - 1;
     int i = pageStart;
     int row = 0;
     for (; i <= pageEnd;) {
-        TextItem *item = (TextItem*)getItem(i);
+        TextItem *item = (TextItem *)getItem(i);
         color = g_imeTextColor;
         int x = rect.x;
-        int y = rect.y + 2 + row*60;
+        int y = rect.y + 2 + row * 60;
         if (i == cur) {
             if (selectionBar) {
                 dest.x = x;
-                dest.y = (60-selectionBar->h)/2 + y;
+                dest.y = (60 - selectionBar->h) / 2 + y;
                 area.x = 0;
                 area.y = 0;
                 area.w = rect.w;
                 area.h = rect.h;
                 SDL_UpperBlit(selectionBar, &area, dst, &dest);
-            } else color = g_wifiSelectedColor;
+            } else
+                color = g_wifiSelectedColor;
         }
         area.x = x + 20;
         SDL_Surface *icon = itemIcon(item);
         if (icon) {
-            area.y = (60-icon->h)/2 + y;
+            area.y = (60 - icon->h) / 2 + y;
             SDL_UpperBlit(icon, NULL, dst, &area);
             area.x = area.x + icon->w + 5;
         }
-        area.y = (60-height)/2 + y;
-        area.w = rect.w-20;
+        area.y = (60 - height) / 2 + y;
+        area.w = rect.w - 20;
         area.h = 60;
-        drawText(dst, g_imeFont, area, item->label.c_str(), color, 0, highlightSelected?i == cur:false);
+        drawText(dst, g_imeFont, area, item->label.c_str(), color, 0, highlightSelected ? i == cur : false);
         i++;
         row++;
     }
@@ -471,46 +499,58 @@ void FileBrowserMenu::drawList(SDL_Surface *dst) {
 
 // 0x2e0f0: one button: up/down move, A/Y open, B/X close, MENU passes through; EVENT_OPEN_DIRECTORY
 // enters the folder (or goes up for "..").
-int FileBrowserMenu::handleKey() {
+int FileBrowserMenu::handleKey()
+{
     const char *path;
     SDL_Event event;
     int key = handleGlobalInput(&event);
     switch (key) {
-        case BUTTON_UP: moveUp();
-        break;
-        case BUTTON_DOWN: moveDown();
-        break;
-        case BUTTON_A: case BUTTON_Y: puts("a");
-        return onSelect();
-        case BUTTON_B: case BUTTON_X: puts("b or c");
-        return 1;
+        case BUTTON_UP:
+            moveUp();
+            break;
+        case BUTTON_DOWN:
+            moveDown();
+            break;
+        case BUTTON_A:
+        case BUTTON_Y:
+            puts("a");
+            return onSelect();
+        case BUTTON_B:
+        case BUTTON_X:
+            puts("b or c");
+            return 1;
         case BUTTON_MENU: return BUTTON_MENU;
         case EVENT_OPEN_DIRECTORY:
-        path = (const char*)event.user.data1;
-        printf("change dir %s\n", path);
-        if (strncmp(path + strlen(path)-2, "..", 2) == 0 || strncmp(path + strlen(path)-3, "../", 3) == 0) dirItems = cache.parent();
-        else dirItems = cache.child(path);
-        restorePosition(0, 0, 5);
-        break;
+            path = (const char *)event.user.data1;
+            printf("change dir %s\n", path);
+            if (strncmp(path + strlen(path) - 2, "..", 2) == 0 || strncmp(path + strlen(path) - 3, "../", 3) == 0)
+                dirItems = cache.parent();
+            else
+                dirItems = cache.child(path);
+            restorePosition(0, 0, 5);
+            break;
         default: break;
     }
     return -1;
 }
 
 // 0x2e318: free callback for caches of surfaces.
-void freeSurfaceCallback(SDL_Surface *surface) {
+void freeSurfaceCallback(SDL_Surface *surface)
+{
     SDL_Surface *value = surface;
     SDL_FreeSurface(value);
 }
 
 // 0x2e344: background job: load a ROM thumbnail scaled to fit 250x360 into the preview cache.
-void LoadSurfaceWorker::run() {
+void LoadSurfaceWorker::run()
+{
     SDL_Surface *surface = loadThumbnail(path.c_str(), 250, 360);
     if (surface) cache->put(path, surface);
 }
 
 // 0x2e3ec: the image is in: ask for a redraw.
-void LoadSurfaceWorker::finished() {
+void LoadSurfaceWorker::finished()
+{
     MainEvent event;
     event.type = SDL_USEREVENT;
     event.user.code = EVENT_REDRAW;
@@ -518,7 +558,8 @@ void LoadSurfaceWorker::finished() {
 }
 
 // Inline definitions follow the record destructors first used by p03-p07.
-inline LoadSurfaceWorker::LoadSurfaceWorker(std::string path, LruCache *cache) {
+inline LoadSurfaceWorker::LoadSurfaceWorker(std::string path, LruCache *cache)
+{
     this->cache = cache;
     this->path = path;
 }

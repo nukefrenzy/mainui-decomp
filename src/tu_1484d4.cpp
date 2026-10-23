@@ -24,7 +24,8 @@ struct TextItem {
     char raw[0x74];
 };
 
-class DBCacheWorker {           // a BGWorker, 0x284 bytes
+class DBCacheWorker
+{           // a BGWorker, 0x284 bytes
 public:
     DBCacheWorker(sqlite3 *db, const std::string &dbName, const std::string &table, int offset, int len,
                   int rowWindowId, LruCache *items, LruCache *data, EmuInfo *emu, std::string *dir,
@@ -37,16 +38,16 @@ extern std::vector<EmuInfo> g_emuFolders;   // 0x181944
 extern std::vector<EmuInfo> g_rappFolders;   // 0x181950
 
 // 0x1484d4: free callback for `items`
-static void deleteTextItem(SDL_Surface *p)
+static void deleteTextItem(SDL_Surface *value)
 {
-    TextItem *item = (TextItem *)p;
+    TextItem *item = (TextItem *)value;
     delete item;
 }
 
 // 0x148518: free callback for `data`
-static void freeData(SDL_Surface *p)
+static void freeData(SDL_Surface *value)
 {
-    void *d = p;
+    void *d = value;
     free(d);
 }
 
@@ -217,11 +218,11 @@ int MultiDBCachedTextMenu::moveUp()
 }
 
 // Returning to the list (e.g. after a game): restore the position and reload the visible page.
-void MultiDBCachedTextMenu::restorePosition(int a, int cur, int c)
+void MultiDBCachedTextMenu::restorePosition(int savedCur, int savedStart, int savedEnd)
 {
-    TextMenuDrawer::restorePosition(a, cur, c);
+    TextMenuDrawer::restorePosition(savedCur, savedStart, savedEnd);
     int len = pageEnd - pageStart + 1;
-    int index = cur;
+    int index = savedStart;   // load from the top of the visible page
     if (pageEnd == 0)
         len = 5;
     printf("restorePos prepareBGWorkers index=%d, lenreq=%d\n", index, len);

@@ -8,13 +8,13 @@ int AppAction::execute(void *param)
 }
 
 // 0x18c94: open the detail window for the selected item.
-int AppAction::progress(int *a, int b)
+int AppAction::progress(int *row, int index)
 {
-    TextItem *item = (TextItem *)a;
+    TextItem *item = (TextItem *)row;
     if (detail) {
         GameDetailWindow *w = new GameDetailWindow(STR_GAMEINFO, WIN_GAME_INFO, app->label.c_str(), item->label.c_str(),
                                                    app->launch.c_str(), app->iconSelected.c_str(),
-                                                   b, result, item->favorite);
+                                                   index, result, item->favorite);
         w->onShow();
         g_windowStack->push_back(w);
         return 0;

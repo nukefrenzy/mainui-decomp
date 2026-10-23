@@ -13,8 +13,15 @@ extern const char g_wifiSkinRoot[], g_wifiArrowLeft[], g_wifiArrowRight[];
 extern const char g_hotspotSwitchFormat[], g_hotspotSsidKey[], g_hotspotConfigPath[], g_hotspotPskKey[];
 
 struct WifiAP {
-    char raw0[8]; char ssid[0x58]; int rssi; char raw64[8]; int freq;
-    char raw70[4]; char bssid[0x18]; char flags[0x80]; int secured, current;
+    char unused0[8];
+    char ssid[0x58];
+    int rssi;
+    char unused64[8];
+    int freq;
+    char unused70[4];
+    char bssid[0x18];
+    char flags[0x80];
+    int secured, current;
 };
 #include "WifiStatus.h"
 extern char *g_themePath;
@@ -23,21 +30,25 @@ extern SDL_Color g_imeTextColor, g_wifiSelectedColor;
 SDL_Surface *loadImeImage(const char *, const char *, const char *);
 const char *languageString(int);
 int drawText(SDL_Surface *, void *, SDL_Rect, const char *, SDL_Color, int, bool);
-extern "C" int SDL_UpperBlit(SDL_Surface *, SDL_Rect *, SDL_Surface *, SDL_Rect *);
-extern "C" void SDL_FreeSurface(SDL_Surface *);
-extern "C" int TTF_SizeText(void *, const char *, int *, int *);
+
+
 extern "C" int getHotspotOn();
 std::string readConfigValue(const std::string &, const std::string &);
-class ItemDrawable {
+class ItemDrawable
+{
 public:
     ItemDrawable(Action *a) : action(a) {}
-    virtual ~ItemDrawable() { if (action) delete action; }
+    virtual ~ItemDrawable()
+    {
+        if (action) delete action;
+    }
     virtual int draw(SDL_Surface *, SDL_Rect *, bool) = 0;
     virtual bool selectable() { return true; }
     virtual int event(int) { return -1; }
     Action *action;
 };
-class WifiOnOffLabel : public ItemDrawable {
+class WifiOnOffLabel : public ItemDrawable
+{
 public:
     WifiOnOffLabel(Action *, bool);
     virtual ~WifiOnOffLabel();
@@ -46,14 +57,16 @@ public:
     SDL_Surface *left, *right;
     bool enabled;
 };
-class WifiLabel : public ItemDrawable {
+class WifiLabel : public ItemDrawable
+{
 public:
     WifiLabel(Action *);
     virtual ~WifiLabel();
     virtual int draw(SDL_Surface *, SDL_Rect *, bool);
     virtual bool selectable() { return false; }
 };
-class WifiItem : public ItemDrawable {
+class WifiItem : public ItemDrawable
+{
 public:
     WifiItem(Action *a, const char *s, int r, int sec, int connected,
              SDL_Surface *lock, SDL_Surface *check, SDL_Surface *sig)

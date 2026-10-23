@@ -22,37 +22,38 @@ struct EmuInfo {
 
 // One opened cache database that has hits for the search string.
 struct DBEntry {                // 0x24 bytes
-    sqlite3     *db;
+    sqlite3 *db;
     std::string name;           // last path component of EmuInfo::path, also the table prefix
-    int         count;          // matching rows
-    EmuInfo     *emu;
+    int count;          // matching rows
+    EmuInfo *emu;
 };
 
-class MultiDBCachedTextMenu : public TextMenuDrawer {
+class MultiDBCachedTextMenu : public TextMenuDrawer
+{
 public:
     MultiDBCachedTextMenu(std::string search);    // 0x1485fc, from MenuWindow::onShow
     virtual ~MultiDBCachedTextMenu();                    // 0x14879c (D2), 0x14889c (D0)
-    virtual void restorePosition(int a, int cur, int c); // 0x14909c
+    virtual void restorePosition(int savedCur, int savedStart, int savedEnd); // 0x14909c
     virtual void *getItem(int index);                    // 0x149514
     virtual void *getItemData(int index);                     // 0x149824
-    virtual int  count() { return total; }               // 0x149b54
-    virtual int  moveDown();                               // 0x149024
-    virtual int  moveUp();                              // 0x149060
-    virtual int  pageUp();                              // 0x148fac
-    virtual int  pageDown();                              // 0x148fe8
+    virtual int count() { return total; }               // 0x149b54
+    virtual int moveDown();                               // 0x149024
+    virtual int moveUp();                              // 0x149060
+    virtual int pageUp();                              // 0x148fac
+    virtual int pageDown();                              // 0x148fe8
 
-    int  openCache(EmuInfo &emu, char *buf, size_t size);   // 0x1488d0
+    int openCache(EmuInfo &emu, char *buf, size_t size);   // 0x1488d0
     void prepare();                                      // 0x148bc4
     void fetchForward();                                 // 0x148eac
     void fetchBackward();                                // 0x148f30
     void prepareBGWorkers(int index, int len);           // 0x149138
 
-    WorkerQueue         workers;     // +0xf8   loads result rows in the background (10 waiting)
-    LruCache         items;       // +0x118  loaded rows (TextItem), freed with operator delete
-    LruCache         data;        // +0x12c  per-row data, freed with free()
-    int                  total;       // +0x140  sum of DBEntry::count
-    std::string          name;        // +0x144  "global_search", table prefix for workers
-    char                 key[0x280];  // +0x15c
-    std::string          dir;         // +0x3dc  "."
+    WorkerQueue workers;     // +0xf8   loads result rows in the background (10 waiting)
+    LruCache items;       // +0x118  loaded rows (TextItem), freed with operator delete
+    LruCache data;        // +0x12c  per-row data, freed with free()
+    int total;       // +0x140  sum of DBEntry::count
+    std::string name;        // +0x144  "global_search", table prefix for workers
+    char key[0x280];  // +0x15c
+    std::string dir;         // +0x3dc  "."
     std::vector<DBEntry> dbs;         // +0x3f4
 };

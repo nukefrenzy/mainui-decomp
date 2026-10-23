@@ -7,6 +7,7 @@
 // is leftover code: nothing in this build starts it (startTouchInput has no caller).
 // Body 5,288 bytes plus five inline virtuals; functions in address order.
 #include <iostream>
+#include "SdlApi.h"
 #include <sstream>
 #include <cstdio>
 #include <cstdlib>
@@ -24,16 +25,31 @@
 
 struct SDL_Thread;
 // The SDL 1.2 SDL_Event members this file uses (20 bytes).
-struct KeyEvent { unsigned char type, which, state, padding; unsigned char scancode; int sym, mod; unsigned short unicode; };
-struct UserEvent { unsigned char type; int code; void *data1, *data2; };
-union InputEvent { unsigned char type; KeyEvent key; UserEvent user; char storage[20]; };
+struct KeyEvent {
+    unsigned char type, which, state, padding;
+    unsigned char scancode;
+    int sym, mod;
+    unsigned short unicode;
+};
+struct UserEvent {
+    unsigned char type;
+    int code;
+    void *data1, *data2;
+};
+union InputEvent {
+    unsigned char type;
+    KeyEvent key;
+    UserEvent user;
+    char storage[20];
+};
 extern "C" {
-int SDL_UpperBlit(SDL_Surface *, SDL_Rect *, SDL_Surface *, SDL_Rect *);
-void SDL_FreeSurface(SDL_Surface *);
-int SDL_WaitEvent(void *); int SDL_PushEvent(void *);
-SDL_Thread *SDL_CreateThread(int (*)(void *), void *);
-void SDL_WaitThread(SDL_Thread *, int *);
-const char *getKeymap(); void setKeymap(const char *);
+
+
+int SDL_PushEvent(void *);
+
+
+const char *getKeymap();
+void setKeymap(const char *);
 void saveSystemJson(void *, const char *, int);
 }
 extern char *g_themePath;
@@ -80,7 +96,9 @@ int openInputDevice(const char *path)
         close(fd);
         return -1;
     }
-    name[79] = 0; physical[79] = 0; unique[79] = 0;
+    name[79] = 0;
+    physical[79] = 0;
+    unique[79] = 0;
     if (ioctl(fd, EVIOCGNAME(79), name) < 1) name[0] = 0;
     if (ioctl(fd, EVIOCGPHYS(79), physical) < 1) physical[0] = 0;
     if (ioctl(fd, EVIOCGUNIQ(79), unique) < 1) unique[0] = 0;
@@ -117,26 +135,38 @@ int touchInputThread(void *)
                 if (input.type == EV_KEY && input.code == BTN_TOUCH) {
                     printf(g_keyEventReadFormat, input.type, input.code, input.value);
                     // Finger down or up; either way the next position starts over.
-                    if (input.value == 1) g_touchPressed = true;
-                    else if (input.value == 0) g_touchPressed = false;
+                    if (input.value == 1)
+                        g_touchPressed = true;
+                    else if (input.value == 0)
+                        g_touchPressed = false;
                     g_touchX = g_touchY = -1;
                 }
                 if (input.type == EV_ABS && (input.code == ABS_X || input.code == ABS_Y) && g_touchPressed) {
                     printf(g_keyEventReadFormat, input.type, input.code, input.value);
-                    if (input.code == ABS_X) g_touchX = input.value;
-                    else if (input.code == ABS_Y) g_touchY = input.value;
+                    if (input.code == ABS_X)
+                        g_touchX = input.value;
+                    else if (input.code == ABS_Y)
+                        g_touchY = input.value;
                     if (g_touchX >= 0 && g_touchY >= 0) {
                         if (g_touchX < 100 && g_touchY > 100 && g_touchY < 380) {
-                            event.type = SDL_USEREVENT; event.user.code = BUTTON_LEFT; SDL_PushEvent(&event);
+                            event.type = SDL_USEREVENT;
+                            event.user.code = BUTTON_LEFT;
+                            SDL_PushEvent(&event);
                         }
                         if (g_touchX > 540 && g_touchY > 100 && g_touchY < 380) {
-                            event.type = SDL_USEREVENT; event.user.code = BUTTON_RIGHT; SDL_PushEvent(&event);
+                            event.type = SDL_USEREVENT;
+                            event.user.code = BUTTON_RIGHT;
+                            SDL_PushEvent(&event);
                         }
                         if (g_touchY < 100 && g_touchX > 100 && g_touchX < 540) {
-                            event.type = SDL_USEREVENT; event.user.code = BUTTON_UP; SDL_PushEvent(&event);
+                            event.type = SDL_USEREVENT;
+                            event.user.code = BUTTON_UP;
+                            SDL_PushEvent(&event);
                         }
                         if (g_touchY > 380 && g_touchX > 100 && g_touchX < 540) {
-                            event.type = SDL_USEREVENT; event.user.code = BUTTON_DOWN; SDL_PushEvent(&event);
+                            event.type = SDL_USEREVENT;
+                            event.user.code = BUTTON_DOWN;
+                            SDL_PushEvent(&event);
                         }
                     }
                 }
@@ -174,21 +204,21 @@ int waitMappingKey()
     InputEvent event;
     while (SDL_WaitEvent(&event)) {
         switch (event.type) {
-        case SDL_KEYUP:
-            switch (event.key.sym) {
-            case MIYOO_KEY_A: return BUTTON_A;
-            case MIYOO_KEY_B: return BUTTON_B;
-            case MIYOO_KEY_X: return BUTTON_X;
-            case MIYOO_KEY_Y: return BUTTON_Y;
-            case MIYOO_KEY_L1: return MAPPING_L1;
-            case MIYOO_KEY_R1: return MAPPING_R1;
-            case MIYOO_KEY_L2: return MAPPING_L2;
-            case MIYOO_KEY_R2: return MAPPING_R2;
-            case MIYOO_KEY_MENU: return BUTTON_MENU;
+            case SDL_KEYUP:
+                switch (event.key.sym) {
+                    case MIYOO_KEY_A: return BUTTON_A;
+                    case MIYOO_KEY_B: return BUTTON_B;
+                    case MIYOO_KEY_X: return BUTTON_X;
+                    case MIYOO_KEY_Y: return BUTTON_Y;
+                    case MIYOO_KEY_L1: return MAPPING_L1;
+                    case MIYOO_KEY_R1: return MAPPING_R1;
+                    case MIYOO_KEY_L2: return MAPPING_L2;
+                    case MIYOO_KEY_R2: return MAPPING_R2;
+                    case MIYOO_KEY_MENU: return BUTTON_MENU;
+                    default: break;
+                }
+                // Falls through to the shared default exit of the outer switch.
             default: break;
-            }
-            // Falls through to the shared default exit of the outer switch.
-        default: break;
         }
     }
     return 0;
@@ -217,22 +247,22 @@ int KeySettingWindow::handleInput()
 {
     int key = waitMappingKey();
     switch (key) {
-    case BUTTON_MENU:
-        // Back to driver order: the first two pairs are swapped on screen (see loadResources).
-        snprintf(keymap, 64, "%s,%s,%s,%s,%s,%s,%s,%s", keys[1].c_str(), keys[0].c_str(),
-                 keys[3].c_str(), keys[2].c_str(), keys[4].c_str(), keys[5].c_str(), keys[6].c_str(), keys[7].c_str());
-        setKeymap(keymap);
-        saveSystemJson(g_keyShm, g_themePath, g_fontSize);
-        sync();
-        return 1;
-    case BUTTON_A: keys[selected] = "A"; break;
-    case BUTTON_B: keys[selected] = "B"; break;
-    case BUTTON_X: keys[selected] = "X"; break;
-    case BUTTON_Y: keys[selected] = "Y"; break;
-    case MAPPING_L1: keys[selected] = "L"; break;
-    case MAPPING_L2: keys[selected] = "L2"; break;
-    case MAPPING_R1: keys[selected] = "R"; break;
-    case MAPPING_R2: keys[selected] = "R2"; break;
+        case BUTTON_MENU:
+            // Back to driver order: the first two pairs are swapped on screen (see loadResources).
+            snprintf(keymap, 64, "%s,%s,%s,%s,%s,%s,%s,%s", keys[1].c_str(), keys[0].c_str(),
+                     keys[3].c_str(), keys[2].c_str(), keys[4].c_str(), keys[5].c_str(), keys[6].c_str(), keys[7].c_str());
+            setKeymap(keymap);
+            saveSystemJson(g_keyShm, g_themePath, g_fontSize);
+            sync();
+            return 1;
+        case BUTTON_A: keys[selected] = "A"; break;
+        case BUTTON_B: keys[selected] = "B"; break;
+        case BUTTON_X: keys[selected] = "X"; break;
+        case BUTTON_Y: keys[selected] = "Y"; break;
+        case MAPPING_L1: keys[selected] = "L"; break;
+        case MAPPING_L2: keys[selected] = "L2"; break;
+        case MAPPING_R1: keys[selected] = "R"; break;
+        case MAPPING_R2: keys[selected] = "R2"; break;
     }
     printf("set key[%d] to %s\n", selected, keys[selected].c_str());
     selected++;
@@ -245,9 +275,14 @@ void drawKeySettingFooter(SDL_Surface *dst, SDL_Surface *icon)
     int y = 420;
     int x = 20;
     if (g_keySettingFooter) {
-        SDL_Rect dest; dest.x = 0; dest.y = y;
-        SDL_Rect source; source.x = 0; source.y = 0;
-        source.w = g_keySettingFooter->w; source.h = g_keySettingFooter->h;
+        SDL_Rect dest;
+        dest.x = 0;
+        dest.y = y;
+        SDL_Rect source;
+        source.x = 0;
+        source.y = 0;
+        source.w = g_keySettingFooter->w;
+        source.h = g_keySettingFooter->h;
         SDL_UpperBlit(g_keySettingFooter, &source, dst, &dest);
     }
     if (icon) drawIconLabel(dst, icon, x, y, 0, languageString(STR_SAVE_AND_EXIT));
@@ -255,8 +290,10 @@ void drawKeySettingFooter(SDL_Surface *dst, SDL_Surface *icon)
 // Background, title, footer, the highlight behind the selected slot, then the eight button names.
 int KeySettingWindow::draw(SDL_Surface *dst)
 {
-    if (background) SDL_UpperBlit(background, NULL, dst, NULL);
-    else drawBackground(dst);
+    if (background)
+        SDL_UpperBlit(background, NULL, dst, NULL);
+    else
+        drawBackground(dst);
     drawTitleBar(dst, getTitle(), 1);
     drawKeySettingFooter(dst, menuIcon);
     SDL_UpperBlit(highlight, NULL, dst, &positions[selected]);
@@ -286,6 +323,10 @@ void KeySettingWindow::loadResources()
     while (std::getline(stream, part, ',') && i < 8) keys[i++] = part;
     // The keymap lists L2,L,R2,R first; the screen shows L,L2,R,R2.
     std::string temp;
-    temp = keys[0]; keys[0] = keys[1]; keys[1] = temp;
-    temp = keys[2]; keys[2] = keys[3]; keys[3] = temp;
+    temp = keys[0];
+    keys[0] = keys[1];
+    keys[1] = temp;
+    temp = keys[2];
+    keys[2] = keys[3];
+    keys[3] = temp;
 }

@@ -2,6 +2,8 @@
 // loop and createMenu. Each part file in src/tu_015b20/ adds only the declarations it needs here.
 #pragma once
 #include "PlatformApi.h"
+#include "SdlApi.h"
+#include "CJsonApi.h"
 #include <atomic>
 #include <stdio.h>
 #include <unistd.h>
@@ -30,29 +32,23 @@ class TextItem;
 #include "ConfigTypes.h"
 typedef void TTF_Font;
 extern "C" {
-int SDL_Flip(SDL_Surface *s);
-int SDL_UpperBlit(SDL_Surface *src, SDL_Rect *srcRect, SDL_Surface *dst, SDL_Rect *dstRect);
+
+
 SDL_Surface *TTF_RenderUTF8_Blended(TTF_Font *font, const char *text, SDL_Color fg);
-int TTF_FontHeight(TTF_Font *font);
-int SDL_FillRect(SDL_Surface *dst, SDL_Rect *rect, unsigned int color);
+
+
 int GetKeyShm(void *shm, int key);
 int SetKeyShm(void *shm, int key, int value);
 int readAxpStatus(int *battery, int *voltage, int *charging);   // 0x14b198
 int hasDsp1(int card);                                          // 0x14b53c
 int wifiSignalLevel(int rssi);                                  // 0x14e118
-int SDL_PushEvent(void *event);
-int SDL_WaitEvent(void *event);
+
+
 int putenv(char *s);
 int setVolumeTinymix(int vol);                                  // 0x14ad50
 const char *getKeymap();                                        // 0x14bab8
 void setupKeymap(const char *keymap);                           // 0x14bb64
 void encrypt_path(const char *path, int len);
-void Mix_CloseAudio();
-int Mix_OpenAudio(int freq, unsigned short format, int channels, int chunkSize);
-int Mix_PlayMusic(void *music, int loops);
-void Mix_PauseMusic();
-int Mix_PlayChannelTimed(int channel, void *chunk, int loops, int ticks);
-char *SDL_GetError();
 }
 #define Mix_PlayChannel(channel, chunk, loops) Mix_PlayChannelTimed(channel, chunk, loops, -1)
 const char *languageString(int id);         // 0x135150
@@ -69,9 +65,20 @@ extern int g_fbFd;                          // 0x17e488
 extern void *g_themeMusic;                  // 0x182268
 extern void *g_changeSound;                 // 0x18226c
 // SDL 1.2 events as handleGlobalInput reads them.
-struct SDL_keysym { unsigned char scancode; int sym; int mod; unsigned short unicode; };
-struct SDL_KeyboardEvent { unsigned char type, which, state; SDL_keysym keysym; };
-struct SDL_MouseButtonEvent { unsigned char type, which, button, state; unsigned short x, y; };
+struct SDL_keysym {
+    unsigned char scancode;
+    int sym;
+    int mod;
+    unsigned short unicode;
+};
+struct SDL_KeyboardEvent {
+    unsigned char type, which, state;
+    SDL_keysym keysym;
+};
+struct SDL_MouseButtonEvent {
+    unsigned char type, which, button, state;
+    unsigned short x, y;
+};
 union SDL_Event {
     unsigned char type;
     SDL_KeyboardEvent key;
@@ -126,9 +133,14 @@ int powerOff(void *arg);                    // 0x1761c
 void powerOffNow();                         // 0x176a8
 void pushWindow(TrimusWindow *w);           // 0x36d88 (p11)
 #include "Action.h"
-class AppAction : public Action {
+class AppAction : public Action
+{
 public:
-    AppAction(AppInfo *app, bool detail, int result) : Action(result) { this->app = app; this->detail = detail; } // 0x3984c
+    AppAction(AppInfo *app, bool detail, int result) : Action(result)
+    {
+        this->app = app;
+        this->detail = detail;
+    } // 0x3984c
     virtual ~AppAction() {}
     virtual int execute(void *param);                        // 0x18c54
     virtual int progress(int *item, int index);               // 0x18c94, opens the detail window
@@ -137,7 +149,8 @@ public:
     bool detail;        // +0x0c
 };
 
-class EmuAction : public Action {
+class EmuAction : public Action
+{
 public:
     EmuAction(EmuInfo *emu, const char *label, const char *rompath, const char *imgpath, int result,
               bool detail, int isDir)
@@ -156,9 +169,15 @@ public:
     std::string folderArg;  // +0x5c  handed to the folder window (MenuWindow::parentPath)
 };
 
-class GeneralAction : public Action {
+class GeneralAction : public Action
+{
 public:
-    GeneralAction(int result, int (*fn)(void *), void *arg) : Action(result) { this->fn = fn; this->arg = arg; verbose = false; } // 0x39bac
+    GeneralAction(int result, int (*fn)(void *), void *arg) : Action(result)
+    {
+        this->fn = fn;
+        this->arg = arg;
+        verbose = false;
+    } // 0x39bac
     virtual ~GeneralAction() {}
     virtual int execute(void *param);                        // 0x19ecc
     int (*fn)(void *);  // +0x08
@@ -166,50 +185,61 @@ public:
     bool verbose;       // +0x10
 };
 
-class MenuAction : public Action {
+class MenuAction : public Action
+{
 public:
-    MenuAction(ListMenu *menu, int result) : Action(result) { this->menu = menu; itemIndex = 0; }
+    MenuAction(ListMenu *menu, int result) : Action(result)
+    {
+        this->menu = menu;
+        itemIndex = 0;
+    }
     virtual ~MenuAction() {}
     ListMenu *menu;     // +0x08
     int itemIndex;        // +0x0c
 };
 
-class DeleteRomAction : public MenuAction {
+class DeleteRomAction : public MenuAction
+{
 public:
     DeleteRomAction(ListMenu *menu, int result) : MenuAction(menu, result) {} // 0x39d5c
     virtual ~DeleteRomAction() {}
     virtual int execute(void *param);                        // 0x1a44c (p03)
 };
 
-class ClearFavoriteAction : public MenuAction {
+class ClearFavoriteAction : public MenuAction
+{
 public:
     ClearFavoriteAction(ListMenu *menu, int result) : MenuAction(menu, result) {} // 0x39e18
     virtual ~ClearFavoriteAction() {}
     virtual int execute(void *param);                        // 0x19f64
 };
 
-class ClearRecentAction : public MenuAction {
+class ClearRecentAction : public MenuAction
+{
 public:
     ClearRecentAction(ListMenu *menu, int result) : MenuAction(menu, result) {} // 0x39ed4
     virtual ~ClearRecentAction() {}
     virtual int execute(void *param);                        // 0x19fd8
 };
 
-class MenuItemAction : public Action {
+class MenuItemAction : public Action
+{
 public:
     MenuItemAction(TextItem *item, int result) : Action(result) { this->item = item; }
     virtual ~MenuItemAction() {}
     TextItem *item;     // +0x08
 };
 
-class AddFavoriteAction : public MenuItemAction {
+class AddFavoriteAction : public MenuItemAction
+{
 public:
     AddFavoriteAction(TextItem *item, int result) : MenuItemAction(item, result) {} // 0x3a054
     virtual ~AddFavoriteAction() {}
     virtual int execute(void *param);                        // 0x1a02c
 };
 
-class RemoveFavoriteAction : public MenuItemAction {
+class RemoveFavoriteAction : public MenuItemAction
+{
 public:
     RemoveFavoriteAction(TextItem *item, int result) : MenuItemAction(item, result) {} // 0x3a110
     virtual ~RemoveFavoriteAction() {}
@@ -218,9 +248,15 @@ public:
 
 #include "FileBrowserCache.h"
 
-class SearchAction : public Action {
+class SearchAction : public Action
+{
 public:
-    SearchAction(ListMenu *arg, int id, void *emu) : Action(-1) { this->arg = arg; this->id = id; this->emu = emu; } // 0x3a24c
+    SearchAction(ListMenu *arg, int id, void *emu) : Action(-1)
+    {
+        this->arg = arg;
+        this->id = id;
+        this->emu = emu;
+    } // 0x3a24c
     virtual ~SearchAction() {}
     virtual int execute(void *param);                        // 0x19b04
     ListMenu *arg;      // +0x08  originating menu
@@ -228,16 +264,23 @@ public:
     void *emu;          // +0x10
 };
 
-class GlobalSearchAction : public Action {
+class GlobalSearchAction : public Action
+{
 public:
     GlobalSearchAction() : Action(-1) {}                     // 0x3a32c
     virtual ~GlobalSearchAction() {}
     virtual int execute(void *param);                        // 0x19c18
 };
 
-class PopupSearchIME : public Action {
+class PopupSearchIME : public Action
+{
 public:
-    PopupSearchIME(ListMenu *arg, int id, void *emu) : Action(-1) { this->arg = arg; this->id = id; this->emu = emu; } // 0x3a3dc
+    PopupSearchIME(ListMenu *arg, int id, void *emu) : Action(-1)
+    {
+        this->arg = arg;
+        this->id = id;
+        this->emu = emu;
+    } // 0x3a3dc
     virtual ~PopupSearchIME() {}
     virtual int execute(void *param);                        // 0x19d24
     ListMenu *arg;      // +0x08  originating menu
@@ -245,9 +288,16 @@ public:
     void *emu;          // +0x10
 };
 
-class PopupDialogAction : public Action {
+class PopupDialogAction : public Action
+{
 public:
-    PopupDialogAction(int title, int text, bool flag, Action *action) : Action(-1) { this->title = title; this->text = text; this->flag = flag; this->action = action; } // 0x3a4bc
+    PopupDialogAction(int title, int text, bool flag, Action *action) : Action(-1)
+    {
+        this->title = title;
+        this->text = text;
+        this->flag = flag;
+        this->action = action;
+    } // 0x3a4bc
     virtual ~PopupDialogAction() {}
     virtual int execute(void *param);                        // 0x19dc0
     int title;          // +0x08
@@ -256,9 +306,14 @@ public:
     Action *action;     // +0x14  run by the dialog
 };
 
-class PopupProgressAction : public Action {
+class PopupProgressAction : public Action
+{
 public:
-    PopupProgressAction(int title, Action *action) : Action(-1) { this->title = title; this->action = action; } // 0x3a5a8
+    PopupProgressAction(int title, Action *action) : Action(-1)
+    {
+        this->title = title;
+        this->action = action;
+    } // 0x3a5a8
     virtual ~PopupProgressAction() {}
     virtual int execute(void *param);                        // 0x19e44
     int title;          // +0x08
@@ -284,26 +339,18 @@ void drawBackground(SDL_Surface *dst);      // 0x17450
 // FileAction is in FileBrowserCache.h).
 // Every class here inherits Action's slots 3/4 (0x397fc returns -1, 0x39828 returns 0) except AppAction.
 struct cJSON;
-extern "C" {
-    cJSON *cJSON_CreateObject();
-    cJSON *cJSON_AddStringToObject(cJSON *, const char *, const char *);
-    cJSON *cJSON_AddNumberToObject(cJSON *, const char *, double);
-    char *cJSON_PrintUnformatted(const cJSON *);
-    void cJSON_Delete(cJSON *);
-}
 int clearRecent(std::list<RecentItem> *list);                // 0x120e20 (tu_11cdc8)
 bool isFavourite(char *buf, FILE *f, const char *rompath);   // 0x1b210 (p03)
 
 // p02 render helpers (0x18dd4-0x19acc): busy animation while a background job runs. g_launchCmd
 // doubles as the counter text buffer, g_titleFont/g_wifiEmptyColor/g_background are p01's globals.
-extern "C" void SDL_Delay(unsigned int ms);
+
 extern SDL_Color g_selectedTextColor;                            // 0x1822a0
 int digitCount(int n);                                       // 0x18dd4
-extern "C" void SDL_FreeSurface(SDL_Surface *s);
+
 SDL_Surface *createSurface(int w, int h);                    // 0x1d720 (p03)
 // Argument of the busy-screen thread (SDL_CreateThread from IconMenu::onSelect, createMenu, ...).
-// The {0, -1, 0} ctor at 0x3adc4 (tail) is called by exactly the busyScreenThread users, so it is
-// taken to be this struct's; the third field is unverified.
+// Its constructor is the {0, -1, 0} one at 0x3adc4 (in the tail), which exactly these callers use.
 
 int busyScreenThread(void *arg);                             // 0x193a8
 int loadingScreenThread(void *arg);                          // 0x198a8
@@ -312,20 +359,11 @@ int loadingScreenThread(void *arg);                          // 0x198a8
 // Base (RTTI "MenuAction", ctor 0x39c8c, vtable 0x1546e0) of the actions that reload a list afterwards.
 
 
-
-
 // Base (RTTI "MenuItemAction", ctor 0x39f90, vtable 0x1546c4) of the actions on one list item.
 
 
-
-
-
-
-
-
-
 // p09
-extern "C" void SDL_FreeSurface(SDL_Surface *s);
+
 extern char *g_themePath;                   // 0x181970
 extern SDL_Surface *g_backBuffer;           // 0x181928
 extern const char g_skinSubdir[];           // 0x151a48 (second argument of every skin load)
@@ -334,11 +372,8 @@ SDL_Surface *loadSkinImage(const char *theme, const char *sub, const char *file,
 void freeSurfaceCallback(SDL_Surface *s);  // 0x2e318
 
 // ===========================================================================================
-// Shared declarations for parts p03-p11, declared once before the parts are written
-// so the parts could be written independently. Each class names its owner part: only that part
-// defines its out-of-line methods and may add non-virtual member declarations to it. `unverified`
-// marks a type, name or argument chosen from incomplete evidence; the owner part may correct it and
-// says so in its report. Vtable slot order is from ghidra/classes.json and is not to be changed.
+// Declarations shared by the part files p03-p11. Each class's out-of-line methods live in the
+// part named next to it. Virtual slot order follows the original vtables and must not change.
 // ===========================================================================================
 #include "Theme.h"
 #include "Language.h"
@@ -387,20 +422,20 @@ std::string makeThumbPath(std::string *game, const char *img);  // 0x1d318
 // p04
 int drawListNumber(int n, SDL_Rect *rect, SDL_Surface *dst, TTF_Font *font); // 0x1e868
 // p05
-char *romFolderName(char *s);                           // 0x20b1c  unverified
+char *romFolderName(char *s);                           // 0x20b1c: last path component
 int prepareRomCache(EmuInfo *emu, int arg, std::string dir, std::string search, char *buf,
-                        int size);                              // 0x22d90  arg unverified
+                    int size);                              // 0x22d90: arg is the list's window id
 DBCachedTextMenu *buildRomList(EmuInfo *emu, int arg, std::string *dir,
-                                     std::string *search);      // 0x23318  unverified
+                               std::string *search);      // 0x23318
 // p07
 void applyPanelTiming();                                    // 0x2b5bc
 // p08
-int findEmuForFile(const char *name);                           // 0x2cfc0  unverified; int (p05 tests < 0)
+int findEmuForFile(const char *name);                           // 0x2cfc0: Emu index or -1
 // p09
-int drawPageCount(SDL_Surface *dst, int a, int b);         // 0x311f4  unverified
+int drawPageCount(SDL_Surface *dst, int current, int total); // 0x311f4
 // freeSurfaceCallback 0x2e318 is declared with p09's globals above.
 // p11
-const char *windowTitle(int arg);                                       // 0x374bc  unverified
+const char *windowTitle(int id);                                        // 0x374bc
 ListMenu *createRomListMenu(EmuInfo *, int id, std::string *dir, std::string *search); // 0x37610
 ListMenu *createMenu(int id, std::string path);                 // 0x37784  path by value (caller builds a temp)
 void flipScreen();                                              // 0x36c20
@@ -419,7 +454,8 @@ void startBackgroundThread();                                   // 0x38868
 #include "TextMenu.h"
 
 // p06. vtable 0x153d40; sizeof 0x430 (layout parallels MultiDBCachedTextMenu).
-class DBCacheWorker : public BGWorker {
+class DBCacheWorker : public BGWorker
+{
 public:
     DBCacheWorker(sqlite3 *db, const std::string &dbName, const std::string &table, int offset, int len,
                   int rowWindowId, LruCache *items, LruCache *data, EmuInfo *emu, std::string *dir,
@@ -441,55 +477,57 @@ public:
     virtual ~DBCacheWorker() {}                                // 0x3a8d8 (D0 0x3a954)
     virtual void run();                                        // 0x23548
     virtual void finished();                                   // 0x2407c
-    char          sqlBuffer[0x200];     // +0x04  SQL/cache-key formatting buffer
-    sqlite3      *db;               // +0x204
-    std::string   dbName;           // +0x208
-    std::string   table;            // +0x220
-    std::string   dir;              // +0x238
-    std::string   search;           // +0x250
-    bool          flag;             // +0x268
-    int           offset;           // +0x26c
-    int           len;              // +0x270
-    int           rowWindowId;                // +0x274
+    char sqlBuffer[0x200];     // +0x04  SQL/cache-key formatting buffer
+    sqlite3 *db;               // +0x204
+    std::string dbName;           // +0x208
+    std::string table;            // +0x220
+    std::string dir;              // +0x238
+    std::string search;           // +0x250
+    bool flag;             // +0x268
+    int offset;           // +0x26c
+    int len;              // +0x270
+    int rowWindowId;                // +0x274
     LruCache *items;            // +0x278
     LruCache *data;             // +0x27c
-    EmuInfo      *emu;              // +0x280
+    EmuInfo *emu;              // +0x280
 };
 
-class DBCachedTextMenu : public TextMenuDrawer {
+class DBCachedTextMenu : public TextMenuDrawer
+{
 public:
-    DBCachedTextMenu(const char *dbName, EmuInfo *emu, int arg174, std::string search); // 0x25240; emu is stored at +0x414
+    DBCachedTextMenu(const char *dbName, EmuInfo *emu, int listWindowId, std::string search); // 0x25240
     virtual ~DBCachedTextMenu();                               // 0x2540c (D0 0x254dc)
-    virtual void restorePosition(int a, int cur, int c);       // 0x246f8
+    virtual void restorePosition(int savedCur, int savedStart, int savedEnd); // 0x246f8
     virtual void *getItem(int index);                          // 0x24410
     virtual void *getItemData(int index);                           // 0x24584
-    virtual int  count() { return total; }                     // 0x3a988, inline
-    virtual int  moveDown();                                     // 0x24128
-    virtual int  moveUp();                                    // 0x24164
+    virtual int count() { return total; }                     // 0x3a988, inline
+    virtual int moveDown();                                     // 0x24128
+    virtual int moveUp();                                    // 0x24164
     virtual void removeItem(int);                                 // 0x24a14
     virtual void setSearch(const char *);                         // 0x24d98
-    virtual int  pageUp();                                    // 0x240b4
-    virtual int  pageDown();                                    // 0x240ec
+    virtual int pageUp();                                    // 0x240b4
+    virtual int pageDown();                                    // 0x240ec
     void prefetchNext();                                      // 0x241a0
     void prefetchPrevious();                                  // 0x242dc
-    void setTotal(int n) { total = n; }                        // 0x3a9b0, inline; name unverified
-    int  open(const char *path, const char *table, const char *folder); // 0x24834
+    void setTotal(int n) { total = n; }                        // 0x3a9b0, inline
+    int open(const char *path, const char *table, const char *folder); // 0x24834
     WorkerQueue workers;           // +0xf8   3 threads
     LruCache items;             // +0x118  rows (free 0x24d28)
     LruCache data;              // +0x12c  (free 0x24d6c)
-    sqlite3     *cacheDb;          // +0x140  database connection
-    std::string  name;              // +0x144
-    std::string  tablePrefix;            // +0x15c
-    int          listWindowId;          // +0x174  ctor arg174
-    int          total;             // +0x178  0
-    std::string  dbName;            // +0x17c
-    char         keyBuffer[0x280];     // +0x194  SQL/cache-key formatting buffer
-    EmuInfo     *emuInfo;          // +0x414  emulator record (constructor argument)
-    std::string  dir;               // +0x418
+    sqlite3 *cacheDb;          // +0x140  database connection
+    std::string name;              // +0x144
+    std::string tablePrefix;            // +0x15c
+    int listWindowId;          // +0x174  window id given to each row's action
+    int total;             // +0x178  0
+    std::string dbName;            // +0x17c
+    char keyBuffer[0x280];     // +0x194  SQL/cache-key formatting buffer
+    EmuInfo *emuInfo;          // +0x414  emulator record (constructor argument)
+    std::string dir;               // +0x418
 };
 
 // p06. Not polymorphic; sizeof 0x80.
-class IconMenuItem {
+class IconMenuItem
+{
 public:
     IconMenuItem(int labelId, const char *icon, const char *iconSelected,
                  SDL_Surface *background, SDL_Surface *backgroundSelected, int menuId, void *param, bool flag);                         // 0x256f0
@@ -500,46 +538,51 @@ public:
     SDL_Surface *iconSurface;       // +0x00
     SDL_Surface *iconSelectedSurface; // +0x04
     SDL_Surface *background, *backgroundSelected; // +0x08, +0x0c, borrowed surfaces
-    std::string  label;             // +0x10
-    std::string  verboseLabel;             // +0x28
-    int          labelId;           // +0x40
-    void        *param;             // +0x44
-    bool         flag;              // +0x48
-    int          menuId;            // +0x4c  createMenu id opened by IconMenu::onSelect
-    std::string  icon;              // +0x50
-    std::string  iconSelected;      // +0x68
+    std::string label;             // +0x10
+    std::string verboseLabel;             // +0x28
+    int labelId;           // +0x40
+    void *param;             // +0x44
+    bool flag;              // +0x48
+    int menuId;            // +0x4c  createMenu id opened by IconMenu::onSelect
+    std::string icon;              // +0x50
+    std::string iconSelected;      // +0x68
 };
 
 // p06. vtable 0x153cf0; sizeof 0xa0.
-class IconMenu : public ListMenu {
+class IconMenu : public ListMenu
+{
 public:
-    IconMenu(int arg58, int arg54, bool showStripes, bool showPageDots, int arg60, int arg64, bool useThemeOffsets); // 0x25c8c
+    IconMenu(int rows, int columns, bool stripes, bool dots, int marginX, int marginY, bool themeOffsets); // 0x25c8c
     virtual ~IconMenu();                                       // 0x25e48 (D0 0x25ec8)
-    virtual int  handleKey();                                     // 0x27bc4
-    virtual int  onSelect();                                     // 0x27724 onSelect
+    virtual int handleKey();                                     // 0x27bc4
+    virtual int onSelect();                                     // 0x27724 onSelect
     virtual void *getItem(int index);                          // 0x26fa0
     virtual void drawList(SDL_Surface *dst);                     // 0x25efc draw
-    virtual int  count() { return items.size(); }              // 0x3a9e0, inline
+    virtual int count() { return items.size(); }              // 0x3a9e0, inline
     virtual void reloadTheme();                                    // 0x27a68
     void freeItems();                                          // 0x2797c
     void addItem(void *item);                          // 0x27a30
-    void setField68(int a, int b) { iconCropWidth = a; iconCropHeight = b; } // 0x3aa10, inline; name unverified
-    void setFontFn(TTF_Font *(*fn)()) { fontFn = fn; }         // 0x3aa50, inline; name unverified
-    void setField74(int v) { labelOffsetY = v; }                    // 0x3aa80, inline; name unverified
+    void setIconCropSize(int a, int b)
+    {
+        iconCropWidth = a;
+        iconCropHeight = b;
+    } // 0x3aa10, inline
+    void setFontFn(TTF_Font *(*fn)()) { fontFn = fn; }         // 0x3aa50, inline
+    void setLabelOffsetY(int v) { labelOffsetY = v; }                    // 0x3aa80, inline
     std::vector<void *> items; // +0x48, IconMenuItem rows; shared specialization with TextMenu
-    int          gridColumns;           // +0x54
-    int          gridRows;           // +0x58
-    bool         showStripes;            // +0x5c
-    bool         showPageDots;            // +0x5d
-    int          gridMarginX;           // +0x60
-    int          gridMarginY;           // +0x64
-    int          iconCropWidth;           // +0x68  0
-    int          iconCropHeight;           // +0x6c  0
-    TTF_Font  *(*fontFn)();         // +0x70  0x25c68 (returns g_iconFont); createMenu sets 0x37760 (g_smallFont)
-    int          labelOffsetY;           // +0x74  0
-    std::string  loadedThemePath;             // +0x78
-    int          iconOffsetX, iconOffsetY, textOffsetY; // +0x90  copied from the Theme's gridIconOffsetX/Y and gridTextOffsetY
-    bool         useThemeOffsets;            // +0x9c
+    int gridColumns;           // +0x54
+    int gridRows;           // +0x58
+    bool showStripes;            // +0x5c
+    bool showPageDots;            // +0x5d
+    int gridMarginX;           // +0x60
+    int gridMarginY;           // +0x64
+    int iconCropWidth;           // +0x68  0
+    int iconCropHeight;           // +0x6c  0
+    TTF_Font *(*fontFn)();         // +0x70  0x25c68 (returns g_iconFont); createMenu sets 0x37760 (g_smallFont)
+    int labelOffsetY;           // +0x74  0
+    std::string loadedThemePath;             // +0x78
+    int iconOffsetX, iconOffsetY, textOffsetY; // +0x90  copied from the Theme's gridIconOffsetX/Y and gridTextOffsetY
+    bool useThemeOffsets;            // +0x9c
 };
 
 // p06. Not polymorphic; sizeof 0x24.
@@ -566,56 +609,60 @@ enum SettingHandler {
     SETTING_WIFI = 19,
     SETTING_HOTSPOT = 20,
 };
-class SettingMenuItem {
+class SettingMenuItem
+{
 public:
     SettingMenuItem(int labelId, const char *icon, int handler); // 0x282d0, integer settings selector
     ~SettingMenuItem();                                        // 0x283b8
     void reload();                                             // 0x28408, called by SettingMenu::reloadTheme
     SDL_Surface *iconSurface;       // +0x00
-    int          labelId;           // +0x04
-    int          handler;           // +0x08  settings selector, switched on in p07 (not a pointer)
-    std::string  icon;              // +0x0c
+    int labelId;           // +0x04
+    int handler;           // +0x08  settings selector, switched on in p07 (not a pointer)
+    std::string icon;              // +0x0c
 };
 
 // p07. vtable 0x153c9c; sizeof 0x128.
-class SettingMenu : public TextMenu {
+class SettingMenu : public TextMenu
+{
 public:
     SettingMenu();                                             // 0x2849c  TextMenu(1, 1, 6, 0)
     virtual ~SettingMenu();                                    // 0x28614 (D0 0x28748)
-    virtual int  handleKey();                                     // 0x2a5d4
+    virtual int handleKey();                                     // 0x2a5d4
     virtual void drawList(SDL_Surface *dst);                     // 0x28994
     virtual void reloadTheme();                                    // 0x2877c
     virtual void freeListItem();                                    // 0x2a6ec
     void decrease();                                          // 0x295a8
     void increase();                                          // 0x298ec
     void select();                                            // 0x29dc8
-    void        *volumePreviewTimer;          // +0x104  delayed volume-preview timer
+    void *volumePreviewTimer;          // +0x104  delayed volume-preview timer
     SDL_Surface *settingLeftArrow;        // +0x108  left-arrow icon
     SDL_Surface *rightArrow;        // +0x10c  right-arrow icon (separate from selectedBackground)
-    std::string  themePath;         // +0x110
+    std::string themePath;         // +0x110
 };
 
 // p07. vtable 0x153c48; sizeof 0x120.
-class DeviceInfoMenu : public TextMenu {
+class DeviceInfoMenu : public TextMenu
+{
 public:
     DeviceInfoMenu();                                          // 0x2a83c  TextMenu(1, 1, 6, 0)
     virtual ~DeviceInfoMenu();                                 // 0x2a934 (D0 0x2a9d4)
-    virtual int  onSelect() { return 0; }                        // 0x3aab0, inline
+    virtual int onSelect() { return 0; }                        // 0x3aab0, inline
     virtual void drawList(SDL_Surface *dst);                     // 0x2aae4
     virtual void reloadTheme();                                    // 0x2aa08
     virtual void freeListItem();                                    // 0x2b504
     void loadInfo();                                           // 0x2b0f8, populate the seven device-information rows
-    char        *firmwareVersion;          // +0x104  loaded firmware-version buffer
-    std::string  themePath;         // +0x108
+    char *firmwareVersion;          // +0x104  loaded firmware-version buffer
+    std::string themePath;         // +0x108
 };
 
 // p08. vtable 0x153bf4; sizeof 0x10c.
-class ColorMenu : public TextMenu {
+class ColorMenu : public TextMenu
+{
 public:
     ColorMenu();                                               // 0x2b788  TextMenu(0, 1, 6, 0)
     virtual ~ColorMenu();                                      // 0x2b8bc (D0 0x2b96c)
-    virtual int  handleKey();                                     // 0x2c274
-    virtual int  onSelect();                                     // 0x2c73c
+    virtual int handleKey();                                     // 0x2c274
+    virtual int onSelect();                                     // 0x2c73c
     virtual void drawList(SDL_Surface *dst);                     // 0x2b9a0
     virtual void freeListItem();                                    // 0x2c760
     void loadItems();                                          // 0x2c824  four LCD controls
@@ -624,39 +671,42 @@ public:
 };
 
 // p08. vtable 0x153ba0; sizeof 0x110.
-class LanguageMenu : public TextMenu {
+class LanguageMenu : public TextMenu
+{
 public:
     LanguageMenu(std::vector<LanguageChoice> languages); // 0x2c950
     virtual ~LanguageMenu();                                   // 0x2caa8 (D0 0x2caf4)
-    virtual int  onSelect();                                     // 0x2cb28
+    virtual int onSelect();                                     // 0x2cb28
     std::vector<LanguageChoice> languages; // +0x104  filename/name pairs
 };
 
 // p08. vtable 0x153b4c; sizeof 0x104 (lists g_themeList).
-class ThemeMenu : public TextMenu {
+class ThemeMenu : public TextMenu
+{
 public:
     ThemeMenu();                                               // 0x2cc14  TextMenu(0, 1, 6, 0)
     virtual ~ThemeMenu();                                      // 0x2cd80 (D0 0x2cdbc)
-    virtual int  onSelect();                                     // 0x2cdf0
+    virtual int onSelect();                                     // 0x2cdf0
 };
 
 // p08. vtable 0x153afc; sizeof 0x80.
-class FileBrowserMenu : public ListMenu {
+class FileBrowserMenu : public ListMenu
+{
 public:
     FileBrowserMenu(const char *path);                         // 0x2d700  ListMenu(false)
     virtual ~FileBrowserMenu();                                // 0x2d908 (D0 0x2da58)
-    virtual int  handleKey();                                     // 0x2e0f0
-    virtual int  onSelect();                                     // 0x2dad4
+    virtual int handleKey();                                     // 0x2e0f0
+    virtual int onSelect();                                     // 0x2dad4
     virtual void *getItem(int index);                          // 0x2db8c
     virtual void drawList(SDL_Surface *dst);                     // 0x2dcbc
-    virtual int  count();                                      // 0x2da8c
+    virtual int count();                                      // 0x2da8c
     SDL_Surface *itemIcon(TextItem *item);                     // 0x2dc14
     FileBrowserCache cache;         // +0x48  filter 0x2d574
     std::vector<void *> *dirItems; // +0x64  cache.open(path)
-    std::vector<SDL_Surface *> icons;  // +0x68  unverified element type
+    std::vector<SDL_Surface *> icons;  // +0x68  file and folder icons
     SDL_Surface *fileIcon;         // +0x74
     SDL_Surface *selectionBar;         // +0x78
-    bool         highlightSelected;            // +0x7c  true
+    bool highlightSelected;            // +0x7c  true
 };
 
 // --- Background workers (BGWorker is in MenuHelpers.h).
@@ -673,114 +723,121 @@ public:
 // p09. vtable 0x153a94; sizeof 0x10. Ctor 0x32040: TrimusWindow(title, -1).
 #include "MenuWindow.h"
 
-class FloatWindow : public TrimusWindow {
+class FloatWindow : public TrimusWindow
+{
 public:
     FloatWindow(int titleLabelId);                             // 0x32040
     virtual ~FloatWindow();                                    // 0x32094 (D0 0x320f0)
-    virtual int  handleInput() { return -1; }                  // 0x3ab64, inline
-    virtual int  draw(SDL_Surface *dst);                       // 0x32124
+    virtual int handleInput() { return -1; }                  // 0x3ab64, inline
+    virtual int draw(SDL_Surface *dst);                       // 0x32124
     virtual void onHide() {}                                   // 0x3ab88, inline
     virtual void onShow();                                     // 0x32160
     virtual void saveState(cJSON *obj) {}                      // 0x3aba8, inline
-    virtual int  restoreState(cJSON *obj) { return 0; }        // 0x3abcc, inline
+    virtual int restoreState(cJSON *obj) { return 0; }        // 0x3abcc, inline
     virtual void update() {}                                   // 0x3abf4, inline
-    SDL_Surface *backdrop;         // +0x0c  0; unverified type
+    SDL_Surface *backdrop;         // +0x0c  dimmed copy of the screen behind the pop-up
 };
 
 // p10. vtable 0x153a60; sizeof 0x18. Created by MenuWindow::handleInput.
-class PopUpWindow : public FloatWindow {
+class PopUpWindow : public FloatWindow
+{
 public:
     PopUpWindow(int titleLabelId, TextMenu *menu, const char *background); // 0x3225c
     virtual ~PopUpWindow();                                    // 0x3247c (D0 0x32534)
-    virtual int  handleInput();                                // 0x32784
-    virtual int  draw(SDL_Surface *dst);                       // 0x32588
+    virtual int handleInput();                                // 0x32784
+    virtual int draw(SDL_Surface *dst);                       // 0x32588
     virtual void onHide();                                     // 0x32568
     TextMenu *menu;                 // +0x10
-    SDL_Surface  *background;       // +0x14
+    SDL_Surface *background;       // +0x14
 };
 
 // p10. vtable 0x153a2c; sizeof 0x3c.
-class NotifyWindow : public FloatWindow {
+class NotifyWindow : public FloatWindow
+{
 public:
-    NotifyWindow(const char *text, const char *arg34, const char *background, void (*callback)()); // 0x327e4: text, button label, button background, callback
+    NotifyWindow(const char *text, const char *buttonLabel, const char *buttonImage, void (*callback)()); // 0x327e4back
     virtual ~NotifyWindow();                                   // 0x32920 (D0 0x329cc)
-    virtual int  handleInput();                                // 0x32d0c
-    virtual int  draw(SDL_Surface *dst);                       // 0x32d74
+    virtual int handleInput();                                // 0x32d0c
+    virtual int draw(SDL_Surface *dst);                       // 0x32d74
     virtual void onShow();                                     // 0x32aa0
-    void        *notifyTimer;           // +0x10  SDL timer
-    std::string  text;              // +0x14
+    void *notifyTimer;           // +0x10  SDL timer
+    std::string text;              // +0x14
     SDL_Surface *notifyBackground;         // +0x2c
     SDL_Surface *notifyButton;         // +0x30
-    const char  *buttonLabel;           // +0x34  borrowed button-label text
-    void       (*callback)();       // +0x38
+    const char *buttonLabel;           // +0x34  borrowed button-label text
+    void (*callback)();       // +0x38
 };
 
 // p10. vtable 0x1539f8; sizeof 0xcc. NotifyWindow(<0x151c98>, ?, "skin/bg-button-f.png", onTimeout).
-class CountDownWindow : public NotifyWindow {
+class CountDownWindow : public NotifyWindow
+{
 public:
     CountDownWindow(int title, void (*onTimeout)(), void (*onCancel)());   // 0x33060
     virtual ~CountDownWindow();                                // 0x330fc (D0 0x33158)
-    virtual int  handleInput();                                // 0x332d8
+    virtual int handleInput();                                // 0x332d8
     virtual void onShow();                                     // 0x331ec
-    int          title;             // +0x3c
-    void        *tickTimer;           // +0x40  countdown tick timer
-    int          seconds;           // +0x44  10
-    void       (*onCancel)();       // +0x48
-    char         countdownText[0xcc - 0x4c]; // +0x4c  formatted countdown text
+    int title;             // +0x3c
+    void *tickTimer;           // +0x40  countdown tick timer
+    int seconds;           // +0x44  10
+    void (*onCancel)();       // +0x48
+    char countdownText[0xcc - 0x4c]; // +0x4c  formatted countdown text
 };
 
 // p10. vtable 0x1539c4; sizeof 0x34.
-class DialogWindow : public FloatWindow {
+class DialogWindow : public FloatWindow
+{
 public:
     DialogWindow(int title, int text, bool flag, Action *action);   // 0x333ec
     virtual ~DialogWindow();                                   // 0x33570 (D0 0x33630)
-    virtual int  handleInput();                                // 0x3400c
-    virtual int  draw(SDL_Surface *dst);                       // 0x33bac
+    virtual int handleInput();                                // 0x3400c
+    virtual int draw(SDL_Surface *dst);                       // 0x33bac
     virtual void onShow();                                     // 0x33664
-    int          title;             // +0x10
-    int          text;              // +0x14
+    int title;             // +0x10
+    int text;              // +0x14
     int drawFallback(SDL_Surface *);                           // 0x33934
-    int          selected;          // +0x18  1; name unverified
+    int selected;          // +0x18  button: 0 Cancel, 1 OK (default)
     SDL_Surface *popupBackground;         // +0x1c
     SDL_Surface *buttonHighlight;         // +0x20
     SDL_Surface *iconA;             // +0x24  g_iconA
     SDL_Surface *iconB;             // +0x28  g_iconB
-    Action      *action;            // +0x2c
-    bool         flag;              // +0x30
-    bool         noPopupSkin;            // +0x31
+    Action *action;            // +0x2c
+    bool flag;              // +0x30
+    bool noPopupSkin;            // +0x31
 };
 
 // p10. vtable 0x153990; sizeof 0x3c.
-class ProgressDialog : public FloatWindow {
+class ProgressDialog : public FloatWindow
+{
 public:
     ProgressDialog(int title, Action *action);                 // 0x34184
     virtual ~ProgressDialog();                                 // 0x342ac (D0 0x3437c)
-    virtual int  handleInput();                                // 0x349f0
-    virtual int  draw(SDL_Surface *dst);                       // 0x34468
+    virtual int handleInput();                                // 0x349f0
+    virtual int draw(SDL_Surface *dst);                       // 0x34468
     virtual void onHide();                                     // 0x34438
     virtual void onShow();                                     // 0x343b0
     void runAction();                                          // 0x343f4
-    int          title;             // +0x10
-    std::string  text;              // +0x14
+    int title;             // +0x10
+    std::string text;              // +0x14
     SDL_Surface *progressButton;         // +0x2c
     SDL_Surface *progressBackground;         // +0x30
-    Action      *action;            // +0x34
-    SDL_Thread  *actionThread;           // +0x38  action worker
+    Action *action;            // +0x34
+    SDL_Thread *actionThread;           // +0x38  action worker
 };
 
 // p10. vtable 0x15395c; sizeof 0x9c.
-class GameDetailWindow : public TrimusWindow {
+class GameDetailWindow : public TrimusWindow
+{
 public:
     GameDetailWindow(int title, int id);                       // 0x34a14
     GameDetailWindow(int title, int id, const char *name, const char *item, const char *launch,
-                     const char *icon, int param, int type, bool favorite); // 0x34b1c
+                     const char *icon, int listIndex, int type, bool favorite); // 0x34b1c
     virtual ~GameDetailWindow();                               // 0x34d0c (D0 0x34d98)
-    virtual int  handleInput();                                // 0x35bbc
-    virtual int  draw(SDL_Surface *dst);                       // 0x356e4
+    virtual int handleInput();                                // 0x35bbc
+    virtual int draw(SDL_Surface *dst);                       // 0x356e4
     virtual void onHide();                                     // 0x34dcc
     virtual void onShow();                                     // 0x34e6c
     virtual void saveState(cJSON *obj);                        // 0x35fe4
-    virtual int  restoreState(cJSON *obj);                     // 0x36140
+    virtual int restoreState(cJSON *obj);                     // 0x36140
     virtual void update();                                     // 0x34f84
     virtual void animateIn(SDL_Surface *dst, FlipFn flip);     // 0x36288
     virtual void animateOut(SDL_Surface *dst, FlipFn flip);    // 0x36534
@@ -788,31 +845,32 @@ public:
     void resetDetails(const char *, const char *, const char *, const char *, int, int, bool); // 0x353a0
     void resetFromItem(TextItem *, int);                        // 0x35538
     void captureBackground(SDL_Surface *);                     // 0x3675c
-    std::string  name;              // +0x0c
-    std::string  item;              // +0x24
-    std::string  thumbPath;         // +0x3c  makeThumbPath(launch, icon)
-    std::string  launch;            // +0x54
+    std::string name;              // +0x0c
+    std::string item;              // +0x24
+    std::string thumbPath;         // +0x3c  makeThumbPath(launch, icon)
+    std::string launch;            // +0x54
     std::vector<std::string> nameLines; // +0x6c  wrapped title lines
-    int          param;             // +0x78  item index
-    int          type;              // +0x7c
-    bool         favorite;          // +0x80
+    int listIndex;             // +0x78  item index
+    int type;              // +0x7c
+    bool favorite;          // +0x80
     SDL_Surface *thumbnailImage, *favoriteImage, *animationCapture; // thumbnail, favourite mark, animation capture
-    int          param90;           // +0x90  ctor param again
-    bool         animatePending;            // +0x94  true
+    int openedIndex;           // +0x90  list index when opened (the slide plays only for that game)
+    bool animatePending;            // +0x94  true
     TextMenuDrawer *parentMenu;        // +0x98  parent text/ROM menu
 };
 
 // p11. vtable 0x153928; sizeof 0x10.
-class ADCInfoWindow : public TrimusWindow {
+class ADCInfoWindow : public TrimusWindow
+{
 public:
     ADCInfoWindow(int title, int id);                          // 0x36838
     virtual ~ADCInfoWindow();                                  // 0x368b8 (D0 0x36914)
-    virtual int  handleInput();                                // 0x36948
-    virtual int  draw(SDL_Surface *dst);                       // 0x36990
+    virtual int handleInput();                                // 0x36948
+    virtual int draw(SDL_Surface *dst);                       // 0x36990
     virtual void onHide() {}                                   // 0x3ac14, inline
     virtual void onShow() {}                                   // 0x3ac34, inline
     virtual void saveState(cJSON *obj) {}                      // 0x3ac54, inline
-    virtual int  restoreState(cJSON *obj) { return 0; }        // 0x3ac78, inline
+    virtual int restoreState(cJSON *obj) { return 0; }        // 0x3ac78, inline
     virtual void update() {}                                   // 0x3aca0, inline
     void *timer;                    // +0x0c  SDL timer
 };
@@ -828,27 +886,34 @@ public:
 #pragma pop_macro("__assert_fail")
 #undef RAPIDXML_NO_STDLIB
 
-inline bool isListMenuId(int id)                                // name unverified
+// Windows that show a list with a "current/total" count and the header line.
+inline bool isListMenuId(int id)
 {
     return id == 5 || id == 17 || id == 2 || id == 10 || id == 3 || id == 4 || id == 24;
 }
 
 struct BusyData {
-    BusyData() { title = 0; type = -1; field8 = 0; }        // 0x3adc4, inline; unverified
+    BusyData()
+    {
+        title = 0;
+        type = -1;
+        unused8 = 0;
+    }        // 0x3adc4, inline
     const char *title;      // "sdata->title"
-    int type;
-    int field8;             // unverified
+    int type;               // window id shown in the frame
+    int unused8;             // never read
 };
 
-class LoadSurfaceWorker : public BGWorker {
+class LoadSurfaceWorker : public BGWorker
+{
 public:
     inline LoadSurfaceWorker(std::string path, LruCache *cache); // 0x3af38
     inline virtual ~LoadSurfaceWorker();                           // 0x3afd0
     virtual void run();                                        // 0x2e344
     virtual void finished();                                   // 0x2e3ec
-    std::string   path;             // +0x04
+    std::string path;             // +0x04
     LruCache *cache;            // +0x1c
-    int           field20;          // +0x20  unverified
+    int unused20;          // +0x20  never read
 };
 
 // Sizes from operator new / operator delete, offsets from the constructors.
@@ -857,9 +922,11 @@ public:
 #pragma GCC diagnostic ignored "-Winvalid-offsetof"
 static_assert(sizeof(ListMenu) == 0x48 && sizeof(TextMenuDrawer) == 0xf8 && sizeof(TextMenu) == 0x104, "menu bases");
 static_assert(offsetof(TextMenuDrawer, textRowHeight) == 0x58 && offsetof(TextMenuDrawer, textScratch) == 0xa0 &&
-              offsetof(TextMenuDrawer, drawStripes) == 0xc1 && offsetof(TextMenuDrawer, background) == 0xe0, "TextMenuDrawer");
+                  offsetof(TextMenuDrawer, drawStripes) == 0xc1 && offsetof(TextMenuDrawer, background) == 0xe0,
+              "TextMenuDrawer");
 static_assert(sizeof(DBCachedTextMenu) == 0x430 && offsetof(DBCachedTextMenu, total) == 0x178 &&
-              offsetof(DBCachedTextMenu, dir) == 0x418, "DBCachedTextMenu");
+                  offsetof(DBCachedTextMenu, dir) == 0x418,
+              "DBCachedTextMenu");
 static_assert(sizeof(IconMenuItem) == 0x80 && offsetof(IconMenuItem, menuId) == 0x4c, "IconMenuItem");
 static_assert(sizeof(IconMenu) == 0xa0 && offsetof(IconMenu, loadedThemePath) == 0x78 && offsetof(IconMenu, useThemeOffsets) == 0x9c, "IconMenu");
 static_assert(sizeof(SettingMenuItem) == 0x24 && sizeof(SettingMenu) == 0x128 && sizeof(DeviceInfoMenu) == 0x120, "settings");
@@ -872,6 +939,7 @@ static_assert(sizeof(CountDownWindow) == 0xcc && sizeof(DialogWindow) == 0x34 &&
 static_assert(sizeof(GameDetailWindow) == 0x9c && offsetof(GameDetailWindow, animatePending) == 0x94, "GameDetailWindow");
 static_assert(sizeof(ADCInfoWindow) == 0x10 && sizeof(MenuWindow) == 0x11c && sizeof(TextItem) == 0x74, "windows, items");
 static_assert(sizeof(EmuAction) == 0x74 && sizeof(AppAction) == 0x10 && sizeof(GeneralAction) == 0x14 &&
-              sizeof(DeleteRomAction) == 0x10 && sizeof(AddFavoriteAction) == 0x0c && sizeof(SearchAction) == 0x14 &&
-              sizeof(PopupDialogAction) == 0x18 && sizeof(PopupProgressAction) == 0x10 && sizeof(FileAction) == 0x24, "actions");
+                  sizeof(DeleteRomAction) == 0x10 && sizeof(AddFavoriteAction) == 0x0c && sizeof(SearchAction) == 0x14 &&
+                  sizeof(PopupDialogAction) == 0x18 && sizeof(PopupProgressAction) == 0x10 && sizeof(FileAction) == 0x24,
+              "actions");
 #pragma GCC diagnostic pop

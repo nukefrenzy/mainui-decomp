@@ -10,29 +10,19 @@
 // The C units 0x14acfc-0x14f730 are split where .rodata proves a new file: GCC merges identical
 // string literals within one file even at -O0, and "w", "r" and "%d" each appear more than once.
 #include <stdio.h>
+#include "CJsonApi.h"
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include "LangStrings.h"
 
-typedef struct cJSON {
-    struct cJSON *next, *prev, *child;
-    int type;
-    char *valuestring;
-    int valueint;
-    double valuedouble;
-    char *string;
-} cJSON;
-cJSON *cJSON_Parse(const char *value);
-cJSON *cJSON_GetObjectItem(const cJSON *object, const char *string);
-void cJSON_Delete(cJSON *c);
-char *cJSON_GetStringValue(cJSON *item);
 
 int readWholeFile(const char *name, FILE *f, char **out);  // 0x14b8a4
 
 char g_langPath[128];           // 0x182680, COMMON: scratch buffer for a path or a key
 char g_unrefCommon_182700[48];  // 0x182700, COMMON: unreferenced storage at this address in the Onion and stock builds; size and position proven, name, type and partition unknown; hashes after g_langPath
-const char *g_defaultStrings[156] = { // 0x17fc9c, built-in English strings
+const char *g_defaultStrings[156] = {
+    // 0x17fc9c, built-in English strings
     "RetroArch", // 0
     "Favorite", // 1
     "Game", // 2

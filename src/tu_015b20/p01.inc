@@ -5,27 +5,27 @@
 const char *keyEventName(int key)
 {
     switch (key) {
-    case 0: return "key_none";
-    case 1: return "key_a";
-    case 2: return "key_b";
-    case 3: return "key_x";
-    case 4: return "key_y";
-    case 5: return "key_up";
-    case 6: return "key_down";
-    case 7: return "key_left";
-    case 8: return "key_right";
-    case 9: return "key_start";
-    case 10: return "key_coin";
-    case 11: return "key_nenu_key";
-    case 12: return "key_hotkey1";
-    case 13: return "key_hotkey2";
-    case 14: return "key_hotkey3";
-    case 15: return "key_hotkey4";
-    case 18: return "event_battery";
-    case 19: return "event_hotplug";
-    case 20: return "event_notify";
-    case 45: return "key_max_key";
-    default: return "event_unkown";
+        case 0: return "key_none";
+        case 1: return "key_a";
+        case 2: return "key_b";
+        case 3: return "key_x";
+        case 4: return "key_y";
+        case 5: return "key_up";
+        case 6: return "key_down";
+        case 7: return "key_left";
+        case 8: return "key_right";
+        case 9: return "key_start";
+        case 10: return "key_coin";
+        case 11: return "key_nenu_key";
+        case 12: return "key_hotkey1";
+        case 13: return "key_hotkey2";
+        case 14: return "key_hotkey3";
+        case 15: return "key_hotkey4";
+        case 18: return "event_battery";
+        case 19: return "event_hotplug";
+        case 20: return "event_notify";
+        case 45: return "key_max_key";
+        default: return "event_unkown";
     }
 }
 
@@ -366,7 +366,7 @@ int drawBatteryIndicator(SDL_Surface *dst, bool focused)
 }
 
 // 0x16ee0: plays the enter sound on channel 0.
-int playEnterSound(int a, int b)
+int playEnterSound(int, int)
 {
     if (g_enterSound != NULL) {
         if (Mix_PlayChannel(0, g_enterSound, 0) == -1)
@@ -509,7 +509,7 @@ void powerOffNow()
 }
 
 // 0x176c0: asks the window loop to power off (EVENT_POWER_OFF); MainUI then shows a countdown.
-int sendPowerOffEvent(int a, int b)
+int sendPowerOffEvent(int, int)
 {
     MainEvent event;
     event.type = SDL_USEREVENT;
@@ -544,132 +544,132 @@ int handleGlobalInput(SDL_Event *out)
     if (SDL_WaitEvent(&event)) {
         // Status updates from MainUI's own threads do not count as user activity.
         if (event.type != SDL_USEREVENT || (event.user.code != EVENT_BATTERY && event.user.code != EVENT_WIFI_STATUS &&
-                                 event.user.code != EVENT_VOLUME_SHOWN && event.user.code != EVENT_VOLUME_HIDDEN &&
-                                 event.user.code != 0))
+                                            event.user.code != EVENT_VOLUME_SHOWN && event.user.code != EVENT_VOLUME_HIDDEN &&
+                                            event.user.code != 0))
             onUserActivity();
         if (out != NULL)
             *out = event;
         switch (event.type) {
-        case SDL_KEYDOWN:
-            if (event.key.keysym.sym != MIYOO_KEY_POWER && event.key.keysym.sym != MIYOO_KEY_R1 &&
-                event.key.keysym.sym != MIYOO_KEY_L1 && g_changeSound != NULL) {
-                if (Mix_PlayChannel(1, g_changeSound, 0) == -1)
-                    printf("Mix_PlayChunk: %s\n", SDL_GetError());
-            }
-            printf("%lu keydown event %d\n", milliseconds(), event.key.keysym.sym);
-            switch (event.key.keysym.sym) {
-            case MIYOO_KEY_UP:
-                return BUTTON_UP;
-            case MIYOO_KEY_DOWN:
-                return BUTTON_DOWN;
-            case MIYOO_KEY_LEFT:
-                return BUTTON_LEFT;
-            case MIYOO_KEY_RIGHT:
-                return BUTTON_RIGHT;
-            case MIYOO_KEY_SELECT:
-                g_selectHeld = true;
+            case SDL_KEYDOWN:
+                if (event.key.keysym.sym != MIYOO_KEY_POWER && event.key.keysym.sym != MIYOO_KEY_R1 &&
+                    event.key.keysym.sym != MIYOO_KEY_L1 && g_changeSound != NULL) {
+                    if (Mix_PlayChannel(1, g_changeSound, 0) == -1)
+                        printf("Mix_PlayChunk: %s\n", SDL_GetError());
+                }
+                printf("%lu keydown event %d\n", milliseconds(), event.key.keysym.sym);
+                switch (event.key.keysym.sym) {
+                    case MIYOO_KEY_UP:
+                        return BUTTON_UP;
+                    case MIYOO_KEY_DOWN:
+                        return BUTTON_DOWN;
+                    case MIYOO_KEY_LEFT:
+                        return BUTTON_LEFT;
+                    case MIYOO_KEY_RIGHT:
+                        return BUTTON_RIGHT;
+                    case MIYOO_KEY_SELECT:
+                        g_selectHeld = true;
+                        break;
+                    case MIYOO_KEY_START:
+                        g_startHeld = true;
+                        break;
+                    case MIYOO_KEY_L2:
+                        if (!g_startHeld && !g_selectHeld)
+                            return BUTTON_HOTKEY1;
+                        break;
+                    case MIYOO_KEY_R2:
+                        if (!g_startHeld && !g_selectHeld)
+                            return BUTTON_HOTKEY2;
+                        break;
+                    case MIYOO_KEY_L1:
+                        return BUTTON_HOTKEY3;
+                    case MIYOO_KEY_R1:
+                        return BUTTON_HOTKEY4;
+                    case MIYOO_KEY_POWER:
+                        // Counts key repeats while held; the dialog opens once per hold.
+                        g_powerDownCount++;
+                        printf("SDLK_POWER down %d, sent %d\n", g_powerDownCount, g_powerSent);
+                        if ((g_powerDownCount - 1) * 100 > 1000 && !g_powerSent) {
+                            g_powerSent = true;
+                            TrimusWindow *w = new DialogWindow(STR_POWER_OFF, STR_SHUT_DOWN_TEXT, false,
+                                                               new GeneralAction(-1, powerOff, NULL));
+                            pushWindow(w);
+                            return EVENT_POWER_DIALOG;
+                        }
+                        break;
+                    default:
+                        printf("event.key.keysym.sym = %d\n", event.key.keysym.sym);
+                        break;
+                }
                 break;
-            case MIYOO_KEY_START:
-                g_startHeld = true;
+            case SDL_KEYUP:
+                switch (event.key.keysym.sym) {
+                    case MIYOO_KEY_MENU:
+                        return BUTTON_MENU;
+                    case MIYOO_KEY_Y:
+                        return BUTTON_Y;
+                    case MIYOO_KEY_A:
+                        return BUTTON_A;
+                    case MIYOO_KEY_B:
+                        return BUTTON_B;
+                    case MIYOO_KEY_X:
+                        return BUTTON_X;
+                    case MIYOO_KEY_START:
+                        g_startHeld = false;
+                        puts("return KEY_START");
+                        return BUTTON_START;
+                    case MIYOO_KEY_SELECT:
+                        g_selectHeld = false;
+                        puts("return KEY_SELECT");
+                        return BUTTON_SELECT;
+                    case MIYOO_KEY_POWER:
+                        g_powerDownCount = 0;
+                        g_powerSent = false;
+                        break;
+                    case MIYOO_KEY_LSUPER:
+                        break;
+                    case MIYOO_KEY_RSUPER:
+                        break;
+                    default:
+                        break;
+                }
                 break;
-            case MIYOO_KEY_L2:
-                if (!g_startHeld && !g_selectHeld)
-                    return BUTTON_HOTKEY1;
-                break;
-            case MIYOO_KEY_R2:
-                if (!g_startHeld && !g_selectHeld)
-                    return BUTTON_HOTKEY2;
-                break;
-            case MIYOO_KEY_L1:
-                return BUTTON_HOTKEY3;
-            case MIYOO_KEY_R1:
-                return BUTTON_HOTKEY4;
-            case MIYOO_KEY_POWER:
-                // Counts key repeats while held; the dialog opens once per hold.
-                g_powerDownCount++;
-                printf("SDLK_POWER down %d, sent %d\n", g_powerDownCount, g_powerSent);
-                if ((g_powerDownCount - 1) * 100 > 1000 && !g_powerSent) {
-                    g_powerSent = true;
-                    TrimusWindow *w = new DialogWindow(STR_POWER_OFF, STR_SHUT_DOWN_TEXT, false,
-                                                       new GeneralAction(-1, powerOff, NULL));
+            case SDL_USEREVENT:
+                if (event.user.code == EVENT_HOTPLUG) {
+                    // Reopen audio on the right device (/dev/dsp1 when a second one is present) at
+                    // 48 kHz, signed 16-bit, stereo, and restart the theme music.
+                    setVolumeTinymix(GetKeyShm(g_keyShm, MONITOR_VOLUME));
+                    Mix_CloseAudio();
+                    if (hasDsp1(2) > 0)
+                        putenv((char *)"AUDIODEV=/dev/dsp1");
+                    else
+                        putenv((char *)"AUDIODEV=/dev/dsp");
+                    if (Mix_OpenAudio(48000, 0x8010, 2, 128) < 0) {   // 0x8010 = AUDIO_S16LSB
+                        printf("open auido fail: %s\n", SDL_GetError());
+                        Mix_PauseMusic();
+                    } else {
+                        Mix_PlayMusic(g_themeMusic, -1);
+                    }
+                } else if (event.user.code == EVENT_POWER_OFF) {
+                    TrimusWindow *w = new CountDownWindow(STR_POWER_OFF_IN, powerOffNow, onUserActivity);
                     pushWindow(w);
-                    return EVENT_POWER_DIALOG;
+                } else if (event.user.code == EVENT_VOLUME_SHOWN) {
+                    g_volumeIndicatorVisible = true;
+                } else if (event.user.code == EVENT_VOLUME_HIDDEN) {
+                    g_volumeIndicatorVisible = false;
                 }
-                break;
-            default:
-                printf("event.key.keysym.sym = %d\n", event.key.keysym.sym);
-                break;
-            }
-            break;
-        case SDL_KEYUP:
-            switch (event.key.keysym.sym) {
-            case MIYOO_KEY_MENU:
-                return BUTTON_MENU;
-            case MIYOO_KEY_Y:
-                return BUTTON_Y;
-            case MIYOO_KEY_A:
-                return BUTTON_A;
-            case MIYOO_KEY_B:
-                return BUTTON_B;
-            case MIYOO_KEY_X:
-                return BUTTON_X;
-            case MIYOO_KEY_START:
-                g_startHeld = false;
-                puts("return KEY_START");
-                return BUTTON_START;
-            case MIYOO_KEY_SELECT:
-                g_selectHeld = false;
-                puts("return KEY_SELECT");
-                return BUTTON_SELECT;
-            case MIYOO_KEY_POWER:
-                g_powerDownCount = 0;
-                g_powerSent = false;
-                break;
-            case MIYOO_KEY_LSUPER:
-                break;
-            case MIYOO_KEY_RSUPER:
-                break;
+                return event.user.code;
+            case SDL_MOUSEBUTTONUP:
+                // Same edge bands as the touch thread (tu_1376fc.cpp).
+                if (event.button.x < 100 && event.button.y > 100 && event.button.y < 380)
+                    return BUTTON_LEFT;
+                if (event.button.x > 540 && event.button.y > 100 && event.button.y < 380)
+                    return BUTTON_RIGHT;
+                if (event.button.y < 100 && event.button.x > 100 && event.button.x < 540)
+                    return BUTTON_UP;
+                if (event.button.y > 380 && event.button.x > 100 && event.button.x < 540)
+                    return BUTTON_DOWN;
             default:
                 break;
-            }
-            break;
-        case SDL_USEREVENT:
-            if (event.user.code == EVENT_HOTPLUG) {
-                // Reopen audio on the right device (/dev/dsp1 when a second one is present) at
-                // 48 kHz, signed 16-bit, stereo, and restart the theme music.
-                setVolumeTinymix(GetKeyShm(g_keyShm, MONITOR_VOLUME));
-                Mix_CloseAudio();
-                if (hasDsp1(2) > 0)
-                    putenv((char *)"AUDIODEV=/dev/dsp1");
-                else
-                    putenv((char *)"AUDIODEV=/dev/dsp");
-                if (Mix_OpenAudio(48000, 0x8010, 2, 128) < 0) {   // 0x8010 = AUDIO_S16LSB
-                    printf("open auido fail: %s\n", SDL_GetError());
-                    Mix_PauseMusic();
-                } else {
-                    Mix_PlayMusic(g_themeMusic, -1);
-                }
-            } else if (event.user.code == EVENT_POWER_OFF) {
-                TrimusWindow *w = new CountDownWindow(STR_POWER_OFF_IN, powerOffNow, onUserActivity);
-                pushWindow(w);
-            } else if (event.user.code == EVENT_VOLUME_SHOWN) {
-                g_volumeIndicatorVisible = true;
-            } else if (event.user.code == EVENT_VOLUME_HIDDEN) {
-                g_volumeIndicatorVisible = false;
-            }
-            return event.user.code;
-        case SDL_MOUSEBUTTONUP:
-            // Same edge bands as the touch thread (tu_1376fc.cpp).
-            if (event.button.x < 100 && event.button.y > 100 && event.button.y < 380)
-                return BUTTON_LEFT;
-            if (event.button.x > 540 && event.button.y > 100 && event.button.y < 380)
-                return BUTTON_RIGHT;
-            if (event.button.y < 100 && event.button.x > 100 && event.button.x < 540)
-                return BUTTON_UP;
-            if (event.button.y > 380 && event.button.x > 100 && event.button.x < 540)
-                return BUTTON_DOWN;
-        default:
-            break;
         }
     }
     return BUTTON_NONE;
@@ -723,7 +723,7 @@ void showLaunchScreen(const char *cmd)
 }
 
 // 0x18170: an action that does nothing (its original name, from __func__, includes the typo).
-int donoting_action(void *a, void *b)
+int donoting_action(void *, void *)
 {
     puts(__func__);
     return 1;
@@ -833,7 +833,7 @@ int EmuAction::execute(void *param)
     } else {
         printf("load dir %s, %s\n", item->label.c_str(), folderArg.c_str());
         MenuWindow *w = new MenuWindow(item->label.c_str(), result, emu);
-        w->setStrB4(folderArg);
+        w->setParentPath(folderArg);
         w->onShow();
         g_windowStack->push_back(w);
         return 0;

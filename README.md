@@ -109,6 +109,10 @@ python3 -m unittest discover -s tools/tests -v    # tooling tests
 python3 tools/linkaudit.py --require-ready        # full link audit + byte-identical executable
 ```
 
+Source style is set by `.clang-format` (whitespace only; it never reorders includes, which fix the
+`-O0` template-tail order). Format with `clang-format -i src/*.h src/*.cpp src/*.c src/tu_015b20/*.inc`
+(any recent clang-format, e.g. `uv tool install clang-format`), then rerun the checks below.
+
 Never relax masks, required unit ends or the raw section checks to obtain a pass. The link audit
 writes `audit.json` (exact compile/link commands and original-address evidence), `report.md`,
 `final-link.map` and the binaries to `build/link-audit/`; none of it is committed.

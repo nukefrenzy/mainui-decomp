@@ -391,7 +391,7 @@ addr	name	subsystem	confidence	comment
 0003a608	PopupProgressAction::~PopupProgressAction	ui_framework	confirmed	Byte-exact source: src/tu_015b20.cpp.
 0003a644	PopupProgressAction::deletingDtor	ui_framework	confirmed	
 0003a678	TextMenuDrawer::setRowHeight	ui_framework	confirmed	Byte-exact source: src/tu_015b20.cpp.
-0003a6a8	TextMenuDrawer::setFlag5c	render	confirmed	Byte-exact source: src/tu_015b20.cpp.
+0003a6a8	TextMenuDrawer::setUnusedPopupFlag	render	confirmed	Byte-exact source: src/tu_015b20.cpp.
 0003a6dc	TextMenu::count	ui_framework	confirmed	Byte-exact source: src/tu_015b20.cpp.
 0003a70c	TextMenu::getItems	config	confirmed	Byte-exact source: src/tu_015b20.cpp.
 0003a74c	DBCacheWorker::DBCacheWorker	games	confirmed	Byte-exact source: src/tu_015b20.cpp.
@@ -400,12 +400,12 @@ addr	name	subsystem	confidence	comment
 0003a988	DBCachedTextMenu::count	ui_framework	confirmed	Byte-exact source: src/tu_015b20.cpp.
 0003a9b0	DBCachedTextMenu::setTotal	database	confirmed	Byte-exact source: src/tu_015b20.cpp.
 0003a9e0	IconMenu::count	ui_framework	confirmed	Byte-exact source: src/tu_015b20.cpp.
-0003aa10	IconMenu::setField68	render	confirmed	Byte-exact source: src/tu_015b20.cpp.
+0003aa10	IconMenu::setIconCropSize	render	confirmed	Byte-exact source: src/tu_015b20.cpp.
 0003aa50	IconMenu::setFontFn	render	confirmed	Byte-exact source: src/tu_015b20.cpp.
-0003aa80	IconMenu::setField74	render	confirmed	Byte-exact source: src/tu_015b20.cpp.
+0003aa80	IconMenu::setLabelOffsetY	render	confirmed	Byte-exact source: src/tu_015b20.cpp.
 0003aab0	DeviceInfoMenu::onSelect	ui_framework	confirmed	Byte-exact source: src/tu_015b20.cpp.
 0003aad4	MenuWindow::getMenu	ui_framework	confirmed	Byte-exact source: src/tu_015b20.cpp.
-0003aafc	MenuWindow::setStrB4	actions	confirmed	Byte-exact source: src/tu_015b20.cpp.
+0003aafc	MenuWindow::setParentPath	actions	confirmed	Byte-exact source: src/tu_015b20.cpp.
 0003ab30	MenuWindow::setPath	games	confirmed	Byte-exact source: src/tu_015b20.cpp.
 0003ab64	FloatWindow::handleInput	ui_framework	confirmed	
 0003ab88	FloatWindow::onHide	ui_framework	inferred	
@@ -4758,11 +4758,11 @@ addr	name	subsystem	confidence	comment
 0014ac68	std::operator==<DBEntry*>	library	confirmed	Byte-exact source: src/tu_1484d4.cpp.
 0014acb0	std::forward<DBEntry>	library	confirmed	Byte-exact source: src/tu_1484d4.cpp.
 0014acd4	std::move_iterator<DBEntry*>::base	library	confirmed	Byte-exact source: src/tu_1484d4.cpp.
-0014acfc	stub_4acfc	device	confirmed	Returns 0. Byte-exact (src/tu_14acfc.c).
+0014acfc	unusedDeviceHook1	device	confirmed	Returns 0. Byte-exact (src/tu_14acfc.c).
 0014ad18	exitDeviceHook	device	confirmed	Empty; called at the end of main. Byte-exact (src/tu_14acfc.c).
-0014ad34	stub_4ad34	device	confirmed	Returns 0. Byte-exact (src/tu_14acfc.c).
+0014ad34	unusedDeviceHook2	device	confirmed	Returns 0. Byte-exact (src/tu_14acfc.c).
 0014ad50	setVolumeTinymix	launch	confirmed	Byte-exact source: src/tu_14acfc.c.
-0014ade8	stub_4ade8	device	confirmed	Returns 2. Byte-exact (src/tu_14acfc.c).
+0014ade8	unusedDeviceHook3	device	confirmed	Returns 2. Byte-exact (src/tu_14acfc.c).
 0014ae04	writeFile	display	confirmed	Byte-exact source: src/tu_14acfc.c.
 0014ae74	initBacklightPwm	display	confirmed	Byte-exact source: src/tu_14acfc.c.
 0014aed4	setBacklight	audio	confirmed	Byte-exact source: src/tu_14acfc.c.

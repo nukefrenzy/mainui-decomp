@@ -133,7 +133,9 @@ int zhuffman_decode(zbuf *a, zhuffman *z)
         return z->value[b];
     }
     k = bit_reverse(a->code_buffer, 16);
-    for (s = 10; ; ++s) { if (k < z->maxcode[s]) break; }
+    for (s = 10;; ++s) {
+        if (k < z->maxcode[s]) break;
+    }
     if (s == 16) return -1;
     b = (k >> (16 - s)) - z->firstcode[s] + z->firstsymbol[s];
     CHECK(z->size[b] == s, 190, zlib_signature_zhuffman_decode);
@@ -161,10 +163,11 @@ int compute_huffman_codes(zbuf *a)
     while (n < hlit + hdist) {
         int c = zhuffman_decode(a, &z);
         CHECK(c >= 0 && c < 19, 232, zlib_signature_compute_huffman_codes);
-        if (c < 16) lencodes[n++] = (unsigned char)c;
+        if (c < 16)
+            lencodes[n++] = (unsigned char)c;
         else if (c == 16) {
             c = zreceive(a, 2) + 3;
-            memset(lencodes + n, lencodes[n-1], c);
+            memset(lencodes + n, lencodes[n - 1], c);
             n += c;
         } else if (c == 17) {
             c = zreceive(a, 3) + 3;
@@ -239,7 +242,10 @@ int parse_huffman_block(zbuf *a, int count)
             if (written == count) return count;
         } else {
             int len, dist;
-            if (z == 256) { a->blockType = -1; return written; }
+            if (z == 256) {
+                a->blockType = -1;
+                return written;
+            }
             if (a->remaining < 1) {
                 z -= 257;
                 len = g_lengthBase[z];
@@ -248,7 +254,10 @@ int parse_huffman_block(zbuf *a, int count)
                 if (z < 0) return zerror("bad huffman code");
                 dist = g_distanceBase[z];
                 if (g_distanceExtra[z]) dist += zreceive(a, g_distanceExtra[z]);
-                if (dist > 32768) { printf("Bad dist\n"); return 0; }
+                if (dist > 32768) {
+                    printf("Bad dist\n");
+                    return 0;
+                }
                 a->remaining = len;
                 a->distance = dist;
             }
@@ -292,33 +301,33 @@ int parse_header(zbuf *a)
     int k, len, nlen;
     unsigned char header[4];
     switch (a->blockType) {
-    case 0:
-        if (a->num_bits & 7) zreceive(a, a->num_bits & 7);
-        k = 0;
-        while (a->num_bits > 0) {
-            header[k++] = (unsigned char)a->code_buffer;
-            a->code_buffer >>= 8;
-            a->num_bits -= 8;
-        }
-        CHECK(a->num_bits == 0, 415, zlib_signature_parse_header);
-        while (k < 4) header[k++] = zget8(a);
-        len = header[1] * 256 + header[0];
-        nlen = header[3] * 256 + header[2];
-        printf("len %d nlen %d\n", len, nlen);
-        if (nlen != (len ^ 0xffff)) return zerror("zlib corrupt (uncompressed block)");
-        if (a->inputPos + len > a->inputLength) return zerror("read past buffer");
-        a->remaining = len;
-        break;
-    case 1:
-        // The last distance-code length doubles as the initialized flag.
-        if (g_defaultDistance[31] == 0) init_default_huffman();
-        if (!zbuild_huffman(&a->lengthTable, g_defaultLength, 288)) return 0;
-        if (!zbuild_huffman(&a->distanceTable, g_defaultDistance, 32)) return 0;
-        break;
-    case 2:
-        if (!compute_huffman_codes(a)) return 0;
-        break;
-    case 3: return 0;
+        case 0:
+            if (a->num_bits & 7) zreceive(a, a->num_bits & 7);
+            k = 0;
+            while (a->num_bits > 0) {
+                header[k++] = (unsigned char)a->code_buffer;
+                a->code_buffer >>= 8;
+                a->num_bits -= 8;
+            }
+            CHECK(a->num_bits == 0, 415, zlib_signature_parse_header);
+            while (k < 4) header[k++] = zget8(a);
+            len = header[1] * 256 + header[0];
+            nlen = header[3] * 256 + header[2];
+            printf("len %d nlen %d\n", len, nlen);
+            if (nlen != (len ^ 0xffff)) return zerror("zlib corrupt (uncompressed block)");
+            if (a->inputPos + len > a->inputLength) return zerror("read past buffer");
+            a->remaining = len;
+            break;
+        case 1:
+            // The last distance-code length doubles as the initialized flag.
+            if (g_defaultDistance[31] == 0) init_default_huffman();
+            if (!zbuild_huffman(&a->lengthTable, g_defaultLength, 288)) return 0;
+            if (!zbuild_huffman(&a->distanceTable, g_defaultDistance, 32)) return 0;
+            break;
+        case 2:
+            if (!compute_huffman_codes(a)) return 0;
+            break;
+        case 3: return 0;
     }
 }
 // A decoder for size bytes of raw DEFLATE data from memory (input) or the file's current
@@ -361,10 +370,16 @@ int readZlib(zbuf *a, void *output, int size)
                 parse_header(a);
             }
             switch (a->blockType) {
-            case 0: count = parse_uncompressed_block(a, left); written += count; break;
-            case 1:
-            case 2: count = parse_huffman_block(a, left); written += count; break;
-            case 3: break;
+                case 0:
+                    count = parse_uncompressed_block(a, left);
+                    written += count;
+                    break;
+                case 1:
+                case 2:
+                    count = parse_huffman_block(a, left);
+                    written += count;
+                    break;
+                case 3: break;
             }
             left -= count;
         } while (!a->final && written < size);
@@ -393,9 +408,9 @@ void *stbi_zlib_decode_malloc(unsigned char *input, int size, int *outsize)
 }
 
 // The __PRETTY_FUNCTION__ strings of the asserting functions.
-const char zlib_signature_zbuild_huffman[] __attribute__((section(".rodata.function_names"),aligned(4))) = "int zbuild_huffman(zhuffman*, uint8*, int)";
-const char zlib_signature_bit_reverse[] __attribute__((section(".rodata.function_names"),aligned(4))) = "int bit_reverse(int, int)";
-const char zlib_signature_fill_bits[] __attribute__((section(".rodata.function_names"),aligned(4))) = "void fill_bits(zbuf*)";
-const char zlib_signature_compute_huffman_codes[] __attribute__((section(".rodata.function_names"),aligned(4))) = "int compute_huffman_codes(zbuf*)";
-const char zlib_signature_zhuffman_decode[] __attribute__((section(".rodata.function_names"),aligned(4))) = "int zhuffman_decode(zbuf*, zhuffman*)";
-const char zlib_signature_parse_header[] __attribute__((section(".rodata.function_names"),aligned(4))) = "int parse_header(zbuf*)";
+const char zlib_signature_zbuild_huffman[] __attribute__((section(".rodata.function_names"), aligned(4))) = "int zbuild_huffman(zhuffman*, uint8*, int)";
+const char zlib_signature_bit_reverse[] __attribute__((section(".rodata.function_names"), aligned(4))) = "int bit_reverse(int, int)";
+const char zlib_signature_fill_bits[] __attribute__((section(".rodata.function_names"), aligned(4))) = "void fill_bits(zbuf*)";
+const char zlib_signature_compute_huffman_codes[] __attribute__((section(".rodata.function_names"), aligned(4))) = "int compute_huffman_codes(zbuf*)";
+const char zlib_signature_zhuffman_decode[] __attribute__((section(".rodata.function_names"), aligned(4))) = "int zhuffman_decode(zbuf*, zhuffman*)";
+const char zlib_signature_parse_header[] __attribute__((section(".rodata.function_names"), aligned(4))) = "int parse_header(zbuf*)";

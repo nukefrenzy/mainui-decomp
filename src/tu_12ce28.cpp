@@ -46,8 +46,10 @@ void insertFileItem(std::vector<void *> *items, TextItem *item)
         if (compareFileItems(item, (TextItem *)items->at(i)) <= 0) break;
         i++;
     }
-    if (i < items->size()) items->insert(items->begin() + i, (void *)item);
-    else items->push_back((void *)item);
+    if (i < items->size())
+        items->insert(items->begin() + i, (void *)item);
+    else
+        items->push_back((void *)item);
 }
 // Counts, recursively, the files the filter accepts plus every non-hidden folder that contains
 // some; buffer is scratch space for full paths.
@@ -65,7 +67,8 @@ int countDirectory(std::string path, FileFilter filter, bool nested, char *buffe
                 if (S_ISREG(info.st_mode)) {
                     if (filter) {
                         if (filter(entry->d_name, buffer)) count++;
-                    } else count++;
+                    } else
+                        count++;
                 } else if (S_ISDIR(info.st_mode) && strncmp(entry->d_name, ".", 1) != 0) {
                     std::string next = path + "/" + entry->d_name;
                     found = countDirectory(next, filter, 1, buffer);

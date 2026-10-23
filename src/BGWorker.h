@@ -2,7 +2,8 @@
 // finished() follows on the same thread, then the queue deletes the job.
 // Inline ctor/destructor order is shared by the UI and worker-queue units.
 #pragma once
-class BGWorker {
+class BGWorker
+{
 public:
     BGWorker() {}
     virtual ~BGWorker() {}

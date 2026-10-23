@@ -14,34 +14,13 @@
 // is "/dev/null" (the strings below are the patched ones), so on Onion MainUI's own backlight
 // writes go nowhere (Onion presumably drives the backlight elsewhere, e.g. from keymon).
 #include <stdio.h>
+#include "SdlApi.h"
+#include "CJsonApi.h"
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdbool.h>
 
-// cJSON 1.7.10 (compiled into MainUI).
-typedef struct cJSON {
-    struct cJSON *next, *prev, *child;
-    int type;
-    char *valuestring;
-    int valueint;
-    double valuedouble;
-    char *string;
-} cJSON;
-cJSON *cJSON_Parse(const char *value);
-cJSON *cJSON_GetObjectItem(const cJSON *object, const char *string);
-int cJSON_IsNumber(const cJSON *item);
-void cJSON_Delete(cJSON *c);
-
-typedef struct SDL_mutex SDL_mutex;
-typedef struct SDL_cond SDL_cond;
-SDL_mutex *SDL_CreateMutex(void);
-int SDL_mutexP(SDL_mutex *mutex);
-int SDL_mutexV(SDL_mutex *mutex);
-void SDL_DestroyMutex(SDL_mutex *mutex);
-SDL_cond *SDL_CreateCond(void);
-int SDL_CondWaitTimeout(SDL_cond *cond, SDL_mutex *mutex, unsigned int ms);
-void SDL_DestroyCond(SDL_cond *cond);
 
 // File-local statics go to .bss in declaration order (GCC 8 C, -O0); this is the original order.
 static int s_unrefBss_1824b4;   // 0x1824b4: unreferenced storage at this address in the Onion and stock builds; size and position proven, name, type and partition unknown
@@ -61,8 +40,8 @@ static struct FdList g_fds;         // 0x182580
 static int g_hotplugRunning;        // 0x1825b4
 
 // Four empty device hooks, probably left over from other hardware. Only exitDeviceHook is called
-// (at the end of main); the original names are unknown.
-int stub_4acfc()                // 0x14acfc
+// (at the end of main); the other three are never called. The original names are unknown.
+int unusedDeviceHook1()                // 0x14acfc
 {
     return 0;
 }
@@ -72,7 +51,7 @@ int exitDeviceHook()            // 0x14ad18
     return 0;
 }
 
-int stub_4ad34()                // 0x14ad34
+int unusedDeviceHook2()                // 0x14ad34
 {
     return 0;
 }
@@ -89,7 +68,7 @@ int setVolumeTinymix(int vol)   // 0x14ad50
     return 0;
 }
 
-int stub_4ade8()                // 0x14ade8
+int unusedDeviceHook3()                // 0x14ade8
 {
     return 2;
 }
@@ -135,8 +114,7 @@ __asm__(
     "        .inst 0xebfffffe\n"
     "        .reloc . - 4, R_ARM_CALL, \\target\n"
     "    .endif\n"
-    ".endm\n"
-);
+    ".endm\n");
 // Sets up the backlight PWM channel: export it, period 800, duty 100%, enable. (The period
 // write is patched out and the duty path is /dev/null; see the file header.)
 void initBacklightPwm()         // 0x14ae74
@@ -151,8 +129,7 @@ __asm__(
     ".purgem bl\n"
     ".if .Linit_pwm_nops != 1\n"
     "    .error \"target NOP patch count changed\"\n"
-    ".endif\n"
-);
+    ".endif\n");
 
 // Sets the backlight brightness: level 0-10 becomes a PWM duty of 6% (never fully dark) to 100%.
 int setBacklight(int level)     // 0x14aed4
@@ -164,17 +141,17 @@ int setBacklight(int level)     // 0x14aed4
         level = 10;
     int duty = 0;
     switch (level) {
-    case 0: duty = 6; break;
-    case 1: duty = 10; break;
-    case 2: duty = 20; break;
-    case 3: duty = 30; break;
-    case 4: duty = 40; break;
-    case 5: duty = 50; break;
-    case 6: duty = 60; break;
-    case 7: duty = 70; break;
-    case 8: duty = 80; break;
-    case 9: duty = 90; break;
-    default: duty = 100; break;
+        case 0: duty = 6; break;
+        case 1: duty = 10; break;
+        case 2: duty = 20; break;
+        case 3: duty = 30; break;
+        case 4: duty = 40; break;
+        case 5: duty = 50; break;
+        case 6: duty = 60; break;
+        case 7: duty = 70; break;
+        case 8: duty = 80; break;
+        case 9: duty = 90; break;
+        default: duty = 100; break;
     }
     snprintf(buf, 32, "%d", duty);
     writeFile(g_pwmDutyPath, buf);

@@ -131,9 +131,12 @@ void transformDeviceBlock(byte *input, byte *output, byte *seed,
             for (i = 7; i > 0; i--) key[i] = (key[i] >> 3) | (key[i - 1] << 5);
             key[0] = (key[0] >> 3) | (saved << 5);
             op = (key[0] >> 6) | ((key[0] >> 3) & 4);
-            if (op == 0) invertSwapHalves(output);
-            else if (op == 1) xorSwapHalves(output, key);
-            else if (mode != 0 && op == 3) rotateBytesRight(output);
+            if (op == 0)
+                invertSwapHalves(output);
+            else if (op == 1)
+                xorSwapHalves(output, key);
+            else if (mode != 0 && op == 3)
+                rotateBytesRight(output);
         }
     }
 }
@@ -232,8 +235,10 @@ byte authenticateDevice(byte *challenge, byte *response) // 0x150504
         deviceHasInit = 1;
     }
     for (attempt = 0; attempt < 2; attempt++) {
-        if (attempt == 0) reg = firstReg;
-        else reg = 0x87;
+        if (attempt == 0)
+            reg = firstReg;
+        else
+            reg = 0x87;
         for (i = 0; i < 8; i++) {
             deviceTxData[i * 2] = challenge[i];
             deviceTxData[i * 2 + 1] = randomByte();
@@ -266,7 +271,8 @@ byte authenticateDevice(byte *challenge, byte *response) // 0x150504
         if (deviceCounterBuf[1] == 255) {
             deviceCounterBuf[0]++;
             deviceCounterBuf[1] = 0;
-        } else deviceCounterBuf[1]++;
+        } else
+            deviceCounterBuf[1]++;
         iterations = 1;
         for (i = 0; i < iterations; i++) {
             transformDeviceBlock(input, response, seed, 2, 32, 2);

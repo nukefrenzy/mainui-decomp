@@ -1,6 +1,7 @@
 // Shared action ABI: result at +4; execute, progress, finished are slots 2-4.
 #pragma once
-class Action {
+class Action
+{
 public:
     Action(int result) : result(result) {} // 0x39750
     virtual ~Action() {}  // 0x39794

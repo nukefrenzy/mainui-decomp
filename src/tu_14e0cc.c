@@ -11,6 +11,7 @@
 // The C units 0x14acfc-0x14f730 are split where .rodata proves a new file: GCC merges identical
 // string literals within one file even at -O0, and "w", "r" and "%d" each appear more than once.
 #include "PlatformApi.h"
+#include "SdlApi.h"
 #include "Input.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -145,12 +146,12 @@ int wifiStartConnect()          // 0x14e528
 
 // One Wi-Fi network: a wpa_cli scan_results row, or the current connection.
 typedef struct WifiAP {         // 0x114 bytes
-    char raw0[8];
+    char unused0[8];            // (never filled)
     char ssid[0x58];            // +0x08
     int rssi;                   // +0x60: signal in dBm
-    char raw64[8];
+    char unused64[8];
     int freq;                   // +0x6c: MHz
-    char raw70[4];
+    char unused70[4];
     char bssid[0x18];           // +0x74: access point MAC address
     char flags[0x80];           // +0x8c: e.g. [WPA2-PSK-CCMP][ESS]
     int secured;                // +0x10c: flags mention WPA or WEP
@@ -160,7 +161,7 @@ typedef struct WifiAP {         // 0x114 bytes
 // The current connection (wpa_cli status), 0x74 bytes.
 typedef struct WifiStatus {
     int state;                  // WifiState (PlatformApi.h)
-    char raw4[4];
+    char unused4[4];
     char ssid[0x40];            // +0x08
     char ip[0x18];              // +0x48
     int rssi;                   // +0x60
@@ -248,34 +249,34 @@ int parseScanLine(const char *text, WifiAP *ap)     // 0x14e824
     while (tok) {
         if (tok && *tok) {
             switch (field) {
-            case 4:
-                strcpy(ap->ssid, tok);
-                unescapeSsid(ap->ssid, strlen(ap->ssid));
-                if (g_connStatus.ssid[0] && strcmp(ap->ssid, g_connStatus.ssid) == 0)
-                    ap->current = 1;
-                else
-                    ap->current = 0;
-                break;
-            case 0:
-                strcpy(ap->bssid, tok);
-                break;
-            case 3:
-                strcpy(ap->flags, tok);
-                if (strstr(ap->flags, "WPA") || strstr(ap->flags, "WEP"))
-                    ap->secured = 1;
-                else
-                    ap->secured = 0;
-                break;
-            case 1:
-                freq = 0;
-                sscanf(tok, "%d", &freq);
-                ap->freq = freq;
-                break;
-            case 2:
-                rssi = -127;
-                sscanf(tok, "%d", &rssi);
-                ap->rssi = rssi;
-                break;
+                case 4:
+                    strcpy(ap->ssid, tok);
+                    unescapeSsid(ap->ssid, strlen(ap->ssid));
+                    if (g_connStatus.ssid[0] && strcmp(ap->ssid, g_connStatus.ssid) == 0)
+                        ap->current = 1;
+                    else
+                        ap->current = 0;
+                    break;
+                case 0:
+                    strcpy(ap->bssid, tok);
+                    break;
+                case 3:
+                    strcpy(ap->flags, tok);
+                    if (strstr(ap->flags, "WPA") || strstr(ap->flags, "WEP"))
+                        ap->secured = 1;
+                    else
+                        ap->secured = 0;
+                    break;
+                case 1:
+                    freq = 0;
+                    sscanf(tok, "%d", &freq);
+                    ap->freq = freq;
+                    break;
+                case 2:
+                    rssi = -127;
+                    sscanf(tok, "%d", &rssi);
+                    ap->rssi = rssi;
+                    break;
             }
             field++;
         }
@@ -365,8 +366,7 @@ typedef union SDL_Event {       // SDL 1.2
         void *data2;
     } user;
 } SDL_Event;
-int SDL_PushEvent(SDL_Event *event);
-char *SDL_GetError(void);
+
 
 // One scan (original name, as logged): start it, give it 2.5 s, save the results, parse them
 // into g_aps and post EVENT_WIFI_SCAN_DONE.

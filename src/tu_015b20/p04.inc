@@ -1,11 +1,10 @@
 // p04 0x1d9d8-0x20500: ListMenu base slots, TextMenuDrawer
 // Functions in address order.
 #include <sys/time.h>   // gettimeofday (no inline functions, so it does not move the tail)
-SDL_Surface *SDL_CreateRGBSurface(unsigned int flags, int w, int h, int depth, unsigned int rmask,
-                                  unsigned int gmask, unsigned int bmask, unsigned int amask);
+
 extern SDL_Color g_highlightColor;     // 0x18228c (only drawListNumber uses it)
 extern SDL_Color g_accentColor;         // 0x1822b0 (search match in a list row)
-extern "C" int TTF_SizeText(void *font, const char *text, int *w, int *h);
+
 SDL_Surface *loadImage(const char *path, SDL_Surface *fmt, bool flag); // 0x123a38 (tu_11cdc8)
 int pinyinFind(const char *text, const char *initials, const char *key, const char **start,
                int *bytes);                                     // 0x143cf4 (tu_143720)
@@ -93,59 +92,59 @@ int ListMenu::handleKey()
     int key = handleGlobalInput(0);
     recordKey(key);
     switch (key) {
-    case BUTTON_UP:
-        if (!gridMode) {
-            if (!keyRepeating())
+        case BUTTON_UP:
+            if (!gridMode) {
+                if (!keyRepeating())
+                    moveUp();
+                else
+                    pageUp();
+            }
+            break;
+        case BUTTON_DOWN:
+            if (!gridMode) {
+                if (!keyRepeating())
+                    moveDown();
+                else
+                    pageDown();
+            }
+            break;
+        case BUTTON_LEFT:
+            if (gridMode)
                 moveUp();
             else
-                pageUp();
-        }
-        break;
-    case BUTTON_DOWN:
-        if (!gridMode) {
-            if (!keyRepeating())
+                return LIST_LEFT;
+            break;
+        case BUTTON_RIGHT:
+            if (gridMode)
                 moveDown();
             else
+                return LIST_RIGHT;
+            break;
+        case BUTTON_HOTKEY1:
+            if (!gridMode)
+                pageUp();
+            break;
+        case BUTTON_HOTKEY2:
+            if (!gridMode)
                 pageDown();
-        }
-        break;
-    case BUTTON_LEFT:
-        if (gridMode)
-            moveUp();
-        else
-            return LIST_LEFT;
-        break;
-    case BUTTON_RIGHT:
-        if (gridMode)
-            moveDown();
-        else
-            return LIST_RIGHT;
-        break;
-    case BUTTON_HOTKEY1:
-        if (!gridMode)
-            pageUp();
-        break;
-    case BUTTON_HOTKEY2:
-        if (!gridMode)
-            pageDown();
-        break;
-    case BUTTON_A:
-    case BUTTON_Y:
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-        int ms;
-        ms = tv.tv_sec * 1000 + tv.tv_usec / 1000;
-        printf("a pressed at %dms\n", ms);
-        return onSelect();
-    case BUTTON_B:
-    case BUTTON_X:
-        return 1;
-    case BUTTON_MENU:
-        return BUTTON_MENU;
-    case BUTTON_START:
-        return BUTTON_START;
-    default:
-        return onUnhandledEvent(key);
+            break;
+        case BUTTON_A:
+        case BUTTON_Y:
+            struct timeval tv;
+            gettimeofday(&tv, NULL);
+            int ms;
+            ms = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+            printf("a pressed at %dms\n", ms);
+            return onSelect();
+        case BUTTON_B:
+        case BUTTON_X:
+            return 1;
+        case BUTTON_MENU:
+            return BUTTON_MENU;
+        case BUTTON_START:
+            return BUTTON_START;
+        default:
+            return onUnhandledEvent(key);
     }
     return -1;
 }
@@ -168,7 +167,7 @@ TextMenuDrawer::TextMenuDrawer(bool noSelectedBg, bool stripes, int rows, const 
     } else {
         selectedBackground = NULL;
     }
-    surface48 = NULL;
+    rowBackground = NULL;
     favoriteMark = loadSkinImage(g_themePath, g_skinSubdir, "skin/ic-favorite-mark.png", g_backBuffer, 0);
     themePath = g_themePath;
     rect.x = 0;
@@ -176,7 +175,7 @@ TextMenuDrawer::TextMenuDrawer(bool noSelectedBg, bool stripes, int rows, const 
     rect.w = 640;
     rect.h = 360;
     textRowHeight = 60;
-    flag5c = true;
+    unusedPopupFlag = true;
     textColor = g_imeTextColor;
     colorBC = g_imeTextColor;
     customBackground = NULL;
@@ -188,8 +187,8 @@ TextMenuDrawer::TextMenuDrawer(bool noSelectedBg, bool stripes, int rows, const 
 // 0x1e3f8 (D0 0x1e4e4)
 TextMenuDrawer::~TextMenuDrawer()
 {
-    if (surface48)
-        SDL_FreeSurface(surface48);
+    if (rowBackground)
+        SDL_FreeSurface(rowBackground);
     if (selectedBackground)
         SDL_FreeSurface(selectedBackground);
     if (favoriteMark)
@@ -443,17 +442,17 @@ void TextMenuDrawer::drawList(SDL_Surface *dst)
         color = textColor;
         int x = rect.x;
         int y = rect.y + 2 + row * textRowHeight;
-        if (surface48) {
+        if (rowBackground) {
             dr.x = x;
-            if (textRowHeight > surface48->h)
-                dr.y = y + (textRowHeight - surface48->h) / 2;
+            if (textRowHeight > rowBackground->h)
+                dr.y = y + (textRowHeight - rowBackground->h) / 2;
             else
                 dr.y = y;
             sr.x = 0;
             sr.y = 0;
             sr.w = rect.w;
             sr.h = textRowHeight;
-            SDL_UpperBlit(surface48, &sr, dst, &dr);
+            SDL_UpperBlit(rowBackground, &sr, dst, &dr);
         }
         if (i == cur) {
             if (selectedBackground) {

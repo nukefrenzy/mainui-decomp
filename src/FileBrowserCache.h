@@ -12,16 +12,22 @@ enum FileKind {
 };
 // The action behind one file-browser row: its full path and kind.
 // vtable 0x153ed8: slots 3/4 are Action's; dtors 0x3a1cc/0x3a218 are inline in tu_015b20's tail.
-class FileAction : public Action {
+class FileAction : public Action
+{
 public:
-    FileAction(const char *name, int kind) : Action(-1) { path = name; this->kind = kind; }
+    FileAction(const char *name, int kind) : Action(-1)
+    {
+        path = name;
+        this->kind = kind;
+    }
     virtual ~FileAction() {}
     virtual int execute(void *);    // 0x2d1bc (tu_015b20 p08)
     std::string path;
     int kind;
 };
 // One list row; sizeof == 0x74. Ctor 0x25510 and dtor 0x25620 are in tu_015b20 (p06).
-class TextItem {
+class TextItem
+{
 public:
     TextItem(const char *label, SDL_Surface *value, Action *action, bool flag);  // 0x25510
     ~TextItem();                                                        // 0x25620
@@ -45,7 +51,8 @@ struct DirectoryItems {
 // The file browser's navigation: the path from the starting folder to the current one, and the
 // rows of recently visited folders (most recent first) so going back is instant. When the cached
 // rows pass 40,000, the least recently visited folders are dropped.
-class FileBrowserCache {
+class FileBrowserCache
+{
 public:
     FileBrowserCache(FileFilter);
     ~FileBrowserCache();

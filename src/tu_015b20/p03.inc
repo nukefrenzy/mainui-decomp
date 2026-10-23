@@ -4,12 +4,6 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 
-extern "C" {
-void cJSON_DeleteItemFromObject(cJSON *object, const char *key);
-cJSON *cJSON_Parse(const char *value);
-cJSON *cJSON_GetObjectItem(const cJSON *object, const char *string);
-char *cJSON_GetStringValue(cJSON *item);
-}
 int findEmuByLaunch(std::vector<EmuInfo> *list, const char *path);  // 0x120f80
 int findApp(std::vector<AppInfo> *list, const char *path);          // 0x12114c
 extern "C" const char *getLanguageFile();                          // 0x14ba18
@@ -340,8 +334,8 @@ struct LcdParam {
 extern "C" {
 int MI_DISP_GetLcdParam(int layer, LcdParam *param);
 int MI_DISP_SetLcdParam(int layer, LcdParam *param);
-int Mix_VolumeMusic(int volume);
-int Mix_Volume(int channel, int volume);
+
+
 void initBacklightPwm();                // 0x14ae74
 int setBacklight(int level);            // 0x14aed4
 }
@@ -402,10 +396,6 @@ bool removeDeletedFavorites(void *menu, int id)
 }
 
 extern "C" int readWholeFile(const char *name, FILE *f, char **out);  // 0x14b8a4
-extern "C" {
-int cJSON_GetArraySize(const cJSON *array);
-cJSON *cJSON_GetArrayItem(const cJSON *array, int index);
-}
 
 // Recreates the windows saved in /tmp/state.json (then deletes it); returns how many.
 int restoreWindowState(std::vector<TrimusWindow *> *stack)
@@ -462,13 +452,6 @@ int restoreWindowState(std::vector<TrimusWindow *> *stack)
     return restored;
 }
 
-extern "C" {
-cJSON *cJSON_AddArrayToObject(cJSON *object, const char *name);
-cJSON *cJSON_CreateNumber(double num);
-void cJSON_AddItemToObject(cJSON *object, const char *string, cJSON *item);
-void cJSON_AddItemToArray(cJSON *array, cJSON *item);
-char *cJSON_Print(const cJSON *item);
-}
 
 // Writes {"list": [{title, type, ...saveState}, ...]} for every window on the stack.
 void saveWindowState(std::vector<TrimusWindow *> *stack, const char *path)
@@ -586,7 +569,6 @@ int loadRomListPositions(std::vector<RomListPosition> *list)
     return restored;
 }
 
-extern "C" cJSON *cJSON_CreateString(const char *string);
 
 void saveRomListPositions(std::vector<RomListPosition> *list)
 {
@@ -624,8 +606,7 @@ void saveRomListPositions(std::vector<RomListPosition> *list)
     }
 }
 
-extern "C" SDL_Surface *SDL_CreateRGBSurface(unsigned flags, int w, int h, int depth, unsigned rMask,
-                                             unsigned gMask, unsigned bMask, unsigned aMask);
+
 SDL_Surface *loadImage(const char *path, SDL_Surface *format, bool debug);  // 0x123a38
 #include "../PixelScale.h"
 

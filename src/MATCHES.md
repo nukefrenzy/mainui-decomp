@@ -610,11 +610,11 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `MultiDBCachedTextMenu::getItem(int)` | 0x149514 | 784 | tu_1484d4.cpp |
 | `MultiDBCachedTextMenu::getItemData(int)` | 0x149824 | 816 | tu_1484d4.cpp |
 | `MultiDBCachedTextMenu::count()` | 0x149b54 | 40 | tu_1484d4.cpp |
-| `int stub_4acfc()` | 0x14acfc | 28 | tu_14acfc.c |
+| `int unusedDeviceHook1()` | 0x14acfc | 28 | tu_14acfc.c |
 | `int exitDeviceHook()` | 0x14ad18 | 28 | tu_14acfc.c |
-| `int stub_4ad34()` | 0x14ad34 | 28 | tu_14acfc.c |
+| `int unusedDeviceHook2()` | 0x14ad34 | 28 | tu_14acfc.c |
 | `int setVolumeTinymix(int vol)` | 0x14ad50 | 152 | tu_14acfc.c |
-| `int stub_4ade8()` | 0x14ade8 | 28 | tu_14acfc.c |
+| `int unusedDeviceHook3()` | 0x14ade8 | 28 | tu_14acfc.c |
 | `int writeFile(const char *path, const char *text)` | 0x14ae04 | 112 | tu_14acfc.c |
 | `void initBacklightPwm()` | 0x14ae74 | 96 | tu_14acfc.c |
 | `int setBacklight(int level)` | 0x14aed4 | 336 | tu_14acfc.c |

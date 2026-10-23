@@ -12,8 +12,8 @@ char *pinyinInitials(const char *s);                            // 0x143ae4 (tu_
 int countDirectoryItems(std::string dir, bool (*filter)(const char *, const char *)); // 0x12d400
 
 // 0x20500: a TextMenuDrawer that owns its rows (TextItem*).
-TextMenu::TextMenu(bool a, bool b, int c, const char *background)
-    : TextMenuDrawer(a, b, c, background)
+TextMenu::TextMenu(bool noSelectedBg, bool stripes, int rows, const char *background)
+    : TextMenuDrawer(noSelectedBg, stripes, rows, background)
 {
 }
 

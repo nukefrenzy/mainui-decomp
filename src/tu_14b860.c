@@ -10,6 +10,7 @@
 // The C units 0x14acfc-0x14f730 are split where .rodata proves a new file: GCC merges identical
 // string literals within one file even at -O0, and "w", "r" and "%d" each appear more than once.
 #include "PlatformApi.h"
+#include "CJsonApi.h"
 #include "ShmVar.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,26 +19,6 @@
 #include <errno.h>
 #include <fcntl.h>
 
-// cJSON 1.7.10 (compiled into MainUI): the node layout and the type flags tested below.
-typedef struct cJSON {
-    struct cJSON *next, *prev, *child;
-    int type;
-    char *valuestring;
-    int valueint;
-    double valuedouble;
-    char *string;
-} cJSON;
-#define cJSON_Number 8
-#define cJSON_String 16
-cJSON *cJSON_Parse(const char *value);
-cJSON *cJSON_GetObjectItem(const cJSON *object, const char *string);
-int cJSON_IsNumber(const cJSON *item);
-void cJSON_Delete(cJSON *c);
-cJSON *cJSON_CreateObject(void);
-cJSON *cJSON_CreateNumber(double num);
-cJSON *cJSON_CreateString(const char *string);
-void cJSON_AddItemToObject(cJSON *object, const char *string, cJSON *item);
-char *cJSON_Print(const cJSON *item);
 
 // libshmvar; `shm` is MainUI's handle (g_keyShm), `key` a MonitorValue.
 int SetKeyShm(void *shm, int key, int value);

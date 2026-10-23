@@ -10,6 +10,8 @@
 // Body 14,368 bytes plus 122 inline/template functions. Keep the ignored system() result stores
 // and the conditional returns: they affect -O0 layout.
 #include "PlatformApi.h"
+#include "SdlApi.h"
+#include "CJsonApi.h"
 #include "LangStrings.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,21 +35,20 @@ int wifiMode()
 #include "WifiMenus.h"
 
 extern "C" {
-int SDL_UpperBlit(SDL_Surface *, SDL_Rect *, SDL_Surface *, SDL_Rect *);
-void SDL_FreeSurface(SDL_Surface *);
-int SDL_FillRect(SDL_Surface *, SDL_Rect *, unsigned int);
-unsigned int SDL_MapRGBA(SDL_PixelFormat *, unsigned char, unsigned char, unsigned char, unsigned char);
-int TTF_FontHeight(void *);
-int TTF_SizeText(void *, const char *, int *, int *);
-int SDL_PushEvent(void *);
-int SDL_WaitEvent(void *);
-const char *SDL_GetError();
-int getWifiOn(); void setWifiOn(int);
-int getHotspotOn(); void setHotspotOn(int);
+
+
+int getWifiOn();
+void setWifiOn(int);
+int getHotspotOn();
+void setHotspotOn(int);
 int setWifiScanEnable(int);
-int wifiConnectOpen(const char *); int wifiConnectPsk(const char *, const char *);
-WifiStatus queryWifiStatus(); WifiStatus *getWifiStatus();
-int wifiStartConnect(); int copyScanResults(WifiAP *, int); int wifiSignalLevel(int);
+int wifiConnectOpen(const char *);
+int wifiConnectPsk(const char *, const char *);
+WifiStatus queryWifiStatus();
+WifiStatus *getWifiStatus();
+int wifiStartConnect();
+int copyScanResults(WifiAP *, int);
+int wifiSignalLevel(int);
 void saveSystemJson(void *, const char *, int);
 }
 extern char *g_themePath;
@@ -67,24 +68,42 @@ int findProcess(const char *, int);
 unsigned long milliseconds();
 SDL_Surface *createSurface(int, int);
 void pushWindow(TrimusWindow *);
-struct UserEvent { unsigned char type; int code; void *data1, *data2; };
-union InputEvent { unsigned char type; UserEvent user; char storage[20]; };
-class ProgressDialog : public TrimusWindow {
+struct UserEvent {
+    unsigned char type;
+    int code;
+    void *data1, *data2;
+};
+union InputEvent {
+    unsigned char type;
+    UserEvent user;
+    char storage[20];
+};
+class ProgressDialog : public TrimusWindow
+{
 public:
     ProgressDialog(int, Action *);
     virtual ~ProgressDialog();
-    virtual int handleInput(); virtual int draw(SDL_Surface *);
-    virtual void onHide(); virtual void onShow();
-    virtual void saveState(cJSON *); virtual int restoreState(cJSON *); virtual void update();
+    virtual int handleInput();
+    virtual int draw(SDL_Surface *);
+    virtual void onHide();
+    virtual void onShow();
+    virtual void saveState(cJSON *);
+    virtual int restoreState(cJSON *);
+    virtual void update();
     char raw[0x3c - 12];
 };
-class NotifyWindow : public TrimusWindow {
+class NotifyWindow : public TrimusWindow
+{
 public:
     NotifyWindow(const char *, const char *, const char *, void (*)());
     virtual ~NotifyWindow();
-    virtual int handleInput(); virtual int draw(SDL_Surface *);
-    virtual void onHide(); virtual void onShow();
-    virtual void saveState(cJSON *); virtual int restoreState(cJSON *); virtual void update();
+    virtual int handleInput();
+    virtual int draw(SDL_Surface *);
+    virtual void onHide();
+    virtual void onShow();
+    virtual void saveState(cJSON *);
+    virtual int restoreState(cJSON *);
+    virtual void update();
     char raw[0x3c - 12];
 };
 
@@ -119,7 +138,11 @@ int wlanAddress(std::string &address)
                 ip = strstr(g_wlanStatusBuffer, "inet ");
                 if (ip) {
                     end = strstr(ip, "/");
-                    if (end) { *end = 0; address = ip + 5; result = 0; }
+                    if (end) {
+                        *end = 0;
+                        address = ip + 5;
+                        result = 0;
+                    }
                 }
             }
             fclose(f);
@@ -131,7 +154,10 @@ int wlanAddress(std::string &address)
 // and the DHCP client, and saves the MAC address to /tmp/wifimac.
 void switch2WpaMode(int pid)
 {
-    if (pid > 0) { printf("%s kill hostapd %d\n", wifi_function_name_0, pid); kill(pid, 15); }
+    if (pid > 0) {
+        printf("%s kill hostapd %d\n", wifi_function_name_0, pid);
+        kill(pid, 15);
+    }
     int dhcp = findProcess("udhcpd", 0);
     printf("%s kill udhcpd %d\n", wifi_function_name_0, dhcp);
     if (dhcp > 0) kill(dhcp, 9);
@@ -171,7 +197,7 @@ extern const char g_wifiSkinRoot[] __attribute__((aligned(4))) = "./";
 extern const char g_wifiArrowRight[] __attribute__((aligned(4))) = "skin/icon-right-arrow-24.png";
 
 // The "Wi-Fi  < On/Off >" row; not selectable while the hotspot is on.
-WifiOnOffLabel::WifiOnOffLabel(Action *a, bool enabled) : ItemDrawable(a)
+WifiOnOffLabel::WifiOnOffLabel(Action *act, bool enabled) : ItemDrawable(act)
 {
     left = loadImeImage(g_themePath, g_wifiSkinRoot, g_wifiArrowLeft);
     right = loadImeImage(g_themePath, g_wifiSkinRoot, g_wifiArrowRight);
@@ -190,8 +216,10 @@ int WifiOnOffLabel::draw(SDL_Surface *dst, SDL_Rect *r, bool selected)
     rect.w = 200;
     rect.x = r->x + r->w - rect.w - (right ? right->w : 0) - 40;
     int on = getWifiOn();
-    if (on) drawText(dst, g_imeFont, rect, languageString(STR_ON), selected ? g_wifiSelectedColor : g_imeTextColor, 1, false);
-    else drawText(dst, g_imeFont, rect, languageString(STR_OFF), selected ? g_wifiSelectedColor : g_imeTextColor, 1, false);
+    if (on)
+        drawText(dst, g_imeFont, rect, languageString(STR_ON), selected ? g_wifiSelectedColor : g_imeTextColor, 1, false);
+    else
+        drawText(dst, g_imeFont, rect, languageString(STR_OFF), selected ? g_wifiSelectedColor : g_imeTextColor, 1, false);
     if (left && right) {
         rect.y = r->y + (60 - left->h) / 2;
         rect.x = r->x + r->w - (right ? right->w : 0) - left->w - 240;
@@ -203,7 +231,7 @@ int WifiOnOffLabel::draw(SDL_Surface *dst, SDL_Rect *r, bool selected)
     return 0;
 }
 // A white heading row shown above the switch while the hotspot is on.
-WifiLabel::WifiLabel(Action *a) : ItemDrawable(a) {}
+WifiLabel::WifiLabel(Action *act) : ItemDrawable(act) {}
 WifiLabel::~WifiLabel() {}
 int WifiLabel::draw(SDL_Surface *dst, SDL_Rect *r, bool selected)
 {
@@ -222,19 +250,26 @@ int WifiItem::draw(SDL_Surface *dst, SDL_Rect *r, bool selected)
     drawText(dst, g_imeFont, rect, ssid.c_str(), selected ? g_wifiSelectedColor : g_imeTextColor, 3, false);
     rect.x = r->x + r->w - 20;
     if (signal) {
-        rect.y = r->y + (r->h - signal->h) / 2; rect.x -= signal->w;
-        rect.w = signal->w; rect.h = signal->h;
+        rect.y = r->y + (r->h - signal->h) / 2;
+        rect.x -= signal->w;
+        rect.w = signal->w;
+        rect.h = signal->h;
         SDL_UpperBlit(signal, NULL, dst, &rect);
         rect.x -= 5;
     }
     if (secured && lock) {
-        rect.y = r->y + (r->h - lock->h) / 2; rect.x -= lock->w;
-        rect.w = lock->w; rect.h = lock->h;
-        SDL_UpperBlit(lock, NULL, dst, &rect); rect.x -= 5;
+        rect.y = r->y + (r->h - lock->h) / 2;
+        rect.x -= lock->w;
+        rect.w = lock->w;
+        rect.h = lock->h;
+        SDL_UpperBlit(lock, NULL, dst, &rect);
+        rect.x -= 5;
     }
     if (connected && check) {
-        rect.y = r->y + (r->h - check->h) / 2; rect.x -= check->w;
-        rect.w = check->w; rect.h = check->h;
+        rect.y = r->y + (r->h - check->h) / 2;
+        rect.x -= check->w;
+        rect.w = check->w;
+        rect.h = check->h;
         SDL_UpperBlit(check, NULL, dst, &rect);
     }
     return 0;
@@ -262,8 +297,17 @@ int WifiConnectAction::execute(void *param)
                this, status.state, status.status, status.ssid, status.ip, status.rssi, status.linkSpeed, status.noise, status.freq, status.id);
         i++;
     } while ((status.state == WIFI_STATE_SCANNING || status.state == WIFI_STATE_DISABLED) && i < 11);
-    if (status.state == WIFI_STATE_COMPLETED) { puts("try dhcp"); wifiStartConnect(); setHotspotOn(0); usleep(2000000); ev.type = SDL_USEREVENT; ev.code = EVENT_WIFI_CONNECTED; }
-    else { ev.type = SDL_USEREVENT; ev.code = EVENT_WIFI_CONNECT_FAILED; }
+    if (status.state == WIFI_STATE_COMPLETED) {
+        puts("try dhcp");
+        wifiStartConnect();
+        setHotspotOn(0);
+        usleep(2000000);
+        ev.type = SDL_USEREVENT;
+        ev.code = EVENT_WIFI_CONNECTED;
+    } else {
+        ev.type = SDL_USEREVENT;
+        ev.code = EVENT_WIFI_CONNECT_FAILED;
+    }
     if (SDL_PushEvent(&ev) < 0) printf("%s %d Failed to push SDL event %s\n", wifi_function_name_2, 241, SDL_GetError());
     return -1;
 }
@@ -300,14 +344,23 @@ void toggleWifi()
     int rc;
     setWifiOn(on);
     if (on) {
-        puts("wifi on"); rc = system("/customer/app/axp_test wifion"); rc = system("sleep 2");
-        rc = system("ifconfig wlan0 down"); rc = system("killall -15 wpa_supplicant"); rc = system("killall -15 udhcpc");
+        puts("wifi on");
+        rc = system("/customer/app/axp_test wifion");
+        rc = system("sleep 2");
+        rc = system("ifconfig wlan0 down");
+        rc = system("killall -15 wpa_supplicant");
+        rc = system("killall -15 udhcpc");
         rc = system("ifconfig wlan0 up");
         rc = system("wpa_supplicant -B -D nl80211 -iwlan0 -c /appconfigs/wpa_supplicant.conf");
-        rc = system("udhcpc -i wlan0 -s /etc/init.d/udhcpc.script &"); rc = system("touch /tmp/audioserver_restart");
+        rc = system("udhcpc -i wlan0 -s /etc/init.d/udhcpc.script &");
+        rc = system("touch /tmp/audioserver_restart");
     } else {
-        puts("wifi off"); rc = system("ifconfig wlan0 down"); rc = system("killall -15 wpa_supplicant");
-        rc = system("killall -15 udhcpc"); rc = system("sleep 0.5"); rc = system("/customer/app/axp_test wifioff");
+        puts("wifi off");
+        rc = system("ifconfig wlan0 down");
+        rc = system("killall -15 wpa_supplicant");
+        rc = system("killall -15 udhcpc");
+        rc = system("sleep 0.5");
+        rc = system("/customer/app/axp_test wifioff");
     }
     saveSystemJson(g_keyShm, g_themePath, g_fontSize);
 }
@@ -317,7 +370,8 @@ void toggleWifi()
 int WifiOnOffAction::execute(void *)
 {
     UserEvent out;
-    out.type = SDL_USEREVENT; out.code = EVENT_WIFI_SWITCHED;
+    out.type = SDL_USEREVENT;
+    out.code = EVENT_WIFI_SWITCHED;
     if (getHotspotOn() == 0) {
         toggleWifi();
         int on = getWifiOn();
@@ -329,21 +383,25 @@ int WifiOnOffAction::execute(void *)
             InputEvent ev;
             while (SDL_WaitEvent(&ev)) {
                 switch (ev.type) {
-                case SDL_USEREVENT:
-                    if (ev.user.code == EVENT_WIFI_SCAN_DONE) {
-                        puts("wifi on/off scan finish"); out.code = EVENT_WIFI_SCAN_DONE;
-                        if (SDL_PushEvent(&out) < 0) printf("%s : %d Failed to push SDL event: %s\n", wifi_function_name_3, 362, SDL_GetError());
-                        return -1;
-                    }
-                default:
-                    break;
+                    case SDL_USEREVENT:
+                        if (ev.user.code == EVENT_WIFI_SCAN_DONE) {
+                            puts("wifi on/off scan finish");
+                            out.code = EVENT_WIFI_SCAN_DONE;
+                            if (SDL_PushEvent(&out) < 0) printf("%s : %d Failed to push SDL event: %s\n", wifi_function_name_3, 362, SDL_GetError());
+                            return -1;
+                        }
+                    default:
+                        break;
                 }
                 unsigned int now = milliseconds();
                 if (now - start > 10000) {
-                    puts("wifi on/off timeout"); out.code = EVENT_WIFI_SWITCH_TIMEOUT; break;
+                    puts("wifi on/off timeout");
+                    out.code = EVENT_WIFI_SWITCH_TIMEOUT;
+                    break;
                 }
             }
-        } else setWifiScanEnable(0);
+        } else
+            setWifiScanEnable(0);
     }
     if (SDL_PushEvent(&out) < 0) printf("%s : %d Failed to push SDL event: %s\n", wifi_function_name_3, 386, SDL_GetError());
     return -1;
@@ -361,7 +419,10 @@ int WifiOnOffDialogAction::execute(void *)
 // clearItems (free the rows) and onUnhandledEvent (user events; an original name).
 WifiMenuDrawer::WifiMenuDrawer() : ListMenu(false)
 {
-    rect.x = 0; rect.y = 60; rect.w = 640; rect.h = 360;
+    rect.x = 0;
+    rect.y = 60;
+    rect.w = 640;
+    rect.h = 360;
     rowHeight = 60;
     background = loadImeImage(g_themePath, g_wifiSkinRoot, "skin/bg-list-s.png");
 }
@@ -417,8 +478,14 @@ void WifiMenuDrawer::drawList(SDL_Surface *dst)
     font = g_imeFont;
     fontHeight = TTF_FontHeight(font);
     if (pageStart == 0 && pageEnd == 0) pageEnd = 5;
-    if (cur < pageStart) { pageStart = cur; pageEnd = pageStart + 5; }
-    if (cur > pageEnd) { pageEnd = cur; pageStart = pageEnd - 5; }
+    if (cur < pageStart) {
+        pageStart = cur;
+        pageEnd = pageStart + 5;
+    }
+    if (cur > pageEnd) {
+        pageEnd = cur;
+        pageStart = pageEnd - 5;
+    }
     if (pageStart < 0) pageStart = 0;
     if (pageEnd >= count() - 1) pageEnd = count() - 1;
     index = pageStart;
@@ -429,34 +496,54 @@ void WifiMenuDrawer::drawList(SDL_Surface *dst)
         x = this->rect.x;
         y = this->rect.y + 2 + row * rowHeight;
         if (index < 5 && g_listStripe) {
-            rect.x = 0; rect.y = (index + 2) * 60;
+            rect.x = 0;
+            rect.y = (index + 2) * 60;
             SDL_UpperBlit(g_listStripe, NULL, dst, &rect);
         }
         if (index == cur && item->selectable()) {
             if (background) {
                 pos.x = x;
-                if (rowHeight > background->h) pos.y = (rowHeight - background->h) / 2 + y;
-                else pos.y = y;
-                rect.x = 0; rect.y = 0; rect.w = this->rect.w; rect.h = rowHeight;
+                if (rowHeight > background->h)
+                    pos.y = (rowHeight - background->h) / 2 + y;
+                else
+                    pos.y = y;
+                rect.x = 0;
+                rect.y = 0;
+                rect.w = this->rect.w;
+                rect.h = rowHeight;
                 SDL_UpperBlit(background, &rect, dst, &pos);
             }
         }
-        rect.x = x; rect.y = y; rect.w = this->rect.w; rect.h = rowHeight;
+        rect.x = x;
+        rect.y = y;
+        rect.w = this->rect.w;
+        rect.h = rowHeight;
         if (item) item->draw(dst, &rect, item->selectable() ? index == cur : false);
-        index++; row++;
+        index++;
+        row++;
     }
     if (count() <= 1 && getWifiOn()) {
-        rect.x = 0; rect.y = 60; rect.w = 640; rect.h = 360;
+        rect.x = 0;
+        rect.y = 60;
+        rect.w = 640;
+        rect.h = 360;
         drawText(dst, font, rect, languageString(STR_SCANNING), g_wifiEmptyColor, 1, false);
         return;
     }
 }
-int WifiMenuDrawer::count() { return items.size(); }
+int WifiMenuDrawer::count()
+{ return items.size(); }
 // Deletes every row (the first one separately, as the original does).
 void WifiMenuDrawer::clearItems()
 {
-    for (int i = 0; i < 1; i++) { ItemDrawable *item = items[i]; delete item; }
-    for (int i = 1; i < items.size(); i++) { ItemDrawable *item = items[i]; delete item; }
+    for (int i = 0; i < 1; i++) {
+        ItemDrawable *item = items[i];
+        delete item;
+    }
+    for (int i = 1; i < items.size(); i++) {
+        ItemDrawable *item = items[i];
+        delete item;
+    }
     puts("TextMenu::freeListItem end");
     items.clear();
 }
@@ -473,7 +560,10 @@ WifiMenu::WifiMenu()
     if (getHotspotOn() == 0) {
         if (getWifiOn()) {
             int pid = findProcess("hostapd", 0);
-            if (pid > 0) { puts("switch to wifi mode"); switch2WpaMode(pid); }
+            if (pid > 0) {
+                puts("switch to wifi mode");
+                switch2WpaMode(pid);
+            }
             setWifiScanEnable(1);
         }
         items.push_back(new WifiOnOffLabel(new WifiOnOffDialogAction, true));
@@ -531,9 +621,12 @@ int WifiMenu::onUnhandledEvent(int event)
                 if (scan[i].current) {
                     current = i;
                     level = wifiSignalLevel(scan[i].rssi);
-                    if (level <= 0) signal = signal2;
-                    else if (level == 2) signal = signal3;
-                    else signal = signal4;
+                    if (level <= 0)
+                        signal = signal2;
+                    else if (level == 2)
+                        signal = signal3;
+                    else
+                        signal = signal4;
                     items.push_back(new WifiItem(new WifiItemAction(&scan[i]), scan[i].ssid, scan[i].rssi,
                                                  scan[i].secured, scan[i].current, lock, check, signal));
                     printf("wifi item %s %d %d\n", scan[i].ssid, scan[i].secured, scan[i].current);
@@ -543,9 +636,12 @@ int WifiMenu::onUnhandledEvent(int event)
             for (int i = 0; i < scanCount; i++) {
                 if (i != current) {
                     level = wifiSignalLevel(scan[i].rssi);
-                    if (level == 0) signal = signal2;
-                    else if (level == 1) signal = signal3;
-                    else signal = signal4;
+                    if (level == 0)
+                        signal = signal2;
+                    else if (level == 1)
+                        signal = signal3;
+                    else
+                        signal = signal4;
                     items.push_back(new WifiItem(new WifiItemAction(&scan[i]), scan[i].ssid, scan[i].rssi,
                                                  scan[i].secured, scan[i].current, lock, check, signal));
                     printf("wifi item %s %d %d\n", scan[i].ssid, scan[i].secured, scan[i].current);
@@ -557,11 +653,14 @@ int WifiMenu::onUnhandledEvent(int event)
         printf("event wifi connected %d\n", connectingIndex);
         for (int i = 1; i < items.size(); i++) {
             WifiItem *item = (WifiItem *)items[i];
-            if (i == connectingIndex) item->connected = 1;
-            else item->connected = 0;
+            if (i == connectingIndex)
+                item->connected = 1;
+            else
+                item->connected = 0;
         }
         UserEvent ev;
-        ev.type = SDL_USEREVENT; ev.code = EVENT_REDRAW;
+        ev.type = SDL_USEREVENT;
+        ev.code = EVENT_REDRAW;
         if (SDL_PushEvent(&ev) < 0) printf("%s : %d Failed to push SDL event: %s\n", wifi_function_name_4, 731, SDL_GetError());
     } else if (event == EVENT_WIFI_CONNECT_FAILED) {
         printf("event wifi connect %d fail\n", connectingIndex);
@@ -573,7 +672,8 @@ int WifiMenu::onUnhandledEvent(int event)
         window->onShow();
         g_windowStack->push_back(window);
     } else if (event == EVENT_WIFI_SWITCHED) {
-        puts("wifi on off ok"); clearItems();
+        puts("wifi on off ok");
+        clearItems();
         items.push_back(new WifiOnOffLabel(new WifiOnOffDialogAction, true));
     }
     return -1;
@@ -586,7 +686,8 @@ int HotspotSwitchAction::execute(void *)
     on = !on;
     setHotspotOn(on);
     if (on) {
-        puts("turn on ap mode"); swicth2ApMode();
+        puts("turn on ap mode");
+        swicth2ApMode();
     } else {
         int wifi = getWifiOn();
         if (wifi) {
@@ -619,7 +720,10 @@ int writeConfigValue(const std::string &file, const std::string &key, const std:
 std::string readConfigValue(const std::string &file, const std::string &key)
 {
     std::ifstream input(file);
-    if (!input) { printf("opening %s fail\n", file.c_str()); return ""; }
+    if (!input) {
+        printf("opening %s fail\n", file.c_str());
+        return "";
+    }
     std::string line;
     std::string prefix = key + "=";
     while (input >> line) {
@@ -632,7 +736,10 @@ int HotspotWriteAction::execute(void *param)
 {
     std::string value((char *)param);
     if (writeConfigValue(file, key, value) == 0) {
-        if (getHotspotOn()) { swicth2ApMode(); return 1; }
+        if (getHotspotOn()) {
+            swicth2ApMode();
+            return 1;
+        }
     }
     return -1;
 }
@@ -660,14 +767,16 @@ HotspotMenu::~HotspotMenu()
 {
     saveSystemJson(g_keyShm, g_themePath, g_fontSize);
 }
-void HotspotMenu::drawList(SDL_Surface *dst) { WifiMenuDrawer::drawList(dst); }
-int HotspotMenu::onUnhandledEvent(int event) { return -1; }
+void HotspotMenu::drawList(SDL_Surface *dst)
+{ WifiMenuDrawer::drawList(dst); }
+int HotspotMenu::onUnhandledEvent(int event)
+{ return -1; }
 
 
 // __func__ strings of the original functions, used in the log messages above.
-const char wifi_function_name_0[] __attribute__((section(".rodata.function_names"),aligned(4))) = "switch2WpaMode";
-const char wifi_function_name_1[] __attribute__((section(".rodata.function_names"),aligned(4))) = "swicth2ApMode";
-const char wifi_function_name_2[] __attribute__((section(".rodata.function_names"),aligned(4))) = "dowork";
-const char wifi_function_name_3[] __attribute__((section(".rodata.function_names"),aligned(4))) = "dowork";
-const char wifi_function_name_4[] __attribute__((section(".rodata.function_names"),aligned(4))) = "onUnhandledEvent";
-const char wifi_function_name_5[] __attribute__((section(".rodata.function_names"),aligned(4))) = "dowork";
+const char wifi_function_name_0[] __attribute__((section(".rodata.function_names"), aligned(4))) = "switch2WpaMode";
+const char wifi_function_name_1[] __attribute__((section(".rodata.function_names"), aligned(4))) = "swicth2ApMode";
+const char wifi_function_name_2[] __attribute__((section(".rodata.function_names"), aligned(4))) = "dowork";
+const char wifi_function_name_3[] __attribute__((section(".rodata.function_names"), aligned(4))) = "dowork";
+const char wifi_function_name_4[] __attribute__((section(".rodata.function_names"), aligned(4))) = "onUnhandledEvent";
+const char wifi_function_name_5[] __attribute__((section(".rodata.function_names"), aligned(4))) = "dowork";

@@ -133,9 +133,9 @@ M = {
     "00121958": ("loadAppFolder", "launch", "confirmed", "Scans App/<name>/config.json."),
     "00037610": ("createRomListMenu", "games", "inferred", "DB-cached ROM list for menu ids 5/0x11."),
     # Function starts Ghidra missed (no callers); byte-exact in src/tu_14acfc.c and src/tu_14e0cc.c
-    "0014acfc": ("stub_4acfc", "device", "confirmed", "Returns 0. Byte-exact (src/tu_14acfc.c)."),
-    "0014ad34": ("stub_4ad34", "device", "confirmed", "Returns 0. Byte-exact (src/tu_14acfc.c)."),
-    "0014ade8": ("stub_4ade8", "device", "confirmed", "Returns 2. Byte-exact (src/tu_14acfc.c)."),
+    "0014acfc": ("unusedDeviceHook1", "device", "confirmed", "Returns 0. Byte-exact (src/tu_14acfc.c)."),
+    "0014ad34": ("unusedDeviceHook2", "device", "confirmed", "Returns 0. Byte-exact (src/tu_14acfc.c)."),
+    "0014ade8": ("unusedDeviceHook3", "device", "confirmed", "Returns 2. Byte-exact (src/tu_14acfc.c)."),
     "0014ad18": ("exitDeviceHook", "device", "confirmed", "Empty; called at the end of main. Byte-exact (src/tu_14acfc.c)."),
     "0014b0fc": ("bootedByPowerKey", "device", "confirmed", "Reads pwrkeyval; nonzero probably means the power key started the device. Byte-exact (src/tu_14acfc.c)."),
     "0014e584": ("hexDigit", "wifi", "confirmed", "0-15 to '0'-'9'/'A'-'F', else 0xff. Byte-exact (src/tu_14e0cc.c)."),

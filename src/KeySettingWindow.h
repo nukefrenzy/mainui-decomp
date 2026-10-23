@@ -1,10 +1,12 @@
 // Button-mapping screen (see tu_1376fc.cpp): recovered 0x15c-byte layout.
 #pragma once
 #include <string>
+#include "CJsonApi.h"
 #include "TrimusWindow.h"
 #include "SDLTypes.h"
 
-class KeySettingWindow : public TrimusWindow {
+class KeySettingWindow : public TrimusWindow
+{
 public:
     KeySettingWindow();
     virtual ~KeySettingWindow();

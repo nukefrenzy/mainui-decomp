@@ -7,17 +7,13 @@
 // setting, ...). Body 12,936 bytes, then 67 generated tail functions. Case order and true/false
 // branch order below preserve GCC 8 -O0 layout.
 #include <stdio.h>
+#include "SdlApi.h"
+#include "CJsonApi.h"
 #include <string.h>
 #include "ImeWindow.h"
 #include "Input.h"
 #include "WindowIds.h"
 
-extern "C" {
-void SDL_FreeSurface(SDL_Surface *);
-int SDL_UpperBlit(SDL_Surface *, SDL_Rect *, SDL_Surface *, SDL_Rect *);
-unsigned int SDL_MapRGB(SDL_PixelFormat *, unsigned char, unsigned char, unsigned char);
-int SDL_FillRect(SDL_Surface *, SDL_Rect *, unsigned int);
-}
 extern char *g_themePath;
 // Key ids by column (10) and row (5): rows 0-3 are the character rows, row 4 the wide key below
 // each column. Used to lay the keys out and to move up and down.
@@ -145,7 +141,10 @@ void ImeWindow::moveHorizontal(bool left)
     rowKeys(row, key);
     int index = -1;
     for (int i = 0; row.size() > i; i++) {
-        if (key == row[i]) { index = i; break; }
+        if (key == row[i]) {
+            index = i;
+            break;
+        }
     }
     if (index >= 0 && row.size() > index) {
         if (left) {
@@ -157,7 +156,10 @@ void ImeWindow::moveHorizontal(bool left)
         }
         int next = row[index];
         for (int i = 0; keys.size() > i; i++) {
-            if (next == keys[i].id) { selected = i; break; }
+            if (next == keys[i].id) {
+                selected = i;
+                break;
+            }
         }
     }
 }
@@ -169,7 +171,10 @@ void ImeWindow::moveVertical(bool up)
     columnKeys(column, key, up);
     int index = -1;
     for (int i = 0; column.size() > i; i++) {
-        if (key == column[i]) { index = i; break; }
+        if (key == column[i]) {
+            index = i;
+            break;
+        }
     }
     if (index >= 0 && column.size() > index) {
         if (up) {
@@ -181,7 +186,10 @@ void ImeWindow::moveVertical(bool up)
         }
         int next = column[index];
         for (int i = 0; keys.size() > i; i++) {
-            if (next == keys[i].id) { selected = i; break; }
+            if (next == keys[i].id) {
+                selected = i;
+                break;
+            }
         }
     }
 }
@@ -193,59 +201,75 @@ int ImeWindow::handleInput()
 {
     int action = handleGlobalInput(0);
     switch (action) {
-    case BUTTON_START:
-        printf("ImeWindow action %s\n", text);
-        if (callback) return callback->execute(text);
-        break;
-    case BUTTON_Y:
-        if ((unsigned int)length < 128) {
-            if (length > 0) length--;
-            text[length] = 0;
-        }
-        break;
-    case BUTTON_X: text[length] = ' '; length++; break;
-    case BUTTON_HOTKEY1:
-        shifted = !shifted;
-        if (shifted) setKeyIcons(IME_KEY_SHIFT, shiftActive, l2);
-        else setKeyIcons(IME_KEY_SHIFT, shift, l2);
-        break;
-    case BUTTON_HOTKEY2:
-        symbols = !symbols;
-        if (symbols) setKeyIcons(IME_KEY_SYMBOLS, character, r2);
-        else setKeyIcons(IME_KEY_SYMBOLS, abc, r2);
-        break;
-    case BUTTON_A:
-        if ((unsigned int)length < 128) {
-            if (keys[selected].id == IME_KEY_DELETE) {
+        case BUTTON_START:
+            printf("ImeWindow action %s\n", text);
+            if (callback) return callback->execute(text);
+            break;
+        case BUTTON_Y:
+            if ((unsigned int)length < 128) {
                 if (length > 0) length--;
                 text[length] = 0;
-            } else if (keys[selected].id == IME_KEY_SPACE) {
-                text[length] = ' ';
-                length++;
-            } else if (keys[selected].id == IME_KEY_SHIFT) {
-                shifted = !shifted;
-                if (shifted) setKeyIcons(IME_KEY_SHIFT, shiftActive, l2);
-                else setKeyIcons(IME_KEY_SHIFT, shift, l2);
-            } else if (keys[selected].id == IME_KEY_SYMBOLS) {
-                symbols = !symbols;
-                if (symbols) setKeyIcons(IME_KEY_SYMBOLS, character, r2);
-                else setKeyIcons(IME_KEY_SYMBOLS, abc, r2);
-            } else if (keys[selected].id == IME_KEY_OK) {
-                printf("ImeWindow action %s\n", text);
-                if (callback) return callback->execute(text);
-            } else if (symbols) {
-                text[length] = keys[selected].symbol[0]; length++;
-            } else if (shifted) {
-                text[length] = keys[selected].upper[0]; length++;
-            } else { text[length] = keys[selected].lower[0]; length++; }
-        }
-        return 0;
-    case BUTTON_B: return 1;
-    case BUTTON_LEFT: moveHorizontal(true); break;
-    case BUTTON_RIGHT: moveHorizontal(false); break;
-    case BUTTON_UP: moveVertical(true); break;
-    case BUTTON_DOWN: moveVertical(false); break;
-    default: break;
+            }
+            break;
+        case BUTTON_X:
+            text[length] = ' ';
+            length++;
+            break;
+        case BUTTON_HOTKEY1:
+            shifted = !shifted;
+            if (shifted)
+                setKeyIcons(IME_KEY_SHIFT, shiftActive, l2);
+            else
+                setKeyIcons(IME_KEY_SHIFT, shift, l2);
+            break;
+        case BUTTON_HOTKEY2:
+            symbols = !symbols;
+            if (symbols)
+                setKeyIcons(IME_KEY_SYMBOLS, character, r2);
+            else
+                setKeyIcons(IME_KEY_SYMBOLS, abc, r2);
+            break;
+        case BUTTON_A:
+            if ((unsigned int)length < 128) {
+                if (keys[selected].id == IME_KEY_DELETE) {
+                    if (length > 0) length--;
+                    text[length] = 0;
+                } else if (keys[selected].id == IME_KEY_SPACE) {
+                    text[length] = ' ';
+                    length++;
+                } else if (keys[selected].id == IME_KEY_SHIFT) {
+                    shifted = !shifted;
+                    if (shifted)
+                        setKeyIcons(IME_KEY_SHIFT, shiftActive, l2);
+                    else
+                        setKeyIcons(IME_KEY_SHIFT, shift, l2);
+                } else if (keys[selected].id == IME_KEY_SYMBOLS) {
+                    symbols = !symbols;
+                    if (symbols)
+                        setKeyIcons(IME_KEY_SYMBOLS, character, r2);
+                    else
+                        setKeyIcons(IME_KEY_SYMBOLS, abc, r2);
+                } else if (keys[selected].id == IME_KEY_OK) {
+                    printf("ImeWindow action %s\n", text);
+                    if (callback) return callback->execute(text);
+                } else if (symbols) {
+                    text[length] = keys[selected].symbol[0];
+                    length++;
+                } else if (shifted) {
+                    text[length] = keys[selected].upper[0];
+                    length++;
+                } else {
+                    text[length] = keys[selected].lower[0];
+                    length++;
+                }
+            }
+            return 0;
+        case BUTTON_B: return 1;
+        case BUTTON_LEFT: moveHorizontal(true); break;
+        case BUTTON_RIGHT: moveHorizontal(false); break;
+        case BUTTON_UP: moveVertical(true); break;
+        case BUTTON_DOWN: moveVertical(false); break;
+        default: break;
     }
     return -1;
 }
@@ -256,11 +280,16 @@ void ImeWindow::drawKeys(SDL_Surface *dst, int x, int y)
 {
     const char *str = NULL;
     for (int i = 0; keys.size() > i; i++) {
-        if (symbols) str = keys[i].symbol.c_str();
-        else if (shifted) str = keys[i].upper.c_str();
-        else str = keys[i].lower.c_str();
-        if (i != selected) SDL_UpperBlit(keys[i].normal, NULL, dst, &keys[i].rect);
-        else SDL_UpperBlit(keys[i].focused, NULL, dst, &keys[i].rect);
+        if (symbols)
+            str = keys[i].symbol.c_str();
+        else if (shifted)
+            str = keys[i].upper.c_str();
+        else
+            str = keys[i].lower.c_str();
+        if (i != selected)
+            SDL_UpperBlit(keys[i].normal, NULL, dst, &keys[i].rect);
+        else
+            SDL_UpperBlit(keys[i].focused, NULL, dst, &keys[i].rect);
         if (keys[i].icon && keys[i].hint) {
             int width = 0;
             SDL_Rect rect;
@@ -290,9 +319,15 @@ int ImeWindow::draw(SDL_Surface *dst)
 {
     drawScreenFrame(dst, languageString(titleLabelId), id, true);
     SDL_Rect rect;
-    rect.x = 0; rect.y = 62; rect.w = 640; rect.h = 358;
+    rect.x = 0;
+    rect.y = 62;
+    rect.w = 640;
+    rect.h = 358;
     SDL_FillRect(dst, &rect, SDL_MapRGB(dst->format, 0, 0, 0));
-    rect.x = 24; rect.y = 64; rect.w = 592; rect.h = 52;
+    rect.x = 24;
+    rect.y = 64;
+    rect.w = 592;
+    rect.h = 52;
     if (inputImage) SDL_UpperBlit(inputImage, NULL, dst, &rect);
     rect.x = 40;
     drawTextLines(dst, g_imeFont, &rect, text, "\n", &g_imeInputColor, 3, false);
@@ -321,51 +356,231 @@ void ImeWindow::initKey(ImeKey &key, int id, SDL_Surface *focused, SDL_Surface *
     key.icon = icon;
     key.hint = hint;
     switch (id) {
-    case IME_KEY_SHIFT: key.lower = ""; key.upper = ""; key.symbol = ""; break;
-    case IME_KEY_SYMBOLS: key.lower = ""; key.upper = ""; key.symbol = ""; break;
-    case IME_KEY_SPACE: key.lower = ""; key.upper = ""; key.symbol = ""; break;
-    case IME_KEY_DELETE: key.lower = ""; key.upper = ""; key.symbol = ""; break;
-    case IME_KEY_OK: key.lower = ""; key.upper = ""; key.symbol = ""; break;
-    case 6: key.lower = "1"; key.upper = "1"; key.symbol = "1"; break;
-    case 7: key.lower = "2"; key.upper = "2"; key.symbol = "2"; break;
-    case 8: key.lower = "3"; key.upper = "3"; key.symbol = "3"; break;
-    case 9: key.lower = "4"; key.upper = "4"; key.symbol = "4"; break;
-    case 10: key.lower = "5"; key.upper = "5"; key.symbol = "5"; break;
-    case 11: key.lower = "6"; key.upper = "6"; key.symbol = "6"; break;
-    case 12: key.lower = "7"; key.upper = "7"; key.symbol = "7"; break;
-    case 13: key.lower = "8"; key.upper = "8"; key.symbol = "8"; break;
-    case 14: key.lower = "9"; key.upper = "9"; key.symbol = "9"; break;
-    case 15: key.lower = "0"; key.upper = "0"; key.symbol = "0"; break;
-    case 16: key.lower = "q"; key.upper = "Q"; key.symbol = "!"; break;
-    case 17: key.lower = "w"; key.upper = "W"; key.symbol = "@"; break;
-    case 18: key.lower = "e"; key.upper = "E"; key.symbol = "#"; break;
-    case 19: key.lower = "r"; key.upper = "R"; key.symbol = "$"; break;
-    case 20: key.lower = "t"; key.upper = "T"; key.symbol = "%"; break;
-    case 21: key.lower = "y"; key.upper = "Y"; key.symbol = "^"; break;
-    case 22: key.lower = "u"; key.upper = "U"; key.symbol = "&"; break;
-    case 23: key.lower = "i"; key.upper = "I"; key.symbol = "*"; break;
-    case 24: key.lower = "o"; key.upper = "O"; key.symbol = "/"; break;
-    case 25: key.lower = "p"; key.upper = "P"; key.symbol = "?"; break;
-    case 26: key.lower = "a"; key.upper = "A"; key.symbol = "~"; break;
-    case 27: key.lower = "s"; key.upper = "S"; key.symbol = "_"; break;
-    case 28: key.lower = "d"; key.upper = "D"; key.symbol = "+"; break;
-    case 29: key.lower = "f"; key.upper = "F"; key.symbol = "{"; break;
-    case 30: key.lower = "g"; key.upper = "G"; key.symbol = "}"; break;
-    case 31: key.lower = "h"; key.upper = "H"; key.symbol = "|"; break;
-    case 32: key.lower = "j"; key.upper = "J"; key.symbol = ":"; break;
-    case 33: key.lower = "k"; key.upper = "K"; key.symbol = "\""; break;
-    case 34: key.lower = "l"; key.upper = "L"; key.symbol = "<"; break;
-    case 4: key.lower = "-"; key.upper = "-"; key.symbol = ">"; break;
-    case 35: key.lower = "z"; key.upper = "Z"; key.symbol = "`"; break;
-    case 36: key.lower = "x"; key.upper = "X"; key.symbol = "-"; break;
-    case 37: key.lower = "c"; key.upper = "C"; key.symbol = "="; break;
-    case 38: key.lower = "v"; key.upper = "V"; key.symbol = "["; break;
-    case 40: key.lower = "b"; key.upper = "B"; key.symbol = "]"; break;
-    case 41: key.lower = "n"; key.upper = "N"; key.symbol = "\\"; break;
-    case 42: key.lower = "m"; key.upper = "M"; key.symbol = ";"; break;
-    case 2: key.lower = "("; key.upper = "("; key.symbol = "'"; break;
-    case 3: key.lower = ")"; key.upper = ")"; key.symbol = ","; break;
-    case 5: key.lower = "/"; key.upper = "/"; key.symbol = "."; break;
+        case IME_KEY_SHIFT:
+            key.lower = "";
+            key.upper = "";
+            key.symbol = "";
+            break;
+        case IME_KEY_SYMBOLS:
+            key.lower = "";
+            key.upper = "";
+            key.symbol = "";
+            break;
+        case IME_KEY_SPACE:
+            key.lower = "";
+            key.upper = "";
+            key.symbol = "";
+            break;
+        case IME_KEY_DELETE:
+            key.lower = "";
+            key.upper = "";
+            key.symbol = "";
+            break;
+        case IME_KEY_OK:
+            key.lower = "";
+            key.upper = "";
+            key.symbol = "";
+            break;
+        case 6:
+            key.lower = "1";
+            key.upper = "1";
+            key.symbol = "1";
+            break;
+        case 7:
+            key.lower = "2";
+            key.upper = "2";
+            key.symbol = "2";
+            break;
+        case 8:
+            key.lower = "3";
+            key.upper = "3";
+            key.symbol = "3";
+            break;
+        case 9:
+            key.lower = "4";
+            key.upper = "4";
+            key.symbol = "4";
+            break;
+        case 10:
+            key.lower = "5";
+            key.upper = "5";
+            key.symbol = "5";
+            break;
+        case 11:
+            key.lower = "6";
+            key.upper = "6";
+            key.symbol = "6";
+            break;
+        case 12:
+            key.lower = "7";
+            key.upper = "7";
+            key.symbol = "7";
+            break;
+        case 13:
+            key.lower = "8";
+            key.upper = "8";
+            key.symbol = "8";
+            break;
+        case 14:
+            key.lower = "9";
+            key.upper = "9";
+            key.symbol = "9";
+            break;
+        case 15:
+            key.lower = "0";
+            key.upper = "0";
+            key.symbol = "0";
+            break;
+        case 16:
+            key.lower = "q";
+            key.upper = "Q";
+            key.symbol = "!";
+            break;
+        case 17:
+            key.lower = "w";
+            key.upper = "W";
+            key.symbol = "@";
+            break;
+        case 18:
+            key.lower = "e";
+            key.upper = "E";
+            key.symbol = "#";
+            break;
+        case 19:
+            key.lower = "r";
+            key.upper = "R";
+            key.symbol = "$";
+            break;
+        case 20:
+            key.lower = "t";
+            key.upper = "T";
+            key.symbol = "%";
+            break;
+        case 21:
+            key.lower = "y";
+            key.upper = "Y";
+            key.symbol = "^";
+            break;
+        case 22:
+            key.lower = "u";
+            key.upper = "U";
+            key.symbol = "&";
+            break;
+        case 23:
+            key.lower = "i";
+            key.upper = "I";
+            key.symbol = "*";
+            break;
+        case 24:
+            key.lower = "o";
+            key.upper = "O";
+            key.symbol = "/";
+            break;
+        case 25:
+            key.lower = "p";
+            key.upper = "P";
+            key.symbol = "?";
+            break;
+        case 26:
+            key.lower = "a";
+            key.upper = "A";
+            key.symbol = "~";
+            break;
+        case 27:
+            key.lower = "s";
+            key.upper = "S";
+            key.symbol = "_";
+            break;
+        case 28:
+            key.lower = "d";
+            key.upper = "D";
+            key.symbol = "+";
+            break;
+        case 29:
+            key.lower = "f";
+            key.upper = "F";
+            key.symbol = "{";
+            break;
+        case 30:
+            key.lower = "g";
+            key.upper = "G";
+            key.symbol = "}";
+            break;
+        case 31:
+            key.lower = "h";
+            key.upper = "H";
+            key.symbol = "|";
+            break;
+        case 32:
+            key.lower = "j";
+            key.upper = "J";
+            key.symbol = ":";
+            break;
+        case 33:
+            key.lower = "k";
+            key.upper = "K";
+            key.symbol = "\"";
+            break;
+        case 34:
+            key.lower = "l";
+            key.upper = "L";
+            key.symbol = "<";
+            break;
+        case 4:
+            key.lower = "-";
+            key.upper = "-";
+            key.symbol = ">";
+            break;
+        case 35:
+            key.lower = "z";
+            key.upper = "Z";
+            key.symbol = "`";
+            break;
+        case 36:
+            key.lower = "x";
+            key.upper = "X";
+            key.symbol = "-";
+            break;
+        case 37:
+            key.lower = "c";
+            key.upper = "C";
+            key.symbol = "=";
+            break;
+        case 38:
+            key.lower = "v";
+            key.upper = "V";
+            key.symbol = "[";
+            break;
+        case 40:
+            key.lower = "b";
+            key.upper = "B";
+            key.symbol = "]";
+            break;
+        case 41:
+            key.lower = "n";
+            key.upper = "N";
+            key.symbol = "\\";
+            break;
+        case 42:
+            key.lower = "m";
+            key.upper = "M";
+            key.symbol = ";";
+            break;
+        case 2:
+            key.lower = "(";
+            key.upper = "(";
+            key.symbol = "'";
+            break;
+        case 3:
+            key.lower = ")";
+            key.upper = ")";
+            key.symbol = ",";
+            break;
+        case 5:
+            key.lower = "/";
+            key.upper = "/";
+            key.symbol = ".";
+            break;
     }
 }
 // Lays out the 40 character keys (52 px squares, 8 px apart) and the five wide keys below.
@@ -393,19 +608,30 @@ void ImeWindow::buildKeys()
     height = 52;
     key.rect.w = width;
     key.rect.h = height;
-    key.rect.x = 24; key.rect.y = 362;
-    initKey(key, IME_KEY_SHIFT, btn2Focused, btn2Normal, shift, l2); keys.push_back(key);
-    key.rect.x = 144; key.rect.y = 362;
-    initKey(key, IME_KEY_SYMBOLS, btn2Focused, btn2Normal, abc, r2); keys.push_back(key);
-    key.rect.x = 264; key.rect.y = 362;
-    initKey(key, IME_KEY_SPACE, btn2Focused, btn2Normal, space, xIcon); keys.push_back(key);
-    key.rect.x = 384; key.rect.y = 362;
-    initKey(key, IME_KEY_DELETE, btn2Focused, btn2Normal, del, yIcon); keys.push_back(key);
-    key.rect.x = 504; key.rect.y = 362;
-    initKey(key, IME_KEY_OK, btn2Focused, btn2Normal, ok, start); keys.push_back(key);
+    key.rect.x = 24;
+    key.rect.y = 362;
+    initKey(key, IME_KEY_SHIFT, btn2Focused, btn2Normal, shift, l2);
+    keys.push_back(key);
+    key.rect.x = 144;
+    key.rect.y = 362;
+    initKey(key, IME_KEY_SYMBOLS, btn2Focused, btn2Normal, abc, r2);
+    keys.push_back(key);
+    key.rect.x = 264;
+    key.rect.y = 362;
+    initKey(key, IME_KEY_SPACE, btn2Focused, btn2Normal, space, xIcon);
+    keys.push_back(key);
+    key.rect.x = 384;
+    key.rect.y = 362;
+    initKey(key, IME_KEY_DELETE, btn2Focused, btn2Normal, del, yIcon);
+    keys.push_back(key);
+    key.rect.x = 504;
+    key.rect.y = 362;
+    initKey(key, IME_KEY_OK, btn2Focused, btn2Normal, ok, start);
+    keys.push_back(key);
 }
 void ImeWindow::onHide() {}
 void ImeWindow::onShow() {}
 void ImeWindow::saveState(cJSON *) {}
-int ImeWindow::restoreState(cJSON *) { return 0; }
+int ImeWindow::restoreState(cJSON *)
+{ return 0; }
 void ImeWindow::update() {}

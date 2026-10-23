@@ -9,6 +9,7 @@
 // Body 4,768 bytes plus 110 generated functions; the draft start 0x133f60 was part of the
 // preceding file's allocator tail.
 #include "PlatformApi.h"
+#include "CJsonApi.h"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -18,12 +19,12 @@
 #include "Language.h"
 struct cJSON;
 extern "C" {
-cJSON *cJSON_CreateObject(); void cJSON_Delete(cJSON *);
-cJSON *cJSON_AddStringToObject(cJSON *, const char *, const char *);
-char *cJSON_Print(const cJSON *); void cJSON_free(void *);
-cJSON *cJSON_Parse(const char *); const char *cJSON_GetErrorPtr();
-cJSON *cJSON_GetObjectItem(const cJSON *, const char *);
-char *cJSON_GetStringValue(const cJSON *);
+void cJSON_Delete(cJSON *);
+
+void cJSON_free(void *);
+const char *cJSON_GetErrorPtr();
+
+
 int readWholeFile(const char *, FILE *, char **);
 const char *getLanguageFile();
 }
@@ -49,7 +50,9 @@ bool genShortLangFile(const std::string &file)
     if (index >= g_languages.size()) return ok;
     if (access("/customer/app/lang", 0) == 0) {
         path = "/customer/app/lang";
-        path += "/"; path += file; path += ".short";
+        path += "/";
+        path += file;
+        path += ".short";
         if (access(path.c_str(), 0) != 0) {
             char key[16] = {0};
             cJSON *json = cJSON_CreateObject();
@@ -128,15 +131,22 @@ bool readLanguageFile(const char *path, Language &language)
                             snprintf(key, 16, "%d", i);
                             item = cJSON_GetObjectItem(json, key);
                             part = cJSON_GetStringValue(item);
-                            if (part) language.strings.push_back(std::string(part));
-                            else { ok = false; break; }
+                            if (part)
+                                language.strings.push_back(std::string(part));
+                            else {
+                                ok = false;
+                                break;
+                            }
                         }
-                    } else printf("%s have no lang string\n", path);
+                    } else
+                        printf("%s have no lang string\n", path);
                     cJSON_Delete(json);
-                } else printf("parse %s content fail:%s\n", path, cJSON_GetErrorPtr());
+                } else
+                    printf("parse %s content fail:%s\n", path, cJSON_GetErrorPtr());
             }
             free(content);
-        } else printf("read %s content fail\n", path);
+        } else
+            printf("read %s content fail\n", path);
         fclose(file);
     }
     printf("read lang file %s ok=%d\n", path, ok);
@@ -192,8 +202,10 @@ void loadLanguages(const char *root)
                         index++;
                     }
                     printf("add language %ld %s to %d. example %s\n", g_languages.size(), lang.file.c_str(), index, lang.strings[0].c_str());
-                    if (index >= g_languages.size()) g_languages.push_back(lang);
-                    else g_languages.insert(g_languages.begin() + index, lang);
+                    if (index >= g_languages.size())
+                        g_languages.push_back(lang);
+                    else
+                        g_languages.insert(g_languages.begin() + index, lang);
                     genShortLangFile(entry->d_name);
                 }
             }

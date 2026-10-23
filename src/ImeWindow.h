@@ -3,6 +3,7 @@
 // is 100 bytes.
 #pragma once
 #include <string>
+#include "CJsonApi.h"
 #include <vector>
 #include "TrimusWindow.h"
 
@@ -26,7 +27,8 @@ struct ImeKey {
     std::string lower, upper, symbol;
     SDL_Surface *focused, *normal, *icon, *hint;
 };
-class ImeWindow : public TrimusWindow {
+class ImeWindow : public TrimusWindow
+{
 public:
     ImeWindow(int title, Action *callback, int label);
     virtual ~ImeWindow();

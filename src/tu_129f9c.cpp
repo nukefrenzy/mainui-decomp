@@ -8,21 +8,18 @@
 // skin in the current directory ("./"). freeTheme releases it all.
 // Seven functions, 11,916 bytes, no generated tail.
 #include "PlatformApi.h"
+#include "SdlApi.h"
 #include <cstdio>
 #include <cstring>
 #include <cstddef>
 #include "Theme.h"
 extern "C" {
-void *TTF_OpenFont(const char *, int); void TTF_CloseFont(void *);
-void TTF_SetFontStyle(void *, int); int TTF_FontHeight(void *);
-SDL_Surface *IMG_Load(const char *);
-SDL_Surface *SDL_CreateRGBSurface(unsigned int, int, int, int, unsigned int, unsigned int, unsigned int, unsigned int);
-int SDL_UpperBlit(SDL_Surface *, SDL_Rect *, SDL_Surface *, SDL_Rect *);
-void SDL_FreeSurface(SDL_Surface *);
-const char *SDL_GetError();
-void *SDL_RWFromFile(const char *, const char *);
-void *Mix_LoadWAV_RW(void *, int); void *Mix_LoadMUS(const char *);
-void Mix_FreeMusic(void *); void Mix_FreeChunk(void *);
+void TTF_CloseFont(void *);
+int TTF_FontHeight(void *);
+
+
+void *Mix_LoadWAV_RW(void *, int);
+void Mix_FreeChunk(void *);
 const char *getLanguageFile();
 }
 bool languageFontExists();
@@ -87,13 +84,19 @@ SDL_Color g_hintColor; // 0x1822a8
 SDL_Color g_listColor; // 0x1822ac
 SDL_Color g_accentColor; // 0x1822b0
 // Original palette follows std::piecewise_construct. Struct copies retain loads at -O0.
-extern const SDL_Color g_themeGray = {104,104,104,0}; // 0x161808
-extern const SDL_Color g_themeWhite = {240,240,240,0}; // 0x16180c
-extern const SDL_Color g_themeDim = {170,170,170,0}; // 0x161810
+extern const SDL_Color g_themeGray = {104, 104, 104, 0}; // 0x161808
+extern const SDL_Color g_themeWhite = {240, 240, 240, 0}; // 0x16180c
+extern const SDL_Color g_themeDim = {170, 170, 170, 0}; // 0x161810
 extern const SDL_Color g_themeUnusedPalette[] = { // 0x161814-0x161838
-    {0,0,0,0}, {17,100,143,0}, {210,180,95,0}, {208,228,88,0},
-    {240,0,36,0}, {255,0,98,0}, {210,172,115,0}, {104,70,24,0}, {255,255,0,0}
-};
+                                                 {0, 0, 0, 0},
+                                                 {17, 100, 143, 0},
+                                                 {210, 180, 95, 0},
+                                                 {208, 228, 88, 0},
+                                                 {240, 0, 36, 0},
+                                                 {255, 0, 98, 0},
+                                                 {210, 172, 115, 0},
+                                                 {104, 70, 24, 0},
+                                                 {255, 255, 0, 0}};
 static_assert(sizeof(Theme) == 0x18c && offsetof(Theme, mainSize) == 0x17c, "theme layout");
 
 // The file's strings as an explicit pool, named after their text, in the original order. The
@@ -184,9 +187,12 @@ void *openThemeFont(const std::string &root, std::string &configured,
 {
     std::string path(root);
     if (configured.length() != 0) {
-        if (configured.at(0) != '/') path += configured;
-        else path = configured;
-    } else path += fallbackFile;
+        if (configured.at(0) != '/')
+            path += configured;
+        else
+            path = configured;
+    } else
+        path += fallbackFile;
     printf(lit_open_s_n, path.c_str(), size);
     void *font = TTF_OpenFont(path.c_str(), size);
     if (font) return font;
@@ -216,11 +222,30 @@ SDL_Surface *loadImeImage(const char *root, const char *fallback, const char *fi
 // multi-language fonts, falling back to wqy-microhei.ttc.
 int changeLanguageFonts(Theme *theme, int *size)
 {
-    if (g_imeFont) { printf(lit_change_lang_font_close_p, g_imeFont); TTF_CloseFont(g_imeFont); g_imeFont = NULL; }
-    if (g_iconFont) { printf(lit_change_lang_font_close_p, g_iconFont); TTF_CloseFont(g_iconFont); g_iconFont = NULL; }
-    if (g_titleFont) { printf(lit_change_lang_font_close_p, g_titleFont); TTF_CloseFont(g_titleFont); g_titleFont = NULL; }
-    if (g_smallFont) { printf(lit_change_lang_font_close_p, g_smallFont); TTF_CloseFont(g_smallFont); g_smallFont = NULL; }
-    if (g_labelFont) { TTF_CloseFont(g_labelFont); g_labelFont = NULL; }
+    if (g_imeFont) {
+        printf(lit_change_lang_font_close_p, g_imeFont);
+        TTF_CloseFont(g_imeFont);
+        g_imeFont = NULL;
+    }
+    if (g_iconFont) {
+        printf(lit_change_lang_font_close_p, g_iconFont);
+        TTF_CloseFont(g_iconFont);
+        g_iconFont = NULL;
+    }
+    if (g_titleFont) {
+        printf(lit_change_lang_font_close_p, g_titleFont);
+        TTF_CloseFont(g_titleFont);
+        g_titleFont = NULL;
+    }
+    if (g_smallFont) {
+        printf(lit_change_lang_font_close_p, g_smallFont);
+        TTF_CloseFont(g_smallFont);
+        g_smallFont = NULL;
+    }
+    if (g_labelFont) {
+        TTF_CloseFont(g_labelFont);
+        g_labelFont = NULL;
+    }
     *size = theme->mainSize;
     bool available = languageFontExists();
     if (available != true || strncmp(getLanguageFile(), lit_en_lang, 7) == 0) {
@@ -262,7 +287,8 @@ SDL_Surface *compositeThemeImage(SDL_Surface *image, SDL_Surface *background)
             SDL_Rect source;
             source.x = (background->w - image->w) / 2;
             source.y = (background->h - image->h) / 2;
-            source.w = image->w; source.h = image->h;
+            source.w = image->w;
+            source.h = image->h;
             SDL_UpperBlit(background, &source, temp, NULL);
         }
         SDL_UpperBlit(image, NULL, temp, NULL);
@@ -322,11 +348,22 @@ bool loadTheme(Theme *theme, int *unusedFontSize)
     g_hintColor = theme->hintColor.bytes;
     g_listColor = theme->listColor.bytes;
     g_accentColor = theme->accentColor.bytes;
-    g_highlightColor.r = 0xd0; g_highlightColor.g = 0xe4; g_highlightColor.b = 0x58; g_highlightColor.unused = 0;
-    g_lightColor.r = 0xf0; g_lightColor.g = 0xf0; g_lightColor.b = 0xf0; g_lightColor.unused = 0;
+    g_highlightColor.r = 0xd0;
+    g_highlightColor.g = 0xe4;
+    g_highlightColor.b = 0x58;
+    g_highlightColor.unused = 0;
+    g_lightColor.r = 0xf0;
+    g_lightColor.g = 0xf0;
+    g_lightColor.b = 0xf0;
+    g_lightColor.unused = 0;
     g_fixedColor.value = 0;
-    g_fixedColor.bytes.r = 0x68; g_fixedColor.bytes.g = 0x46; g_fixedColor.bytes.b = 0x18;
-    g_grayColor.r = 0x68; g_grayColor.g = 0x68; g_grayColor.b = 0x68; g_grayColor.unused = 0;
+    g_fixedColor.bytes.r = 0x68;
+    g_fixedColor.bytes.g = 0x46;
+    g_fixedColor.bytes.b = 0x18;
+    g_grayColor.r = 0x68;
+    g_grayColor.g = 0x68;
+    g_grayColor.b = 0x68;
+    g_grayColor.unused = 0;
     bool available = languageFontExists();
     printf(lit_sys_lang_s_path_s_support, getLanguageFile(), theme->root.c_str(), available);
     if (available != true || strncmp(getLanguageFile(), lit_en_lang, 7) == 0) {
@@ -352,7 +389,6 @@ bool loadTheme(Theme *theme, int *unusedFontSize)
         g_smallFont = openThemeFont(theme->root, theme->mainFontMulti, lit_here, lit_wqy_microhei_ttc, theme->smallSize);
         g_labelFont = openThemeFont(theme->root, theme->labelFontMulti, lit_here, lit_wqy_microhei_ttc, theme->labelSize);
         TTF_SetFontStyle(g_labelFont, 2);
-
     }
     printf(lit_init_skin_sfont_p_stitlefont_p, g_imeFont, g_titleFont, g_iconFont, g_smallFont, g_labelFont);
     if (!g_imeFont) fprintf(stderr, lit_open_font_fail_s, SDL_GetError());
@@ -363,19 +399,22 @@ bool loadTheme(Theme *theme, int *unusedFontSize)
         SDL_UpperBlit(g_background, NULL, temp, NULL);
         SDL_FreeSurface(g_background);
         g_background = temp;
-    } else fprintf(stderr, lit_open_background_fail_s, SDL_GetError());
+    } else
+        fprintf(stderr, lit_open_background_fail_s, SDL_GetError());
     g_listStripe = loadSkinImage(theme->root.c_str(), lit_here, lit_here_skin_div_line_h_png, g_backBuffer, 0);
     if (g_listStripe) {
         SDL_Surface *temp = compositeThemeImage(g_listStripe, g_background);
         SDL_FreeSurface(g_listStripe);
         g_listStripe = temp;
-    } else fprintf(stderr, lit_open_div_line_h_png_fail, SDL_GetError());
+    } else
+        fprintf(stderr, lit_open_div_line_h_png_fail, SDL_GetError());
     g_vertLine = loadSkinImage(theme->root.c_str(), lit_here, lit_here_skin_div_line_v_01_png, g_backBuffer, 0);
     if (g_vertLine) {
         SDL_Surface *temp = compositeThemeImage(g_vertLine, g_background);
         SDL_FreeSurface(g_vertLine);
         g_vertLine = temp;
-    } else fprintf(stderr, lit_open_bg_hline_fail_s, SDL_GetError());
+    } else
+        fprintf(stderr, lit_open_bg_hline_fail_s, SDL_GetError());
     g_unusedIndicator = NULL;
     g_dotActive = loadSkinImage(theme->root.c_str(), lit_here, lit_here_skin_dot_a_png, g_backBuffer, 0);
     if (!g_dotActive) fprintf(stderr, lit_open_dot_a_fail_s, SDL_GetError());
@@ -388,19 +427,22 @@ bool loadTheme(Theme *theme, int *unusedFontSize)
         SDL_UpperBlit(g_navItem, NULL, temp, NULL);
         SDL_FreeSurface(g_navItem);
         g_navItem = temp;
-    } else fprintf(stderr, lit_open_stat_bg_fail_s, SDL_GetError());
+    } else
+        fprintf(stderr, lit_open_stat_bg_fail_s, SDL_GetError());
     g_titleBar = loadSkinImage(theme->root.c_str(), lit_here, lit_here_skin_bg_title_png, g_backBuffer, 1);
     if (g_titleBar) {
         SDL_Surface *temp = compositeThemeImage(g_titleBar, g_background);
         SDL_FreeSurface(g_titleBar);
         g_titleBar = temp;
-    } else fprintf(stderr, lit_open_bar_bg_fail_s, SDL_GetError());
+    } else
+        fprintf(stderr, lit_open_bar_bg_fail_s, SDL_GetError());
     g_keySettingFooter = loadSkinImage(theme->root.c_str(), lit_here, lit_here_skin_tips_bar_bg_png, g_backBuffer, 0);
     if (g_keySettingFooter) {
         SDL_Surface *temp = compositeThemeImage(g_keySettingFooter, g_background);
         SDL_FreeSurface(g_keySettingFooter);
         g_keySettingFooter = temp;
-    } else fprintf(stderr, lit_open_bar_bg_fail_s, SDL_GetError());
+    } else
+        fprintf(stderr, lit_open_bar_bg_fail_s, SDL_GetError());
     g_miniLogo = loadSkinImage(theme->root.c_str(), lit_here, lit_here_skin_miyoo_topbar_png, g_backBuffer, 0);
     if (!g_miniLogo) fprintf(stderr, lit_open_mini_logo_fail_s, SDL_GetError());
     g_emptyImage = loadSkinImage(theme->root.c_str(), lit_here, lit_here_skin_empty_png, g_backBuffer, 0);
@@ -485,7 +527,10 @@ int freeTheme()
         printf(lit_free_background_p_n_x_n, g_background, g_background->w, g_background->h);
         SDL_FreeSurface(g_background);
     }
-    if (g_imeFont) { printf(lit_free_sfont_p, g_imeFont); TTF_CloseFont(g_imeFont); }
+    if (g_imeFont) {
+        printf(lit_free_sfont_p, g_imeFont);
+        TTF_CloseFont(g_imeFont);
+    }
     if (g_iconFont) TTF_CloseFont(g_iconFont);
     if (g_titleFont) TTF_CloseFont(g_titleFont);
     if (g_smallFont) TTF_CloseFont(g_smallFont);
@@ -522,7 +567,8 @@ int freeTheme()
     if (g_wifi3) SDL_FreeSurface(g_wifi3);
     if (g_wifi2) SDL_FreeSurface(g_wifi2);
     if (g_headphoneIcon) SDL_FreeSurface(g_headphoneIcon);
-    for (int i = 0; i < 21; i++) if (g_volumeIcons[i]) SDL_FreeSurface(g_volumeIcons[i]);
+    for (int i = 0; i < 21; i++)
+        if (g_volumeIcons[i]) SDL_FreeSurface(g_volumeIcons[i]);
     if (g_themeMusic) Mix_FreeMusic(g_themeMusic);
     if (g_changeSound) Mix_FreeChunk(g_changeSound);
     if (g_enterSound) Mix_FreeChunk(g_enterSound);
