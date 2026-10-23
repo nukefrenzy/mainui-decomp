@@ -52,7 +52,7 @@ spelling (such as `favourite.json`).
 - **Formatting.** Format with the repository's `.clang-format` (any recent clang-format):
 
   ```bash
-  clang-format -i src/*.h src/*.cpp src/*.c src/tu_015b20/*.inc
+  clang-format -i src/*.h src/*.cpp src/*.c
   ```
 
   It only changes whitespace and never reorders includes, because include order matters here.

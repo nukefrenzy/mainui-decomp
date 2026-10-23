@@ -1,4 +1,4 @@
-// tu_049c3c (0x049c3c-0x04c418): MainUI's main program and its two background threads.
+// Main.cpp (0x049c3c-0x04c418): MainUI's main program and its two background threads.
 //
 // main initializes the device and SDL, loads settings, theme, language and the Emu/App/RApp
 // folders, restores the windows from the last run (or creates the root menu) and runs the window
@@ -6,7 +6,7 @@
 // - the status thread wakes every second and posts user events (Input.h) when the battery or
 //   charger state, the Wi-Fi state or the volume changes, so the status bar can redraw;
 // - the hotplug thread posts EVENT_HOTPLUG when a second sound card comes or goes;
-// - the Wi-Fi monitor (tu_14e0cc.c) calls wifiStatusCallback to start DHCP when needed.
+// - the Wi-Fi monitor (Wifi.c) calls wifiStatusCallback to start DHCP when needed.
 // Body 4,740 bytes (10 functions and an init pair) plus 93 inline/template functions.
 #include "PlatformApi.h"
 #include "SdlApi.h"
@@ -218,7 +218,7 @@ void pushHotplugEvent(int card, int plugged)
     }
 }
 
-// Hotplug thread: runs hotplugLoop (tu_14acfc.c) until stopHotplug.
+// Hotplug thread: runs hotplugLoop (Device.c) until stopHotplug.
 int hotplugThread(void *arg)
 {
     return hotplugLoop(reinterpret_cast<void (*)(int, int)>(pushHotplugEvent));
@@ -257,7 +257,7 @@ int main(int argc, char **argv)
     printf("%d ui start\n", milliseconds());
     system("echo ondemand > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor");
     system("touch /tmp/stay_awake");
-    if (waitForProbe() != 0) return 2;   // device authentication (tu_14f730.c)
+    if (waitForProbe() != 0) return 2;   // device authentication (DeviceAuth.c)
     // Load the RTL8188FU Wi-Fi driver from the SD card if it is not loaded yet.
     if (moduleLoaded("8188fu.ko") != true) {
         if (access("/mnt/SDCARD/8188fu.ko", 0) == 0) {

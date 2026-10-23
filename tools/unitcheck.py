@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check a whole translation unit against MainUI, the way the linker lays it out.
 
-Usage: unitcheck.py <src/tu_xxxxxx.cpp> [--unit NAME | --at ADDR] [--end ADDR] [--verbose] [--body-only]
+Usage: unitcheck.py <src/Name.cpp|.c> [--unit NAME | --at ADDR] [--end ADDR] [--verbose] [--body-only]
 
 GNU ld places each object's .text first, then its template/inline COMDAT sections (.text._Z*)
 in the order they appear in the object; a COMDAT that an earlier file already contributed is
@@ -39,7 +39,7 @@ from elftools.elf.relocation import RelocationSection
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ap = argparse.ArgumentParser()
 ap.add_argument("source")
-ap.add_argument("--unit", help="unit name in docs/tu-map.tsv (default: from the file name tu_<lo>)")
+ap.add_argument("--unit", help="unit name in docs/tu-map.tsv (default: the file name without extension)")
 ap.add_argument("--at", help="hex start address instead of a unit")
 ap.add_argument("--end", help="required hex end address (default: enforce the end of proven units)")
 ap.add_argument("--orig", default=os.path.join(ROOT, "MainUI-354-clean"))

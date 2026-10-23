@@ -1,10 +1,10 @@
-// tu_1484d4 (0x1484d4-0x14acfc): MultiDBCachedTextMenu, the global ROM search list.
+// GlobalSearch.cpp (0x1484d4-0x14acfc): MultiDBCachedTextMenu, the global ROM search list.
 //
 // A ROM search opens this list (MenuWindow::onShow). Every emulator and RetroArch-app folder keeps a
 // SQLite cache of its ROMs (<folder>/<name>_cache6.db, table <name>_roms); the menu opens each
 // one that has games whose name matches the search (by pinyin, or by Chinese pinyin with the
 // Chinese language), and shows all matches as one list, in folder order. Rows are not loaded up
-// front: as the cursor moves, DBCacheWorker jobs (tu_015b20) fetch the rows around it in the
+// front: as the cursor moves, DBCacheWorker jobs (MainUI.cpp) fetch the rows around it in the
 // background into the `items` cache, and getItem returns them once they are there.
 // Tail order: the C headers come first and define no inline functions, so the tail starts with
 // count() (defined in the class) and then follows first use in the bodies below; it matched as

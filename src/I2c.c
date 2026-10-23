@@ -1,7 +1,7 @@
-// tu_14dc18 (0x14dc18-0x14e0cc): helpers for the device check.
+// I2c.c (0x14dc18-0x14e0cc): helpers for the device check.
 //
 // MainUI refuses to start unless a chip on the I2C bus answers a challenge correctly
-// (authenticateDevice in tu_14f730.c; probably a vendor authentication chip). This file gives
+// (authenticateDevice in DeviceAuth.c; probably a vendor authentication chip). This file gives
 // that code raw register reads and writes on /dev/i2c-1, a millisecond sleep and a random byte,
 // and waitForProbe, which main calls first thing.
 // Compiled as C (call results are stored straight from r0), so there is no template tail.

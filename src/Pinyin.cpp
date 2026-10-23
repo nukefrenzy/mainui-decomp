@@ -1,4 +1,4 @@
-// tu_143720 (0x143720-0x1484d4): the pinyin table used by ROM search.
+// Pinyin.cpp (0x143720-0x1484d4): the pinyin table used by ROM search.
 //
 // Loads ./py.dat ("<hanzi> <pinyin>" per line) into a map from codepoint to pinyin, and uses it
 // to match ASCII search keys against UTF-8 names. Strings are tiny-utf8 4.4.x

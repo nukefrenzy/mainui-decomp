@@ -8,7 +8,7 @@ typedef void (*FlipFn)();
 struct cJSON;
 const char *languageString(int);
 
-// What a window's handleInput result tells the window loop (runWindowLoop, tu_015b20/p11.inc).
+// What a window's handleInput result tells the window loop (runWindowLoop, MainUI.cpp).
 // Negative or 0 (or any other value): stay open.
 enum WindowResult {
     WINDOW_CLOSE = 1,        // close this window, unless it is the last one
@@ -29,7 +29,7 @@ public:
     virtual void saveState(cJSON *obj) = 0;           // slot 6: called by saveWindowState (/tmp/state.json)
     virtual int restoreState(cJSON *obj) = 0;        // slot 7: called by restoreWindowState
     virtual void update() = 0;                        // slot 8: every frame, before draw
-    // Inline: both sit in tu_015b20's template/inline tail, not in its body.
+    // Inline: both sit in MainUI.cpp's template/inline tail, not in its body.
     virtual void animateIn(SDL_Surface *dst, FlipFn flip)    // slot 9, default empty (0x39478)
     {
     }

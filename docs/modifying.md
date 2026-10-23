@@ -24,7 +24,7 @@ To see exactly what your change did to the machine code, check the file you edit
 the first difference, with a disassembly of both sides:
 
 ```bash
-python3 tools/unitcheck.py src/tu_14b860.c
+python3 tools/unitcheck.py src/Settings.c
 ```
 
 ## Try it on a device
@@ -64,14 +64,14 @@ the Expert build instead.
 
 | Goal | Where |
 | --- | --- |
-| Global hotkeys | `handleGlobalInput` ([p01.inc](../src/tu_015b20/p01.inc)): every key press of every window passes through it |
-| How games and apps launch | `launchRom` and `launchApp_buildCommand` (p01.inc). Or leave MainUI alone and change what Onion's runtime script does with `/tmp/cmd_to_run.sh`. |
-| Status bar icons or an overlay | `runWindowLoop` ([p11.inc](../src/tu_015b20/p11.inc)) draws the indicators, then flips; draw onto `g_backBuffer` before the flip |
-| A main menu icon | `createMenu`, case `WIN_MAIN` (p11.inc): add an `IconMenuItem` with the window id it opens |
-| A Settings row | `createMenu`, case `WIN_SETTING`: add a `SettingMenuItem` with a new `SettingHandler` value, and handle it in `SettingMenu::select` / `handleKey` ([p07.inc](../src/tu_015b20/p07.inc)) |
+| Global hotkeys | `handleGlobalInput` ([MainUI.cpp](../src/MainUI.cpp)): every key press of every window passes through it |
+| How games and apps launch | `launchRom` and `launchApp_buildCommand` (MainUI.cpp). Or leave MainUI alone and change what Onion's runtime script does with `/tmp/cmd_to_run.sh`. |
+| Status bar icons or an overlay | `runWindowLoop` ([MainUI.cpp](../src/MainUI.cpp)) draws the indicators, then flips; draw onto `g_backBuffer` before the flip |
+| A main menu icon | `createMenu`, case `WIN_MAIN` (MainUI.cpp): add an `IconMenuItem` with the window id it opens |
+| A Settings row | `createMenu`, case `WIN_SETTING`: add a `SettingMenuItem` with a new `SettingHandler` value, and handle it in `SettingMenu::select` / `handleKey` ([MainUI.cpp](../src/MainUI.cpp)) |
 | A new screen | Derive from `TrimusWindow` ([TrimusWindow.h](../src/TrimusWindow.h)) or `MenuWindow`, and open it with `pushWindow` |
-| Settings shared with keymon | [ShmVar.h](../src/ShmVar.h) and `GetKeyShm`/`SetKeyShm`; saved by `saveSystemJson` ([tu_14b860.c](../src/tu_14b860.c)) |
-| Reacting to battery, Wi-Fi or volume changes | the status thread in [tu_049c3c.cpp](../src/tu_049c3c.cpp) posts user events, and windows receive them through `handleGlobalInput` |
+| Settings shared with keymon | [ShmVar.h](../src/ShmVar.h) and `GetKeyShm`/`SetKeyShm`; saved by `saveSystemJson` ([Settings.c](../src/Settings.c)) |
+| Reacting to battery, Wi-Fi or volume changes | the status thread in [Main.cpp](../src/Main.cpp) posts user events, and windows receive them through `handleGlobalInput` |
 
 ## Without rebuilding: an LD_PRELOAD library
 

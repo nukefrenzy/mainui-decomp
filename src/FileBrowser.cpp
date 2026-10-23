@@ -1,4 +1,4 @@
-// tu_12ce28 (0x12ce28-0x1302cc): reading folders for the file browser.
+// FileBrowser.cpp (0x12ce28-0x1302cc): reading folders for the file browser.
 //
 // loadDirectory lists one folder as TextItem rows (folders and the files the filter accepts),
 // sorted by name; FileBrowserCache (FileBrowserCache.h) keeps the folders already visited.

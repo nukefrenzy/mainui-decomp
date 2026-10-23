@@ -24,11 +24,11 @@ Contents:
 
 ## Start-up and exit
 
-`main` ([tu_049c3c.cpp](../src/tu_049c3c.cpp), 0x4a2fc) does this, in order:
+`main` ([Main.cpp](../src/Main.cpp), 0x4a2fc) does this, in order:
 
 1. It writes `ondemand` to the CPU governor and creates `/tmp/stay_awake`.
-2. It runs the **device check** (`waitForProbe`, [tu_14dc18.c](../src/tu_14dc18.c) and
-   [tu_14f730.c](../src/tu_14f730.c)). A chip on I2C bus 1 must answer a challenge, with up to
+2. It runs the **device check** (`waitForProbe`, [I2c.c](../src/I2c.c) and
+   [DeviceAuth.c](../src/DeviceAuth.c)). A chip on I2C bus 1 must answer a challenge, with up to
    20 attempts. If it fails, MainUI exits with status 2 before showing anything.
 3. If `8188fu.ko` isn't loaded and `/mnt/SDCARD/8188fu.ko` exists, it runs `insmod` on it.
 4. It installs a SIGTERM handler that clears the running flag. The window loop then ends
@@ -52,7 +52,7 @@ Contents:
     and `/RApp`, where each subfolder with a `config.json` is one entry.
 13. It restores the list positions from `/appconfigs/romwinidx.json` and the open windows from
     `/tmp/state.json`. Without saved windows it builds the main menu.
-14. It runs the window loop (`runWindowLoop`, [p11.inc](../src/tu_015b20/p11.inc), 0x36ee8).
+14. It runs the window loop (`runWindowLoop`, [MainUI.cpp](../src/MainUI.cpp), 0x36ee8).
 
 **On exit**, the window loop:
 
@@ -69,7 +69,7 @@ the command and starts MainUI again.
 ### `/mnt/SDCARD/system.json`: settings
 
 Read by `loadSystemJson` and written by `saveSystemJson`, both in
-[tu_14b860.c](../src/tu_14b860.c) (0x14bca8 and 0x14c5fc). Stock Miyoo firmware uses
+[Settings.c](../src/Settings.c) (0x14bca8 and 0x14c5fc). Stock Miyoo firmware uses
 `/appconfigs/system.json` instead; see [onion-changes.md](onion-changes.md).
 
 | Key | Type | Default | Notes |
@@ -101,7 +101,7 @@ without truncation; see [quirks](#original-quirks-and-bugs).
 
 ### `/mnt/SDCARD/Roms/recentlist.json`: Recent
 
-`loadRecentList`, `saveRecentList` and `addRecent` in [tu_11cdc8.cpp](../src/tu_11cdc8.cpp)
+`loadRecentList`, `saveRecentList` and `addRecent` in [Config.cpp](../src/Config.cpp)
 (0x1208a0, 0x120af4, 0x1204c4).
 
 The file holds one unformatted JSON object per line, in this key order:
@@ -119,8 +119,8 @@ The file holds one unformatted JSON object per line, in this key order:
 
 ### `/mnt/SDCARD/Roms/favourite.json`: Favorites
 
-`AddFavoriteAction::execute` in [p02.inc](../src/tu_015b20/p02.inc) (0x1a02c) appends to this
-file. The list is read in [p03.inc](../src/tu_015b20/p03.inc) and rewritten by `saveFavorites`.
+`AddFavoriteAction::execute` in [MainUI.cpp](../src/MainUI.cpp) (0x1a02c) appends to this
+file. The list is read in [MainUI.cpp](../src/MainUI.cpp) and rewritten by `saveFavorites`.
 The file name keeps the original British spelling.
 
 The format is one JSON object per line: `{"label":…,"launch":…,"type":…,"rompath":…}`.
@@ -133,7 +133,7 @@ The format is one JSON object per line: `{"label":…,"launch":…,"type":…,"r
 
 ### `/tmp/state.json`: open windows across a launch
 
-`saveWindowState` and `restoreWindowState` in [p03.inc](../src/tu_015b20/p03.inc). The file is
+`saveWindowState` and `restoreWindowState` in [MainUI.cpp](../src/MainUI.cpp). The file is
 deleted after it is read.
 
 ```json
@@ -145,19 +145,19 @@ type as a `MenuWindow`.
 
 | Window | Fields |
 | --- | --- |
-| `MenuWindow` (`saveState`, [p09.inc](../src/tu_015b20/p09.inc), 0x2edac) | `currpos`, `pagestart`, `pageend`; `emuname` (type 5) or `raname` (others) when the list belongs to an emulator; `ppath` (parent folder) and `searchstr` when not empty |
-| `GameDetailWindow` (`saveState`, [p10.inc](../src/tu_015b20/p10.inc), 0x35fe4) | `gamename`, `gamepath`, `thumbpath`, `gameidx`, `gametype`, `favourite` (bool) |
+| `MenuWindow` (`saveState`, [MainUI.cpp](../src/MainUI.cpp), 0x2edac) | `currpos`, `pagestart`, `pageend`; `emuname` (type 5) or `raname` (others) when the list belongs to an emulator; `ppath` (parent folder) and `searchstr` when not empty |
+| `GameDetailWindow` (`saveState`, [MainUI.cpp](../src/MainUI.cpp), 0x35fe4) | `gamename`, `gamepath`, `thumbpath`, `gameidx`, `gametype`, `favourite` (bool) |
 
 ### `/appconfigs/romwinidx.json`: list positions
 
-`loadRomListPositions` and `saveRomListPositions` in [p03.inc](../src/tu_015b20/p03.inc). The
+`loadRomListPositions` and `saveRomListPositions` in [MainUI.cpp](../src/MainUI.cpp). The
 format is `{"list":[{"rompath":…,"pos":…,"start":…,"end":…}, ...]}`, one entry per ROM folder: the
 selected row, the first visible row, and the last visible row.
 
 ### Emulator, app and theme folders
 
 Each subfolder of `/mnt/SDCARD/Emu`, `/App`, `/RApp` and `/mnt/SDCARD/Themes` that holds a
-`config.json` is one entry. The parsers are in [tu_11cdc8.cpp](../src/tu_11cdc8.cpp).
+`config.json` is one entry. The parsers are in [Config.cpp](../src/Config.cpp).
 
 | Folder | Parser | Keys (required in bold) |
 | --- | --- | --- |
@@ -171,8 +171,8 @@ one. Emulators are kept sorted by label.
 ### ROM cache databases
 
 Each emulator folder has a SQLite cache `<emu folder>/<name>_cache6.db`, built in
-[p05.inc](../src/tu_015b20/p05.inc) and read in [p06.inc](../src/tu_015b20/p06.inc) and
-[tu_1484d4.cpp](../src/tu_1484d4.cpp):
+[MainUI.cpp](../src/MainUI.cpp) and read in [MainUI.cpp](../src/MainUI.cpp) and
+[GlobalSearch.cpp](../src/GlobalSearch.cpp):
 
 ```sql
 CREATE TABLE <name>_roms (id INTEGER PRIMARY KEY AUTOINCREMENT, disp TEXT NOT NULL,
@@ -194,8 +194,8 @@ CREATE TABLE <name>_roms (id INTEGER PRIMARY KEY AUTOINCREMENT, disp TEXT NOT NU
 
 ### Languages
 
-`loadLanguages` in [tu_134080.cpp](../src/tu_134080.cpp) and the built-in strings in
-[tu_14da50.c](../src/tu_14da50.c).
+`loadLanguages` in [Language.cpp](../src/Language.cpp) and the built-in strings in
+[BuiltinStrings.c](../src/BuiltinStrings.c).
 
 - **Built-in strings.** 156 English strings are built in (ids in
   [LangStrings.h](../src/LangStrings.h)). If `/customer/app/lang/en.lang` is missing, it is
@@ -223,7 +223,7 @@ CREATE TABLE <name>_roms (id INTEGER PRIMARY KEY AUTOINCREMENT, disp TEXT NOT NU
 
 ## Launching games and apps
 
-The code is in [p01.inc](../src/tu_015b20/p01.inc): `launchRom` (0x181a0),
+The code is in [MainUI.cpp](../src/MainUI.cpp): `launchRom` (0x181a0),
 `launchApp_buildCommand` (0x18560) and `writeCmdToRun` (0x17fc0). A launch:
 
 1. builds a shell command;
@@ -258,14 +258,14 @@ cd <dir>; chmod a+x <file>; <file>                     # neither audiofix nor au
 ## System update
 
 Choosing a `TrimuiUpdate*.zip` in the file browser (`FileAction::execute`,
-[p08.inc](../src/tu_015b20/p08.inc), 0x2d1bc) asks for confirmation and needs 500 MB free. On
+[MainUI.cpp](../src/MainUI.cpp), 0x2d1bc) asks for confirmation and needs 500 MB free. On
 confirm, `requestUpgrade` (0x2d158) writes the zip's path to `/tmp/.try_upgrade_file` and
 returns 3 (exit MainUI); the shell script around MainUI performs the update. Choosing another
 file starts the emulator whose `extlist` matches its extension.
 
 ## Input
 
-`handleGlobalInput` ([p01.inc](../src/tu_015b20/p01.inc), 0x17744) is the only place windows get
+`handleGlobalInput` ([MainUI.cpp](../src/MainUI.cpp), 0x17744) is the only place windows get
 input. The key symbols, button codes and event codes are in [Input.h](../src/Input.h).
 
 - **When buttons report.** Buttons report on release. The exceptions are the arrows, L1/R1 and
@@ -283,7 +283,7 @@ input. The key symbols, button codes and event codes are in [Input.h](../src/Inp
 
 ## Status events and timings
 
-The status thread (`statusPollThread`, [tu_049c3c.cpp](../src/tu_049c3c.cpp), 0x4a050) wakes
+The status thread (`statusPollThread`, [Main.cpp](../src/Main.cpp), 0x4a050) wakes
 every second and posts SDL user events:
 
 | Event | When |
@@ -299,35 +299,37 @@ disappears.
 | Timing | Value | Where |
 | --- | --- | --- |
 | Key repeat | 500 ms delay, 100 ms interval | `main` |
-| Volume preview in Settings | 150 ms after the last change | [p07.inc](../src/tu_015b20/p07.inc) |
-| Notification window | 5 s | `NotifyWindow`, [p10.inc](../src/tu_015b20/p10.inc) |
-| Power-off countdown | 10 s, ticking every second | `CountDownWindow`, p10.inc |
-| ADC info refresh | every 500 ms | `ADCInfoWindow`, [p11.inc](../src/tu_015b20/p11.inc) |
-| Wi-Fi monitor | every 3 s | [tu_14e0cc.c](../src/tu_14e0cc.c) |
+| Volume preview in Settings | 150 ms after the last change | [MainUI.cpp](../src/MainUI.cpp) |
+| Notification window | 5 s | `NotifyWindow`, [MainUI.cpp](../src/MainUI.cpp) |
+| Power-off countdown | 10 s, ticking every second | `CountDownWindow`, MainUI.cpp |
+| ADC info refresh | every 500 ms | `ADCInfoWindow`, [MainUI.cpp](../src/MainUI.cpp) |
+| Wi-Fi monitor | every 3 s | [Wifi.c](../src/Wifi.c) |
 | Wi-Fi switch-on timeout | 10 s without a scan result | `EVENT_WIFI_SWITCH_TIMEOUT` |
-| Hardware key test / sound test | 1 s ticks / 6 s | [tu_04cb68.cpp](../src/tu_04cb68.cpp) |
+| Hardware key test / sound test | 1 s ticks / 6 s | [HardwareTests.cpp](../src/HardwareTests.cpp) |
 
 ## Screens and settings
 
 - **Main menu**, in order: Recent, Favorites, Games, RetroArch, Apps, Settings. In the Clean
   build the RetroArch icon is never added; see the table of disabled items below.
 - **Window ids** are listed in [WindowIds.h](../src/WindowIds.h). `createMenu(id, path)`
-  ([p11.inc](../src/tu_015b20/p11.inc), 0x37784) builds each screen's list.
+  ([MainUI.cpp](../src/MainUI.cpp), 0x37784) builds each screen's list.
 - **Settings rows** carry a handler number (`SettingHandler` in
-  [tu_015b20.h](../src/tu_015b20.h)), handled by `SettingMenu::select` and
-  `SettingMenu::handleKey` in [p07.inc](../src/tu_015b20/p07.inc):
-  - **Volume and music volume** range 0–20.
-  - **Brightness** ranges 1–10.
-  - **Sleep** cycles through never, 5, 15 and 30 minutes.
-  - **The audio fix** toggles `/tmp/no_audioserver`.
-  - **Refresh Roms** and **Factory reset** ask for confirmation and then run with a progress
-    window.
+  [MainUI.h](../src/MainUI.h)), handled by `SettingMenu::select` and
+  `SettingMenu::handleKey` in [MainUI.cpp](../src/MainUI.cpp):
+  - **Rows in this build:** music volume (0–20), brightness (1–10), sleep (never, 5, 15 or 30
+    minutes), language, display color, device info, Wi-Fi and power off. The audio fix row
+    (which toggles `/tmp/no_audioserver`) belongs to the Fixes submenu, which this build doesn't
+    show.
+  - **Handled but never added** by `createMenu`: volume (1), Refresh Roms (4), ADC info (9) and
+    hotspot (20). Volume is set with the volume keys instead.
+  - **Added in stock but disabled by Onion:** key settings, theme, Fixes, factory reset and key
+    test (see below). Destructive rows ask for confirmation and then run with a progress window.
   - **Leaving Settings** saves `system.json`.
 - **Disabled items.** Some items are prepared but never added in this build. `createMenu`
   allocates them, but their constructor and append calls are NOPs in the binary. The affected
   items are RetroArch (main menu), Key settings, Theme, Fixes, Factory reset and Key test. The
   source keeps every NOP site.
-- **Charging screen.** `chargingScreenLoop` (p11.inc, 0x38ff8) shows a battery animation from
+- **Charging screen.** `chargingScreenLoop` (MainUI.cpp, 0x38ff8) shows a battery animation from
   the current level upwards with "Charging...". It powers off if the charger is unplugged, and
   holding power for over half a second reboots into the normal menus.
 
@@ -338,21 +340,21 @@ fix them, but should know they exist.
 
 | Behavior | Where |
 | --- | --- |
-| The `mute` setting is read from the `vol` value: any nonzero volume loads as muted when `mute` exists. A file with `mute` but no `vol` crashes (NULL dereference). | `loadSystemJson`, [tu_14b860.c](../src/tu_14b860.c) |
-| `system.json` is written without truncating, so a shorter new file keeps the old file's tail. | `saveSystemJson`, tu_14b860.c |
-| In station mode, `EVENT_WIFI_STATUS` is posted every second, because the last reported state is never updated. | `pollWifiStatus`, [tu_049c3c.cpp](../src/tu_049c3c.cpp) |
-| The battery check's charger-unplug branch can never run. | `pollBatteryStatus`, tu_049c3c.cpp |
-| Language paths are built as root + `./lang/…`, e.g. `././lang/`. | `loadLanguages`, [tu_134080.cpp](../src/tu_134080.cpp) |
-| The ROM-list position loader always reports 0 entries restored. | `loadRomListPositions`, [p03.inc](../src/tu_015b20/p03.inc) |
-| The global search menu's destructor loops with an uninitialized index. | `~MultiDBCachedTextMenu`, [tu_1484d4.cpp](../src/tu_1484d4.cpp) |
-| In global search, a position past the last match reads past the end of the database list. | `MultiDBCachedTextMenu::getItem`, tu_1484d4.cpp |
-| The connected network's signal bars use different thresholds from the other networks. | `WifiMenu::onUnhandledEvent`, [tu_138c50.cpp](../src/tu_138c50.cpp) |
-| On the keyboard screen, X adds a space without checking the 128-byte limit, and A on a key returns 0 instead of -1. | `ImeWindow::handleInput`, [tu_13edfc.cpp](../src/tu_13edfc.cpp) |
-| The ADC info screen always says "Disconnected". | `ADCInfoWindow::draw`, [p11.inc](../src/tu_015b20/p11.inc) |
-| `loadSkinImage` prints "open ok" for absolute names even when loading failed, and `loadImage` "converts" to the image's own format (a copy). | [tu_11cdc8.cpp](../src/tu_11cdc8.cpp) |
-| The file-browser cache trim can empty the list it is trimming. | `FileBrowserCache::trim`, [tu_12ce28.cpp](../src/tu_12ce28.cpp) |
-| `LruCache::clear` clears its list outside the lock. | [tu_131e34.cpp](../src/tu_131e34.cpp) |
-| The zlib helper `stbi_zlib_decode_malloc` overwrites the start of its buffer on every read, and `openZlib` leaks when given neither input nor file. | [tu_1302cc.cpp](../src/tu_1302cc.cpp) |
-| The zip reader computes and ignores a "remaining" limit for stored entries. | `zipRead`, [tu_14cb24.c](../src/tu_14cb24.c) |
-| `i2cRead` exits the whole program on some errors, leaks the descriptor on an ioctl error, and truncates the error to a byte. | [tu_14dc18.c](../src/tu_14dc18.c) |
-| `setWifiScanEnable` and `wifiMonitorThread` are declared to return values but return nothing. | [tu_14e0cc.c](../src/tu_14e0cc.c) |
+| The `mute` setting is read from the `vol` value: any nonzero volume loads as muted when `mute` exists. A file with `mute` but no `vol` crashes (NULL dereference). | `loadSystemJson`, [Settings.c](../src/Settings.c) |
+| `system.json` is written without truncating, so a shorter new file keeps the old file's tail. | `saveSystemJson`, Settings.c |
+| In station mode, `EVENT_WIFI_STATUS` is posted every second, because the last reported state is never updated. | `pollWifiStatus`, [Main.cpp](../src/Main.cpp) |
+| The battery check's charger-unplug branch can never run. | `pollBatteryStatus`, Main.cpp |
+| Language paths are built as root + `./lang/…`, e.g. `././lang/`. | `loadLanguages`, [Language.cpp](../src/Language.cpp) |
+| The ROM-list position loader always reports 0 entries restored. | `loadRomListPositions`, [MainUI.cpp](../src/MainUI.cpp) |
+| The global search menu's destructor loops with an uninitialized index. | `~MultiDBCachedTextMenu`, [GlobalSearch.cpp](../src/GlobalSearch.cpp) |
+| In global search, a position past the last match reads past the end of the database list. | `MultiDBCachedTextMenu::getItem`, GlobalSearch.cpp |
+| The connected network's signal bars use different thresholds from the other networks. | `WifiMenu::onUnhandledEvent`, [WifiMenus.cpp](../src/WifiMenus.cpp) |
+| On the keyboard screen, X adds a space without checking the 128-byte limit, and A on a key returns 0 instead of -1. | `ImeWindow::handleInput`, [ImeWindow.cpp](../src/ImeWindow.cpp) |
+| The ADC info screen always says "Disconnected". | `ADCInfoWindow::draw`, [MainUI.cpp](../src/MainUI.cpp) |
+| `loadSkinImage` prints "open ok" for absolute names even when loading failed, and `loadImage` "converts" to the image's own format (a copy). | [Config.cpp](../src/Config.cpp) |
+| The file-browser cache trim can empty the list it is trimming. | `FileBrowserCache::trim`, [FileBrowser.cpp](../src/FileBrowser.cpp) |
+| `LruCache::clear` clears its list outside the lock. | [MenuHelpers.cpp](../src/MenuHelpers.cpp) |
+| The zlib helper `stbi_zlib_decode_malloc` overwrites the start of its buffer on every read, and `openZlib` leaks when given neither input nor file. | [ZlibDecoder.cpp](../src/ZlibDecoder.cpp) |
+| The zip reader computes and ignores a "remaining" limit for stored entries. | `zipRead`, [ZipReader.c](../src/ZipReader.c) |
+| `i2cRead` exits the whole program on some errors, leaks the descriptor on an ioctl error, and truncates the error to a byte. | [I2c.c](../src/I2c.c) |
+| `setWifiScanEnable` and `wifiMonitorThread` are declared to return values but return nothing. | [Wifi.c](../src/Wifi.c) |

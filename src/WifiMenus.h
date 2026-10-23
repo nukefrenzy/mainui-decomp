@@ -1,4 +1,4 @@
-// The Wi-Fi and hotspot menus and their actions (tu_138c50.cpp). Keep the inline functions in
+// The Wi-Fi and hotspot menus and their actions (WifiMenus.cpp). Keep the inline functions in
 // this order; it decides where the compiler places them.
 #pragma once
 #include "WifiMenuItems.h"

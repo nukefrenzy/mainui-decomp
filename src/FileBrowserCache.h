@@ -1,4 +1,4 @@
-// Directory contents and bounded navigation cache used by FileBrowserMenu (tu_12ce28.cpp).
+// Directory contents and bounded navigation cache used by FileBrowserMenu (FileBrowser.cpp).
 #pragma once
 #include <string>
 #include <vector>
@@ -11,7 +11,7 @@ enum FileKind {
     FILE_KIND_DIRECTORY = 102,   // a folder: open it (EVENT_OPEN_DIRECTORY)
 };
 // The action behind one file-browser row: its full path and kind.
-// vtable 0x153ed8: slots 3/4 are Action's; dtors 0x3a1cc/0x3a218 are inline in tu_015b20's tail.
+// vtable 0x153ed8: slots 3/4 are Action's; dtors 0x3a1cc/0x3a218 are inline in MainUI.cpp's tail.
 class FileAction : public Action
 {
 public:
@@ -21,11 +21,11 @@ public:
         this->kind = kind;
     }
     virtual ~FileAction() {}
-    virtual int execute(void *);    // 0x2d1bc (tu_015b20 p08)
+    virtual int execute(void *);    // 0x2d1bc (MainUI.cpp)
     std::string path;
     int kind;
 };
-// One list row; sizeof == 0x74. Ctor 0x25510 and dtor 0x25620 are in tu_015b20 (p06).
+// One list row; sizeof == 0x74. Ctor 0x25510 and dtor 0x25620 are in MainUI.cpp.
 class TextItem
 {
 public:
@@ -36,12 +36,12 @@ public:
     bool ownsAction;        // +0x1c  ctor flag
     bool favorite;      // +0x1d  set by AddFavoriteAction, shown by the game detail window
     bool removed;       // +0x1e  set by RemoveFavoriteAction
-    SDL_Surface *value; // +0x20  ctor value; TextMenuDrawer::drawList draws it as the row icon (p04)
+    SDL_Surface *value; // +0x20  ctor value; TextMenuDrawer::drawList draws it as the row icon
     bool showThumbnail;        // +0x24  false
     std::string subtitle;  // +0x28
     std::string displayLabel;  // +0x40
     std::string thumbnailPath;  // +0x58
-    SDL_Surface *thumbnailSurface; // +0x70  0; thumbnail loaded from thumbnailPath by TextMenuDrawer::drawList (p04)
+    SDL_Surface *thumbnailSurface; // +0x70  0; thumbnail loaded from thumbnailPath by TextMenuDrawer::drawList
 };
 // One directory's rows (TextItem*), as loaded.
 struct DirectoryItems {

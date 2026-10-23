@@ -1,9 +1,9 @@
-// tu_14acfc (0x14acfc-0x14b860): low-level device helpers.
+// Device.c (0x14acfc-0x14b860): low-level device helpers.
 //
 // Speaker volume (through the tinymix tool), the LCD backlight (PWM in sysfs), the power key's
 // sysfs value, the battery/charger state (from the AXP power chip, via /customer/app/axp_test),
 // and a polling loop that notices a second sound card (/dev/dsp1, e.g. USB audio) appearing or
-// disappearing. main and the status thread (tu_049c3c.cpp) are the main users.
+// disappearing. main and the status thread (Main.cpp) are the main users.
 //
 // Ends before setupKeymap's second copy of "w" (0x163bac); the exact cut inside
 // 0x14b198-0x14bb64 is by subsystem.

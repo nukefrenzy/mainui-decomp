@@ -1,4 +1,4 @@
-// tu_11cdc8 (0x11cdc8-0x129f9c): configuration and device helpers.
+// Config.cpp (0x11cdc8-0x129f9c): configuration and device helpers.
 //
 // - Device and SD card: free space, mount checks, loaded kernel modules, swap file, CPU and
 //   memory size, the serial number, process lookup.

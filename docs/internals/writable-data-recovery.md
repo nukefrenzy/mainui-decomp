@@ -47,7 +47,7 @@ selection in other consumers, so that approach is not retained.
 
 `WifiMenuItems.h` now holds the initial shared drawable declarations and definitions.
 `WifiMenus.h` includes it and retains the remaining menu/action classes. Other consumers
-see the same complete definitions in the same order. In `tu_138c50.cpp`, `wifiMode`
+see the same complete definitions in the same order. In `WifiMenus.cpp`, `wifiMode`
 appears between those includes: this establishes the body unwind section before
 menu/action inline definitions, preserving code, vtables and all shared declarations.
 No function bodies, object layouts, virtual slots or exception behavior were changed

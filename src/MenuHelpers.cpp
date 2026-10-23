@@ -1,4 +1,4 @@
-// tu_131e34 (0x131e34-0x134080): LruCache and WorkerQueue (declared in MenuHelpers.h).
+// MenuHelpers.cpp (0x131e34-0x134080): LruCache and WorkerQueue (declared in MenuHelpers.h).
 //
 // Menus load thumbnails and previews in the background: they queue a job on a WorkerQueue,
 // whose thread runs it, and the job stores the image in an LruCache keyed by its path, where

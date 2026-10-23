@@ -1,7 +1,7 @@
 // ListMenu (0x48 bytes): base of the lists inside a MenuWindow.
 // Slot names come from what each slot does across the subclasses (onUnhandledEvent and
 // freeListItem are original names, from log messages); they were numbered vfuncN before.
-// Vtable 0x153fdc; inline definitions sit in tu_015b20's tail (0x39520-0x39750).
+// Vtable 0x153fdc; inline definitions sit in MainUI.cpp's tail (0x39520-0x39750).
 #pragma once
 #include <string>
 #include <vector>
@@ -13,7 +13,7 @@ public:
     ListMenu(bool flag);                                      // 0x1d8fc
     virtual ~ListMenu();                                     // slots 0-1, inline (0x39520, D0 0x39570)
     virtual void restorePosition(int cur, int pageStart, int pageEnd); // slot 2, 0x1d9d8
-    virtual int handleKey();                                     // slot 3, 0x1de34: one button (see p04.inc)
+    virtual int handleKey();                                     // slot 3, 0x1de34: one button (see MainUI.cpp)
     virtual int onSelect() = 0;                                 // slot 4: A on the current row
     virtual void *getItem(int index) = 0;                      // slot 5
     virtual void *getItemData(int index);                         // slot 6, 0x39678: a row's extra data

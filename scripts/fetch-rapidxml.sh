@@ -1,6 +1,6 @@
 #!/bin/sh
 # Fetch RapidXml 1.13 (rapidxml.sourceforge.net), the header-only XML parser compiled into MainUI
-# (tu_015b20 reads gamelist.xml with it; rapidxml::parse_error sits in that unit's tail at 0x3acc0).
+# (MainUI.cpp reads gamelist.xml with it; rapidxml::parse_error sits in that unit's tail at 0x3acc0).
 # Unpacks to build/rapidxml/1.13/ (gitignored) and prints the include directory for -I.
 set -eu
 ROOT=$(cd "$(dirname "$0")/.." && pwd)

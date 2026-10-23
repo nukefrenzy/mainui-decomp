@@ -1,4 +1,4 @@
-// The custom-drawn rows of the Wi-Fi and hotspot screens (tu_138c50.cpp).
+// The custom-drawn rows of the Wi-Fi and hotspot screens (WifiMenus.cpp).
 #pragma once
 #include <stdio.h>
 #include <string>

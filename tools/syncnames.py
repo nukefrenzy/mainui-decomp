@@ -31,9 +31,9 @@ def units():
     """(lo, hi, source file) for every Miyoo unit in the map."""
     out = []
     srcs = {os.path.splitext(f)[0]: f for f in os.listdir(os.path.join(ROOT, 'src'))
-            if f.startswith('tu_') and f.endswith(('.c', '.cpp'))}
+            if f.endswith(('.c', '.cpp'))}
     for row in csv.reader(open(TUMAP), delimiter='\t'):
-        if len(row) < 3 or not (row[2].startswith('tu_') or row[2] == 'runtime'):
+        if len(row) < 4 or not (row[3] == 'proven' or row[2] == 'runtime'):
             continue
         src = 'the C runtime start files' if row[2] == 'runtime' else 'src/' + srcs.get(row[2], row[2])
         out.append((int(row[0], 16), int(row[1], 16), src))

@@ -1,4 +1,4 @@
-// The two helpers behind the menus' thumbnails and previews (implemented in tu_131e34.cpp):
+// The two helpers behind the menus' thumbnails and previews (implemented in MenuHelpers.cpp):
 // an LRU cache of loaded images keyed by path, and a queue of background jobs (BGWorker)
 // that one worker thread runs, newest first. Formerly MenuHelper80/MenuHelper60 (their offsets
 // in MenuWindow).
@@ -10,7 +10,7 @@ struct SDL_Surface;
 struct SDL_mutex;
 struct SDL_cond;
 struct SDL_Thread;
-// Ctor 0x393dc (implicit), dtor 0x39410 and deleting dtor 0x39444 are inline in tu_015b20's tail.
+// Ctor 0x393dc (implicit), dtor 0x39410 and deleting dtor 0x39444 are inline in MainUI.cpp's tail.
 
 struct CacheEntry {
     std::string key;

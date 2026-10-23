@@ -1,5 +1,5 @@
-// Streaming DEFLATE decoder (tu_1302cc.cpp), adapted from stb_image's zlib code. The zip reader
-// (tu_14cb24.c) uses it, reading straight from the archive file.
+// Streaming DEFLATE decoder (ZlibDecoder.cpp), adapted from stb_image's zlib code. The zip reader
+// (ZipReader.c) uses it, reading straight from the archive file.
 #pragma once
 #include <stdio.h>
 typedef struct zhuffman {

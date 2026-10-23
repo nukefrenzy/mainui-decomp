@@ -1,8 +1,8 @@
-// tu_14cb24 (0x14cb24-0x14da50): a small read-only zip reader.
+// ZipReader.c (0x14cb24-0x14da50): a small read-only zip reader.
 //
 // It finds the zip's central directory, looks an entry up by name (or CRC), and reads it,
 // stored or deflated (the inflater, ZlibDecoder.h, lives at 0x131a68). Its only user is the file
-// browser's filter (fileBrowserFilter, tu_015b20/p08.inc): a TrimuiUpdate*.zip is offered only
+// browser's filter (fileBrowserFilter, MainUI.cpp): a TrimuiUpdate*.zip is offered only
 // if it contains an "updater" entry. Integers in zip files are little-endian.
 // Compiled as C (call results are stored straight from r0), so there is no template tail.
 // The C units 0x14acfc-0x14f730 are split where .rodata proves a new file: GCC merges identical

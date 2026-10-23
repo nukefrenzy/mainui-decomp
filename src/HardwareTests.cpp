@@ -1,4 +1,4 @@
-// tu_04cb68 (0x04cb68-0x051b5c): the factory hardware tests (Settings > Hardware Test).
+// HardwareTests.cpp (0x04cb68-0x051b5c): the factory hardware tests (Settings > Hardware Test).
 //
 // HardwareTestMenu lists six tests, each with a PASS/FAIL/UNTEST result: keys (press each button
 // in turn within 12 s), LCD (color bars), sound (music at three volumes), USB host (type on a

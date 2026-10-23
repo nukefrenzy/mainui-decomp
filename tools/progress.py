@@ -8,7 +8,7 @@ Matched bytes come from src/matches.tsv. If docs/tu-map.tsv exists (lo, hi, name
 evidence; hex addresses, hi exclusive), progress is also reported per translation unit, and a unit
 whose range is "proven" (tools/tusplit.py UNIT_FIXED, set after tools/unitcheck.py printed RESULT
 MATCH) and whose src/<name>.cpp (or .c) exists counts whole: every function in it, template tail included.
-CI keeps that claim honest by running scripts/run_units.sh on every src/tu_*.cpp and src/tu_*.c.
+CI keeps that claim honest by running scripts/run_units.sh on every source file in docs/tu-map.tsv.
 """
 import argparse
 import bisect

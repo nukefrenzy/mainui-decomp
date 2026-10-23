@@ -1,7 +1,7 @@
 // Ids of MainUI's 156 user-interface strings: the argument of languageString() and the title
 // id of every window. Each language file (<lang>.lang, JSON) maps "0".."155" to its text; the
-// comments give the built-in English text (g_defaultStrings in tu_14da50.c), which is also the
-// fallback. Ids 88-155 are also written to <lang>.short files (genShortLangFile, tu_134080.cpp).
+// comments give the built-in English text (g_defaultStrings in BuiltinStrings.c), which is also the
+// fallback. Ids 88-155 are also written to <lang>.short files (genShortLangFile, Language.cpp).
 // Names are derived from the English text. Values only, for C and C++ alike.
 #pragma once
 

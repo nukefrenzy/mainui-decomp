@@ -1,4 +1,4 @@
-// KeySettingWindow: the button-mapping screen (tu_1376fc.cpp), 0x15c bytes.
+// KeySettingWindow: the button-mapping screen (KeySettingWindow.cpp), 0x15c bytes.
 #pragma once
 #include <string>
 #include "CJsonApi.h"

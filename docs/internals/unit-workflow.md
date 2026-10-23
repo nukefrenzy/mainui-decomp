@@ -1,9 +1,9 @@
 # Unit workflow: rewriting one source file byte-exact
 
 MainUI is rebuilt one translation unit (original source file) at a time. A unit is a range in
-`docs/tu-map.tsv`; its rewrite is `src/tu_<lo>.cpp`; it is done when `tools/unitcheck.py` prints
-`RESULT MATCH`. Worked examples include `tu_143720` (pinyin search), `tu_1484d4`
-(MultiDBCachedTextMenu), and `tu_11cdc8` (shared configuration). All 22 units are proven;
+`docs/tu-map.tsv`; its rewrite is `src/<name>.cpp` (or `.c`), named by the map's name column; it is done when `tools/unitcheck.py` prints
+`RESULT MATCH`. Worked examples include `Pinyin.cpp` (pinyin search), `GlobalSearch.cpp`
+(MultiDBCachedTextMenu), and `Config.cpp` (shared configuration). All 22 units are proven;
 `scripts/run_units.sh` checks them.
 
 ## What a unit looks like in the binary
@@ -16,7 +16,7 @@ contributed. So a unit is:
    (`__static_initialization_and_destruction_0`, `_GLOBAL__sub_I_*`) if it has globals with
    constructors.
 2. **Tail**: every template/inline function this file used first, in GCC's emission order. It can be
-   far larger than the body (`tu_143720`: 1.9 KB body, 18 KB tail) and is never written by hand: it
+   far larger than the body (`Pinyin.cpp`: 1.9 KB body, 18 KB tail) and is never written by hand: it
    appears when the body uses the right types and headers.
 
 Draft boundaries from `tools/tusplit.py` are often wrong at the tail end; `unitcheck` reports the real
@@ -26,18 +26,18 @@ end. Neighbors of proven units have one proven boundary, so work outward from th
 
 ```sh
 export MIYOO_TC=$(scripts/fetch-toolchain.sh)
-python3 tools/packet.py --tu tu_<lo>          # briefs in build/packets/ (gitignored)
-python3 tools/autoderive.py --tu tu_<lo>      # pattern matches in build/auto/tu_<lo>/matched.cpp
+python3 tools/packet.py --tu <name>          # briefs in build/packets/ (gitignored)
+python3 tools/autoderive.py --tu <name>      # pattern matches in build/auto/<name>/matched.cpp
 ```
 
 1. Read the packets for the body functions (up to the static init, or the first template run).
    Identify the types the tail needs: `std::` containers, tiny-utf8 (`scripts/fetch-tinyutf8.sh`),
    classes from `ghidra/classes.json` (draft layouts: `autoderive.py --headers`, `build/layouts/`).
-2. Write `src/tu_<lo>.cpp` with the body functions **in address order**. Shared class declarations
+2. Write `src/<name>.cpp` with the body functions **in address order**. Shared class declarations
    go in `src/<Class>.h`.
-3. Check each function: `python3 tools/matchfn.py src/tu_<lo>.cpp <name|mangled> <addr> --quiet`
+3. Check each function: `python3 tools/matchfn.py src/<name>.cpp <name|mangled> <addr> --quiet`
    (add `--flags "-O0 -fsigned-char -I<dir>"` for third-party headers).
-4. Check the unit: `python3 tools/unitcheck.py src/tu_<lo>.cpp [--verbose]`. Fix body mismatches
+4. Check the unit: `python3 tools/unitcheck.py src/<name>.cpp [--verbose]`. Fix body mismatches
    first, then tail mismatches (wrong types or calls), then tail order (below).
    If the next unit fixes the end, pass `--end <hexaddr>` while proving it. The checker enforces
    recorded ends automatically for proven units. A draft's unconstrained `MATCH` can describe a
@@ -72,7 +72,7 @@ literal words; no additional masking is needed.
 - Calls whose callers look the same can differ only in the tail: `s[i]` and `s.at(i)` produce
   identical calling code in tiny-utf8 but instantiate different functions (unchecked vs checked).
 - Return values kept across a destructor call live in `r4`; that is the compiler, not the source.
-- Array dimensions affect address calculation even for identical storage: in `tu_14f730`,
+- Array dimensions affect address calculation even for identical storage: in `DeviceAuth.c`,
   `byte table[2][8]; table[round][i]` adds the table base to the scaled round before adding `i`.
   A flat `table[round * 8 + i]` computes the combined index first and does not match.
 - A saved index in `r5` across a call can expose the callee's return type. In the PIC C unit,
@@ -204,7 +204,7 @@ then where the first use of the displaced function happens.
   local offsets (`FileAction::execute` 0x2d1bc versus `LoadSurfaceWorker::finished` 0x2e3ec).
 - A pointer-to-int argument cast can add `mov r3, r0` before copying a call result to a saved
   register, even though both types are 32 bits. The NotifyWindow button-label parameter must
-  be `const char*` for its p08 callers to match; an integer placeholder plus cast is not equivalent.
+  be `const char*` for its callers at 0x2b788-0x2e424 to match; an integer placeholder plus cast is not equivalent.
 
 - A by-value `std::string` parameter has the same indirect ARM ABI as a string reference/pointer
   inside a callee. A matching callee body alone does not settle its signature: caller-side copy
@@ -222,7 +222,7 @@ then where the first use of the displaced function happens.
   a range-check wrapper and changes later template order. Keep rvalue/const-reference append
   overloads as well as element types consistent.
 - An inline special member can be declared in its class and defined later in the same TU to
-  preserve tail order. LoadSurfaceWorker's definitions follow p08, after the first implicit
+  preserve tail order. LoadSurfaceWorker's definitions follow the code at 0x2b788-0x2e424, after the first implicit
   RomListPosition/xml_document/DeviceInfoItem special-member uses. No class layout change or
   artificial template instantiation is needed.
 
@@ -263,9 +263,9 @@ per-unit backtracking; see the example below.
 
 ### Equal instructions do not establish COMDAT identity
 
-The linked tu_11cdc8 tail was 556 bytes short despite a standalone whole-unit MATCH. Its independent
+The linked Config.cpp tail was 556 bytes short despite a standalone whole-unit MATCH. Its independent
 global at 0x182170 had been declared `std::list<RecentItem>`; it is `std::list<int>`. The mistaken
-type reused COMDAT constructor/destructor names from tu_049c3c's recent-games list, so ld discarded
+type reused COMDAT constructor/destructor names from Main.cpp's recent-games list, so ld discarded
 sections that the unit walk could assign to byte-identical code later in the binary. Correcting
 the local global type restores the original tail and all later body addresses without padding.
 A valid walk proves a byte arrangement exists, not that actual symbol identities select it.

@@ -1,5 +1,5 @@
-// Shared declarations for tu_015b20 (0x15b20-0x49c3c): window and menu classes, actions, the window
-// loop and createMenu. Each part file in src/tu_015b20/ adds only the declarations it needs here.
+// Shared declarations for MainUI.cpp (0x15b20-0x49c3c): window and menu classes, actions, the window
+// loop and createMenu. Declarations are grouped by the section of MainUI.cpp that defines them.
 #pragma once
 #include "PlatformApi.h"
 #include "SdlApi.h"
@@ -15,7 +15,7 @@ struct EmuInfo;
 class TextItem;
 #include "ListMenu.h"
 
-// p01
+// Defined at 0x15b20-0x18c54
 #include <string>
 #include <list>
 #include <dirent.h>
@@ -95,7 +95,7 @@ const char *keyEventName(int key);          // 0x15b20, unreferenced
 void onUserActivity();                      // 0x1772c, empty
 int powerOff(void *arg);                    // 0x1761c
 void powerOffNow();                         // 0x176a8
-void pushWindow(TrimusWindow *w);           // 0x36d88 (p11)
+void pushWindow(TrimusWindow *w);           // 0x36d88
 #include "Action.h"
 class AppAction : public Action
 {
@@ -167,7 +167,7 @@ class DeleteRomAction : public MenuAction
 public:
     DeleteRomAction(ListMenu *menu, int result) : MenuAction(menu, result) {} // 0x39d5c
     virtual ~DeleteRomAction() {}
-    virtual int execute(void *param);                        // 0x1a44c (p03)
+    virtual int execute(void *param);                        // 0x1a44c
 };
 
 class ClearFavoriteAction : public MenuAction
@@ -289,30 +289,30 @@ public:
 #include "ImeWindow.h"
 
 
-int enableSwapAction(void *arg);            // 0x38834 (p11)
+int enableSwapAction(void *arg);            // 0x38834
 // A ROM (or ROM folder) in a list; sizeof == 0x74. Ctor 0x39948, dtors 0x39ac4/0x39b34 and
 // finished 0x39b6c are inline in the tail.
 
-// The p10 windows p01 constructs (GameDetailWindow, ProgressDialog, DialogWindow, CountDownWindow)
+// Windows defined later that the first section constructs (GameDetailWindow, ProgressDialog, DialogWindow, CountDownWindow)
 // are declared with the other windows at the end of this file.
 void writeCmdToRun(const char *cmd);        // 0x17fc0
 void drawBackground(SDL_Surface *dst);      // 0x17450
 
-// p02: actions. Inline ctors/dtors sit in the tail at 0x3984c-0x3a678, in this declaration order
-// (EmuAction and GeneralAction are declared with p01 above; DeleteRomAction (p03) sits in tail order;
+// Actions (0x18c54-0x1a44c). Inline ctors/dtors sit in the tail at 0x3984c-0x3a678, in this declaration order
+// (EmuAction and GeneralAction are declared above; DeleteRomAction sits in tail order;
 // FileAction is in FileBrowserCache.h).
 // Every class here inherits Action's slots 3/4 (0x397fc returns -1, 0x39828 returns 0) except AppAction.
 struct cJSON;
-int clearRecent(std::list<RecentItem> *list);                // 0x120e20 (tu_11cdc8)
-bool isFavorite(char *buf, FILE *f, const char *rompath);   // 0x1b210 (p03)
+int clearRecent(std::list<RecentItem> *list);                // 0x120e20 (Config.cpp)
+bool isFavorite(char *buf, FILE *f, const char *rompath);   // 0x1b210
 
-// p02 render helpers (0x18dd4-0x19acc): busy animation while a background job runs. g_launchCmd
-// doubles as the counter text buffer, g_titleFont/g_wifiEmptyColor/g_background are p01's globals.
+// Render helpers (0x18dd4-0x19acc): busy animation while a background job runs. g_launchCmd
+// doubles as the counter text buffer, g_titleFont/g_wifiEmptyColor/g_background are globals from the first section.
 
 extern SDL_Color g_selectedTextColor;                            // 0x1822a0
 int digitCount(int n);                                       // 0x18dd4
 
-SDL_Surface *createSurface(int w, int h);                    // 0x1d720 (p03)
+SDL_Surface *createSurface(int w, int h);                    // 0x1d720
 // Argument of the busy-screen thread (SDL_CreateThread from IconMenu::onSelect, createMenu, ...).
 // Its constructor is the {0, -1, 0} one at 0x3adc4 (in the tail), which exactly these callers use.
 
@@ -326,7 +326,7 @@ int loadingScreenThread(void *arg);                          // 0x198a8
 // Base (RTTI "MenuItemAction", ctor 0x39f90, vtable 0x1546c4) of the actions on one list item.
 
 
-// p09
+// Defined at 0x2e424-0x3225c
 
 extern char *g_themePath;                   // 0x181970
 extern SDL_Surface *g_backBuffer;           // 0x181928
@@ -336,7 +336,7 @@ SDL_Surface *loadSkinImage(const char *theme, const char *sub, const char *file,
 void freeSurfaceCallback(SDL_Surface *s);  // 0x2e318
 
 // ===========================================================================================
-// Declarations shared by the part files p03-p11. Each class's out-of-line methods live in the
+// Declarations shared by the later sections (0x1a44c onward). Each class's out-of-line methods live in the
 // part named next to it. Virtual slot order follows the original vtables and must not change.
 // ===========================================================================================
 #include "Theme.h"
@@ -359,11 +359,11 @@ extern SDL_Color g_emptyColor;                      // 0x1822a4
 class TextMenu;
 class DBCachedTextMenu;
 
-// libgamename import, C++ linkage (_Z11GetGameNamePKcS0_); used by p03 and p05.
+// libgamename import, C++ linkage (_Z11GetGameNamePKcS0_); used by the favorites lists and the ROM cache.
 char *GetGameName(const char *langFile, const char *name);
 
-// Non-member functions called across parts (p01/p02 functions are defined before every later part).
-// p03
+// Non-member functions called across sections (first-section functions are defined before all others).
+// Defined at 0x1a44c-0x1d9d8
 void saveFavorites(const char *path, std::vector<void *> *items); // 0x1a4bc  writes a favorites file
 void removeFavorite(const char *label, const char *path);   // 0x1a75c  removes a favorite
 TextMenu *buildFavoriteList(const char *path);                    // 0x1a924  favorites list
@@ -382,23 +382,23 @@ int loadRomListPositions(std::vector<RomListPosition> *list);   // 0x1c994
 void saveRomListPositions(std::vector<RomListPosition> *list); // 0x1cc90
 SDL_Surface *loadThumbnail(const char *path, int w, int h);     // 0x1cee0
 std::string makeThumbPath(std::string *game, const char *img);  // 0x1d318
-// createSurface 0x1d720 and isFavorite 0x1b210 are declared with p02 above.
-// p04
+// createSurface 0x1d720 and isFavorite 0x1b210 are declared above.
+// Defined at 0x1d9d8-0x20500
 int drawListNumber(int n, SDL_Rect *rect, SDL_Surface *dst, TTF_Font *font); // 0x1e868
-// p05
+// Defined at 0x20500-0x23548
 char *romFolderName(char *s);                           // 0x20b1c: last path component
 int prepareRomCache(EmuInfo *emu, int arg, std::string dir, std::string search, char *buf,
                     int size);                              // 0x22d90: arg is the list's window id
 DBCachedTextMenu *buildRomList(EmuInfo *emu, int arg, std::string *dir,
                                std::string *search);      // 0x23318
-// p07
+// Defined at 0x2849c-0x2b788
 void applyPanelTiming();                                    // 0x2b5bc
-// p08
+// Defined at 0x2b788-0x2e424
 int findEmuForFile(const char *name);                           // 0x2cfc0: Emu index or -1
-// p09
+// Defined at 0x2e424-0x3225c
 int drawPageCount(SDL_Surface *dst, int current, int total); // 0x311f4
-// freeSurfaceCallback 0x2e318 is declared with p09's globals above.
-// p11
+// freeSurfaceCallback 0x2e318 is declared with the globals above.
+// Defined at 0x36838-0x39240
 const char *windowTitle(int id);                                        // 0x374bc
 ListMenu *createRomListMenu(EmuInfo *, int id, std::string *dir, std::string *search); // 0x37610
 ListMenu *createMenu(int id, std::string path);                 // 0x37784  path by value (caller builds a temp)
@@ -408,16 +408,17 @@ void initFramebuffer();                                         // 0x36dbc
 void runWindowLoop(std::vector<TrimusWindow *> *, std::atomic<bool> *); // 0x36ee8
 void createRootWindow(std::vector<TrimusWindow *> *);          // 0x373c4
 void startBackgroundThread();                                   // 0x38868
-// pushWindow 0x36d88 and enableSwapAction 0x38834 are declared with p01 above.
+// pushWindow 0x36d88 and enableSwapAction 0x38834 are declared above.
 // Inline in the tail (0x3ad44), called by MenuWindow::onShow/draw: menu ids with a ROM/app list.
 
 
-// --- Menus. Bases are in ListMenu.h / TextMenuDrawer.h (p03 ctor/setRect, p04 the rest).
+// --- Menus. Bases are in ListMenu.h / TextMenuDrawer.h (ctor and setRect at 0x1a44c-0x1d9d8, the rest at 0x1d9d8-0x20500).
 
-// p05. vtable 0x153da8; sizeof 0x104.
+// TextMenu (TextMenu.h): vtable 0x153da8; sizeof 0x104.
 #include "TextMenu.h"
 
-// p06. vtable 0x153d40; sizeof 0x430 (layout parallels MultiDBCachedTextMenu).
+// Loads a page of ROM rows on a worker thread (run/finished). Ctor and dtors are inline in the
+// tail (0x3a74c-0x3a954). sizeof 0x284.
 class DBCacheWorker : public BGWorker
 {
 public:
@@ -456,6 +457,7 @@ public:
     EmuInfo *emu;              // +0x280
 };
 
+// vtable 0x153d40; sizeof 0x430 (layout parallels MultiDBCachedTextMenu).
 class DBCachedTextMenu : public TextMenuDrawer
 {
 public:
@@ -489,7 +491,7 @@ public:
     std::string dir;               // +0x418
 };
 
-// p06. Not polymorphic; sizeof 0x80.
+// Not polymorphic; sizeof 0x80.
 class IconMenuItem
 {
 public:
@@ -512,7 +514,7 @@ public:
     std::string iconSelected;      // +0x68
 };
 
-// p06. vtable 0x153cf0; sizeof 0xa0.
+// vtable 0x153cf0; sizeof 0xa0.
 class IconMenu : public ListMenu
 {
 public:
@@ -549,7 +551,6 @@ public:
     bool useThemeOffsets;            // +0x9c
 };
 
-// p06. Not polymorphic; sizeof 0x24.
 // What a settings row does (SettingMenuItem::handler): A opens or confirms, left/right adjust
 // the value. Rows 1, 4, 9 and 20 exist in the code but createMenu never adds them.
 enum SettingHandler {
@@ -573,6 +574,8 @@ enum SettingHandler {
     SETTING_WIFI = 19,
     SETTING_HOTSPOT = 20,
 };
+
+// Not polymorphic; sizeof 0x24.
 class SettingMenuItem
 {
 public:
@@ -581,11 +584,11 @@ public:
     void reload();                                             // 0x28408, called by SettingMenu::reloadTheme
     SDL_Surface *iconSurface;       // +0x00
     int labelId;           // +0x04
-    int handler;           // +0x08  settings selector, switched on in p07 (not a pointer)
+    int handler;           // +0x08  settings selector, switched on in SettingMenu::select (not a pointer)
     std::string icon;              // +0x0c
 };
 
-// p07. vtable 0x153c9c; sizeof 0x128.
+// vtable 0x153c9c; sizeof 0x128.
 class SettingMenu : public TextMenu
 {
 public:
@@ -604,7 +607,7 @@ public:
     std::string themePath;         // +0x110
 };
 
-// p07. vtable 0x153c48; sizeof 0x120.
+// vtable 0x153c48; sizeof 0x120.
 class DeviceInfoMenu : public TextMenu
 {
 public:
@@ -619,7 +622,7 @@ public:
     std::string themePath;         // +0x108
 };
 
-// p08. vtable 0x153bf4; sizeof 0x10c.
+// vtable 0x153bf4; sizeof 0x10c.
 class ColorMenu : public TextMenu
 {
 public:
@@ -634,7 +637,7 @@ public:
     SDL_Surface *colorRightArrow;        // +0x108  right arrow (selection background is +0x4c)
 };
 
-// p08. vtable 0x153ba0; sizeof 0x110.
+// vtable 0x153ba0; sizeof 0x110.
 class LanguageMenu : public TextMenu
 {
 public:
@@ -644,7 +647,7 @@ public:
     std::vector<LanguageChoice> languages; // +0x104  filename/name pairs
 };
 
-// p08. vtable 0x153b4c; sizeof 0x104 (lists g_themeList).
+// vtable 0x153b4c; sizeof 0x104 (lists g_themeList).
 class ThemeMenu : public TextMenu
 {
 public:
@@ -653,7 +656,7 @@ public:
     virtual int onSelect();                                     // 0x2cdf0
 };
 
-// p08. vtable 0x153afc; sizeof 0x80.
+// vtable 0x153afc; sizeof 0x80.
 class FileBrowserMenu : public ListMenu
 {
 public:
@@ -673,18 +676,10 @@ public:
     bool highlightSelected;            // +0x7c  true
 };
 
-// --- Background workers (BGWorker is in MenuHelpers.h).
 
-// p06 (run/finished); ctor and dtors inline in the tail (0x3a74c-0x3a954). sizeof 0x284.
+// --- Windows (TrimusWindow.h and MenuWindow.h).
 
-
-// p08 (run/finished); created by MenuWindow (p09, 0x2f6c4). Ctor and dtors inline (0x3af38-0x3b01c).
-// sizeof 0x24.
-
-
-// --- Windows (TrimusWindow.h; MenuWindow.h is p09's).
-
-// p09. vtable 0x153a94; sizeof 0x10. Ctor 0x32040: TrimusWindow(title, -1).
+// vtable 0x153a94; sizeof 0x10. Ctor 0x32040: TrimusWindow(title, -1).
 #include "MenuWindow.h"
 
 class FloatWindow : public TrimusWindow
@@ -702,7 +697,7 @@ public:
     SDL_Surface *backdrop;         // +0x0c  dimmed copy of the screen behind the pop-up
 };
 
-// p10. vtable 0x153a60; sizeof 0x18. Created by MenuWindow::handleInput.
+// vtable 0x153a60; sizeof 0x18. Created by MenuWindow::handleInput.
 class PopUpWindow : public FloatWindow
 {
 public:
@@ -715,7 +710,7 @@ public:
     SDL_Surface *background;       // +0x14
 };
 
-// p10. vtable 0x153a2c; sizeof 0x3c.
+// vtable 0x153a2c; sizeof 0x3c.
 class NotifyWindow : public FloatWindow
 {
 public:
@@ -732,7 +727,7 @@ public:
     void (*callback)();       // +0x38
 };
 
-// p10. vtable 0x1539f8; sizeof 0xcc. NotifyWindow(<0x151c98>, ?, "skin/bg-button-f.png", onTimeout).
+// vtable 0x1539f8; sizeof 0xcc. NotifyWindow(<0x151c98>, ?, "skin/bg-button-f.png", onTimeout).
 class CountDownWindow : public NotifyWindow
 {
 public:
@@ -747,7 +742,7 @@ public:
     char countdownText[0xcc - 0x4c]; // +0x4c  formatted countdown text
 };
 
-// p10. vtable 0x1539c4; sizeof 0x34.
+// vtable 0x1539c4; sizeof 0x34.
 class DialogWindow : public FloatWindow
 {
 public:
@@ -769,7 +764,7 @@ public:
     bool noPopupSkin;            // +0x31
 };
 
-// p10. vtable 0x153990; sizeof 0x3c.
+// vtable 0x153990; sizeof 0x3c.
 class ProgressDialog : public FloatWindow
 {
 public:
@@ -788,7 +783,7 @@ public:
     SDL_Thread *actionThread;           // +0x38  action worker
 };
 
-// p10. vtable 0x15395c; sizeof 0x9c.
+// vtable 0x15395c; sizeof 0x9c.
 class GameDetailWindow : public TrimusWindow
 {
 public:
@@ -823,7 +818,7 @@ public:
     TextMenuDrawer *parentMenu;        // +0x98  parent text/ROM menu
 };
 
-// p11. vtable 0x153928; sizeof 0x10.
+// vtable 0x153928; sizeof 0x10.
 class ADCInfoWindow : public TrimusWindow
 {
 public:
@@ -868,6 +863,8 @@ struct BusyData {
     int unused8;             // never read
 };
 
+// Loads a thumbnail on a worker thread (run/finished); created by MenuWindow (0x2f6c4). Ctor and
+// dtors are inline (0x3af38-0x3b01c). sizeof 0x24.
 class LoadSurfaceWorker : public BGWorker
 {
 public:
@@ -894,7 +891,7 @@ static_assert(sizeof(DBCachedTextMenu) == 0x430 && offsetof(DBCachedTextMenu, to
 static_assert(sizeof(IconMenuItem) == 0x80 && offsetof(IconMenuItem, menuId) == 0x4c, "IconMenuItem");
 static_assert(sizeof(IconMenu) == 0xa0 && offsetof(IconMenu, loadedThemePath) == 0x78 && offsetof(IconMenu, useThemeOffsets) == 0x9c, "IconMenu");
 static_assert(sizeof(SettingMenuItem) == 0x24 && sizeof(SettingMenu) == 0x128 && sizeof(DeviceInfoMenu) == 0x120, "settings");
-static_assert(sizeof(ColorMenu) == 0x10c && sizeof(LanguageMenu) == 0x110 && sizeof(ThemeMenu) == 0x104, "p08 menus");
+static_assert(sizeof(ColorMenu) == 0x10c && sizeof(LanguageMenu) == 0x110 && sizeof(ThemeMenu) == 0x104, "color, language and theme menus");
 static_assert(sizeof(FileBrowserMenu) == 0x80 && offsetof(FileBrowserMenu, dirItems) == 0x64, "FileBrowserMenu");
 static_assert(sizeof(DBCacheWorker) == 0x284 && offsetof(DBCacheWorker, previewSearchResults) == 0x268, "DBCacheWorker");
 static_assert(sizeof(LoadSurfaceWorker) == 0x24, "LoadSurfaceWorker");

@@ -62,50 +62,59 @@ CUT_DROP = {
     0x049b14: "reviewed: std::__copy_move<..>::__copy_m for a 1-byte type, still the first file's tail",
 }
 # Units proven as one file (tools/unitcheck.py): both ends are cuts, nothing inside is.
+# File names of the proven units (src/<name>.cpp or .c); new, unreviewed units get tu_<lo>.
+UNIT_NAMES = {
+    0x015b20: "MainUI", 0x049c3c: "Main", 0x04c418: "RingList", 0x04cb68: "HardwareTests",
+    0x11cdc8: "Config", 0x129f9c: "Theme", 0x12ce28: "FileBrowser", 0x1302cc: "ZlibDecoder",
+    0x131e34: "MenuHelpers", 0x134080: "Language", 0x1376fc: "KeySettingWindow", 0x138c50: "WifiMenus",
+    0x13edfc: "ImeWindow", 0x143720: "Pinyin", 0x1484d4: "GlobalSearch", 0x14acfc: "Device",
+    0x14b860: "Settings", 0x14cb24: "ZipReader", 0x14da50: "BuiltinStrings", 0x14dc18: "I2c",
+    0x14e0cc: "Wifi", 0x14f730: "DeviceAuth",
+}
 UNIT_FIXED = {
-    (0x015b20, 0x049c3c): "unitcheck --end 49c3c: src/tu_015b20.cpp; complete main UI body "
+    (0x015b20, 0x049c3c): "unitcheck --end 49c3c: src/MainUI.cpp; complete main UI body "
                           "(145184 bytes) and 798 inline/template sections (68092 bytes)",
-    (0x04cb68, 0x051b5c): "unitcheck --end 51b5c: src/tu_04cb68.cpp; hardware-test windows, 27 inline tail functions; four zero padding bytes before cJSON",
-    (0x04c418, 0x04cb68): "unitcheck --end 4cb68: src/tu_04c418.cpp fills exactly "
+    (0x04cb68, 0x051b5c): "unitcheck --end 51b5c: src/HardwareTests.cpp; hardware-test windows, 27 inline tail functions; four zero padding bytes before cJSON",
+    (0x04c418, 0x04cb68): "unitcheck --end 4cb68: src/RingList.cpp fills exactly "
                           "0x04c418-0x04cb68; ten circular-list helpers, no tail",
-    (0x049c3c, 0x04c418): "unitcheck --end 4c418: src/tu_049c3c.cpp body + 93 inline/template functions "
+    (0x049c3c, 0x04c418): "unitcheck --end 4c418: src/Main.cpp body + 93 inline/template functions "
                           "fill exactly 0x049c3c-0x04c418; main, status and hotplug callbacks",
-    (0x11cdc8, 0x129f9c): "unitcheck --end 129f9c: src/tu_11cdc8.cpp body + 263 inline/template functions "
+    (0x11cdc8, 0x129f9c): "unitcheck --end 129f9c: src/Config.cpp body + 263 inline/template functions "
                           "fill exactly 0x11cdc8-0x129f9c; shared device/configuration helpers",
-    (0x129f9c, 0x12ce28): "unitcheck --end 12ce28: src/tu_129f9c.cpp fills exactly "
+    (0x129f9c, 0x12ce28): "unitcheck --end 12ce28: src/Theme.cpp fills exactly "
                           "0x129f9c-0x12ce28; seven theme/font/image/sound functions, no tail",
-    (0x12ce28, 0x1302cc): "unitcheck --end 1302cc: src/tu_12ce28.cpp body + 105 template/inline functions "
+    (0x12ce28, 0x1302cc): "unitcheck --end 1302cc: src/FileBrowser.cpp body + 105 template/inline functions "
                           "fill exactly 0x12ce28-0x1302cc; file-browser directory cache and traversal",
-    (0x1302cc, 0x131e34): "unitcheck --end 131e34: src/tu_1302cc.cpp fills exactly "
+    (0x1302cc, 0x131e34): "unitcheck --end 131e34: src/ZlibDecoder.cpp fills exactly "
                           "0x1302cc-0x131e34; streaming stb_zlib.cpp decoder, 19 functions, no tail",
-    (0x131e34, 0x134080): "unitcheck --end 134080: src/tu_131e34.cpp body + 110 template/inline functions "
+    (0x131e34, 0x134080): "unitcheck --end 134080: src/MenuHelpers.cpp body + 110 template/inline functions "
                           "fill exactly 0x131e34-0x134080; keyed cache and background worker queue",
-    (0x134080, 0x1376fc): "unitcheck --end 1376fc: src/tu_134080.cpp body + 110 template/inline functions "
+    (0x134080, 0x1376fc): "unitcheck --end 1376fc: src/Language.cpp body + 110 template/inline functions "
                           "fill exactly 0x134080-0x1376fc; language loading, choices and lookup",
-    (0x1376fc, 0x138c50): "unitcheck --end 138c50: src/tu_1376fc.cpp body + five inline virtuals "
+    (0x1376fc, 0x138c50): "unitcheck --end 138c50: src/KeySettingWindow.cpp body + five inline virtuals "
                           "fill exactly 0x1376fc-0x138c50; KeySettingWindow and touch-input worker",
-    (0x138c50, 0x13edfc): "unitcheck --end 13edfc: src/tu_138c50.cpp body + 122 inline/template functions "
+    (0x138c50, 0x13edfc): "unitcheck --end 13edfc: src/WifiMenus.cpp body + 122 inline/template functions "
                           "fill exactly 0x138c50-0x13edfc; Wi-Fi/Hotspot menus; ImeWindow follows",
-    (0x13edfc, 0x143720): "unitcheck: src/tu_13edfc.cpp body + 67 template/inline functions fill exactly "
+    (0x13edfc, 0x143720): "unitcheck: src/ImeWindow.cpp body + 67 template/inline functions fill exactly "
                           "0x13edfc-0x143720; ImeWindow keyboard; 0x143720 starts the pinyin unit",
-    (0x143720, 0x1484d4): "unitcheck: src/tu_143720.cpp body + 170 template/inline functions fill exactly "
+    (0x143720, 0x1484d4): "unitcheck: src/Pinyin.cpp body + 170 template/inline functions fill exactly "
                           "0x143720-0x1484d4; 0x1484d4 starts the next file",
-    (0x1484d4, 0x14acfc): "unitcheck: src/tu_1484d4.cpp body + 60 template/inline functions fill exactly "
+    (0x1484d4, 0x14acfc): "unitcheck: src/GlobalSearch.cpp body + 60 template/inline functions fill exactly "
                           "0x1484d4-0x14acfc; 0x14acfc starts the next file",
     # C files (no template tail). GCC merges identical literals within a file even at -O0, so each
     # repeated literal proves a cut: "w" (0x1639a4 vs 0x163bac) inside 0x14b198-0x14bb64, "r"
     # (0x163bfc vs 0x164630) inside 0x14c460-0x14da50, "r"/"%d" (0x164630/0x164640 vs
     # 0x1646c0/0x1647f0) inside 0x14db84-0x14e184. The cuts inside those windows are by subsystem.
-    (0x14acfc, 0x14b860): "unitcheck: src/tu_14acfc.c fills 0x14acfc-0x14b860 (C, no tail); device "
+    (0x14acfc, 0x14b860): "unitcheck: src/Device.c fills 0x14acfc-0x14b860 (C, no tail); device "
                           "helpers; \"w\" repeats at 0x163bac, so the file ends by 0x14bb64",
-    (0x14b860, 0x14cb24): "unitcheck: src/tu_14b860.c fills 0x14b860-0x14cb24 (C); system.json settings",
-    (0x14cb24, 0x14da50): "unitcheck: src/tu_14cb24.c fills 0x14cb24-0x14da50 (C); zip reader, cut by subsystem",
-    (0x14da50, 0x14dc18): "unitcheck: src/tu_14da50.c fills 0x14da50-0x14dc18 (C); language strings, own "
+    (0x14b860, 0x14cb24): "unitcheck: src/Settings.c fills 0x14b860-0x14cb24 (C); system.json settings",
+    (0x14cb24, 0x14da50): "unitcheck: src/ZipReader.c fills 0x14cb24-0x14da50 (C); zip reader, cut by subsystem",
+    (0x14da50, 0x14dc18): "unitcheck: src/BuiltinStrings.c fills 0x14da50-0x14dc18 (C); language strings, own "
                           "\"r\" and \"%d\"",
-    (0x14dc18, 0x14e0cc): "unitcheck: src/tu_14dc18.c fills 0x14dc18-0x14e0cc (C); I2C helpers, cut by subsystem",
-    (0x14e0cc, 0x14f730): "unitcheck: src/tu_14e0cc.c fills 0x14e0cc-0x14f730 (C); Wi-Fi, own \"r\" and "
+    (0x14dc18, 0x14e0cc): "unitcheck: src/I2c.c fills 0x14dc18-0x14e0cc (C); I2C helpers, cut by subsystem",
+    (0x14e0cc, 0x14f730): "unitcheck: src/Wifi.c fills 0x14e0cc-0x14f730 (C); Wi-Fi, own \"r\" and "
                           "\"%d\"; 0x14f730 starts PIC code (GOT base via add r4, pc, r4)",
-    (0x14f730, 0x150ad8): "unitcheck: src/tu_14f730.c fills 0x14f730-0x150ad8 (C, -fPIC, no tail); "
+    (0x14f730, 0x150ad8): "unitcheck: src/DeviceAuth.c fills 0x14f730-0x150ad8 (C, -fPIC, no tail); "
                           "8 I2C device-authentication functions; libgcc __udivsi3 follows",
 }
 # libstdc++'s own messages: a string span made only of these says nothing about the user's files
@@ -124,7 +133,7 @@ FIXED = [(0x14d20, 0x15b20, "runtime", "PLT, _start, crtbegin"),
          (0x51b60, 0x57920, "lib_cjson", "cJSON 1.7.10, byte-exact (verify-libs.sh)"),
          (0x57920, 0x11cdc8, "lib_sqlite", "SQLite 3.30.1, byte-exact (verify-libs.sh)")]
 # Miyoo code ends at 0x150ad8, where libgcc's __udivsi3 starts: 0x14f730-0x150ad8 is -O0 PIC code
-# (a static library) that calls the I2C helpers of tu_14dc18.
+# (a static library) that calls the I2C helpers of I2c.c.
 MIYOO = [(0x15b20, 0x51b60), (0x11cdc8, 0x150ad8)]
 
 
@@ -309,7 +318,7 @@ for lo, hi in zip(bounds, bounds[1:]):
             ev.append(f"CHECK: own string span {after[0][0]:#x}-{after[0][1]:#x} follows static init {x:#x}; "
                       f"possible split near {after[0][0]:#x}")
     conf = "proven" if (lo, hi) in UNIT_FIXED else "reviewed" if lo in CUT_ADD else "review"
-    rows.append((lo, hi, f"tu_{lo:06x}", conf, "; ".join(ev), label))
+    rows.append((lo, hi, UNIT_NAMES.get(lo, f"tu_{lo:06x}"), conf, "; ".join(ev), label))
 
 os.makedirs(os.path.dirname(a.out), exist_ok=True)
 with open(a.out, "w") as f:

@@ -14,7 +14,7 @@ enum {
 
 // The Miyoo buttons as SDL 1.2 key symbols (SDL_keysym.h values), as the Miyoo SDL port delivers
 // them (Onion: src/common/system/keymap_sw.h). The shoulder buttons assume the default keymap,
-// which the kernel driver applies (see setupKeymap in tu_14b860.c).
+// which the kernel driver applies (see setupKeymap in Settings.c).
 enum MiyooKey {
     MIYOO_KEY_R2 = 8,          // SDLK_BACKSPACE
     MIYOO_KEY_L2 = 9,          // SDLK_TAB

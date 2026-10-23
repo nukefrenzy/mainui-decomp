@@ -1,8 +1,8 @@
-// tu_138c50 (0x138c50-0x13edfc): the Wi-Fi and hotspot settings screens.
+// WifiMenus.cpp (0x138c50-0x13edfc): the Wi-Fi and hotspot settings screens.
 //
 // WifiMenu lists the Wi-Fi on/off switch and, once a scan finishes, the networks found (signal
 // bars, lock, check mark for the current one). Choosing a network asks for its password if it is
-// secured (ImeWindow) and connects through the wpa_cli backend in tu_14e0cc.c, behind a progress
+// secured (ImeWindow) and connects through the wpa_cli backend in Wifi.c, behind a progress
 // dialog. HotspotMenu switches the device into access-point mode (hostapd + udhcpd) and edits the
 // hotspot's name and password in /etc/wifi/hostapd.conf. Wi-Fi and hotspot exclude each other.
 // Results come back to the menus as user events (Input.h) through the ListMenu event slot.

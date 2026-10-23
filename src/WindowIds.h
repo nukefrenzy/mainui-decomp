@@ -1,5 +1,5 @@
 // Window ids: the `id` of every TrimusWindow and the menu a MenuWindow shows (createMenu(id),
-// tu_015b20/p11.inc). Main-menu icons carry the id of the menu they open, a window's id is
+// MainUI.cpp). Main-menu icons carry the id of the menu they open, a window's id is
 // saved in /tmp/state.json to reopen it after a launch, and the favorites file records the id
 // of the list a game was added from. Only WIN_SETTING and WIN_FIXES are original names (they
 // survive in log messages); the rest are named after what createMenu builds. Values only.

@@ -31,46 +31,36 @@ same screens from `/tmp/state.json`.
 
 ## How the source is organized
 
-The original program was built from separate source files (translation units). Each one became a
-file named after its start address, `src/tu_<address>`, holding its functions **in the original
-address order**. Each file starts with a header comment saying what it contains.
-[tu-map.tsv](tu-map.tsv) lists the exact ranges.
+The original program was built from 22 separate source files (translation units), and `src/` has
+one file for each. The original file names aren't recorded in the binary, so each file is named
+after what it contains. Its first comment line gives the address range it covers, and
+[tu-map.tsv](tu-map.tsv) lists all the ranges. Functions appear **in the original address
+order**.
 
 | File | Contents |
 | --- | --- |
-| [tu_015b20.cpp](../src/tu_015b20.cpp) + `tu_015b20/p01–p11.inc` | The main user interface (about 1,100 functions), split into eleven parts by address: |
-| [p01](../src/tu_015b20/p01.inc) | text drawing, status-bar indicators, global input (`handleGlobalInput`), launching games and apps |
-| [p02](../src/tu_015b20/p02.inc) | list actions (apps, favorites, search, dialogs) and the busy screens |
-| [p03](../src/tu_015b20/p03.inc) | favorites, Recent and app lists, ROM deletion, saving/restoring windows |
-| [p04](../src/tu_015b20/p04.inc) | `ListMenu` navigation and `TextMenuDrawer` drawing |
-| [p05](../src/tu_015b20/p05.inc) | `TextMenu` and building the ROM cache databases |
-| [p06](../src/tu_015b20/p06.inc) | ROM lists backed by the cache, icon menus, settings rows |
-| [p07](../src/tu_015b20/p07.inc) | the Settings and Device Info menus |
-| [p08](../src/tu_015b20/p08.inc) | color, language, theme and file-browser menus |
-| [p09](../src/tu_015b20/p09.inc) | `MenuWindow` and `FloatWindow` |
-| [p10](../src/tu_015b20/p10.inc) | pop-ups, dialogs, the power-off countdown, the game detail window |
-| [p11](../src/tu_015b20/p11.inc) | the window loop, `createMenu`, the charging screen |
-| [tu_049c3c.cpp](../src/tu_049c3c.cpp) | `main` and the status and hotplug threads |
-| [tu_04c418.cpp](../src/tu_04c418.cpp) | a small circular linked list |
-| [tu_04cb68.cpp](../src/tu_04cb68.cpp) | factory hardware tests (keys, LCD, sound, SD card) |
-| [tu_11cdc8.cpp](../src/tu_11cdc8.cpp) | reading Emu/App/RApp/Themes `config.json` folders, the Recent list, device and SD card helpers, image loading |
-| [tu_129f9c.cpp](../src/tu_129f9c.cpp) | loading a theme: fonts, images, colors, sounds |
-| [tu_12ce28.cpp](../src/tu_12ce28.cpp) | reading folders for the file browser |
-| [tu_1302cc.cpp](../src/tu_1302cc.cpp) | a DEFLATE (zlib) decoder adapted from stb_image |
-| [tu_131e34.cpp](../src/tu_131e34.cpp) | `LruCache` and `WorkerQueue` (thumbnail loading) |
-| [tu_134080.cpp](../src/tu_134080.cpp) | user-interface languages |
-| [tu_1376fc.cpp](../src/tu_1376fc.cpp) | the button-mapping screen |
-| [tu_138c50.cpp](../src/tu_138c50.cpp) | the Wi-Fi and hotspot screens |
-| [tu_13edfc.cpp](../src/tu_13edfc.cpp) | the on-screen keyboard (`ImeWindow`) |
-| [tu_143720.cpp](../src/tu_143720.cpp) | the pinyin table for ROM search |
-| [tu_1484d4.cpp](../src/tu_1484d4.cpp) | global ROM search across all emulators |
-| [tu_14acfc.c](../src/tu_14acfc.c) | battery, backlight, volume, audio hotplug (C) |
-| [tu_14b860.c](../src/tu_14b860.c) | `system.json` settings and the keymap (C) |
-| [tu_14cb24.c](../src/tu_14cb24.c) | a read-only zip reader (C) |
-| [tu_14da50.c](../src/tu_14da50.c) | the built-in English strings and `.short` language files (C) |
-| [tu_14dc18.c](../src/tu_14dc18.c) | I2C helpers for the device check (C) |
-| [tu_14e0cc.c](../src/tu_14e0cc.c) | the Wi-Fi backend: `wpa_cli`, scanning, the monitor thread (C) |
-| [tu_14f730.c](../src/tu_14f730.c) | the device check run before anything else (C, vendor code built with GCC 7.3.0) |
+| [MainUI.cpp](../src/MainUI.cpp) | The main user interface, about 1,100 functions in one file (as in the original). Lines of `=` mark its sections: text drawing, the status bar, global input and launching; list actions and busy screens; favorites, Recent and app lists; list navigation and drawing; the ROM cache databases; icon menus and settings rows; the Settings and Device Info menus; color, language, theme and file-browser menus; `MenuWindow` and `FloatWindow`; pop-ups, dialogs and the game detail window; the window loop, `createMenu` and the charging screen. |
+| [Main.cpp](../src/Main.cpp) | `main` and the status and hotplug threads |
+| [RingList.cpp](../src/RingList.cpp) | a small circular linked list |
+| [HardwareTests.cpp](../src/HardwareTests.cpp) | factory hardware tests (keys, LCD, sound, SD card) |
+| [Config.cpp](../src/Config.cpp) | reading Emu/App/RApp/Themes `config.json` folders, the Recent list, device and SD card helpers, image loading |
+| [Theme.cpp](../src/Theme.cpp) | loading a theme: fonts, images, colors, sounds |
+| [FileBrowser.cpp](../src/FileBrowser.cpp) | reading folders for the file browser |
+| [ZlibDecoder.cpp](../src/ZlibDecoder.cpp) | a DEFLATE (zlib) decoder adapted from stb_image |
+| [MenuHelpers.cpp](../src/MenuHelpers.cpp) | `LruCache` and `WorkerQueue` (thumbnail loading) |
+| [Language.cpp](../src/Language.cpp) | user-interface languages |
+| [KeySettingWindow.cpp](../src/KeySettingWindow.cpp) | the button-mapping screen |
+| [WifiMenus.cpp](../src/WifiMenus.cpp) | the Wi-Fi and hotspot screens |
+| [ImeWindow.cpp](../src/ImeWindow.cpp) | the on-screen keyboard (`ImeWindow`) |
+| [Pinyin.cpp](../src/Pinyin.cpp) | the pinyin table for ROM search |
+| [GlobalSearch.cpp](../src/GlobalSearch.cpp) | global ROM search across all emulators |
+| [Device.c](../src/Device.c) | battery, backlight, volume, audio hotplug (C) |
+| [Settings.c](../src/Settings.c) | `system.json` settings and the keymap (C) |
+| [ZipReader.c](../src/ZipReader.c) | a read-only zip reader (C) |
+| [BuiltinStrings.c](../src/BuiltinStrings.c) | the built-in English strings and `.short` language files (C) |
+| [I2c.c](../src/I2c.c) | I2C helpers for the device check (C) |
+| [Wifi.c](../src/Wifi.c) | the Wi-Fi backend: `wpa_cli`, scanning, the monitor thread (C) |
+| [DeviceAuth.c](../src/DeviceAuth.c) | the device check run before anything else (C, vendor code built with GCC 7.3.0) |
 
 ### What is in the binary
 
@@ -99,7 +89,7 @@ Class layouts are exact, and each class is declared once:
 
 - [TrimusWindow.h](../src/TrimusWindow.h), [MenuWindow.h](../src/MenuWindow.h), and the others
   in `src/`;
-- [tu_015b20.h](../src/tu_015b20.h) for the classes of the main UI unit.
+- [MainUI.h](../src/MainUI.h) for the classes of the main UI unit.
 
 The numbers MainUI passes around have names:
 
@@ -134,14 +124,14 @@ The numbers MainUI passes around have names:
 
 ## Start-up
 
-`main` ([tu_049c3c.cpp](../src/tu_049c3c.cpp)) initializes the hardware and SDL, loads settings,
+`main` ([Main.cpp](../src/Main.cpp)) initializes the hardware and SDL, loads settings,
 theme and languages, scans the Emu, App and RApp folders, restores the previous windows (or
 builds the main menu), and runs `runWindowLoop`. [behavior.md](behavior.md#start-up-and-exit)
 gives the exact order.
 
 ## The window loop
 
-`runWindowLoop` ([p11.inc](../src/tu_015b20/p11.inc)) works on a `std::vector<TrimusWindow*>`;
+`runWindowLoop` ([MainUI.cpp](../src/MainUI.cpp)) works on a `std::vector<TrimusWindow*>`;
 the top window is `back()`. While the stack isn't empty and the running flag is set, each pass:
 
 1. calls `update()`, `animateIn()` and `draw(g_backBuffer)` on the top window;
@@ -185,13 +175,13 @@ the original ones.
 
 ### Screens and lists
 
-**`MenuWindow`** ([MenuWindow.h](../src/MenuWindow.h), [p09.inc](../src/tu_015b20/p09.inc), 0x11c
+**`MenuWindow`** ([MenuWindow.h](../src/MenuWindow.h), [MainUI.cpp](../src/MainUI.cpp), 0x11c
 bytes) holds one list (`menu`), the saved list position, a thumbnail loader and cache for game
 previews, and the folder path for ROM lists. `onShow` builds the list lazily:
 
 - the global search window (24) builds a `MultiDBCachedTextMenu`;
 - ROM lists (5 and 17) build a `DBCachedTextMenu` on the emulator's SQLite cache;
-- every other window calls **`createMenu(id, path)`** ([p11.inc](../src/tu_015b20/p11.inc)).
+- every other window calls **`createMenu(id, path)`** ([MainUI.cpp](../src/MainUI.cpp)).
 
 | id | createMenu builds | id | createMenu builds |
 | --- | --- | --- | --- |
@@ -216,7 +206,7 @@ creates a `MenuWindow` for that id and pushes it.
 - `PopupProgressAction` runs an action in a `ProgressDialog` with a worker thread.
 
 **Settings rows** are `SettingMenuItem`s whose handler number (`SettingHandler` in
-[tu_015b20.h](../src/tu_015b20.h)) tells `SettingMenu::select` and `handleKey` what to do:
+[MainUI.h](../src/MainUI.h)) tells `SettingMenu::select` and `handleKey` what to do:
 
 - **Value rows** change their value with left/right.
 - **Submenu rows** push a new `MenuWindow`.
@@ -226,30 +216,30 @@ creates a `MenuWindow` for that id and pushes it.
 
 | What | Where | Notes |
 | --- | --- | --- |
-| Wi-Fi and hotspot screens | [tu_138c50.cpp](../src/tu_138c50.cpp) | `WifiMenu` keeps up to 32 scan results |
-| Wi-Fi backend | [tu_14e0cc.c](../src/tu_14e0cc.c) | `wpa_cli` and the monitor thread |
-| Button-mapping screen | [tu_1376fc.cpp](../src/tu_1376fc.cpp) | `KeySettingWindow` |
-| Applying the keymap | `setupKeymap` in [tu_14b860.c](../src/tu_14b860.c) | writes the mapping to the kernel driver |
-| File browser | [tu_12ce28.cpp](../src/tu_12ce28.cpp) | Caches up to 40,000 rows of visited folders; loads at most 20,000 items per folder |
+| Wi-Fi and hotspot screens | [WifiMenus.cpp](../src/WifiMenus.cpp) | `WifiMenu` keeps up to 32 scan results |
+| Wi-Fi backend | [Wifi.c](../src/Wifi.c) | `wpa_cli` and the monitor thread |
+| Button-mapping screen | [KeySettingWindow.cpp](../src/KeySettingWindow.cpp) | `KeySettingWindow` |
+| Applying the keymap | `setupKeymap` in [Settings.c](../src/Settings.c) | writes the mapping to the kernel driver |
+| File browser | [FileBrowser.cpp](../src/FileBrowser.cpp) | Caches up to 40,000 rows of visited folders; loads at most 20,000 items per folder |
 
 ### Background work
 
 | Part | Where | What it does |
 | --- | --- | --- |
-| `WorkerQueue` | [tu_131e34.cpp](../src/tu_131e34.cpp) | One SDL thread that runs `BGWorker` jobs, newest first. When too much work is pending, it drops the oldest jobs. |
-| `LruCache` | tu_131e34.cpp | Keeps loaded thumbnails, at most 1,000 entries |
-| `DBCacheWorker` | [p06.inc](../src/tu_015b20/p06.inc) | Loads a page of ROM rows from SQLite |
-| `LoadSurfaceWorker` | [p08.inc](../src/tu_015b20/p08.inc) | Loads a thumbnail image |
+| `WorkerQueue` | [MenuHelpers.cpp](../src/MenuHelpers.cpp) | One SDL thread that runs `BGWorker` jobs, newest first. When too much work is pending, it drops the oldest jobs. |
+| `LruCache` | MenuHelpers.cpp | Keeps loaded thumbnails, at most 1,000 entries |
+| `DBCacheWorker` | [MainUI.cpp](../src/MainUI.cpp) | Loads a page of ROM rows from SQLite |
+| `LoadSurfaceWorker` | [MainUI.cpp](../src/MainUI.cpp) | Loads a thumbnail image |
 
 ### Threads
 
 | Thread | Where | What it does |
 | --- | --- | --- |
-| Status thread | `statusPollThread`, [tu_049c3c.cpp](../src/tu_049c3c.cpp) | Every second, posts SDL user events when the battery, Wi-Fi state or volume indicator changes |
-| Hotplug thread | tu_049c3c.cpp, with the helpers in [tu_14acfc.c](../src/tu_14acfc.c) | Posts an event when a second sound card appears or disappears |
-| Wi-Fi monitor | [tu_14e0cc.c](../src/tu_14e0cc.c) | Every 3 s; starts DHCP once connected |
+| Status thread | `statusPollThread`, [Main.cpp](../src/Main.cpp) | Every second, posts SDL user events when the battery, Wi-Fi state or volume indicator changes |
+| Hotplug thread | Main.cpp, with the helpers in [Device.c](../src/Device.c) | Posts an event when a second sound card appears or disappears |
+| Wi-Fi monitor | [Wifi.c](../src/Wifi.c) | Every 3 s; starts DHCP once connected |
 
-`handleGlobalInput` ([p01.inc](../src/tu_015b20/p01.inc)) is the single input function every
+`handleGlobalInput` ([MainUI.cpp](../src/MainUI.cpp)) is the single input function every
 window calls. It turns SDL events into button codes and handles the power key, sounds and these
 user events.
 

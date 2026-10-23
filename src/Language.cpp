@@ -1,11 +1,11 @@
-// tu_134080 (0x134080-0x1376fc): user-interface languages.
+// Language.cpp (0x134080-0x1376fc): user-interface languages.
 //
 // Every language is a JSON file <lang>.lang in ./lang/ with "lang" (its display name) and the 156
 // strings "0".."155" (ids: LangStrings.h). loadLanguages reads English first (writing
 // /customer/app/lang/en.lang from the built-in table if missing, or falling back to that table),
 // then every other .lang file, sorted by file name. languageString() returns a string in the
 // language chosen in system.json. For each language it also writes a reduced <lang>.short with
-// ids 88-155 (see tu_14da50.c). Languages other than English need the CJK font on the SD card.
+// ids 88-155 (see BuiltinStrings.c). Languages other than English need the CJK font on the SD card.
 // Body 4,768 bytes plus 110 generated functions.
 #include "PlatformApi.h"
 #include "CJsonApi.h"

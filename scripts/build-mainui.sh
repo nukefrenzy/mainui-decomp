@@ -3,7 +3,7 @@
 # Usage: scripts/build-mainui.sh            (fetches and verifies every pinned input it needs)
 #
 # Runs the full link audit with --require-ready: every unit is compiled with its recorded
-# compiler and flags (src/matches.tsv; tu_14f730 uses GCC 7.3.0 from scripts/fetch-gcc73.sh),
+# compiler and flags (src/matches.tsv; DeviceAuth.c uses GCC 7.3.0 from scripts/fetch-gcc73.sh),
 # SQLite/cJSON are rebuilt and verified, and the executable is linked against the pinned
 # SDK/runtime libraries, then stripped. It fails unless the result's SHA-256 equals the
 # original's and every audit check passes. The binary is Miyoo's program: it is written to

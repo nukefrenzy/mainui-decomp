@@ -39,8 +39,8 @@ Ghidra 12.1.4: import with defaults, auto-analyze, run `ghidra/ApplyMainUINames.
    `python3 tools/progress.py --matches-md src/MATCHES.md`. CI (`.github/workflows/match.yml`) re-checks all of them
    and posts the progress summary.
 
-Work file by file (full recipe, -O0 idioms and the tail-order rule: `docs/internals/unit-workflow.md`): `docs/tu-map.tsv` (from `tools/tusplit.py`) gives each unit's range, `src/tu_<lo>.cpp` holds its
-functions in address order, and `tools/unitcheck.py src/tu_<lo>.cpp` checks the whole unit as the linker lays it out
+Work file by file (full recipe, -O0 idioms and the tail-order rule: `docs/internals/unit-workflow.md`): `docs/tu-map.tsv` (from `tools/tusplit.py`) gives each unit's range and name, `src/<name>.cpp` (or `.c`) holds its
+functions in address order, and `tools/unitcheck.py src/<name>.cpp` checks the whole unit as the linker lays it out
 (body, then template/inline tail; CI runs it on every unit via `scripts/run_units.sh`). Briefs: `tools/packet.py --tu <unit>`; patterns: `tools/autoderive.py --tu <unit>`.
 
 At `-O0` the code mirrors the source closely: keep statement order, redundant assignments and member order exactly

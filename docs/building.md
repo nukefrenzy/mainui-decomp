@@ -80,7 +80,7 @@ Downloads go to `toolchain/` and `build/`, both ignored by git. Once fetched, an
 `scripts/build-mainui.sh` runs [`tools/linkaudit.py --require-ready`](../tools/linkaudit.py):
 
 1. It compiles the 22 source files with `arm-linux-gnueabihf-g++ -O0 -fsigned-char`, using the
-   per-file extra flags in [`src/matches.tsv`](../src/matches.tsv). `tu_14f730.c` gets `-fPIC`
+   per-file extra flags in [`src/matches.tsv`](../src/matches.tsv). `DeviceAuth.c` gets `-fPIC`
    and GCC 7.3.0.
 2. It rebuilds SQLite and cJSON and checks them against the copies inside the original.
 3. It links in the original library order and strips the result.
@@ -96,9 +96,9 @@ Building the whole program isn't necessary after every edit. These are quicker:
 
 | Command | Checks | Time |
 | --- | --- | --- |
-| `python3 tools/unitcheck.py src/tu_14b860.c` | One source file, as the linker lays it out | seconds |
+| `python3 tools/unitcheck.py src/Settings.c` | One source file, as the linker lays it out | seconds |
 | `scripts/run_units.sh` | All 22 source files | about a minute |
-| `python3 tools/matchfn.py src/tu_14b860.c loadSystemJson 14bca8 --orig MainUI-354-clean` | One function | seconds |
+| `python3 tools/matchfn.py src/Settings.c loadSystemJson 14bca8 --orig MainUI-354-clean` | One function | seconds |
 | `scripts/run_matches.sh` | Every function listed in `src/matches.tsv` | several minutes |
 | `scripts/build-mainui.sh` | The whole program, byte for byte; the only check that sees string and data changes | under a minute |
 

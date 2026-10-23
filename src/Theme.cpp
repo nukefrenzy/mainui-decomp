@@ -1,4 +1,4 @@
-// tu_129f9c (0x129f9c-0x12ce28): the theme: fonts, images, colors and sounds.
+// Theme.cpp (0x129f9c-0x12ce28): the theme: fonts, images, colors and sounds.
 //
 // A theme is a folder (Theme.h; found by loadThemeFolder) with skin/ images, sound/
 // files and font settings. loadTheme copies its colors into globals, opens the five fonts

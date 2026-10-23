@@ -1,4 +1,4 @@
-// tu_14b860 (0x14b860-0x14cb24): system settings.
+// Settings.c (0x14b860-0x14cb24): system settings.
 //
 // /mnt/SDCARD/system.json holds the user's settings (volume, brightness, display color, theme,
 // language, button keymap, Wi-Fi switch, ...). loadSystemJson copies them into the memory that
@@ -121,7 +121,7 @@ void setWifiOn(int on)          // 0x14bc00
         g_hotspotOn = 0;
 }
 
-// The hotspot switch (HotspotMenu, tu_138c50.cpp).
+// The hotspot switch (HotspotMenu, WifiMenus.cpp).
 int getHotspotOn()              // 0x14bc54
 {
     return g_hotspotOn;

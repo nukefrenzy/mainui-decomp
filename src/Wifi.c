@@ -1,4 +1,4 @@
-// tu_14e0cc (0x14e0cc-0x14f730): the Wi-Fi client backend, driving wpa_supplicant through the
+// Wifi.c (0x14e0cc-0x14f730): the Wi-Fi client backend, driving wpa_supplicant through the
 // wpa_cli command-line tool.
 //
 // A monitor thread (started from main) runs every 3 seconds: it refreshes the connection status
@@ -6,7 +6,7 @@
 // wifiStatusCallback; while the Wi-Fi menu wants a scan it also scans (wpa_cli scan +
 // scan_result, parsed from /tmp/wpa_scan.txt into g_aps) and posts EVENT_WIFI_SCAN_DONE; and
 // after a connect it runs the DHCP client. Connecting replaces all saved networks with the one
-// chosen. The menus that use this are in tu_138c50.cpp.
+// chosen. The menus that use this are in WifiMenus.cpp.
 // Compiled as C (call results are stored straight from r0), so there is no template tail.
 // The C units 0x14acfc-0x14f730 are split where .rodata proves a new file: GCC merges identical
 // string literals within one file even at -O0, and "w", "r" and "%d" each appear more than once.

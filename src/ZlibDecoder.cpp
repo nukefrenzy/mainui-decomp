@@ -1,8 +1,8 @@
-// tu_1302cc (0x1302cc-0x131e34): a DEFLATE (zlib) decoder, adapted from stb_image's.
+// ZlibDecoder.cpp (0x1302cc-0x131e34): a DEFLATE (zlib) decoder, adapted from stb_image's.
 //
 // The original file was stb_zlib.cpp (its assert messages name it). Unlike stb's, it decodes in
 // parts: readZlib fills as much of the caller's buffer as asked and keeps its place, reading the
-// compressed data from memory or straight from a file, so the zip reader (tu_14cb24.c) can
+// compressed data from memory or straight from a file, so the zip reader (ZipReader.c) can
 // decompress an entry without loading it whole. Function names are stb's where stb has them.
 // 19 functions, 7,016 bytes, no template tail.
 #include <cstdio>

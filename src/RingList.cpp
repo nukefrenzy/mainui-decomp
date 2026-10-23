@@ -1,4 +1,4 @@
-// tu_04c418 (0x04c418-0x04cb68): a circular singly linked list of void* values.
+// RingList.cpp (0x04c418-0x04cb68): a circular singly linked list of void* values.
 //
 // A list is a pointer to its head node; the last node points back to the head, and an empty
 // list is NULL. Functions that can change the head return the new one. Nothing in MainUI calls

@@ -48,24 +48,24 @@ Onion's MainUI shows two kinds of change:
 
 | Change | Functions | Effect |
 | --- | --- | --- |
-| Settings file moved to the SD card | `loadSystemJson`, `saveSystemJson`, `loadThemeAndFontSize` ([tu_14b860.c](../src/tu_14b860.c)) | `/mnt/SDCARD/system.json` instead of `/appconfigs/system.json` |
-| Clean shutdown on SIGTERM | `onSIGTERM`, `main`, `runWindowLoop` ([tu_049c3c.cpp](../src/tu_049c3c.cpp), [p11.inc](../src/tu_015b20/p11.inc)) | Stock installs no signal handler. Onion's `main` installs one with `sigaction`. It clears a `std::atomic<bool>` running flag, which `runWindowLoop` now takes as a parameter, so the loop ends normally and saves the open windows and list positions. The four small `std::atomic<bool>` functions exist only in Onion. |
+| Settings file moved to the SD card | `loadSystemJson`, `saveSystemJson`, `loadThemeAndFontSize` ([Settings.c](../src/Settings.c)) | `/mnt/SDCARD/system.json` instead of `/appconfigs/system.json` |
+| Clean shutdown on SIGTERM | `onSIGTERM`, `main`, `runWindowLoop` ([Main.cpp](../src/Main.cpp), [MainUI.cpp](../src/MainUI.cpp)) | Stock installs no signal handler. Onion's `main` installs one with `sigaction`. It clears a `std::atomic<bool>` running flag, which `runWindowLoop` now takes as a parameter, so the loop ends normally and saves the open windows and list positions. The four small `std::atomic<bool>` functions exist only in Onion. |
 | No SD card folder setup at start-up | `main` | Stock calls `initSdCardFolders` (creates App, Roms, Imgs and the per-system folders). Onion still contains the function but never calls it. |
-| L2/R2 ignored while SELECT or START is held | `handleGlobalInput` ([p01.inc](../src/tu_015b20/p01.inc)) | New `g_selectHeld`/`g_startHeld` flags, so button combinations handled elsewhere in Onion don't also reach MainUI's menus |
-| Dot files hidden from ROM lists | `isHiddenRomFile` ([p05.inc](../src/tu_015b20/p05.inc)) | A name starting with `.` is never a ROM (for example macOS `._` files) |
-| ROM cache inserts use prepared statements | `importGameList`, `scanRomDir` (p05.inc) | Stock builds `INSERT … VALUES('%s',…)` text and doubles quotes with `replaceAll`. Onion binds the values with `sqlite3_prepare_v2`/`sqlite3_bind_*`, so names containing quotes are stored as they are. The error text becomes `db exec at %d error : %s`. |
-| A log line number | `prepareRomCache` (p05.inc) | Prints 4100 instead of 4000 (the `__LINE__` of a moved source line) |
+| L2/R2 ignored while SELECT or START is held | `handleGlobalInput` ([MainUI.cpp](../src/MainUI.cpp)) | New `g_selectHeld`/`g_startHeld` flags, so button combinations handled elsewhere in Onion don't also reach MainUI's menus |
+| Dot files hidden from ROM lists | `isHiddenRomFile` ([MainUI.cpp](../src/MainUI.cpp)) | A name starting with `.` is never a ROM (for example macOS `._` files) |
+| ROM cache inserts use prepared statements | `importGameList`, `scanRomDir` (MainUI.cpp) | Stock builds `INSERT … VALUES('%s',…)` text and doubles quotes with `replaceAll`. Onion binds the values with `sqlite3_prepare_v2`/`sqlite3_bind_*`, so names containing quotes are stored as they are. The error text becomes `db exec at %d error : %s`. |
+| A log line number | `prepareRomCache` (MainUI.cpp) | Prints 4100 instead of 4000 (the `__LINE__` of a moved source line) |
 
 ## Binary patches
 
 | Patch | Where | Effect |
 | --- | --- | --- |
-| Six menu items disabled | `createMenu` ([p11.inc](../src/tu_015b20/p11.inc)), 12 `mov r0, r0` | Stock adds them, Onion doesn't: RetroArch (main menu; 0x37994/0x379a0), Key settings, Theme, Fixes, Factory reset, Key test (Settings). The objects are still allocated and leaked. |
-| Text shadow off | `drawText` ([p01.inc](../src/tu_015b20/p01.inc)), 1 `nop` | The shadow blit under text is skipped |
-| Wi-Fi indicator background off | `drawWifiIndicator` (p01.inc), 6 `nop` | Four background blits and two fills are skipped; only the icon is drawn |
-| Backlight writes go nowhere | `initBacklightPwm` ([tu_14acfc.c](../src/tu_14acfc.c)), 1 `nop`, and a string | The PWM period write is skipped and the duty-cycle path `/sys/class/pwm/pwmchip0/pwm0/duty_cycle` becomes `/dev/null`. Onion controls the backlight from outside MainUI. |
-| Power off handed to Onion | `powerOff` (p01.inc), string | `/customer/app/axp_test poweroff` becomes `mainui_off_order` |
-| Battery icons hidden | theme loader ([tu_129f9c.cpp](../src/tu_129f9c.cpp)), strings | The five `skin/power-*-icon.png` paths all become `skin/.batt-perc.png`, so Onion's own battery display is used |
+| Six menu items disabled | `createMenu` ([MainUI.cpp](../src/MainUI.cpp)), 12 `mov r0, r0` | Stock adds them, Onion doesn't: RetroArch (main menu; 0x37994/0x379a0), Key settings, Theme, Fixes, Factory reset, Key test (Settings). The objects are still allocated and leaked. |
+| Text shadow off | `drawText` ([MainUI.cpp](../src/MainUI.cpp)), 1 `nop` | The shadow blit under text is skipped |
+| Wi-Fi indicator background off | `drawWifiIndicator` (MainUI.cpp), 6 `nop` | Four background blits and two fills are skipped; only the icon is drawn |
+| Backlight writes go nowhere | `initBacklightPwm` ([Device.c](../src/Device.c)), 1 `nop`, and a string | The PWM period write is skipped and the duty-cycle path `/sys/class/pwm/pwmchip0/pwm0/duty_cycle` becomes `/dev/null`. Onion controls the backlight from outside MainUI. |
+| Power off handed to Onion | `powerOff` (MainUI.cpp), string | `/customer/app/axp_test poweroff` becomes `mainui_off_order` |
+| Battery icons hidden | theme loader ([Theme.cpp](../src/Theme.cpp)), strings | The five `skin/power-*-icon.png` paths all become `skin/.batt-perc.png`, so Onion's own battery display is used |
 
 ## Clean and Expert
 
@@ -78,6 +78,6 @@ The other ten NOPs are the same in both.
 
 ## Not differences
 
-- The device check (`tu_14f730.c`) and the C start-up code (`call_weak_fn`) are the same code.
+- The device check (`DeviceAuth.c`) and the C start-up code (`call_weak_fn`) are the same code.
   Their GOT offsets move by 4 because Onion imports one more function (`sigaction`).
 - `GameDetailWindow::animateIn` gains one alignment NOP before its `double` constants.

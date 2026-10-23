@@ -1,4 +1,4 @@
-// tu_13edfc (0x13edfc-0x143720): ImeWindow, the on-screen keyboard.
+// ImeWindow.cpp (0x13edfc-0x143720): ImeWindow, the on-screen keyboard.
 //
 // Four rows of ten character keys (digits, then QWERTY) and a bottom row of five wide keys:
 // shift, symbols, space, delete and OK. The D-pad moves between keys and A presses one; the

@@ -1,11 +1,11 @@
-// tu_14f730 (0x14f730-0x150ad8): the device check MainUI runs before anything else.
+// DeviceAuth.c (0x14f730-0x150ad8): the device check MainUI runs before anything else.
 //
 // A chip on I2C bus 1 (8-bit address 0x7a; probably a vendor authentication chip) must answer a
 // challenge. The first call sets the chip up: it reads two 8-byte keys from it, exchanges a
 // block scrambled with fixed keys, and sends one of its keys back disguised. Each call then
 // writes the challenge (with random filler bytes), reads the chip's answer, unscrambles it with
 // the keys and a counter, and compares the result with the challenge; it tries two registers.
-// waitForProbe (tu_14dc18.c) retries this up to 20 times, and main exits if it fails.
+// waitForProbe (I2c.c) retries this up to 20 times, and main exits if it fails.
 //
 // Separately built vendor code: compiled with GCC 7.3.0 (deps gcc73; its .comment string is
 // MainUI's second one), -O0 -fsigned-char -fPIC. Byte arrays are unsigned. The library and

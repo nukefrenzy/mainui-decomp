@@ -33,7 +33,7 @@ jobs:
           path: build/gcc73/install
           key: gcc73-${{ hashFiles('scripts/fetch-gcc73.sh') }}-arm-gnu-8.2-2018.08
 
-      - name: Fetch and build GCC 7.3.0 (compiles tu_14f730; stamped in MainUI's .comment)
+      - name: Fetch and build GCC 7.3.0 (compiles DeviceAuth.c; stamped in MainUI's .comment)
         run: |
           command -v m4 >/dev/null || (sudo apt-get update && sudo apt-get install -y --no-install-recommends m4)
           scripts/fetch-gcc73.sh
@@ -47,7 +47,7 @@ jobs:
       - name: Byte-match every rewrite in src/
         run: scripts/run_matches.sh
 
-      - name: Check every whole unit (body + template tail) in src/tu_*.cpp
+      - name: Check every whole unit (body + template tail) in docs/tu-map.tsv
         run: scripts/run_units.sh
 
       - name: Test relocation, initializer and dynamic-import checks

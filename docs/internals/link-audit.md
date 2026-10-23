@@ -17,7 +17,7 @@ binaries stay in the ignored `build/`.
 ## Inputs
 
 - **The 22 Miyoo units**, compiled with their manifest flags and dependencies (`src/matches.tsv`);
-  `tu_14f730` uses GCC 7.3.0 (`scripts/fetch-gcc73.sh`).
+  `DeviceAuth.c` uses GCC 7.3.0 (`scripts/fetch-gcc73.sh`).
 - **Embedded libraries:** `scripts/build-libs.sh` builds SQLite 3.30.1 (C) and cJSON 1.7.10 (C++)
   in `build/embedded-libs/` from SHA-256-checked sources; `strictcmp.py` verifies their 808,104
   and 23,996 text bytes with only relocated words masked. `scripts/verify-libs.sh` runs the same
@@ -89,12 +89,12 @@ canonical definition: `g_launchCmd` (0x17ff54, 2,048 bytes), `g_iconFont`, `g_em
 `g_gameFocused`/`g_gameNormal` (borrowed `SDL_Surface*` backgrounds, not coordinates), `g_raRow`,
 `g_previewBg`, `g_volumeIcons`, `g_clearColor` (one `SDL_Color` for shadow and clear),
 `g_highlightColor`, `g_selectedTextColor`, `g_hintColor` and `g_listColor`. The three read-only theme colors in
-`tu_129f9c.cpp` are `SDL_Color` structs (a union folded their loads at `-O0`). Details:
+`Theme.cpp` are `SDL_Color` structs (a union folded their loads at `-O0`). Details:
 [data-recovery.md](data-recovery.md).
 
 **COMDAT identity.** The global at 0x182170 (`g_recentList`) is `std::list<int>`, not
 `std::list<RecentItem>`. With the wrong type its generated constructor and destructor shared
-COMDAT identities with the recent-games list and were discarded, shifting `tu_129f9c`.
+COMDAT identities with the recent-games list and were discarded, shifting `Theme.cpp`.
 
 **Jump table.** `ImeWindow::initKey`'s 45-case table at 0x140db0 needs cases 39, 43 and 44 right
 after cases 0 and 1; otherwise 43 table words are permuted while the masked proof still passes.

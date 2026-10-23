@@ -508,9 +508,13 @@ def audit(args):
             source='pinned_toolchain' if name in runtime else 'my283_sdk'))
     manifest = tsv('src/matches.tsv')
     units = {r['name']: r for r in tsv('docs/tu-map.tsv') if r['confidence'] == 'proven'}
-    sources = sorted(list(Path('src').glob('tu_*.cpp')) + list(Path('src').glob('tu_*.c')))
-    if {s.stem for s in sources} != set(units):
-        raise ValueError('source files and proven TU map differ; complete the unit proofs first')
+    # One source file per proven unit, named after the unit (src/<name>.cpp or .c).
+    sources = []
+    for name in units:
+        found = [p for p in (Path('src') / (name + '.cpp'), Path('src') / (name + '.c')) if p.exists()]
+        if len(found) != 1:
+            raise ValueError(f'unit {name}: expected exactly one of src/{name}.cpp or src/{name}.c')
+        sources.append(found[0])
     fetch = {}
     compiled, refs, providers = [], defaultdict(set), defaultdict(list)
     commands, warnings = [['scripts/build-libs.sh', str(original)], ['scripts/fetch-target-libs.sh']], []

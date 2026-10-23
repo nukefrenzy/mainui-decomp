@@ -1,8 +1,8 @@
-// tu_1376fc (0x1376fc-0x138c50): the button-mapping screen, and a touch-panel input thread.
+// KeySettingWindow.cpp (0x1376fc-0x138c50): the button-mapping screen, and a touch-panel input thread.
 //
 // KeySettingWindow lets the user choose which physical button reports as which (L, L2, R, R2, X,
 // A, B, Y): each press assigns the pressed button's name to the highlighted slot, and MENU saves
-// the result as the keymap (setKeymap/saveSystemJson in tu_14b860.c), which the kernel's button
+// the result as the keymap (setKeymap/saveSystemJson in Settings.c), which the kernel's button
 // driver applies. The touch thread turns taps near the screen edges into arrow-button events; it
 // is leftover code: nothing in this build starts it (startTouchInput has no caller).
 // Body 5,288 bytes plus five inline virtuals; functions in address order.

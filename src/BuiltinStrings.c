@@ -1,8 +1,8 @@
-// tu_14da50 (0x14da50-0x14dc18): the built-in English strings, and a reader for <lang>.short files.
+// BuiltinStrings.c (0x14da50-0x14dc18): the built-in English strings, and a reader for <lang>.short files.
 //
 // g_defaultStrings holds the English text of all 156 user-interface strings (ids: LangStrings.h);
 // MainUI falls back to it when no language file can be read. The three functions read the
-// reduced <lang>.short files that genShortLangFile (tu_134080.cpp) writes for ids 88-155, the
+// reduced <lang>.short files that genShortLangFile (Language.cpp) writes for ids 88-155, the
 // in-game menu's strings ("Continue", "Save", "Load", "Exit Game", ...). Nothing in MainUI calls
 // them; they are presumably there for another program that shares this code.
 // Its .rodata starts with the table's strings (0x163e5c).

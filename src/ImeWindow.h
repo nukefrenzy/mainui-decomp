@@ -1,4 +1,4 @@
-// The on-screen keyboard (tu_13edfc.cpp): a window for typing a line of text (Wi-Fi password,
+// The on-screen keyboard (ImeWindow.cpp): a window for typing a line of text (Wi-Fi password,
 // hotspot name, search), which it hands to an Action. The window is 0xf0 bytes; each key
 // is 100 bytes.
 #pragma once
