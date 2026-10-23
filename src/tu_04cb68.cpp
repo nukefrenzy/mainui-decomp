@@ -17,6 +17,8 @@
 #include "HardwareTestWindows.h"
 #include "LangStrings.h"
 #include "Input.h"
+#include "ShmVar.h"
+#include "WindowIds.h"
 
 // Button codes in the tests: the original numbering (keyEventName's "key_*" names), which is
 // MainButton's except that START is 9 and SELECT 10, and L2/R2 are 12/13, labelled L and R.
@@ -117,7 +119,7 @@ int readTestInput() {
 
 // A "press these keys in order" test: sequence holds the keys, input reads one, and the result
 // goes to g_testResults[index]. Each key must come within 12 s (a 1 s timer counts down).
-SDLKeyTestWindow::SDLKeyTestWindow(const int*sequence,int count,int(*input)(),const char*unused,int index):TrimusWindow(-1,25) {
+SDLKeyTestWindow::SDLKeyTestWindow(const int*sequence,int count,int(*input)(),const char*unused,int index):TrimusWindow(-1,WIN_TEST) {
     readInput=input;
     keys=sequence;
     keyCount=count;
@@ -388,7 +390,7 @@ int KeyTestWindow::draw(SDL_Surface*dst) {
 }
 
 // The "IO Test": shows which buttons are held. MENU + A leaves.
-KeyTestWindow2::KeyTestWindow2():TrimusWindow(STR_IO_TEST,25) {
+KeyTestWindow2::KeyTestWindow2():TrimusWindow(STR_IO_TEST,WIN_TEST) {
     loadMasks();
     menuHeld=false;
 }
@@ -621,7 +623,7 @@ int KeyTestWindow2::draw(SDL_Surface*dst) {
 
 // The LCD test: five vertical colour bars (up/down switches to plain red, left/right rotates
 // the colours); A passes, B fails.
-LCDTestWindow::LCDTestWindow():TrimusWindow(-1,25) {
+LCDTestWindow::LCDTestWindow():TrimusWindow(-1,WIN_TEST) {
     mode=0;
     colorIndex=0;
     colors[0]=g_testRed;
@@ -682,7 +684,7 @@ void LCDTestWindow::onShow() {
 
 // The sound test: plays the theme music at 1/3, 2/3 and full volume, six seconds each; A passes
 // once all three have played, B fails.
-SoundTestWindow::SoundTestWindow():TrimusWindow(-1,25) {
+SoundTestWindow::SoundTestWindow():TrimusWindow(-1,WIN_TEST) {
     phase=0;
     timer=0;
 }
@@ -762,8 +764,8 @@ void SoundTestWindow::playNext() {
 
 void SoundTestWindow::onHide() {
     Mix_PlayMusic(g_themeMusic,-1);
-    Mix_VolumeMusic((GetKeyShm(g_keyShm,5)<<7)/20);
-    printf("restore volume %d\n",(GetKeyShm(g_keyShm,5)<<7)/20);
+    Mix_VolumeMusic((GetKeyShm(g_keyShm,MONITOR_BGM_VOLUME)<<7)/20);
+    printf("restore volume %d\n",(GetKeyShm(g_keyShm,MONITOR_BGM_VOLUME)<<7)/20);
     if (timer)SDL_RemoveTimer(timer);
 }
 
@@ -791,7 +793,7 @@ int readUsbTestInput() {
 
 // The SD card test: a thread writes 2 MiB to /mnt/SDCARD/testfile and reads it back, checking
 // every byte; the window shows progress and speeds. Any key afterwards records the result.
-SDCardTestWindow::SDCardTestWindow():TrimusWindow(-1,25) {
+SDCardTestWindow::SDCardTestWindow():TrimusWindow(-1,WIN_TEST) {
     thread=NULL;
     writeMS=0;
     readMS=0;
@@ -1001,7 +1003,7 @@ HardwareTestMenu::HardwareTestMenu():TextMenu(0,1,6,NULL) {
 }
 
 HardwareTestMenu::~HardwareTestMenu() {
-    vfunc18();
+    freeListItem();
 }
 
 extern std::vector<TrimusWindow*>*g_windowStack;
@@ -1022,7 +1024,7 @@ int g_deviceTestKeys[13]= {   // the key test's order
 };
 // Opens the selected test. The SD card test needs a card when the system runs from SPI NAND;
 // the stress test launches /mnt/SDCARD/test/dino.zip in mame4allx (returning 3 to launch).
-int HardwareTestMenu::vfunc4() {
+int HardwareTestMenu::onSelect() {
     switch (cur) {
         case 0: {
             KeyTestWindow*window=new KeyTestWindow(g_deviceTestKeys,13,readTestInput,"KeyTest",0);
@@ -1106,7 +1108,7 @@ SDL_Color testResultColor(int result) {
 extern SDL_Color g_wifiSelectedColor;
 extern "C" int TTF_FontHeight(void*);
 // Draws the six rows: name and result (or the stress test's running time).
-void HardwareTestMenu::vfunc7(SDL_Surface*dst) {
+void HardwareTestMenu::drawList(SDL_Surface*dst) {
     int height=TTF_FontHeight(g_imeFont);
     SDL_Rect area;
     SDL_Color color;
@@ -1172,7 +1174,7 @@ void HardwareTestMenu::vfunc7(SDL_Surface*dst) {
     }
 }
 
-void HardwareTestMenu::vfunc18() {
+void HardwareTestMenu::freeListItem() {
     puts("HardwareTestMenu::freeListItem");
     for (int i=0;i<items.size();i++) {
         TestMenuItem*item=(TestMenuItem*)items[i];

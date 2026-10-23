@@ -20,6 +20,7 @@
 #include "KeySettingWindow.h"
 #include "LangStrings.h"
 #include "Input.h"
+#include "WindowIds.h"
 
 struct SDL_Thread;
 // The SDL 1.2 SDL_Event members this file uses (20 bytes).
@@ -196,8 +197,7 @@ int waitMappingKey()
 // 44 bytes, longer than the text.
 extern const char g_keyEventReadFormat[44] = "read event type=%d, code=%d, value=%d\n";
 
-// Title "Key Setting"; window id 0x19.
-KeySettingWindow::KeySettingWindow() : TrimusWindow(STR_KEY_SETTING, 0x19)
+KeySettingWindow::KeySettingWindow() : TrimusWindow(STR_KEY_SETTING, WIN_TEST)
 {
     menuIcon = NULL;
     highlight = NULL;

@@ -27,15 +27,15 @@ public:
     ~TextItem();                                                        // 0x25620
     std::string label;
     Action *action;     // +0x18
-    bool flag1c;        // +0x1c  ctor flag
+    bool ownsAction;        // +0x1c  ctor flag
     bool favorite;      // +0x1d  set by AddFavoriteAction, shown by the game detail window
     bool removed;       // +0x1e  set by RemoveFavoriteAction
-    SDL_Surface *value; // +0x20  ctor value; TextMenuDrawer::vfunc7 draws it as the row icon (p04)
-    bool flag24;        // +0x24  false
-    std::string str28;  // +0x28
-    std::string str40;  // +0x40
-    std::string str58;  // +0x58
-    SDL_Surface *field70; // +0x70  0; thumbnail loaded from str58 by TextMenuDrawer::vfunc7 (p04)
+    SDL_Surface *value; // +0x20  ctor value; TextMenuDrawer::drawList draws it as the row icon (p04)
+    bool showThumbnail;        // +0x24  false
+    std::string subtitle;  // +0x28
+    std::string displayLabel;  // +0x40
+    std::string thumbnailPath;  // +0x58
+    SDL_Surface *thumbnailSurface; // +0x70  0; thumbnail loaded from thumbnailPath by TextMenuDrawer::drawList (p04)
 };
 // One directory's rows (TextItem*), as loaded.
 struct DirectoryItems {

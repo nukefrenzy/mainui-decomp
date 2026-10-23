@@ -60,9 +60,11 @@ enum MainButton {
 // User-event codes (SDL_USEREVENT, event.user.code). handleGlobalInput returns them to the
 // window like button codes, so they share one number space.
 enum UserEventCode {
+    EVENT_NOTIFY_TIMEOUT = 0,   // a notification window's timer ran out (also a "no input" result)
     EVENT_BATTERY = 18,         // battery level or charger state changed (status thread)
     EVENT_HOTPLUG = 19,         // an audio device was plugged or unplugged: reopen audio
     EVENT_NOTIFY = 20,          // "event_notify" in keyEventName
+    EVENT_COUNTDOWN_TICK = 22,  // the power-off countdown's one-second timer
     EVENT_POWER_OFF = 21,       // power-off requested (power-off dialog confirmed)
     EVENT_REDRAW = 24,          // "redraw now": posted by timers and after state changes
     EVENT_OPEN_DIRECTORY = 25,  // the file browser chose a folder; event.user.data1 is its path
@@ -76,4 +78,13 @@ enum UserEventCode {
     EVENT_VOLUME_HIDDEN = 41,   // 3 s without volume change: hide it
     EVENT_WIFI_SWITCHED = 42,   // Wi-Fi was switched on or off
     EVENT_WIFI_SWITCH_TIMEOUT = 44,   // switched on, but no scan result within 10 s
+};
+
+// What ListMenu::handleKey returns to its window besides an onSelect result: left/right reuse
+// the numbers 5 and 6 (and UP/DOWN never come back), B and X give 1 (close), MENU and START
+// come back as themselves.
+enum ListResult {
+    LIST_CLOSE = 1,
+    LIST_LEFT = 5,
+    LIST_RIGHT = 6,
 };

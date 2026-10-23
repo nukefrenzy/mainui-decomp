@@ -23,13 +23,13 @@ struct cJSONItem {
 
 int DeleteRomAction::execute(void *param)
 {
-    menu->vfunc12(field0c);
-    printf("removerom_action menu %p, pos %d\n", menu, field0c);
+    menu->removeItem(itemIndex);
+    printf("removerom_action menu %p, pos %d\n", menu, itemIndex);
     return 1;
 }
 
 // Rewrites a favourites file from a list: one JSON object per line.
-void power_label_1a4bc(const char *path, std::vector<void *> *items)
+void saveFavorites(const char *path, std::vector<void *> *items)
 {
     FILE *f = fopen(path, "w");
     if (f != NULL) {
@@ -74,7 +74,7 @@ void power_label_1a4bc(const char *path, std::vector<void *> *items)
 }
 
 // Removes the lines whose "label" starts with label from a favourites file (via /tmp/favourite.tmp).
-void launch_label_1a75c(const char *label, const char *path)
+void removeFavorite(const char *label, const char *path)
 {
     if (label == NULL)
         return;
@@ -109,7 +109,7 @@ void launch_label_1a75c(const char *label, const char *path)
 
 // Builds the favourites list from a file of JSON lines (type 3 apps, 5/17 ROMs). Drops duplicates and
 // rewrites the file if any were found.
-TextMenu *buildMenu_1a924(const char *path)
+TextMenu *buildFavoriteList(const char *path)
 {
     FILE *f = fopen(path, "r+");
     bool repeat = false;
@@ -145,9 +145,9 @@ TextMenu *buildMenu_1a924(const char *path)
                     } else if ((type == 5 || type == 0x11) && rompath != NULL) {
                         std::vector<EmuInfo> *list = NULL;
                         if (type == 5)
-                            list = &g_romSourcesA;
+                            list = &g_emuFolders;
                         else
-                            list = &g_romSourcesB;
+                            list = &g_rappFolders;
                         int idx = findEmuByLaunch(list, launch);
                         if (idx >= 0 && idx < list->size()) {
                             char *name = NULL;
@@ -247,7 +247,7 @@ bool isFavourite(char *buf, FILE *f, const char *rompath)
 }
 
 // Builds the recent-games list; favourites are marked from favourite.json.
-TextMenu *buildMenu_1b488(std::list<RecentItem> *list)
+TextMenu *buildRecentList(std::list<RecentItem> *list)
 {
     if (list->size() != 0) {
         FILE *f = fopen("/mnt/SDCARD/Roms/favourite.json", "r");
@@ -263,27 +263,27 @@ TextMenu *buildMenu_1b488(std::list<RecentItem> *list)
                                         new AppAction(&g_appFolder[idx], false, it->type), true);
                 }
             } else {
-                int idx = findEmuByLaunch(&g_romSourcesA, it->launch.c_str());
-                if (idx >= 0 && idx < g_romSourcesA.size()) {
+                int idx = findEmuByLaunch(&g_emuFolders, it->launch.c_str());
+                if (idx >= 0 && idx < g_emuFolders.size()) {
                     const char *name = NULL;
-                    if (g_romSourcesA[idx].hasCpinyin != 0)
+                    if (g_emuFolders[idx].hasCpinyin != 0)
                         name = GetGameName(getLanguageFile(), it->label.c_str());
                     if (name == NULL)
                         name = it->label.c_str();
                     item = new TextItem(name, 0,
-                                        new EmuAction(&g_romSourcesA[idx], name, it->rompath.c_str(),
+                                        new EmuAction(&g_emuFolders[idx], name, it->rompath.c_str(),
                                                       it->imgpath.c_str(), it->type, true, 0),
                                         true);
                 } else {
-                    idx = findEmuByLaunch(&g_romSourcesB, it->launch.c_str());
-                    if (idx >= 0 && idx < g_romSourcesB.size()) {
+                    idx = findEmuByLaunch(&g_rappFolders, it->launch.c_str());
+                    if (idx >= 0 && idx < g_rappFolders.size()) {
                         const char *name = NULL;
-                        if (g_romSourcesB[idx].hasCpinyin != 0)
+                        if (g_rappFolders[idx].hasCpinyin != 0)
                             name = GetGameName(getLanguageFile(), it->label.c_str());
                         if (name == NULL)
                             name = it->label.c_str();
                         item = new TextItem(name, 0,
-                                            new EmuAction(&g_romSourcesB[idx], name, it->rompath.c_str(),
+                                            new EmuAction(&g_rappFolders[idx], name, it->rompath.c_str(),
                                                           it->imgpath.c_str(), it->type, true, 0),
                                             true);
                     }
@@ -303,7 +303,7 @@ TextMenu *buildMenu_1b488(std::list<RecentItem> *list)
 }
 
 // Builds the app list (with descriptions and icons); favourites are marked from favourite.json.
-TextMenu *buildMenu_1bbfc(std::vector<AppInfo> *apps)
+TextMenu *buildAppList(std::vector<AppInfo> *apps)
 {
     if (apps->size() != 0) {
         FILE *f = fopen("/mnt/SDCARD/Roms/favourite.json", "r");
@@ -312,9 +312,9 @@ TextMenu *buildMenu_1bbfc(std::vector<AppInfo> *apps)
         menu->setRowHeight(90);
         for (int i = 0; i < apps->size(); i++) {
             TextItem *item = new TextItem((*apps)[i].label.c_str(), 0, new AppAction(&(*apps)[i], true, 3), true);
-            item->str28 = (*apps)[i].description;
-            item->str58 = (*apps)[i].icon;
-            item->flag24 = true;
+            item->subtitle = (*apps)[i].description;
+            item->thumbnailPath = (*apps)[i].icon;
+            item->showThumbnail = true;
             if (f != NULL)
                 item->favorite = isFavourite(0, f, (*apps)[i].label.c_str());
             if (!menu->addUnique(item))
@@ -347,7 +347,7 @@ int setBacklight(int level);            // 0x14aed4
 }
 
 // Sets the panel colour from the settings scale (luma 0-, hue/saturation x5, contrast).
-int display_getlcd_1bea4(int luma, int hue, int saturation, int contrast)
+int setLcdColor(int luma, int hue, int saturation, int contrast)
 {
     LcdParam param;
     memset(&param, 0, sizeof(param));
@@ -366,17 +366,17 @@ int display_getlcd_1bea4(int luma, int hue, int saturation, int contrast)
 void initAudioSettings(void *shm)
 {
     setupKeymap("L2,L,R2,R,X,A,B,Y");
-    setVolumeTinymix(GetKeyShm(shm, 0));
+    setVolumeTinymix(GetKeyShm(shm, MONITOR_VOLUME));
     initBacklightPwm();
-    setBacklight(GetKeyShm(shm, 1));
+    setBacklight(GetKeyShm(shm, MONITOR_BRIGHTNESS));
     Mix_PlayMusic(g_themeMusic, -1);
-    Mix_VolumeMusic(GetKeyShm(shm, 5) * 128 / 20);
-    Mix_Volume(1, GetKeyShm(shm, 5) * 128 / 20);
-    printf("restore background music volume %d\n", GetKeyShm(shm, 5) * 128 / 20);
+    Mix_VolumeMusic(GetKeyShm(shm, MONITOR_BGM_VOLUME) * 128 / 20);
+    Mix_Volume(1, GetKeyShm(shm, MONITOR_BGM_VOLUME) * 128 / 20);
+    printf("restore background music volume %d\n", GetKeyShm(shm, MONITOR_BGM_VOLUME) * 128 / 20);
 }
 
 // Deletes the items marked removed from a favourites list (menu id 2); true if any were removed.
-bool refreshMenu_1c0ac(void *menu, int id)
+bool removeDeletedFavorites(void *menu, int id)
 {
     bool changed = false;
     if (id == 2) {
@@ -751,12 +751,12 @@ void TrimusWindow::dump()
 
 ListMenu::ListMenu(bool flag)
 {
-    flag08 = flag;
+    gridMode = flag;
     cur = 0;
     pageStart = 0;
     pageEnd = 0;
-    field38 = 0;
-    field04 = 0;
+    lastKeyTime = 0;
+    previewWidth = 0;
 }
 
 void ListMenu::setRect(SDL_Rect *r)

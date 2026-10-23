@@ -7,6 +7,15 @@ typedef void (*FlipFn)();
 struct cJSON;
 const char *languageString(int);
 
+// What a window's handleInput result tells the window loop (runWindowLoop, tu_015b20/p11.inc).
+// Negative or 0 (or any other value): stay open.
+enum WindowResult {
+    WINDOW_CLOSE = 1,        // close this window, unless it is the last one
+    WINDOW_QUIT = 2,         // leave the loop: MainUI exits
+    WINDOW_LAUNCH = 3,       // leave the loop to run /tmp/cmd_to_run.sh (a window with a negative id is closed first)
+    WINDOW_FORCE_CLOSE = 4,  // close this window
+};
+
 class TrimusWindow {
 public:
     TrimusWindow(int titleLabelId, int id);           // 0x1d7dc

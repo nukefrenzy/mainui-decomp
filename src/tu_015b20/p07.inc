@@ -16,51 +16,54 @@ int removeEmulatorConfigs();
 float maxCpuMHz();
 int memoryMB();
 std::string sdCardSpace();
-// 0x2849c
+// 0x2849c: the settings list (WIN_SETTING and WIN_FIXES): rows with an icon, a label and, for
+// adjustable settings, the value between left/right arrows.
 SettingMenu::SettingMenu():TextMenu(true, true, 6, NULL) {
-    field104 = NULL;
-    surface108 = loadSkinImage(g_themePath, g_skinSubdir, "skin/icon-left-arrow-24.png", g_backBuffer, false);
-    surface10c = loadSkinImage(g_themePath, g_skinSubdir, "skin/icon-right-arrow-24.png", g_backBuffer, false);
+    volumePreviewTimer = NULL;
+    settingLeftArrow = loadSkinImage(g_themePath, g_skinSubdir, "skin/icon-left-arrow-24.png", g_backBuffer, false);
+    rightArrow = loadSkinImage(g_themePath, g_skinSubdir, "skin/icon-right-arrow-24.png", g_backBuffer, false);
     selectedBackground = loadSkinImage(g_themePath, g_skinSubdir, "skin/bg-list-s.png", g_backBuffer, false);
     themePath = g_themePath;
 }
 
-// 0x28614
+// 0x28614: closing settings saves system.json (and applies a pending volume preview).
 SettingMenu::~SettingMenu() {
-    vfunc18();
+    freeListItem();
     saveSystemJson(g_keyShm, g_themePath, g_fontSize);
     g_settingsDirty = false;
-    if (field104) {
-        SDL_RemoveTimer(field104);
-        setVolumeTinymix(GetKeyShm(g_keyShm, 0));
+    if (volumePreviewTimer) {
+        SDL_RemoveTimer(volumePreviewTimer);
+        setVolumeTinymix(GetKeyShm(g_keyShm, MONITOR_VOLUME));
     }
-    if (surface108)SDL_FreeSurface(surface108);
-    if (surface10c)SDL_FreeSurface(surface10c);
+    if (settingLeftArrow)SDL_FreeSurface(settingLeftArrow);
+    if (rightArrow)SDL_FreeSurface(rightArrow);
     if (selectedBackground) {
         SDL_FreeSurface(selectedBackground);
         selectedBackground = NULL;
     }
 }
 
-// 0x2877c
-void SettingMenu::vfunc11() {
+// 0x2877c: after a theme change: reload the row icons, arrows and highlight.
+void SettingMenu::reloadTheme() {
     if (themePath.compare(g_themePath) != 0) {
         for (int i = 0;i<items.size();i++) {
             SettingMenuItem *item = (SettingMenuItem*)items[i];
             item->reload();
         }
-        if (surface108)SDL_FreeSurface(surface108);
-        if (surface10c)SDL_FreeSurface(surface10c);
+        if (settingLeftArrow)SDL_FreeSurface(settingLeftArrow);
+        if (rightArrow)SDL_FreeSurface(rightArrow);
         if (selectedBackground)SDL_FreeSurface(selectedBackground);
-        surface108 = loadSkinImage(g_themePath, g_skinSubdir, "skin/icon-left-arrow-24.png", g_backBuffer, false);
-        surface10c = loadSkinImage(g_themePath, g_skinSubdir, "skin/icon-right-arrow-24.png", g_backBuffer, false);
+        settingLeftArrow = loadSkinImage(g_themePath, g_skinSubdir, "skin/icon-left-arrow-24.png", g_backBuffer, false);
+        rightArrow = loadSkinImage(g_themePath, g_skinSubdir, "skin/icon-right-arrow-24.png", g_backBuffer, false);
         selectedBackground = loadSkinImage(g_themePath, g_skinSubdir, "skin/bg-list-s.png", g_backBuffer, false);
         themePath = g_themePath;
     }
 }
 
-// 0x28994
-void SettingMenu::vfunc7(SDL_Surface *dst) {
+// 0x28994: draws the visible rows: icon and label, and for adjustable settings the current value
+// (volume, brightness, music volume, sleep timer, audio fix) between arrows; the Wi-Fi row shows
+// the IP address when connected.
+void SettingMenu::drawList(SDL_Surface *dst) {
     int height = TTF_FontHeight(g_imeFont);
     SDL_Rect area;
     SDL_Color color;
@@ -91,7 +94,7 @@ void SettingMenu::vfunc7(SDL_Surface *dst) {
             dest.y = (row + 2)*60;
             SDL_UpperBlit(g_listStripe, NULL, dst, &dest);
         }
-        if (surface48) {
+        if (surface48) {   // never set: TextMenuDrawer keeps it NULL
             dest.x = x;
             dest.y = (60-surface48->h)/2 + y;
             area.x = 0;
@@ -118,53 +121,53 @@ void SettingMenu::vfunc7(SDL_Surface *dst) {
             area.x = area.x + 60;
         }
         area.y = y;
-        area.w = rect.w-(surface108?surface108->w:0)-(surface10c?surface10c->w:0)-20;
+        area.w = rect.w-(settingLeftArrow?settingLeftArrow->w:0)-(rightArrow?rightArrow->w:0)-20;
         area.h = 60;
-        drawText(dst, g_imeFont, area, languageString(item->labelId), color, 3, flagC0?i == cur:false);
-        area.x = rect.w + x-(surface10c?surface10c->w:0)-240;
+        drawText(dst, g_imeFont, area, languageString(item->labelId), color, 3, shadowSelected?i == cur:false);
+        area.x = rect.w + x-(rightArrow?rightArrow->w:0)-240;
         area.w = 200;
         int type = item->handler;
         int mode;
         WifiStatus *status;
         int level, timeout;
-        if (type == 1 || type == 3 || type == 2 || type == 12 || type == 14 || type == 17) {
-            if (type == 1) {
-                level = GetKeyShm(g_keyShm, 0);
+        if (type == SETTING_VOLUME || type == SETTING_BRIGHTNESS || type == SETTING_BGM_VOLUME || type == SETTING_HIBERNATE || type == SETTING_UNUSED_14 || type == SETTING_AUDIOFIX) {
+            if (type == SETTING_VOLUME) {
+                level = GetKeyShm(g_keyShm, MONITOR_VOLUME);
                 snprintf(text, 32, "%02d/%02d", level, 20);
-            } else if (type == 3) {
-                level = GetKeyShm(g_keyShm, 1);
+            } else if (type == SETTING_BRIGHTNESS) {
+                level = GetKeyShm(g_keyShm, MONITOR_BRIGHTNESS);
                 snprintf(text, 32, "%02d/%02d", level, 10);
-            } else if (type == 2)snprintf(text, 32, "%02d/%02d", GetKeyShm(g_keyShm, 5), 20);
-            else if (type == 12) {
-                timeout = GetKeyShm(g_keyShm, 6);
+            } else if (type == SETTING_BGM_VOLUME)snprintf(text, 32, "%02d/%02d", GetKeyShm(g_keyShm, MONITOR_BGM_VOLUME), 20);
+            else if (type == SETTING_HIBERNATE) {
+                timeout = GetKeyShm(g_keyShm, MONITOR_HIBERNATE_DELAY);
                 if (timeout<5 || timeout>30)strncpy(text, languageString(STR_NEVER), 32);
                 else snprintf(text, 32, languageString(STR_N_MIN_LATER), timeout);
-            } else if (type == 17) {
-                timeout = GetKeyShm(g_keyShm, 13);
+            } else if (type == SETTING_AUDIOFIX) {
+                timeout = GetKeyShm(g_keyShm, MONITOR_AUDIOFIX);
                 if (timeout != 0)strncpy(text, languageString(STR_ON), 32);
                 else strncpy(text, languageString(STR_OFF), 32);
             }
             area.y += 2;
             drawText(dst, g_imeFont, area, text, color, 1, false);
-            if (surface108) {
-                area.y = (60-surface108->h)/2 + y;
-                area.x = rect.w + x-(surface10c?surface10c->w:0)-surface108->w-240;
-                SDL_UpperBlit(surface108, NULL, dst, &area);
+            if (settingLeftArrow) {
+                area.y = (60-settingLeftArrow->h)/2 + y;
+                area.x = rect.w + x-(rightArrow?rightArrow->w:0)-settingLeftArrow->w-240;
+                SDL_UpperBlit(settingLeftArrow, NULL, dst, &area);
             }
-            if (surface10c) {
-                area.y = (60-surface10c->h)/2 + y;
-                area.x = rect.w + x-surface10c->w-40;
-                SDL_UpperBlit(surface10c, NULL, dst, &area);
+            if (rightArrow) {
+                area.y = (60-rightArrow->h)/2 + y;
+                area.x = rect.w + x-rightArrow->w-40;
+                SDL_UpperBlit(rightArrow, NULL, dst, &area);
             }
-        } else if (type == 19) {
+        } else if (type == SETTING_WIFI) {
             mode = wifiMode();
-            if (mode == 2) {
+            if (mode == WIFI_MODE_STATION) {
                 status = getWifiStatus();
-                if (status->state == 4) {
+                if (status->state == WIFI_STATE_COMPLETED) {
                     std::string label(status->ip);
                     if (label.size() != 0) {
-                        area.x = rect.w + x-(surface10c?surface10c->w:0)-240;
-                        area.w = surface10c?surface10c->w + 200:200;
+                        area.x = rect.w + x-(rightArrow?rightArrow->w:0)-240;
+                        area.w = rightArrow?rightArrow->w + 200:200;
                         area.y += 2;
                         drawText(dst, g_imeFont, area, label.c_str(), color, 4, false);
                     }
@@ -176,17 +179,19 @@ void SettingMenu::vfunc7(SDL_Surface *dst) {
     }
 }
 
-// 0x294f8
+// 0x294f8: timer, 150 ms after the volume last changed: apply it and play the "enter" sound as a
+// preview.
 static unsigned previewVolume(unsigned interval, void *param) {
     if (g_enterSound) {
         puts("Mix_PlayChannel enter.wav");
         if (Mix_PlayChannel(0, g_enterSound, 0) == -1)printf("Mix_PlayChunk: %s\n", SDL_GetError());
     }
-    setVolumeTinymix(GetKeyShm(g_keyShm, 0));
+    setVolumeTinymix(GetKeyShm(g_keyShm, MONITOR_VOLUME));
     return 0;
 }
 
-// 0x295a8
+// 0x295a8: left on an adjustable setting: one step down (volume and music 0-20, brightness 1-10),
+// or the next sleep timeout (0, 5, 15, 30 min) or the audio fix switch; marks settings changed.
 void SettingMenu::decrease() {
     SettingMenuItem *item = (SettingMenuItem*)items[cur];
     if (item == NULL)return;
@@ -194,35 +199,35 @@ void SettingMenu::decrease() {
     int level;
     int selector = item->handler;
     switch (selector) {
-        case 1:level = GetKeyShm(g_keyShm, 0);
+        case SETTING_VOLUME:level = GetKeyShm(g_keyShm, MONITOR_VOLUME);
         if (level>0)level--;
-        SetKeyShm(g_keyShm, 0, level);
-        SetKeyShm(g_keyShm, 3, 0);
-        if (field104) {
-            SDL_RemoveTimer(field104);
+        SetKeyShm(g_keyShm, MONITOR_VOLUME, level);
+        SetKeyShm(g_keyShm, MONITOR_MUTE, 0);
+        if (volumePreviewTimer) {
+            SDL_RemoveTimer(volumePreviewTimer);
             Mix_HaltChannel(0);
         }
-        field104 = SDL_AddTimer(150, previewVolume, NULL);
+        volumePreviewTimer = SDL_AddTimer(150, previewVolume, NULL);
         break;
-        case 3:level = GetKeyShm(g_keyShm, 1);
+        case SETTING_BRIGHTNESS:level = GetKeyShm(g_keyShm, MONITOR_BRIGHTNESS);
         if (level>1)level--;
-        SetKeyShm(g_keyShm, 1, level);
+        SetKeyShm(g_keyShm, MONITOR_BRIGHTNESS, level);
         setBacklight(level);
         break;
-        case 2:level = GetKeyShm(g_keyShm, 5);
+        case SETTING_BGM_VOLUME:level = GetKeyShm(g_keyShm, MONITOR_BGM_VOLUME);
         if (level>0)level--;
-        SetKeyShm(g_keyShm, 5, level);
+        SetKeyShm(g_keyShm, MONITOR_BGM_VOLUME, level);
         Mix_VolumeMusic((level<<7)/20);
         Mix_Volume(1, (level<<7)/20);
         break;
-        case 12:level = GetKeyShm(g_keyShm, 6);
+        case SETTING_HIBERNATE:level = GetKeyShm(g_keyShm, MONITOR_HIBERNATE_DELAY);
         if (level == 0)level = 5;
         else if (level == 5)level = 15;
         else if (level == 15)level = 30;
         else level = 0;
-        SetKeyShm(g_keyShm, 6, level);
+        SetKeyShm(g_keyShm, MONITOR_HIBERNATE_DELAY, level);
         break;
-        case 17:level = GetKeyShm(g_keyShm, 13);
+        case SETTING_AUDIOFIX:level = GetKeyShm(g_keyShm, MONITOR_AUDIOFIX);
         if (level == 0) {
             level = 1;
             system("rm -f /tmp/no_audioserver");
@@ -230,13 +235,13 @@ void SettingMenu::decrease() {
             level = 0;
             system("touch /tmp/no_audioserver");
         }
-        SetKeyShm(g_keyShm, 13, level);
+        SetKeyShm(g_keyShm, MONITOR_AUDIOFIX, level);
         break;
         default:break;
     }
 }
 
-// 0x298ec
+// 0x298ec: right: one step up; otherwise as decrease.
 void SettingMenu::increase() {
     SettingMenuItem *item = (SettingMenuItem*)items[cur];
     if (item == NULL)return;
@@ -244,35 +249,35 @@ void SettingMenu::increase() {
     int level;
     int selector = item->handler;
     switch (selector) {
-        case 1:level = GetKeyShm(g_keyShm, 0);
+        case SETTING_VOLUME:level = GetKeyShm(g_keyShm, MONITOR_VOLUME);
         if (level<20)level++;
-        SetKeyShm(g_keyShm, 0, level);
-        SetKeyShm(g_keyShm, 3, 0);
-        if (field104) {
-            SDL_RemoveTimer(field104);
+        SetKeyShm(g_keyShm, MONITOR_VOLUME, level);
+        SetKeyShm(g_keyShm, MONITOR_MUTE, 0);
+        if (volumePreviewTimer) {
+            SDL_RemoveTimer(volumePreviewTimer);
             Mix_HaltChannel(0);
         }
-        field104 = SDL_AddTimer(150, previewVolume, NULL);
+        volumePreviewTimer = SDL_AddTimer(150, previewVolume, NULL);
         break;
-        case 3:level = GetKeyShm(g_keyShm, 1);
+        case SETTING_BRIGHTNESS:level = GetKeyShm(g_keyShm, MONITOR_BRIGHTNESS);
         if (level<10)level++;
-        SetKeyShm(g_keyShm, 1, level);
+        SetKeyShm(g_keyShm, MONITOR_BRIGHTNESS, level);
         setBacklight(level);
         break;
-        case 2:level = GetKeyShm(g_keyShm, 5);
+        case SETTING_BGM_VOLUME:level = GetKeyShm(g_keyShm, MONITOR_BGM_VOLUME);
         if (level<20)level++;
-        SetKeyShm(g_keyShm, 5, level);
+        SetKeyShm(g_keyShm, MONITOR_BGM_VOLUME, level);
         Mix_VolumeMusic((level<<7)/20);
         Mix_Volume(1, (level<<7)/20);
         break;
-        case 12:level = GetKeyShm(g_keyShm, 6);
+        case SETTING_HIBERNATE:level = GetKeyShm(g_keyShm, MONITOR_HIBERNATE_DELAY);
         if (level == 0)level = 5;
         else if (level == 5)level = 15;
         else if (level == 15)level = 30;
         else level = 0;
-        SetKeyShm(g_keyShm, 6, level);
+        SetKeyShm(g_keyShm, MONITOR_HIBERNATE_DELAY, level);
         break;
-        case 17:level = GetKeyShm(g_keyShm, 13);
+        case SETTING_AUDIOFIX:level = GetKeyShm(g_keyShm, MONITOR_AUDIOFIX);
         if (level == 0) {
             level = 1;
             system("rm -f /tmp/no_audioserver");
@@ -280,41 +285,42 @@ void SettingMenu::increase() {
             level = 0;
             system("touch /tmp/no_audioserver");
         }
-        SetKeyShm(g_keyShm, 13, level);
+        SetKeyShm(g_keyShm, MONITOR_AUDIOFIX, level);
         break;
         default:break;
     }
 }
 
-// 0x29c30
+// 0x29c30: reboot into the flashing mode (unused).
 static void rebootToEfex() {
     system("reboot efex");
 }
 
-// 0x29c4c
+// 0x29c4c: "Refresh Roms": delete the ROM caches and the emulator settings.
 static int resetEmulatorSettings(void *arg) {
     removeAllDBFiles();
     removeEmulatorConfigs();
     return 1;
 }
 
-// 0x29c74
+// 0x29c74: factory reset: also deletes favourites, system.json and the saved list positions,
+// restores the default volume, brightness and colours, clears Recent, the keymap and the language.
 static int resetAllSettings(void *arg) {
     resetEmulatorSettings(NULL);
     unlink("/mnt/SDCARD/Roms/favourite.json");
     unlink("/mnt/SDCARD/system.json");
     unlink("/appconfigs/romwinidx.json");
     g_romListPositions.clear();
-    SetKeyShm(g_keyShm, 0, 20);
-    SetKeyShm(g_keyShm, 5, 8);
-    SetKeyShm(g_keyShm, 3, 0);
-    SetKeyShm(g_keyShm, 1, 7);
-    SetKeyShm(g_keyShm, 8, 7);
-    SetKeyShm(g_keyShm, 9, 10);
-    SetKeyShm(g_keyShm, 10, 10);
-    SetKeyShm(g_keyShm, 11, 10);
-    setVolumeTinymix(GetKeyShm(g_keyShm, 0));
-    display_getlcd_1bea4(7, 10, 10, 10);
+    SetKeyShm(g_keyShm, MONITOR_VOLUME, 20);
+    SetKeyShm(g_keyShm, MONITOR_BGM_VOLUME, 8);
+    SetKeyShm(g_keyShm, MONITOR_MUTE, 0);
+    SetKeyShm(g_keyShm, MONITOR_BRIGHTNESS, 7);
+    SetKeyShm(g_keyShm, MONITOR_LUMINATION, 7);
+    SetKeyShm(g_keyShm, MONITOR_HUE, 10);
+    SetKeyShm(g_keyShm, MONITOR_SATURATION, 10);
+    SetKeyShm(g_keyShm, MONITOR_CONTRAST, 10);
+    setVolumeTinymix(GetKeyShm(g_keyShm, MONITOR_VOLUME));
+    setLcdColor(7, 10, 10, 10);
     clearRecent(&g_recentGames);
     setKeymap(NULL);
     setLanguageFile(NULL);
@@ -323,93 +329,94 @@ static int resetAllSettings(void *arg) {
     return 1;
 }
 
-// 0x29dc8
+// 0x29dc8: A on a row: opens what it stands for (device info, fixes, IO test, ADC info, language,
+// key setting, colour, themes, Wi-Fi, hotspot) or asks to confirm a reset or power-off.
 void SettingMenu::select() {
     SettingMenuItem *item = (SettingMenuItem*)items[cur];
     if (item == NULL)return;
     g_settingsDirty = true;
     int type = item->handler;
     switch (type) {
-        case 7: {
-            MenuWindow *window = new MenuWindow(30, 9, (void*)NULL);
+        case SETTING_DEVICE_INFO: {
+            MenuWindow *window = new MenuWindow(STR_DEVICE_INFO, WIN_DEVICE_INFO, (void*)NULL);
             window->onShow();
             g_windowStack->push_back((TrimusWindow*)window);
             return;
         }
-        case 16: {
-            MenuWindow *window = new MenuWindow(130, 20, (void*)NULL);
+        case SETTING_FIXES: {
+            MenuWindow *window = new MenuWindow(STR_FIXES, WIN_FIXES, (void*)NULL);
             window->onShow();
             g_windowStack->push_back((TrimusWindow*)window);
             return;
         }
-        case 8: {
+        case SETTING_IO_TEST: {
             KeyTestWindow2 *window = new KeyTestWindow2;
             window->onShow();
             g_windowStack->push_back((TrimusWindow*)window);
             return;
         }
-        case 9: {
-            ADCInfoWindow *window = new ADCInfoWindow(32, 12);
+        case SETTING_ADC_INFO: {
+            ADCInfoWindow *window = new ADCInfoWindow(STR_ADC_INFO, WIN_ADC_INFO);
             window->onShow();
             g_windowStack->push_back((TrimusWindow*)window);
             return;
         }
-        case 4: {
+        case SETTING_REFRESH_ROMS: {
             Action *action = new GeneralAction(-1, resetEmulatorSettings, NULL);
-            Action *progress = new PopupProgressAction(53, action);
-            DialogWindow *window = new DialogWindow(54, 69, false, progress);
+            Action *progress = new PopupProgressAction(STR_REFRESH, action);
+            DialogWindow *window = new DialogWindow(STR_REFRESH_ROMS_2, STR_REFRESH_ROMS_TEXT, false, progress);
             window->onShow();
             g_windowStack->push_back((TrimusWindow*)window);
             return;
         }
-        case 5: {
+        case SETTING_FACTORY_RESET: {
             Action *action = new GeneralAction(-1, resetAllSettings, NULL);
-            Action *progress = new PopupProgressAction(70, action);
-            DialogWindow *window = new DialogWindow(67, 68, false, progress);
+            Action *progress = new PopupProgressAction(STR_RESET, action);
+            DialogWindow *window = new DialogWindow(STR_RESUME_DEFAULT_SETTING, STR_RESUME_SETTINGS_TEXT, false, progress);
             window->onShow();
             g_windowStack->push_back((TrimusWindow*)window);
             return;
         }
-        case 11: {
-            MenuWindow *window = new MenuWindow(23, 14, (void*)NULL);
+        case SETTING_LANGUAGE: {
+            MenuWindow *window = new MenuWindow(STR_LANGUAGE, WIN_LANGUAGE, (void*)NULL);
             window->onShow();
             g_windowStack->push_back((TrimusWindow*)window);
             return;
         }
-        case 0: {
+        case SETTING_KEYMAP: {
             KeySettingWindow *window = new KeySettingWindow;
             window->onShow();
             g_windowStack->push_back((TrimusWindow*)window);
             return;
         }
-        case 13: {
-            MenuWindow *window = new MenuWindow(118, 18, (void*)NULL);
+        case SETTING_COLOR: {
+            MenuWindow *window = new MenuWindow(STR_COLOR, WIN_COLOR, (void*)NULL);
             window->onShow();
             g_windowStack->push_back((TrimusWindow*)window);
             return;
         }
-        case 15: {
-            MenuWindow *window = new MenuWindow(125, 19, (void*)NULL);
+        case SETTING_THEME: {
+            MenuWindow *window = new MenuWindow(STR_THEMES, WIN_THEME, (void*)NULL);
             window->onShow();
             g_windowStack->push_back((TrimusWindow*)window);
             return;
         }
-        case 18: {
-            DialogWindow *window = new DialogWindow(86, 108, false, new GeneralAction(-1, powerOff, NULL));
+        case SETTING_POWER_OFF: {
+            DialogWindow *window = new DialogWindow(STR_POWER_OFF, STR_SHUT_DOWN_TEXT, false, new GeneralAction(-1, powerOff, NULL));
             window->onShow();
             g_windowStack->push_back((TrimusWindow*)window);
             return;
         }
-        case 19: {
+        case SETTING_WIFI: {
             WifiMenu *menu = new WifiMenu;
-            MenuWindow *window = new MenuWindow(131, 21, (ListMenu*)menu);
+            MenuWindow *window = new MenuWindow(STR_WIFI, WIN_WIFI, (ListMenu*)menu);
             window->onShow();
             g_windowStack->push_back((TrimusWindow*)window);
             return;
         }
-        case 20: {
+        case SETTING_HOTSPOT: {
             HotspotMenu *menu = new HotspotMenu;
-            MenuWindow *window = new MenuWindow(134, 23, (ListMenu*)menu);
+            MenuWindow *window = new MenuWindow(STR_HOTSPOT, WIN_HOTSPOT, (ListMenu*)menu);
             window->onShow();
             g_windowStack->push_back((TrimusWindow*)window);
             return;
@@ -418,33 +425,33 @@ void SettingMenu::select() {
     }
 }
 
-// 0x2a5d4
-int SettingMenu::vfunc3() {
+// 0x2a5d4: one button: up/down move, left/right adjust, A/Y select, B/X close, MENU passes through.
+int SettingMenu::handleKey() {
     int key = handleGlobalInput(NULL);
     switch (key) {
-        case 5:puts("key_up");
-        vfunc10();
+        case BUTTON_UP:puts("key_up");
+        moveUp();
         break;
-        case 6:puts("key_down");
-        vfunc9();
+        case BUTTON_DOWN:puts("key_down");
+        moveDown();
         break;
-        case 7:decrease();
+        case BUTTON_LEFT:decrease();
         break;
-        case 8:increase();
+        case BUTTON_RIGHT:increase();
         break;
-        case 1:case 4:puts("a");
+        case BUTTON_A:case BUTTON_Y:puts("a");
         select();
         break;
-        case 2:case 3:puts("b or c");
+        case BUTTON_B:case BUTTON_X:puts("b or c");
         return 1;
-        case 11:return 11;
+        case BUTTON_MENU:return BUTTON_MENU;
         default:break;
     }
     return -1;
 }
 
-// 0x2a6ec
-void SettingMenu::vfunc18() {
+// 0x2a6ec: deletes every row.
+void SettingMenu::freeListItem() {
     puts("SettingMenu::freeListItem");
     for (int i = 0;i<items.size();i++) {
         SettingMenuItem *item = (SettingMenuItem*)items[i];
@@ -459,15 +466,15 @@ struct DeviceInfoItem {
     }
     std::string label, value;
 };
-// 0x2a7b0
+// 0x2a7b0: one "label: value" row of the device information.
 DeviceInfoItem::DeviceInfoItem(const char *a, const char *b) {
     label = a;
     value = b;
 }
 
-// 0x2a83c
+// 0x2a83c: the device information list (WIN_DEVICE_INFO).
 DeviceInfoMenu::DeviceInfoMenu():TextMenu(true, true, 6, NULL) {
-    field104 = NULL;
+    firmwareVersion = NULL;
     loadInfo();
     selectedBackground = loadSkinImage(g_themePath, g_skinSubdir, "skin/bg-list-s.png", g_backBuffer, false);
     themePath = g_themePath;
@@ -475,16 +482,16 @@ DeviceInfoMenu::DeviceInfoMenu():TextMenu(true, true, 6, NULL) {
 
 // 0x2a934
 DeviceInfoMenu::~DeviceInfoMenu() {
-    vfunc18();
+    freeListItem();
     if (selectedBackground) {
         SDL_FreeSurface(selectedBackground);
         selectedBackground = NULL;
     }
-    if (field104)free(field104);
+    if (firmwareVersion)free(firmwareVersion);
 }
 
-// 0x2aa08
-void DeviceInfoMenu::vfunc11() {
+// 0x2aa08: after a theme change: reload the highlight.
+void DeviceInfoMenu::reloadTheme() {
     if (themePath.compare(g_themePath) != 0) {
         if (selectedBackground)SDL_FreeSurface(selectedBackground);
         selectedBackground = loadSkinImage(g_themePath, g_skinSubdir, "skin/bg-list-s.png", g_backBuffer, false);
@@ -492,8 +499,8 @@ void DeviceInfoMenu::vfunc11() {
     }
 }
 
-// 0x2aae4
-void DeviceInfoMenu::vfunc7(SDL_Surface *dst) {
+// 0x2aae4: draws the visible rows: label on the left, value on the right.
+void DeviceInfoMenu::drawList(SDL_Surface *dst) {
     TTF_Font *font = g_imeFont;
     int height = TTF_FontHeight(font);
     SDL_Rect area;
@@ -548,7 +555,7 @@ void DeviceInfoMenu::vfunc7(SDL_Surface *dst) {
         area.y = (60-height)/2 + y;
         area.w = rect.w-40;
         area.h = 60;
-        int width = drawText(dst, font, area, item->label.c_str(), color, 0, flagC0?i == cur:false);
+        int width = drawText(dst, font, area, item->label.c_str(), color, 0, shadowSelected?i == cur:false);
         area.x = area.x + width;
         area.w = rect.w-area.x-20;
         drawText(dst, font, area, item->value.c_str(), color, 2, false);
@@ -557,7 +564,8 @@ void DeviceInfoMenu::vfunc7(SDL_Surface *dst) {
     }
 }
 
-// 0x2b028
+// 0x2b028: the chip's unique id (MI_SYS_ReadUuid) as 16 hex digits; left empty if it cannot be
+// read.
 static void formatDeviceUuid(char *out, size_t size) {
     int rc = 0xa009201f;
     struct Words {
@@ -576,7 +584,8 @@ static void formatDeviceUuid(char *out, size_t size) {
     if (rc == 0)snprintf(out, size, "%02X%02X%02X%02X%02X%02X%02X%02X", words.data[7], words.data[6], words.data[5], words.data[4], words.data[3], words.data[2], words.data[1], words.data[0]);
 }
 
-// 0x2b0f8
+// 0x2b0f8: fills the rows: model MY354, serial (chip id), firmware version (miyoo_version from the
+// U-Boot environment), CPU clock, memory, SD card use, website.
 void DeviceInfoMenu::loadInfo() {
     char uuid[32] = {
         0
@@ -584,20 +593,20 @@ void DeviceInfoMenu::loadInfo() {
     char buf[16];
     formatDeviceUuid(uuid, 32);
     char *version = NULL;
-    if (field104) {
-        free(field104);
-        field104 = NULL;
+    if (firmwareVersion) {
+        free(firmwareVersion);
+        firmwareVersion = NULL;
     }
     system("/etc/fw_printenv miyoo_version > /tmp/miyoo_version");
     FILE *f = fopen("/tmp/miyoo_version", "r");
     if (f) {
         puts("loadContent");
-        readWholeFile("/tmp/miyoo_version", f, &field104);
+        readWholeFile("/tmp/miyoo_version", f, &firmwareVersion);
         puts("loadContent end");
         fclose(f);
-        version = strstr(field104, "\n");
+        version = strstr(firmwareVersion, "\n");
         if (version)*version = 0;
-        version = strstr(field104, "miyoo_version=");
+        version = strstr(firmwareVersion, "miyoo_version=");
         if (version)version += 14;
     }
     addItem((TextItem*)new DeviceInfoItem(languageString(STR_MODE), "MY354"));
@@ -611,8 +620,8 @@ void DeviceInfoMenu::loadInfo() {
     addItem((TextItem*)new DeviceInfoItem(languageString(STR_WEBSITE), "www.lomiyoo.com"));
 }
 
-// 0x2b504
-void DeviceInfoMenu::vfunc18() {
+// 0x2b504: deletes every row.
+void DeviceInfoMenu::freeListItem() {
     for (int i = 0;i<items.size();i++) {
         DeviceInfoItem *item = (DeviceInfoItem*)items[i];
         delete item;
@@ -716,8 +725,9 @@ struct DisplayAttr {
 };
 extern "C" int MI_DISP_GetPubAttr(int, DisplayAttr*);
 extern "C" int MI_DISP_SetPubAttr(int, DisplayAttr*);
-// 0x2b5bc
-void display_memset_2b5bc() {
+// 0x2b5bc: programs the display controller with the panel timing from g_panelInfo (sync widths,
+// porches, frame rate).
+void applyPanelTiming() {
     DisplayAttr attr;
     char reserved[16]; // Retain the original unused stack storage.
     memset(&attr, 0, 48);

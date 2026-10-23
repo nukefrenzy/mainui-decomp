@@ -27,14 +27,14 @@ struct TextItem {
 class DBCacheWorker {           // a BGWorker, 0x284 bytes
 public:
     DBCacheWorker(sqlite3 *db, const std::string &dbName, const std::string &table, int offset, int len,
-                  int x, LruCache *items, LruCache *data, EmuInfo *emu, std::string *dir,
+                  int rowWindowId, LruCache *items, LruCache *data, EmuInfo *emu, std::string *dir,
                   std::string *search, bool flag);   // 0x3a74c
     char raw[0x284];
 };
 
 const char *getLanguageFile();               // 0x14ba18
-extern std::vector<EmuInfo> g_romSourcesA;   // 0x181944
-extern std::vector<EmuInfo> g_romSourcesB;   // 0x181950
+extern std::vector<EmuInfo> g_emuFolders;   // 0x181944
+extern std::vector<EmuInfo> g_rappFolders;   // 0x181950
 
 // 0x1484d4: free callback for `items`
 static void deleteTextItem(SDL_Surface *p)
@@ -72,9 +72,9 @@ MultiDBCachedTextMenu::MultiDBCachedTextMenu(std::string search)
 {
     name = "global_search";
     dir = ".";
-    str18 = search;
+    searchText = search;
     prepare();
-    field58 = 90;
+    textRowHeight = 90;
 }
 
 // Closes the databases. Original bug, kept as-is: the loop index is never initialised.
@@ -100,9 +100,9 @@ int MultiDBCachedTextMenu::openCache(EmuInfo &emu, char *buf, size_t size)
     rc = sqlite3_open(buf, &db);
     if (rc == 0) {
         if (emu.hasCpinyin && strcmp(getLanguageFile(), "ch.lang") == 0)
-            snprintf(buf, size, "SELECT COUNT(*) FROM %s_roms WHERE type=0 AND cpinyin like '%%%s%%'", base, str18.c_str());
+            snprintf(buf, size, "SELECT COUNT(*) FROM %s_roms WHERE type=0 AND cpinyin like '%%%s%%'", base, searchText.c_str());
         else
-            snprintf(buf, size, "SELECT COUNT(*) FROM %s_roms WHERE type=0 AND pinyin like '%%%s%%'", base, str18.c_str());
+            snprintf(buf, size, "SELECT COUNT(*) FROM %s_roms WHERE type=0 AND pinyin like '%%%s%%'", base, searchText.c_str());
         sqlite3_stmt *stmt;
         if (sqlite3_prepare_v2(db, buf, -1, &stmt, NULL) == 0) {
             if (sqlite3_step(stmt) == 100) {   // SQLITE_ROW
@@ -136,20 +136,20 @@ void MultiDBCachedTextMenu::prepare()
     unsigned int k;
     const int bufSize = 512;
     int t = 0;
-    if (str18.length() != 0) {
+    if (searchText.length() != 0) {
         char *buf = (char *)malloc(bufSize);
         struct timeval tv;
         gettimeofday(&tv, NULL);
         t = tv.tv_sec * 1000000 + tv.tv_usec;
-        for (i = 0; i < g_romSourcesA.size(); i++) {
-            count = openCache(g_romSourcesA[i], buf, bufSize);
+        for (i = 0; i < g_emuFolders.size(); i++) {
+            count = openCache(g_emuFolders[i], buf, bufSize);
             if (count > 0)
-                printf("%s have %d items\n", g_romSourcesA[i].path.c_str(), count);
+                printf("%s have %d items\n", g_emuFolders[i].path.c_str(), count);
         }
-        for (j = 0; j < g_romSourcesB.size(); j++) {
-            count = openCache(g_romSourcesB[j], buf, bufSize);
+        for (j = 0; j < g_rappFolders.size(); j++) {
+            count = openCache(g_rappFolders[j], buf, bufSize);
             if (count > 0)
-                printf("%s have %d items\n", g_romSourcesB[j].path.c_str(), count);
+                printf("%s have %d items\n", g_rappFolders[j].path.c_str(), count);
         }
         free(buf);
         gettimeofday(&tv, NULL);
@@ -186,32 +186,32 @@ void MultiDBCachedTextMenu::fetchBackward()
     prepareBGWorkers(index, len);
 }
 
-// Cursor movement (TextMenuDrawer slots 9, 10, 16 and 17; probably down, up, page up and page
-// down): move as usual, then queue the rows that came into view.
-int MultiDBCachedTextMenu::vfunc16()
+// Cursor movement (moveDown, moveUp, pageUp, pageDown): move as usual, then queue the rows that
+// came into view.
+int MultiDBCachedTextMenu::pageUp()
 {
-    int r = TextMenuDrawer::vfunc16();
+    int r = TextMenuDrawer::pageUp();
     fetchBackward();
     return r;
 }
 
-int MultiDBCachedTextMenu::vfunc17()
+int MultiDBCachedTextMenu::pageDown()
 {
-    int r = TextMenuDrawer::vfunc17();
+    int r = TextMenuDrawer::pageDown();
     fetchForward();
     return r;
 }
 
-int MultiDBCachedTextMenu::vfunc9()
+int MultiDBCachedTextMenu::moveDown()
 {
-    int r = TextMenuDrawer::vfunc9();
+    int r = TextMenuDrawer::moveDown();
     fetchForward();
     return r;
 }
 
-int MultiDBCachedTextMenu::vfunc10()
+int MultiDBCachedTextMenu::moveUp()
 {
-    int r = TextMenuDrawer::vfunc10();
+    int r = TextMenuDrawer::moveUp();
     fetchBackward();
     return r;
 }
@@ -242,13 +242,13 @@ void MultiDBCachedTextMenu::prepareBGWorkers(int index, int len)
             table = name + "_" + dbs[i].name;
             if (len <= end - index) {
                 worker = new DBCacheWorker(dbs[i].db, dbs[i].name, table, index - start, len, 24,
-                                           &items, &data, dbs[i].emu, &dir, &str18, true);
+                                           &items, &data, dbs[i].emu, &dir, &searchText, true);
                 workers.addWorker((BGWorker *)worker);
                 len = 0;
             } else {
                 take = end - index;
                 worker = new DBCacheWorker(dbs[i].db, dbs[i].name, table, index - start, take, 24,
-                                           &items, &data, dbs[i].emu, &dir, &str18, true);
+                                           &items, &data, dbs[i].emu, &dir, &searchText, true);
                 workers.addWorker((BGWorker *)worker);
                 index += take;
                 len -= take;
@@ -282,7 +282,7 @@ void *MultiDBCachedTextMenu::getItem(int index)
 }
 
 // The same lookup in the `data` cache: the row's extra data, if loaded.
-void *MultiDBCachedTextMenu::vfunc6(int index)
+void *MultiDBCachedTextMenu::getItemData(int index)
 {
     if (dbs.size() != 0) {
         int end = 0;

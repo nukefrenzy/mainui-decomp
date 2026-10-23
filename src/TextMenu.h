@@ -10,9 +10,9 @@ public:
     virtual ~TextMenu();                                       // 0x20570 (D0 0x205c4)
     virtual void *getItem(int index);                          // 0x20714 slot 5, a TextItem *
     virtual int  count() { return items.size(); }              // 0x3a6dc, inline
-    virtual void vfunc12(int);                                 // 0x2079c
-    virtual void vfunc13();                                    // 0x206e0
-    virtual void vfunc18();                                    // 0x205f8 slot 18 (new)
+    virtual void removeItem(int);                                 // 0x2079c
+    virtual void clearItems();                                    // 0x206e0
+    virtual void freeListItem();                                    // 0x205f8 slot 18 (new)
     void addItem(void *item);                              // 0x20898
     void insertSorted(void *item, int (*cmp)(TextItem *, TextItem *)); // 0x208d0
     bool addUnique(TextItem *item);                            // 0x20a3c  false if the label is listed

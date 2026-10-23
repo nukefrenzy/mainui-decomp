@@ -38,6 +38,24 @@ See [docs/byte-identical-build.md](docs/byte-identical-build.md) for how, and th
 | `tools/` | `matchfn.py` (one function) and `unitcheck.py` (a whole file) against the original; `tusplit.py` (source-file map), `packet.py` (per-function briefs), `autoderive.py` (patterns), `progress.py`; library matchers and the analysis scripts that produced the names |
 | `scripts/` | Fetch and verify MainUI and the toolchain; run all matches; rebuild and compare the embedded libraries |
 
+## Reading the source
+
+Each `src/tu_<address>` file is one of MainUI's original source files, rebuilt in address order;
+its header comment says what it does, and `docs/program-map.md` gives the overall picture. The
+numbers MainUI passes around have names, defined in a few small headers:
+
+| Header | Names |
+| --- | --- |
+| `src/Input.h` | SDL key symbols of the Miyoo buttons, MainUI's button codes, user-event codes, ListMenu results |
+| `src/WindowIds.h` | window and menu ids (`WIN_SETTING`, `WIN_ROM_LIST`, ...) |
+| `src/LangStrings.h` | the 156 user-interface strings, with their English text |
+| `src/ShmVar.h` | settings shared with the keymon daemon (`MONITOR_VOLUME`, ...) |
+| `src/PlatformApi.h` | Wi-Fi states and modes |
+| `src/TrimusWindow.h` | what a window's `handleInput` result tells the window loop |
+
+At `-O0` the code mirrors the original closely, so some statements look odd on purpose; comments
+marked "kept as-is" point out original bugs and quirks that the byte match requires.
+
 ## Quick start (Linux or WSL)
 
 ```sh

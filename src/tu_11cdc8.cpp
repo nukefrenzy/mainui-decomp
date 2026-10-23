@@ -1,6 +1,16 @@
-// Device/filesystem support, recent lists, and app/emulator/theme configuration.
-// Proven 0x11cdc8-0x129f9c: 29,296 body bytes (56 written functions and an init pair),
-// followed by 263 generated inline/template functions (24,420 bytes).
+// tu_11cdc8 (0x11cdc8-0x129f9c): configuration and device helpers.
+//
+// - Device and SD card: free space, mount checks, loaded kernel modules, swap file, CPU and
+//   memory size, the serial number, process lookup.
+// - Folders of config.json files: /mnt/SDCARD/Emu (emulators), /App (apps), /RApp (RetroArch
+//   apps) and /Themes are each a folder per entry; loadConfigFolder parses every entry with a
+//   callback (parseEmu, parseApp, parseTheme).
+// - The Recent list (/mnt/SDCARD/Roms/recentlist.json, one JSON object per line, at most 20) and
+//   the hardware test results (/mnt/SDCARD/test_result.json).
+// - Image loading with a theme fallback (loadSkinImage), used everywhere.
+// - Leftovers from TrimUI's firmware for its dual-partition SD card layout (/mnt/P2EXT, built-in
+//   platform folders with license files); on the Miyoo they find nothing to do.
+// Body 29,296 bytes (56 functions and an init pair), then 263 generated functions (24,420 bytes).
 #include "PlatformApi.h"
 #include "PixelScale.h"
 #include <string>
@@ -48,9 +58,10 @@ extern "C" {
 static_assert(sizeof(RecentItem)==100, "recent item layout");
 static_assert(sizeof(EmuInfo)==0xdc, "emulator layout");
 std::vector<std::string> g_platformPaths; // 0x182064
-char g_ioBuffer[128],g_pathBuffer[128]; // 0x182070, 0x1820f0
-extern std::vector<EmuInfo> g_romSourcesA,g_romSourcesB;
-// 0x11cdc8
+char g_ioBuffer[128],g_pathBuffer[128]; // 0x182070, 0x1820f0: shared scratch buffers
+extern std::vector<EmuInfo> g_emuFolders,g_rappFolders;
+// 0x11cdc8: nearest-neighbour scaling of a 32-bit pixel block (16.16 fixed point); dst rows
+// are dw pixels plus `padding` skipped pixels.
 void scalePixels(int sx,int sy,unsigned sw,unsigned sh,unsigned dw,unsigned dh,unsigned stride,int padding,int *src,int *dst) {
     unsigned cx,cy;
     unsigned x=sx<<16,y=sy<<16;
@@ -76,7 +87,8 @@ void scalePixels(int sx,int sy,unsigned sw,unsigned sh,unsigned dw,unsigned dh,u
     while (--cy!=0);
 }
 
-// 0x11cf40
+// 0x11cf40: "<used>G/<total>G" for the SD card, or "umounted"/"unmounted" (both spellings
+// are original) if it cannot be read or is under 256 MiB.
 std::string sdCardSpace() {
     struct statvfs info;
     if (statvfs("/mnt/SDCARD",&info)!=0) {
@@ -97,7 +109,7 @@ std::string sdCardSpace() {
     return stream.str();
 }
 
-// 0x11d198
+// 0x11d198: free space on the SD card in MiB (0 on error).
 unsigned sdCardFreeMB() {
     struct statvfs info;
     if (statvfs("/mnt/SDCARD",&info)!=0) {
@@ -116,7 +128,7 @@ unsigned sdCardFreeMB() {
     return free>>20;
 }
 
-// 0x11d2e4
+// 0x11d2e4: true if path appears anywhere in /proc/mounts.
 bool isMounted(const char *path) {
     bool found=false;
     FILE*f=fopen("/proc/mounts","r");
@@ -137,7 +149,7 @@ bool sdCardMounted() {
     return isMounted("/mnt/SDCARD");
 }
 
-// 0x11d3e0
+// 0x11d3e0: true if lsmod lists a module whose line contains name.
 bool moduleLoaded(const char *name) {
     system("lsmod > /tmp/.lsmod.result");
     FILE*f=fopen("/tmp/.lsmod.result","r");
@@ -155,12 +167,13 @@ bool moduleLoaded(const char *name) {
     return false;
 }
 
-// 0x11d4d0
+// 0x11d4d0: true if the system runs from SPI NAND flash.
 bool isSpinand() {
     return access("/sys/devices/soc/spinand/modalias",0)==0;
 }
 
-// 0x11d504
+// 0x11d504: true if path holds a regular file whose name starts with name (any case).
+// count only has to be at least 1.
 bool fileExists(const char *path,const char *name,int count) {
     bool found=false;
     if (count<1)return found;
@@ -180,7 +193,8 @@ bool fileExists(const char *path,const char *name,int count) {
     return found;
 }
 
-// 0x11d694
+// 0x11d694: TrimUI leftover: reads /usr/trimui/res/oplatform.json and, for the first entry
+// whose checkpath exists on /mnt/P2EXT, the per-system folders (mame, neogeo, fc, ...).
 unsigned loadPlatformPaths() {
     int i;
     g_platformPaths.clear();
@@ -292,7 +306,7 @@ unsigned loadPlatformPaths() {
 // Its distinct COMDATs are retained here; RecentItem list construction is in main.
 std::list<int> g_recentList;
 // 0x182170
-// 0x11dfa0
+// 0x11dfa0: true on a two-partition SD card with a KERNEL file (TrimUI layout).
 bool dualPartition() {
     if (access("/sys/block/mmcblk0/mmcblk0p2",0)==0&&access("/sys/block/mmcblk0/mmcblk0p1",0)==0) {
         if (fileExists("/mnt/SDCARD","KERNEL",1))return 1;
@@ -300,7 +314,7 @@ bool dualPartition() {
     return 0;
 }
 
-// 0x11e02c
+// 0x11e02c: copies the NeoGeo BIOS (neogeo.zip) from /mnt/P2EXT into path if it is missing.
 int copyNeoGeo(const char *path) {
     snprintf(g_ioBuffer,128,"%s/neogeo.zip",path);
     if (access(g_ioBuffer,0)!=0) {
@@ -312,7 +326,7 @@ int copyNeoGeo(const char *path) {
     return -1;
 }
 
-// 0x11e0f0
+// 0x11e0f0: one of loadPlatformPaths' folders, on the dual-partition layout only.
 const char *platformPath(int index) {
     if (dualPartition()!=true)return NULL;
     if (isMounted("/mnt/P2EXT")) {
@@ -326,7 +340,7 @@ const char *platformPath(int index) {
     return NULL;
 }
 
-// 0x11e220
+// 0x11e220: true if file's sha256sum output equals the file sha.
 bool verifyGameList(const char*file,const char*sha) {
     snprintf(g_ioBuffer,128,"sha256sum %s > /tmp/.gamelist_sha256",file);
     int rc=system(g_ioBuffer);
@@ -334,7 +348,7 @@ bool verifyGameList(const char*file,const char*sha) {
     return system(g_ioBuffer)==0;
 }
 
-// 0x11e2ac
+// 0x11e2ac: mounts the second SD partition at /mnt/P2EXT (ext4, journal turned off) if needed.
 int mountP2Ext() {
     bool mounted=isMounted("/mnt/P2EXT");
     if (mounted!=true) {
@@ -349,7 +363,8 @@ int mountP2Ext() {
     }
 }
 
-// 0x11e390
+// 0x11e390: "Refresh Roms": deletes every ROM cache database (*_cache.db .. *_cache6.db) of
+// the built-in system folders and of every Emu/RApp folder, so they are rebuilt.
 int removeAllDBFiles() {
     puts("removeAllDBFiles");
     if (dualPartition()!=true) {
@@ -479,22 +494,22 @@ int removeAllDBFiles() {
                 rc=system(cmd.c_str());
                 printf("removedbfiles %s\n",cmd.c_str());
             }
-            for (j=0;j<g_romSourcesA.size();j++) {
+            for (j=0;j<g_emuFolders.size();j++) {
                 std::stringstream stream(std::ios::out|std::ios::in);
                 stream<<suffix;
                 cmd="rm -f ";
-                cmd+=g_romSourcesA[j].path;
+                cmd+=g_emuFolders[j].path;
                 cmd+="/*_cache";
                 if (suffix>0)cmd+=stream.str()+".db";
                 else cmd+=".db";
                 rc=system(cmd.c_str());
                 printf("removedbfiles %s\n",cmd.c_str());
             }
-            for (k=0;k<g_romSourcesB.size();k++) {
+            for (k=0;k<g_rappFolders.size();k++) {
                 std::stringstream stream(std::ios::out|std::ios::in);
                 stream<<suffix;
                 cmd="rm -f ";
-                cmd+=g_romSourcesB[k].path;
+                cmd+=g_rappFolders[k].path;
                 cmd+="/*_cache";
                 if (suffix>0)cmd+=stream.str()+".db";
                 else cmd+=".db";
@@ -509,7 +524,7 @@ int removeAllDBFiles() {
     return 1;
 }
 
-// 0x11f734
+// 0x11f734: deletes the MAME and FCEUX settings (part of a factory reset).
 int removeEmulatorConfigs() {
     int rc=system("rm -f /mnt/SDCARD/Roms/ARCADE//.mame4all/configs/*.cfg");
     rc=system("rm -f /mnt/SDCARD/Roms/FC//.fceux/fceux.cfg");
@@ -518,7 +533,8 @@ int removeEmulatorConfigs() {
     return 1;
 }
 
-// 0x11f790
+// 0x11f790: creates the App, Roms and Imgs folders and the per-system ROM and image folders,
+// copying each emulator's licence file in (TrimUI layout; skipped on dual-partition cards).
 int initSdCardFolders() {
     if (dualPartition()!=0)return -1;
     if (access("/mnt/SDCARD/App",0)!=0)mkdir("/mnt/SDCARD/App",0777);
@@ -577,7 +593,7 @@ int initSdCardFolders() {
     return 0;
 }
 
-// 0x11ffa8
+// 0x11ffa8: size of the first active swap area in KiB, from /proc/swaps (0 if none).
 int swapSize() {
     int size=0;
     FILE*f=fopen("/proc/swaps","r");
@@ -589,7 +605,8 @@ int swapSize() {
     return size;
 }
 
-// 0x12005c
+// 0x12005c: creates /mnt/SDCARD/cachefile (128 MiB) as swap if it is missing or the wrong size,
+// then turns it on; for emulators with "useswap" (the "Create Cache" dialog).
 int enableSwap() {
     struct stat info;
     int rc;
@@ -601,7 +618,7 @@ int enableSwap() {
     else return -1;
 }
 
-// 0x120154
+// 0x120154: the CPU's maximum clock in MHz (Device Info).
 float maxCpuMHz() {
     int freq=0;
     FILE*f=fopen("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq","r");
@@ -612,7 +629,7 @@ float maxCpuMHz() {
     return(float)(freq/1000);
 }
 
-// 0x1201e0
+// 0x1201e0: total memory in MiB, rounded up to a multiple of 32 (Device Info).
 int memoryMB() {
     int mem=0;
     FILE*f=fopen("/proc/meminfo","r");
@@ -624,7 +641,7 @@ int memoryMB() {
     return mem;
 }
 
-// 0x120290
+// 0x120290: remove the largest / smallest value from a list of ints (no callers).
 void removeMax(std::list<int>*list) {
     std::list<int>::iterator it,chosen;
     it=list->begin();
@@ -656,7 +673,8 @@ void removeMin(std::list<int>*list) {
     if (min<100000000)list->erase(chosen);
 }
 
-// 0x1204c4
+// 0x1204c4: adds a game to the Recent list (front or back), first removing the same game
+// (label, ROM path and type); the list keeps at most 20, dropping from the other end.
 int addRecent(std::list<RecentItem>*list,const char*label,const char*launch,const char*rompath,const char*imgpath,int type,bool front) {
     if (!list||!label||!launch)return -1;
     RecentItem item;
@@ -684,7 +702,8 @@ int addRecent(std::list<RecentItem>*list,const char*label,const char*launch,cons
     return 1;
 }
 
-// 0x120798
+// 0x120798: removes the Recent entry for a ROM. Despite the parameter name, `label` is
+// compared with the ROM path.
 int removeRecent(std::list<RecentItem>*list,const char*label) {
     if (!list)return -1;
     std::list<RecentItem>::iterator it;
@@ -697,7 +716,7 @@ int removeRecent(std::list<RecentItem>*list,const char*label) {
     return 0;
 }
 
-// 0x1208a0
+// 0x1208a0: reads recentlist.json (one JSON object per line) into the list; returns its size.
 int loadRecentList(std::list<RecentItem>*list) {
     if (!list)return -1;
     FILE*f=fopen("/mnt/SDCARD/Roms/recentlist.json","r+");
@@ -729,7 +748,7 @@ int loadRecentList(std::list<RecentItem>*list) {
     return list->size();
 }
 
-// 0x120af4
+// 0x120af4: writes the list back, one object per line, reusing a single cJSON object.
 int saveRecentList(std::list<RecentItem>*list) {
     std::list<RecentItem>::iterator it;
     FILE*f=fopen("/mnt/SDCARD/Roms/recentlist.json","w+");
@@ -759,7 +778,7 @@ int saveRecentList(std::list<RecentItem>*list) {
     return 0;
 }
 
-// 0x120e20
+// 0x120e20: empties the list and deletes the file ("Clear List").
 int clearRecent(std::list<RecentItem>*list) {
     list->clear();
     unlink("/mnt/SDCARD/Roms/recentlist.json");
@@ -767,7 +786,7 @@ int clearRecent(std::list<RecentItem>*list) {
     return 0;
 }
 
-// 0x120e58
+// 0x120e58: remove the app with this launch path (before re-adding it).
 static_assert(sizeof(AppInfo)==128, "app layout");
 int removeApp(std::vector<AppInfo>*list,const std::string&launch) {
     for (int i=0;i<list->size();i++) {
@@ -780,7 +799,7 @@ int removeApp(std::vector<AppInfo>*list,const std::string&launch) {
     return -1;
 }
 
-// 0x120f80
+// 0x120f80: index of the emulator whose launch path is a prefix of path, or -1.
 int findEmuByLaunch(std::vector<EmuInfo>*list,const char*path) {
     if (!path)return -1;
     {
@@ -791,7 +810,7 @@ int findEmuByLaunch(std::vector<EmuInfo>*list,const char*path) {
     return -1;
 }
 
-// 0x121074
+// 0x121074: index of the first emulator whose label starts with path, or -1.
 int findEmuByLabelPrefix(std::vector<EmuInfo>*list,const char*path) {
     if (!path)return -1;
     {
@@ -802,7 +821,7 @@ int findEmuByLabelPrefix(std::vector<EmuInfo>*list,const char*path) {
     return -1;
 }
 
-// 0x12114c
+// 0x12114c: index of the app whose launch path is a prefix of path, or -1.
 int findApp(std::vector<AppInfo>*list,const char*path) {
     for (int i=0;i<list->size();i++) {
         if (strncmp((*list)[i].launch.c_str(),path,(*list)[i].launch.length())==0)return i;
@@ -810,7 +829,9 @@ int findApp(std::vector<AppInfo>*list,const char*path) {
     return -1;
 }
 
-// 0x12122c
+// 0x12122c: one App/<dir>/config.json: label, icon, iconsel, launch (needed: label, icon,
+// launch), description, autoflip, noaudiofix. Relative paths are made absolute; a later
+// folder with the same launch path replaces the earlier one.
 void parseApp(void*data,const char*base,const char*dir,cJSON*root) {
     std::vector<AppInfo>*list=(std::vector<AppInfo>*)data;
     cJSON*item=NULL;
@@ -860,7 +881,8 @@ void parseApp(void*data,const char*base,const char*dir,cJSON*root) {
     }
 }
 
-// 0x1216e4
+// 0x1216e4: for every subfolder of base that has `filename`, parses it as JSON and calls
+// parse(data, base, subfolder, root). Always returns 0.
 int loadConfigFolder(void*data,const char*base,const char*filename,void(*parse)(void*,const char*,const char*,cJSON*)) {
     char*path=(char*)malloc(1024);
     int result=0;
@@ -904,7 +926,7 @@ int loadAppFolder(std::vector<AppInfo>*list,const char*base) {
     return loadConfigFolder(list,base,"config.json",parseApp);
 }
 
-// 0x121998
+// 0x121998: remove the emulator with this launch path (before re-adding it).
 int removeEmu(std::vector<EmuInfo>*list,const std::string&launch) {
     for (int i=0;i<list->size();i++) {
         if (list->at(i).launch.compare(launch)==0) {
@@ -916,7 +938,10 @@ int removeEmu(std::vector<EmuInfo>*list,const std::string&launch) {
     return -1;
 }
 
-// 0x121ac0
+// 0x121ac0: one Emu/<dir>/config.json: label, labelverbose, icon, iconsel, launch, rompath,
+// imgpath, gamelist, useswap (default on), shortname (search by Chinese pinyin), extlist
+// ("ext1|ext2|..."), hidebios, noaudiofix. Needs label, icon, launch and either rompath with
+// imgpath or a gamelist. The list is kept sorted by label.
 void parseEmu(void*data,const char*base,const char*dir,cJSON*root) {
     std::vector<EmuInfo>*list=(std::vector<EmuInfo>*)data;
     cJSON*item=NULL;
@@ -1022,7 +1047,7 @@ int loadEmuFolder(std::vector<EmuInfo>*list,const char*base) {
     return loadConfigFolder(list,base,"config.json",parseEmu);
 }
 
-// 0x1224b0
+// 0x1224b0: parses "#RRGGBB" into color; returns 0 for anything else.
 int parseThemeColor(const char*section,const char*text,SDL_Color*color) {
     if (strlen(text)>=7&&*text=='#') {
         char bytes[4]= {
@@ -1039,7 +1064,7 @@ int parseThemeColor(const char*section,const char*text,SDL_Color*color) {
     return 0;
 }
 
-// 0x1225b4
+// 0x1225b4: a theme font section: font, fontascii (default: font), size, color.
 void parseFont(const char*section,cJSON*root,std::string*font,std::string*ascii,int*size,SDL_Color*color) {
     cJSON*item,*number,*colorItem;
     item=cJSON_GetObjectItem(root,"font");
@@ -1053,7 +1078,7 @@ void parseFont(const char*section,cJSON*root,std::string*font,std::string*ascii,
     if (colorItem&&cJSON_IsString(colorItem))parseThemeColor(section,colorItem->valuestring,color);
 }
 
-// 0x12276c
+// 0x12276c: the "list" section: as parseFont, plus selectedcolor and highlightcolor.
 void parseListFont(const char*section,cJSON*root,std::string*font,std::string*ascii,int*size,SDL_Color*color,SDL_Color*selectedcolor,SDL_Color*highlightcolor) {
     cJSON*item,*number,*colorItem;
     item=cJSON_GetObjectItem(root,"font");
@@ -1071,7 +1096,7 @@ void parseListFont(const char*section,cJSON*root,std::string*font,std::string*as
     if (colorItem&&cJSON_IsString(colorItem))parseThemeColor(section,colorItem->valuestring,highlightcolor);
 }
 
-// 0x1229ec
+// 0x1229ec: the "grid" section: fonts, grid1x4/grid3x4 sizes, icon/text offsets, colours.
 void parseGridFont(const char*section,cJSON*root,std::string*font,std::string*ascii,int*grid1x4,int*grid3x4,int*iconxoff1x4,int*iconyoff1x4,int*txtyoff1x4,SDL_Color*color,SDL_Color*selectedcolor) {
     cJSON*item,*number,*colorItem;
     item=cJSON_GetObjectItem(root,"font");
@@ -1099,7 +1124,9 @@ const SDL_Color g_configGray = {104,104,104,0}; // 0x1615a0
 const SDL_Color g_configWhite = {240,240,240,0}; // 0x1615a4
 const SDL_Color g_configDim = {170,170,170,0}; // 0x1615a8
 const SDL_Color g_configYellow = {255,255,0,0}; // 0x1615ac
-// 0x122d78
+// 0x122d78: one Themes/<dir>/config.json: name, then the font sections title, path, hint,
+// currentpage, total, grid and list, each with defaults. (Several Theme fields are named after
+// where loadTheme uses them, not after these sections.)
 void parseTheme(void*data,const char*base,const char*dir,cJSON*root) {
     std::vector<Theme>*list=(std::vector<Theme>*)data;
     cJSON*item=NULL,*section=NULL;
@@ -1139,10 +1166,10 @@ void parseTheme(void*data,const char*base,const char*dir,cJSON*root) {
         theme.smallSize=18;
         theme.selectedColor.bytes=g_configGray;
         theme.textColor.bytes=g_configWhite;
-        theme.field144=0;
-        theme.field140=0;
-        theme.field148=0;
-        if (section)parseGridFont("grid",section,&theme.iconFontMulti,&theme.iconFontEnglish,&theme.iconSize,&theme.smallSize,&theme.field144,&theme.field140,&theme.field148,&theme.selectedColor.bytes,&theme.textColor.bytes);
+        theme.gridIconOffsetX=0;
+        theme.gridIconOffsetY=0;
+        theme.gridTextOffsetY=0;
+        if (section)parseGridFont("grid",section,&theme.iconFontMulti,&theme.iconFontEnglish,&theme.iconSize,&theme.smallSize,&theme.gridIconOffsetX,&theme.gridIconOffsetY,&theme.gridTextOffsetY,&theme.selectedColor.bytes,&theme.textColor.bytes);
         section=cJSON_GetObjectItem(root,"list");
         theme.mainSize=24;
         theme.imeColor.bytes=g_configWhite;
@@ -1158,7 +1185,7 @@ int loadThemeFolder(std::vector<Theme>*list,const char*base) {
     return loadConfigFolder(list,base,"config.json",parseTheme);
 }
 
-// 0x1232dc
+// 0x1232dc: the theme whose folder (root, e.g. "/mnt/SDCARD/Themes/x/") equals name, or NULL.
 Theme*findTheme(std::vector<Theme>*list,const char*name) {
     if (name) {
         for (int i=0;i<list->size();i++) {
@@ -1168,7 +1195,7 @@ Theme*findTheme(std::vector<Theme>*list,const char*name) {
     return NULL;
 }
 
-// 0x1233b0
+// 0x1233b0: replaces every occurrence of from in text.
 void replaceAll(std::string&text,const std::string&from,const std::string&to) {
     unsigned pos=0;
     while (true) {
@@ -1180,7 +1207,8 @@ void replaceAll(std::string&text,const std::string&from,const std::string&to) {
 }
 
 int getSerial(char*);
-// 0x123444
+// 0x123444: reads test_result.json: testitem0-4 into results and the serial it was saved
+// with. False if anything is missing.
 bool loadTestResults(int*results,char*serial) {
     FILE*f=fopen("/mnt/SDCARD/test_result.json","r");
     char key[32]= {
@@ -1213,7 +1241,7 @@ bool loadTestResults(int*results,char*serial) {
     return ok;
 }
 
-// 0x123658
+// 0x123658: writes the five results with this device's serial.
 int saveTestResults(int*results) {
     if (results) {
         cJSON*root=cJSON_CreateObject();
@@ -1243,19 +1271,20 @@ int saveTestResults(int*results) {
 }
 
 extern unsigned char g_deviceId[5];
-// 0x1237a8
+// 0x1237a8: the device serial as 10 hex digits, from the five device-id bytes (plus a
+// constant offset).
 int getSerial(char*serial) {
     unsigned value=(unsigned)g_deviceId[3]<<24|(unsigned)g_deviceId[2]<<16|(unsigned)g_deviceId[1]<<8|(unsigned)g_deviceId[0];
     value+=0x1583247;
     return snprintf(serial,16,"%02X%08X",(unsigned)g_deviceId[4],value);
 }
 
-// 0x123858
+// 0x123858: true if the CJK font wqy-microhei.ttc is on the SD card or in the current folder.
 bool languageFontExists() {
     return access("/mnt/SDCARD/wqy-microhei.ttc",0)==0||access("./wqy-microhei.ttc",0)==0;
 }
 
-// 0x1238ac
+// 0x1238ac: wall-clock time in ms (wraps; only differences are used).
 unsigned long milliseconds() {
     timeval tv;
     gettimeofday(&tv,NULL);
@@ -1272,7 +1301,8 @@ void printSurfaceFormat(const char*label,SDL_Surface*surface) {
 extern "C" SDL_Surface*IMG_Load(const char*);
 extern "C" SDL_Surface*SDL_ConvertSurface(SDL_Surface*,SDL_PixelFormat*,unsigned);
 extern "C" void SDL_FreeSurface(SDL_Surface*);
-// 0x123a38
+// 0x123a38: loads an image file. Original quirk, kept as-is: it "converts" the image to its
+// own format (format is unused), i.e. makes a copy.
 SDL_Surface*loadImage(const char*path,SDL_Surface*format,bool debug) {
     SDL_Surface*src=IMG_Load(path);
     if (src) {
@@ -1290,7 +1320,8 @@ SDL_Surface*loadImage(const char*path,SDL_Surface*format,bool debug) {
     return NULL;
 }
 
-// 0x123af0
+// 0x123af0: loads a skin image: base+name, else fallback+name; an absolute name is loaded as
+// is. Original quirk, kept as-is: for absolute names it prints "open ok" when loading failed.
 SDL_Surface*loadSkinImage(const char*base,const char*fallback,const char*name,SDL_Surface*format,bool debug) {
     std::string path;
     if (*name!='/') {
@@ -1313,7 +1344,7 @@ SDL_Surface*loadSkinImage(const char*base,const char*fallback,const char*name,SD
     return image;
 }
 
-// 0x123c8c
+// 0x123c8c: reads up to length bytes and NUL-terminates; returns the count or -1.
 int readTextFile(const char*path,char*buf,int length) {
     int fd=open(path,O_RDONLY);
     if (fd<0) {
@@ -1326,7 +1357,8 @@ int readTextFile(const char*path,char*buf,int length) {
     return count;
 }
 
-// 0x123d28
+// 0x123d28: pid of a running process whose command line contains name as a whole word
+// (followed by its end or a space), or -1. debug logs each check.
 int findProcess(const char*name,int debug) {
     int pid=0;
     size_t length=strlen(name);

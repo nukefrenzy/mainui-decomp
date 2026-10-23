@@ -24,30 +24,30 @@ public:
     void cacheBackground();                            // 0x310ac
     void setHeaderIcon(SDL_Surface *, const char *, bool, bool); // 0x31ed4
     ListMenu *getMenu() { return menu; }                 // 0x3aad4
-    void setStrB4(const std::string &s) { strB4 = s; }   // 0x3aafc, inline
+    void setStrB4(const std::string &s) { parentPath = s; }   // 0x3aafc, inline
     void setPath(const std::string &p) { path = p; }   // 0x3ab30, inline (search string for ROM lists)
 
     ListMenu    *menu;            // +0x0c  deleted by onHide, not by the destructor
     int          savedCurPos;     // +0x10  restored into the list on show
     int          savedPageStart;  // +0x14
     int          savedPageEnd;    // +0x18
-    bool         flag1c;          // +0x1c
-    bool         flag1d;          // +0x1d  set in onShow
-    std::string  str20;           // +0x20  selected thumbnail cache key
-    SDL_Surface *field38;         // +0x38  thumbnail borrowed from helper80
-    std::string  str3c;           // +0x3c  thumbnail key awaiting a worker
-    bool         field54;         // +0x54  initialised to true
-    SDL_Surface *surface58;       // +0x58  freed in destructor
+    bool         menuChanged;          // +0x1c
+    bool         hasPreview;          // +0x1d  set in onShow
+    std::string  shownImageKey;           // +0x20  selected thumbnail cache key
+    SDL_Surface *previewImage;         // +0x38  thumbnail borrowed from thumbnailCache
+    std::string  pendingImageKey;           // +0x3c  thumbnail key awaiting a worker
+    bool         rightOpensDetail;         // +0x54  initialised to true
+    SDL_Surface *cachedScreen;       // +0x58  freed in destructor
     void        *emuEntry;        // +0x5c  emulator / RetroArch app entry for ROM lists (ids 5, 0x11)
-    WorkerQueue helper60;        // +0x60
-    LruCache helper80;        // +0x80
-    bool         field94;         // +0x94  toggle full ROM path in the header
-    std::string  str98;           // +0x98  literal title for the path constructor
+    WorkerQueue thumbnailLoader;        // +0x60
+    LruCache thumbnailCache;        // +0x80
+    bool         showFullPath;         // +0x94  toggle full ROM path in the header
+    std::string  titleText;           // +0x98  literal title for the path constructor
     SDL_Surface *iconTF;          // +0xb0  skin/icon-TF.png, freed in destructor
-    std::string  strB4;           // +0xb4  used when building ROM lists
+    std::string  parentPath;           // +0xb4  used when building ROM lists
     std::string  path;            // +0xcc  folder path passed to createMenu
     std::string  themePath;       // +0xe4  copy of g_themePath
-    SDL_Surface *surfaceFC;       // +0xfc  freed only if ownsSurfaceFC
-    std::string  str100;          // +0x100
-    bool         ownsSurfaceFC;   // +0x118
+    SDL_Surface *headerIcon;       // +0xfc  freed only if ownsHeaderIcon
+    std::string  headerText;          // +0x100
+    bool         ownsHeaderIcon;   // +0x118
 };

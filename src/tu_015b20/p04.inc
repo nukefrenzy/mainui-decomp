@@ -22,7 +22,7 @@ void ListMenu::restorePosition(int cur, int pageStart, int pageEnd)
 }
 
 // 0x1dae8: next item, wrapping to the first.
-int ListMenu::vfunc9()
+int ListMenu::moveDown()
 {
     if (cur < count() - 1)
         cur++;
@@ -32,7 +32,7 @@ int ListMenu::vfunc9()
 }
 
 // 0x1db6c: previous item, wrapping to the last.
-int ListMenu::vfunc10()
+int ListMenu::moveUp()
 {
     if (cur > 0)
         cur--;
@@ -42,7 +42,7 @@ int ListMenu::vfunc10()
 }
 
 // 0x1dbdc: six items up.
-int ListMenu::vfunc16()
+int ListMenu::pageUp()
 {
     cur -= 6;
     if (cur < 0)
@@ -51,7 +51,7 @@ int ListMenu::vfunc16()
 }
 
 // 0x1dc30: six items down.
-int ListMenu::vfunc17()
+int ListMenu::pageDown()
 {
     cur += 6;
     if (cur >= count())
@@ -63,19 +63,19 @@ int ListMenu::vfunc17()
 void ListMenu::recordKey(int key)
 {
     int now = milliseconds();
-    if ((unsigned long)(now - field38) < 200) {
+    if ((unsigned long)(now - lastKeyTime) < 200) {
         if (history.size() != 0) {
             if (history[history.size() - 1] == key) {
                 history.push_back(key);
-                field38 = now;
+                lastKeyTime = now;
             }
         } else {
-            field38 = now;
+            lastKeyTime = now;
             history.push_back(key);
         }
     } else {
         history.clear();
-        field38 = now;
+        lastKeyTime = now;
     }
 }
 
@@ -85,71 +85,73 @@ bool ListMenu::keyRepeating()
     return history.size() > 25;
 }
 
-// 0x1de34: key input. Up/down move by one, or by six once a key is held; left/right page when
-// flag08 is set (IconMenu) and otherwise return 5/6 to the window.
-int ListMenu::vfunc3()
+// 0x1de34: one button. Up/down move by one row, or by a page while the key repeats; L2/R2 page;
+// left/right move in grids (gridMode: IconMenu) and are otherwise returned as LIST_LEFT/LIST_RIGHT;
+// A or Y runs onSelect; B or X returns LIST_CLOSE; anything else goes to onUnhandledEvent.
+int ListMenu::handleKey()
 {
     int key = handleGlobalInput(0);
     recordKey(key);
     switch (key) {
-    case 5:
-        if (!flag08) {
+    case BUTTON_UP:
+        if (!gridMode) {
             if (!keyRepeating())
-                vfunc10();
+                moveUp();
             else
-                vfunc16();
+                pageUp();
         }
         break;
-    case 6:
-        if (!flag08) {
+    case BUTTON_DOWN:
+        if (!gridMode) {
             if (!keyRepeating())
-                vfunc9();
+                moveDown();
             else
-                vfunc17();
+                pageDown();
         }
         break;
-    case 7:
-        if (flag08)
-            vfunc10();
+    case BUTTON_LEFT:
+        if (gridMode)
+            moveUp();
         else
-            return 5;
+            return LIST_LEFT;
         break;
-    case 8:
-        if (flag08)
-            vfunc9();
+    case BUTTON_RIGHT:
+        if (gridMode)
+            moveDown();
         else
-            return 6;
+            return LIST_RIGHT;
         break;
-    case 12:
-        if (!flag08)
-            vfunc16();
+    case BUTTON_HOTKEY1:
+        if (!gridMode)
+            pageUp();
         break;
-    case 13:
-        if (!flag08)
-            vfunc17();
+    case BUTTON_HOTKEY2:
+        if (!gridMode)
+            pageDown();
         break;
-    case 1:
-    case 4:
+    case BUTTON_A:
+    case BUTTON_Y:
         struct timeval tv;
         gettimeofday(&tv, NULL);
         int ms;
         ms = tv.tv_sec * 1000 + tv.tv_usec / 1000;
         printf("a pressed at %dms\n", ms);
-        return vfunc4();
-    case 2:
-    case 3:
+        return onSelect();
+    case BUTTON_B:
+    case BUTTON_X:
         return 1;
-    case 11:
-        return 11;
-    case 10:
-        return 10;
+    case BUTTON_MENU:
+        return BUTTON_MENU;
+    case BUTTON_START:
+        return BUTTON_START;
     default:
-        return vfunc15(key);
+        return onUnhandledEvent(key);
     }
     return -1;
 }
 
-// 0x1e128
+// 0x1e128: a list of text rows: without noSelectedBg the selection is drawn with an image
+// (skin/bg-list-s.png or `background`); stripes draws separators; rows per page.
 TextMenuDrawer::TextMenuDrawer(bool noSelectedBg, bool stripes, int rows, const char *background)
     : ListMenu(false)
 {
@@ -173,14 +175,14 @@ TextMenuDrawer::TextMenuDrawer(bool noSelectedBg, bool stripes, int rows, const 
     rect.y = 60;
     rect.w = 640;
     rect.h = 360;
-    field58 = 60;
+    textRowHeight = 60;
     flag5c = true;
     textColor = g_imeTextColor;
     colorBC = g_imeTextColor;
-    surface54 = NULL;
-    flagC0 = true;
-    flagC1 = stripes;
-    fieldC4 = rows;
+    customBackground = NULL;
+    shadowSelected = true;
+    drawStripes = stripes;
+    rowsPerPage = rows;
 }
 
 // 0x1e3f8 (D0 0x1e4e4)
@@ -192,12 +194,12 @@ TextMenuDrawer::~TextMenuDrawer()
         SDL_FreeSurface(selectedBackground);
     if (favoriteMark)
         SDL_FreeSurface(favoriteMark);
-    if (surface54)
-        SDL_FreeSurface(surface54);
+    if (customBackground)
+        SDL_FreeSurface(customBackground);
 }
 
 // 0x1e518: onSelect, shared by every text menu: run the current item's Action with the item.
-int TextMenuDrawer::vfunc4()
+int TextMenuDrawer::onSelect()
 {
     TextItem *item = (TextItem *)getItem(cur);
     if (item && item->action) {
@@ -209,7 +211,7 @@ int TextMenuDrawer::vfunc4()
 }
 
 // 0x1e5d0: reload the theme images when the theme changed.
-void TextMenuDrawer::vfunc11()
+void TextMenuDrawer::reloadTheme()
 {
     if (themePath.compare(g_themePath) != 0) {
         if (background.size() != 0) {
@@ -327,49 +329,49 @@ void TextMenuDrawer::drawHighlighted(SDL_Surface *dst, TTF_Font *font, SDL_Rect 
             int tw;
             if (align == 0 || align == 3) {
                 if (text < start) {
-                    strA0 = text;
-                    strA0 = strA0.substr(0, start - text);
-                    tw = drawText(dst, font, r, strA0.c_str(), color, align, shadow);
+                    textScratch = text;
+                    textScratch = textScratch.substr(0, start - text);
+                    tw = drawText(dst, font, r, textScratch.c_str(), color, align, shadow);
                     r.x += tw;
                 }
-                strA0 = start;
-                strA0 = strA0.substr(0, len);
-                tw = drawText(dst, font, r, strA0.c_str(), g_accentColor, align, shadow);
+                textScratch = start;
+                textScratch = textScratch.substr(0, len);
+                tw = drawText(dst, font, r, textScratch.c_str(), g_accentColor, align, shadow);
                 r.x += tw;
                 if (strlen(text) > start - text + len) {
-                    strA0 = start + len;
-                    drawText(dst, font, r, strA0.c_str(), color, align, shadow);
+                    textScratch = start + len;
+                    drawText(dst, font, r, textScratch.c_str(), color, align, shadow);
                 }
             } else if (align == 2 || align == 4) {
                 if (strlen(text) > start - text + len) {
-                    strA0 = start + len;
-                    drawText(dst, font, r, strA0.c_str(), color, align, shadow);
+                    textScratch = start + len;
+                    drawText(dst, font, r, textScratch.c_str(), color, align, shadow);
                     r.w -= tw;
                 }
-                strA0 = start;
-                strA0 = strA0.substr(0, len);
-                tw = drawText(dst, font, r, strA0.c_str(), g_accentColor, align, shadow);
+                textScratch = start;
+                textScratch = textScratch.substr(0, len);
+                tw = drawText(dst, font, r, textScratch.c_str(), g_accentColor, align, shadow);
                 r.w -= tw;
                 if (text < start) {
-                    strA0 = text;
-                    strA0 = strA0.substr(0, start - text);
-                    drawText(dst, font, r, strA0.c_str(), color, align, shadow);
+                    textScratch = text;
+                    textScratch = textScratch.substr(0, start - text);
+                    drawText(dst, font, r, textScratch.c_str(), color, align, shadow);
                 }
             } else {
                 r.x = rect.x + (rect.w - w) / 2;
                 if (text < start) {
-                    strA0 = text;
-                    strA0 = strA0.substr(0, start - text);
-                    tw = drawText(dst, font, r, strA0.c_str(), color, 3, shadow);
+                    textScratch = text;
+                    textScratch = textScratch.substr(0, start - text);
+                    tw = drawText(dst, font, r, textScratch.c_str(), color, 3, shadow);
                     r.x += tw;
                 }
-                strA0 = start;
-                strA0 = strA0.substr(0, len);
-                tw = drawText(dst, font, r, strA0.c_str(), g_accentColor, 3, shadow);
+                textScratch = start;
+                textScratch = textScratch.substr(0, len);
+                tw = drawText(dst, font, r, textScratch.c_str(), g_accentColor, 3, shadow);
                 r.x += tw;
                 if (strlen(text) > start - text + len) {
-                    strA0 = start + len;
-                    drawText(dst, font, r, strA0.c_str(), color, 3, shadow);
+                    textScratch = start + len;
+                    drawText(dst, font, r, textScratch.c_str(), color, 3, shadow);
                 }
             }
         } else {
@@ -380,17 +382,17 @@ void TextMenuDrawer::drawHighlighted(SDL_Surface *dst, TTF_Font *font, SDL_Rect 
     }
 }
 
-// 0x1f5e0: load `file` from the current theme into surface54 and remember it as the background.
+// 0x1f5e0: load `file` from the current theme into customBackground and remember it as the background.
 void TextMenuDrawer::setBackground(const char *file)
 {
-    if (surface54)
-        SDL_FreeSurface(surface54);
-    surface54 = loadSkinImage(g_themePath, g_skinSubdir, file, g_backBuffer, 0);
+    if (customBackground)
+        SDL_FreeSurface(customBackground);
+    customBackground = loadSkinImage(g_themePath, g_skinSubdir, file, g_backBuffer, 0);
     themePath = g_themePath;
     background = file;
 }
 
-// 0x1f694
+// 0x1f694: free the selection image (no caller found).
 void TextMenuDrawer::freeSelectedBackground(bool really)
 {
     if (really && selectedBackground) {
@@ -399,12 +401,12 @@ void TextMenuDrawer::freeSelectedBackground(bool really)
     }
 }
 
-// 0x1f6f0: draw the visible rows. Keeps the page (pageStart..pageEnd, fieldC4 rows) around the
+// 0x1f6f0: draw the visible rows. Keeps the page (pageStart..pageEnd, rowsPerPage rows) around the
 // current item, then per row: row background, selection background, icon (TextItem::value is an
 // SDL_Surface* here), the label with the search match highlighted, or for two-line items
-// (flag24) a 71x71 thumbnail (field70, loaded from str58), the label and str28 below it; finally
+// (showThumbnail) a 71x71 thumbnail (thumbnailSurface, loaded from thumbnailPath), the label and str28 below it; finally
 // the favourite mark.
-void TextMenuDrawer::vfunc7(SDL_Surface *dst)
+void TextMenuDrawer::drawList(SDL_Surface *dst)
 {
     int i;
     int row;
@@ -413,14 +415,14 @@ void TextMenuDrawer::vfunc7(SDL_Surface *dst)
     if (count() <= 0)
         return;
     if (pageStart == 0 && pageEnd == 0)
-        pageEnd = fieldC4 - 1;
+        pageEnd = rowsPerPage - 1;
     if (cur < pageStart) {
         pageStart = cur;
-        pageEnd = pageStart + fieldC4 - 1;
+        pageEnd = pageStart + rowsPerPage - 1;
     }
     if (cur > pageEnd) {
         pageEnd = cur;
-        pageStart = pageEnd - fieldC4 + 1;
+        pageStart = pageEnd - rowsPerPage + 1;
     }
     if (pageStart < 0)
         pageStart = 0;
@@ -429,10 +431,10 @@ void TextMenuDrawer::vfunc7(SDL_Surface *dst)
     SDL_Rect sr;
     SDL_Color color;
     SDL_Rect dr;
-    if (flagC1) {
-        for (i = 0; i < fieldC4 - 1 && g_listStripe; i++) {
+    if (drawStripes) {
+        for (i = 0; i < rowsPerPage - 1 && g_listStripe; i++) {
             dr.x = 0;
-            dr.y = (i + 1) * field58 + 60;
+            dr.y = (i + 1) * textRowHeight + 60;
             SDL_UpperBlit(g_listStripe, NULL, dst, &dr);
         }
     }
@@ -440,44 +442,44 @@ void TextMenuDrawer::vfunc7(SDL_Surface *dst)
         TextItem *item = (TextItem *)getItem(i);
         color = textColor;
         int x = rect.x;
-        int y = rect.y + 2 + row * field58;
+        int y = rect.y + 2 + row * textRowHeight;
         if (surface48) {
             dr.x = x;
-            if (field58 > surface48->h)
-                dr.y = y + (field58 - surface48->h) / 2;
+            if (textRowHeight > surface48->h)
+                dr.y = y + (textRowHeight - surface48->h) / 2;
             else
                 dr.y = y;
             sr.x = 0;
             sr.y = 0;
             sr.w = rect.w;
-            sr.h = field58;
+            sr.h = textRowHeight;
             SDL_UpperBlit(surface48, &sr, dst, &dr);
         }
         if (i == cur) {
             if (selectedBackground) {
                 dr.x = x;
-                if (field58 > selectedBackground->h)
-                    dr.y = y + (field58 - selectedBackground->h) / 2;
+                if (textRowHeight > selectedBackground->h)
+                    dr.y = y + (textRowHeight - selectedBackground->h) / 2;
                 else
                     dr.y = y;
                 sr.x = 0;
                 sr.y = 0;
                 sr.w = rect.w;
-                sr.h = field58;
+                sr.h = textRowHeight;
                 SDL_UpperBlit(selectedBackground, &sr, dst, &dr);
                 color = colorBC;
             } else {
                 color = colorBC;
             }
         }
-        if (surface54 && i == cur) {
+        if (customBackground && i == cur) {
             sr.x = x + 18;
-            sr.y = y + (field58 - surface54->h) / 2;
-            SDL_UpperBlit(surface54, NULL, dst, &sr);
+            sr.y = y + (textRowHeight - customBackground->h) / 2;
+            SDL_UpperBlit(customBackground, NULL, dst, &sr);
         }
         if (item && item->value) {
             sr.x = x + 5;
-            sr.y = y + (field58 - (item->value)->h) / 2;
+            sr.y = y + (textRowHeight - (item->value)->h) / 2;
             sr.w = (item->value)->w;
             sr.h = (item->value)->h;
             SDL_UpperBlit(item->value, NULL, dst, &sr);
@@ -485,41 +487,41 @@ void TextMenuDrawer::vfunc7(SDL_Surface *dst)
         } else {
             sr.x = x + 20;
         }
-        sr.y = y + (field58 - fontH) / 2;
+        sr.y = y + (textRowHeight - fontH) / 2;
         sr.w = rect.w - 40;
-        sr.h = field58;
+        sr.h = textRowHeight;
         if (item == NULL) {
-            drawText(dst, font, sr, languageString(STR_LOADING), color, 0, flagC0 ? i == cur : false);
+            drawText(dst, font, sr, languageString(STR_LOADING), color, 0, shadowSelected ? i == cur : false);
         } else {
-            if (!item->flag24) {
+            if (!item->showThumbnail) {
                 if (item->label.length() <= 48) {
-                    drawHighlighted(dst, font, sr, item->label.c_str(), color, 0, flagC0 ? i == cur : false,
-                                    str18.c_str(),
-                                    item->str40.length() ? item->str40.c_str() : item->label.c_str());
+                    drawHighlighted(dst, font, sr, item->label.c_str(), color, 0, shadowSelected ? i == cur : false,
+                                    searchText.c_str(),
+                                    item->displayLabel.length() ? item->displayLabel.c_str() : item->label.c_str());
                 } else {
                     strncpy(shortLabel, item->label.c_str(), 64);
-                    drawHighlighted(dst, font, sr, shortLabel, color, 0, flagC0 ? i == cur : false,
-                                    str18.c_str(),
-                                    item->str40.length() ? item->str40.c_str() : item->label.c_str());
+                    drawHighlighted(dst, font, sr, shortLabel, color, 0, shadowSelected ? i == cur : false,
+                                    searchText.c_str(),
+                                    item->displayLabel.length() ? item->displayLabel.c_str() : item->label.c_str());
                 }
             } else {
-                if (item->field70 == NULL)
-                    if (item->str58.length() != 0)
-                        item->field70 = loadImage(item->str58.c_str(), g_backBuffer, 0);
-                if (item->field70) {
+                if (item->thumbnailSurface == NULL)
+                    if (item->thumbnailPath.length() != 0)
+                        item->thumbnailSurface = loadImage(item->thumbnailPath.c_str(), g_backBuffer, 0);
+                if (item->thumbnailSurface) {
                     dr.x = x + 20;
                     int size = 71;
-                    if (field58 >= (item->field70)->h ||
-                        field58 >= (item->field70)->w) {
-                        dr.y = y + (field58 - (item->field70)->h) / 2;
-                        SDL_UpperBlit(item->field70, NULL, dst, &dr);
+                    if (textRowHeight >= (item->thumbnailSurface)->h ||
+                        textRowHeight >= (item->thumbnailSurface)->w) {
+                        dr.y = y + (textRowHeight - (item->thumbnailSurface)->h) / 2;
+                        SDL_UpperBlit(item->thumbnailSurface, NULL, dst, &dr);
                     } else {
                         dr.y = y;
-                        sr.x = (item->field70->w - 71) / 2;
-                        sr.y = (item->field70->h - 71) / 2;
+                        sr.x = (item->thumbnailSurface->w - 71) / 2;
+                        sr.y = (item->thumbnailSurface->h - 71) / 2;
                         sr.w = 71;
                         sr.h = 71;
-                        SDL_UpperBlit(item->field70, &sr, dst, &dr);
+                        SDL_UpperBlit(item->thumbnailSurface, &sr, dst, &dr);
                     }
                     sr.x = x + 111;
                     sr.w = rect.w - 111;
@@ -528,16 +530,16 @@ void TextMenuDrawer::vfunc7(SDL_Surface *dst)
                     sr.w = rect.w - 20;
                 }
                 sr.y = y + 20;
-                sr.h = field58 / 2 - 20;
-                drawHighlighted(dst, font, sr, item->label.c_str(), color, 0, flagC0 ? i == cur : false,
-                                str18.c_str(),
-                                item->str40.length() ? item->str40.c_str() : item->label.c_str());
-                sr.y = y + field58 / 2;
-                drawText(dst, font, sr, item->str28.c_str(), g_selectedColor, 0, flagC0 ? i == cur : false);
+                sr.h = textRowHeight / 2 - 20;
+                drawHighlighted(dst, font, sr, item->label.c_str(), color, 0, shadowSelected ? i == cur : false,
+                                searchText.c_str(),
+                                item->displayLabel.length() ? item->displayLabel.c_str() : item->label.c_str());
+                sr.y = y + textRowHeight / 2;
+                drawText(dst, font, sr, item->subtitle.c_str(), g_selectedColor, 0, shadowSelected ? i == cur : false);
             }
             if (favoriteMark && item->favorite) {
-                sr.x = rect.w + x - favoriteMark->w - field04 - 20;
-                sr.y = y + (field58 - favoriteMark->h) / 2;
+                sr.x = rect.w + x - favoriteMark->w - previewWidth - 20;
+                sr.y = y + (textRowHeight - favoriteMark->h) / 2;
                 SDL_UpperBlit(favoriteMark, NULL, dst, &sr);
             }
         }
@@ -545,7 +547,7 @@ void TextMenuDrawer::vfunc7(SDL_Surface *dst)
 }
 
 // 0x204d4: key input, ListMenu's.
-int TextMenuDrawer::vfunc3()
+int TextMenuDrawer::handleKey()
 {
-    return ListMenu::vfunc3();
+    return ListMenu::handleKey();
 }

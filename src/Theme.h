@@ -23,7 +23,7 @@ struct Theme {
     std::string iconFontMulti, iconFontEnglish;
     int iconSize, smallSize;
     ThemeColor textColor, selectedColor;
-    int field140, field144, field148;
+    int gridIconOffsetY, gridIconOffsetX, gridTextOffsetY;
     std::string mainFontMulti, mainFontEnglish;
     int mainSize;
     ThemeColor wifiColor, imeColor;

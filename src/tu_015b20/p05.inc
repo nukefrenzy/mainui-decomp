@@ -11,7 +11,7 @@ const char *getLanguageFile();                                  // 0x14ba18 (tu_
 char *pinyinInitials(const char *s);                            // 0x143ae4 (tu_143720)
 int countDirectoryItems(std::string dir, bool (*filter)(const char *, const char *)); // 0x12d400
 
-// 0x20500
+// 0x20500: a TextMenuDrawer that owns its rows (TextItem*).
 TextMenu::TextMenu(bool a, bool b, int c, const char *background)
     : TextMenuDrawer(a, b, c, background)
 {
@@ -20,11 +20,11 @@ TextMenu::TextMenu(bool a, bool b, int c, const char *background)
 // 0x20570
 TextMenu::~TextMenu()
 {
-    vfunc18();
+    freeListItem();
 }
 
 // 0x205f8: free every item (slot 18).
-void TextMenu::vfunc18()
+void TextMenu::freeListItem()
 {
     for (int i = 0; i < items.size(); i++) {
         TextItem *item = (TextItem *)items[i];
@@ -36,12 +36,12 @@ void TextMenu::vfunc18()
 }
 
 // 0x206e0: reload (slot 13).
-void TextMenu::vfunc13()
+void TextMenu::clearItems()
 {
-    vfunc18();
+    freeListItem();
 }
 
-// 0x20714
+// 0x20714: the row at index, or NULL.
 void *TextMenu::getItem(int index)
 {
     if (index >= 0 && index < items.size())
@@ -51,7 +51,7 @@ void *TextMenu::getItem(int index)
 }
 
 // 0x2079c: remove the item at index (slot 12).
-void TextMenu::vfunc12(int index)
+void TextMenu::removeItem(int index)
 {
     if (index >= 0 && index < items.size()) {
         TextItem *item = (TextItem *)items[index];
@@ -93,7 +93,7 @@ bool TextMenu::addUnique(TextItem *item)
 }
 
 // 0x20b1c: strip trailing slashes and return the last path component (same as tu_1484d4's).
-char *database_strlen_20b1c(char *path)
+char *romFolderName(char *path)
 {
     int len = strlen(path);
     if (len > 0) {
@@ -170,7 +170,7 @@ int importGameList(const char *xml, int arg, const char *table, sqlite3 *db)
                 }
                 const char *ext = strrchr(path.c_str(), '.');
                 if (strncasecmp(ext, ".zip", 4) != 0) {
-                    if (fileType_2cfc0(path.c_str()) < 0)
+                    if (findEmuForFile(path.c_str()) < 0)
                         continue;
                 }
                 node = game->first_node("name");
@@ -473,7 +473,7 @@ bool isRomFile(const char *name, const char *dir)
 {
     if (strncmp(name, "[BIOS]", 6) == 0)
         return false;
-    if (fileType_2cfc0(name) >= 0)
+    if (findEmuForFile(name) >= 0)
         return true;
     if (strncmp(name, "neogeo.zip", 10) == 0)
         return false;
@@ -487,14 +487,14 @@ bool isRomFile(const char *name, const char *dir)
 
 // 0x22d90: open the emulator's ROM cache (<path>/<name>_cache6.db) and count the rows for a folder or
 // a search; an empty cache is rebuilt from gamelist.xml, else from the file system.
-int database_lang_22d90(EmuInfo *emu, int arg, std::string dir, std::string search, char *buf, int size)
+int prepareRomCache(EmuInfo *emu, int arg, std::string dir, std::string search, char *buf, int size)
 {
     int count = 0;
     int rc = -1;
     int t = 0;
     char *base = NULL;
     char *path = strdup(emu->path.c_str());
-    base = database_strlen_20b1c(path);
+    base = romFolderName(path);
     sqlite3 *db;
     sqlite3_stmt *stmt;
     struct timeval tv;
@@ -553,7 +553,7 @@ done:
 }
 
 // 0x23318: the ROM list of one emulator folder (or a search in it), backed by its cache database.
-DBCachedTextMenu *buildRomList_23318(EmuInfo *emu, int arg, std::string *dir, std::string *search)
+DBCachedTextMenu *buildRomList(EmuInfo *emu, int arg, std::string *dir, std::string *search)
 {
     DBCachedTextMenu *menu = new DBCachedTextMenu(emu->label.c_str(), emu, arg, *search);
     printf("create_rom_browser_menu %p, search %s\n", menu, search->c_str());
@@ -561,8 +561,8 @@ DBCachedTextMenu *buildRomList_23318(EmuInfo *emu, int arg, std::string *dir, st
     const int bufSize = 512;
     char *buf = (char *)malloc(bufSize);
     char *path = strdup(emu->path.c_str());
-    char *base = database_strlen_20b1c(path);
-    count = database_lang_22d90(emu, arg, *dir, *search, buf, bufSize);
+    char *base = romFolderName(path);
+    count = prepareRomCache(emu, arg, *dir, *search, buf, bufSize);
     menu->setTotal(count);
     snprintf(buf, bufSize, "%s/%s_cache6.db", emu->path.c_str(), base);
     menu->open(buf, base, dir->length() ? dir->c_str() : ".");

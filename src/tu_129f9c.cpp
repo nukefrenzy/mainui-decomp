@@ -291,18 +291,18 @@ void setDefaultTheme(Theme *theme)
     theme->smallSize = 0x12;
     theme->textColor.bytes = g_themeWhite;
     theme->selectedColor.bytes = g_themeGray;
-    theme->field140 = 0;
-    theme->field144 = 0;
-    theme->field148 = 0;
+    theme->gridIconOffsetY = 0;
+    theme->gridIconOffsetX = 0;
+    theme->gridTextOffsetY = 0;
     theme->mainSize = 0x18;
     theme->wifiColor.bytes = g_themeWhite;
     theme->imeColor.bytes = g_themeWhite;
     theme->accentColor.value = 0;
     theme->accentColor.bytes.r = 255;
     theme->accentColor.bytes.g = 255;
-    theme->field144 = 0;
-    theme->field140 = 0;
-    theme->field148 = 0;
+    theme->gridIconOffsetX = 0;
+    theme->gridIconOffsetY = 0;
+    theme->gridTextOffsetY = 0;
 }
 // Loads a theme into the globals (see the file header). Returns false if the background or the
 // main font could not be loaded; main then gives up.

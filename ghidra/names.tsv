@@ -50,15 +50,15 @@ addr	name	subsystem	confidence	comment
 00019fd8	ClearRecentAction::execute	games	confirmed	
 0001a02c	AddFavoriteAction::execute	config	confirmed	
 0001a44c	DeleteRomAction::execute	games	confirmed	
-0001a4bc	power_label_1a4bc	power	inferred	
-0001a75c	launch_label_1a75c	launch	inferred	
-0001a924	buildMenu_1a924	render	confirmed	Byte-exact source: src/tu_015b20.cpp.
+0001a4bc	saveFavorites	power	confirmed	Byte-exact source: src/tu_015b20.cpp.
+0001a75c	removeFavorite	launch	confirmed	Byte-exact source: src/tu_015b20.cpp.
+0001a924	buildFavoriteList	render	confirmed	Byte-exact source: src/tu_015b20.cpp.
 0001b210	isFavourite	config	confirmed	Byte-exact source: src/tu_015b20.cpp.
-0001b488	buildMenu_1b488	config	confirmed	Byte-exact source: src/tu_015b20.cpp.
-0001bbfc	buildMenu_1bbfc	config	confirmed	Byte-exact source: src/tu_015b20.cpp.
-0001bea4	display_getlcd_1bea4	display	inferred	
+0001b488	buildRecentList	config	confirmed	Byte-exact source: src/tu_015b20.cpp.
+0001bbfc	buildAppList	config	confirmed	Byte-exact source: src/tu_015b20.cpp.
+0001bea4	setLcdColor	display	confirmed	Byte-exact source: src/tu_015b20.cpp.
 0001bf90	initAudioSettings	audio	inferred	Restores music volume; button-name table L2,L,R2,R,X,A,B,Y.
-0001c0ac	refreshMenu_1c0ac	render	confirmed	Byte-exact source: src/tu_015b20.cpp.
+0001c0ac	removeDeletedFavorites	render	confirmed	Byte-exact source: src/tu_015b20.cpp.
 0001c1fc	restoreWindowState	config	confirmed	Reads /tmp/state.json, recreates saved windows.
 0001c544	saveWindowState	config	confirmed	Writes open windows to /tmp/state.json.
 0001c760	setRomListPosition	config	confirmed	Byte-exact source: src/tu_015b20.cpp.
@@ -75,60 +75,60 @@ addr	name	subsystem	confidence	comment
 0001d8fc	ListMenu::ListMenu	render	confirmed	Byte-exact source: src/tu_015b20.cpp.
 0001d99c	ListMenu::setRect	ui_framework	confirmed	Byte-exact source: src/tu_015b20.cpp.
 0001d9d8	ListMenu::restorePosition	ui_framework	confirmed	Byte-exact slot 2 (p04): restore cur/pageStart/pageEnd if inside the list.
-0001dae8	ListMenu::vfunc9	ui_framework	confirmed	Byte-exact slot 9 (p04): next item, wraps to 0.
-0001db6c	ListMenu::vfunc10	ui_framework	confirmed	Byte-exact slot 10 (p04): previous item, wraps to the last.
-0001dbdc	ListMenu::vfunc16	ui_framework	confirmed	Byte-exact slot 16 (p04): six items up.
-0001dc30	ListMenu::vfunc17	ui_framework	confirmed	Byte-exact slot 17 (p04): six items down.
+0001dae8	ListMenu::moveDown	ui_framework	confirmed	Byte-exact slot 9 (p04): next item, wraps to 0.
+0001db6c	ListMenu::moveUp	ui_framework	confirmed	Byte-exact slot 10 (p04): previous item, wraps to the last.
+0001dbdc	ListMenu::pageUp	ui_framework	confirmed	Byte-exact slot 16 (p04): six items up.
+0001dc30	ListMenu::pageDown	ui_framework	confirmed	Byte-exact slot 17 (p04): six items down.
 0001dcc8	ListMenu::recordKey	ui_framework	confirmed	Byte-exact (p04): history (+0x3c) of a key repeated within 200 ms, time in +0x38.
 0001ddf4	ListMenu::keyRepeating	ui_framework	confirmed	Byte-exact (p04): history.size() > 25 (held key scrolls by six).
-0001de34	ListMenu::vfunc3	ui_framework	confirmed	Byte-exact slot 3 key input (p04): 1/4 -> onSelect, 2/3 -> 1, up/down move, left/right page or return 5/6, 10/11 returned, else slot 15.
+0001de34	ListMenu::handleKey	ui_framework	confirmed	Byte-exact slot 3 key input (p04): 1/4 -> onSelect, 2/3 -> 1, up/down move, left/right page or return 5/6, 10/11 returned, else slot 15.
 0001e128	TextMenuDrawer::TextMenuDrawer	ui_framework	confirmed	Byte-exact (p04): (bool noSelBg, bool stripes, int rows, const char *background).
 0001e3f8	TextMenuDrawer::~TextMenuDrawer	ui_framework	confirmed	Byte-exact (p04).
 0001e4e4	TextMenuDrawer::deletingDtor	ui_framework	confirmed	Byte-exact deleting dtor (p04).
-0001e518	TextMenuDrawer::vfunc4	ui_framework	confirmed	Byte-exact onSelect shared by text menus (p04): getItem(cur)->action->execute(item), -1 if none or negative.
-0001e5d0	TextMenuDrawer::vfunc11	ui_framework	confirmed	Byte-exact slot 11 (p04): reload selection background and favourite mark after a theme change.
+0001e518	TextMenuDrawer::onSelect	ui_framework	confirmed	Byte-exact onSelect shared by text menus (p04): getItem(cur)->action->execute(item), -1 if none or negative.
+0001e5d0	TextMenuDrawer::reloadTheme	ui_framework	confirmed	Byte-exact slot 11 (p04): reload selection background and favourite mark after a theme change.
 0001e76c	TextMenuDrawer::makeSelectedBackground	ui_framework	confirmed	Byte-exact (p04): copy a surface into a new 32-bit RGBA surface; no caller found.
 0001e868	drawListNumber	render	confirmed	Byte-exact (p04): draw n (<=9999, %04d) with g_listNumber digits over g_numberBg, else text; called by GameDetailWindow::draw.
 0001ec00	truncateUtf8	render	confirmed	Byte-exact (p04): cut a UTF-8 string to a width (ASCII 1, other 1.5) and add dots; unreferenced; missed by Ghidra export.
 0001ede4	TextMenuDrawer::drawHighlighted	ui_framework	confirmed	Byte-exact (p04): row label with the pinyinFind search match drawn in the highlight colour.
 0001f5e0	TextMenuDrawer::setBackground	ui_framework	confirmed	Byte-exact (p04): load a skin image into +0x54 and remember it; no caller found.
 0001f694	TextMenuDrawer::freeSelectedBackground	ui_framework	confirmed	Byte-exact (p04): no caller found.
-0001f6f0	TextMenuDrawer::vfunc7	ui_framework	confirmed	Byte-exact draw (p04): page clamp, row/selection backgrounds, icon, highlighted label or thumbnail + two lines, favourite mark.
-000204d4	TextMenuDrawer::vfunc3	ui_framework	confirmed	Byte-exact slot 3 (p04): ListMenu::vfunc3().
+0001f6f0	TextMenuDrawer::drawList	ui_framework	confirmed	Byte-exact draw (p04): page clamp, row/selection backgrounds, icon, highlighted label or thumbnail + two lines, favourite mark.
+000204d4	TextMenuDrawer::handleKey	ui_framework	confirmed	Byte-exact slot 3 (p04): ListMenu::vfunc3().
 00020500	TextMenu::TextMenu	ui_framework	confirmed	Byte-exact ctor: TextMenuDrawer(a, b, c, background), empty item vector at +0xf8.
 00020570	TextMenu::~TextMenu	ui_framework	confirmed	Byte-exact dtor: frees the items via slot 18.
 000205c4	TextMenu::deletingDtor	ui_framework	confirmed	
-000205f8	TextMenu::vfunc18	ui_framework	confirmed	Byte-exact slot 18 (void): deletes every TextItem (prints TextMenu::freeListItem) and clears the list.
-000206e0	TextMenu::vfunc13	ui_framework	confirmed	Byte-exact slot 13 (reload): calls slot 18.
+000205f8	TextMenu::freeListItem	ui_framework	confirmed	Byte-exact slot 18 (void): deletes every TextItem (prints TextMenu::freeListItem) and clears the list.
+000206e0	TextMenu::clearItems	ui_framework	confirmed	Byte-exact slot 13 (reload): calls slot 18.
 00020714	TextMenu::getItem	ui_framework	confirmed	Byte-exact slot 5: items[index] or NULL when out of range.
-0002079c	TextMenu::vfunc12	ui_framework	confirmed	Byte-exact slot 12: erase and delete the item at index.
+0002079c	TextMenu::removeItem	ui_framework	confirmed	Byte-exact slot 12: erase and delete the item at index.
 00020898	TextMenu::addItem	ui_framework	confirmed	Byte-exact push_back of a TextItem.
 000208d0	TextMenu::insertSorted	ui_framework	confirmed	Byte-exact insert before the first item cmp(item, it) <= 0; no caller found.
 00020a3c	TextMenu::addUnique	ui_framework	confirmed	Byte-exact append unless an item with the same label exists; true if added.
-00020b1c	database_strlen_20b1c	database	confirmed	Byte-exact lastPathComponent (strips trailing slashes); same code as tu_1484d4's 0x148544. Name kept: shared prototype.
+00020b1c	romFolderName	database	confirmed	Byte-exact lastPathComponent (strips trailing slashes); same code as tu_1484d4's 0x148544. Name kept: shared prototype.
 00020bd4	importGameList	database	confirmed	Byte-exact rebuild of <table>_roms from gamelist.xml with rapidxml (gameList/game/path,name,image); .zip or known types only; returns rows added.
 00021818	isHiddenRomFile	files	confirmed	Byte-exact ROM scan filter: [BIOS] (if hideBios), dot files, neogeo/gngeo, COPYING/LICENSE, extension list or save/db/png blacklist, .bin with .cue.
 00021d50	scanRomDir	files	confirmed	Byte-exact recursive (one level) ROM folder scan into <table>_roms with pinyin columns (GetGameName en/ch when the emulator has shortnames); folders get type 1 rows.
 0002291c	rebuildRomCache	database	confirmed	Byte-exact DROP/CREATE <table>_roms then scanRomDir over EmuInfo path/imagePath in one transaction.
 00022c88	isRomFile	files	confirmed	Byte-exact countDirectoryItems filter: known file type or .zip, never [BIOS]/neogeo/gngeo.
-00022d90	database_lang_22d90	database	confirmed	Byte-exact open <path>/<name>_cache6.db and count rows (folder ppath or pinyin/cpinyin search); empty cache is rebuilt from gamelist.xml, else the file system. Name kept: shared prototype.
+00022d90	prepareRomCache	database	confirmed	Byte-exact open <path>/<name>_cache6.db and count rows (folder ppath or pinyin/cpinyin search); empty cache is rebuilt from gamelist.xml, else the file system. Name kept: shared prototype.
 00023318	buildRomList_23318	database	confirmed	Byte-exact create_rom_browser_menu: new DBCachedTextMenu(emu label, emu, arg, search), count via 0x22d90, setTotal, open the cache. Name kept: shared prototype.
 00023548	DBCacheWorker::run	database	confirmed	Byte-exact tu_015b20 p06.
 0002407c	DBCacheWorker::finished	database	confirmed	Byte-exact tu_015b20 p06.
-000240b4	DBCachedTextMenu::vfunc16	database	confirmed	Byte-exact tu_015b20 p06.
-000240ec	DBCachedTextMenu::vfunc17	database	confirmed	Byte-exact tu_015b20 p06.
-00024128	DBCachedTextMenu::vfunc9	database	confirmed	Byte-exact tu_015b20 p06.
-00024164	DBCachedTextMenu::vfunc10	database	confirmed	Byte-exact tu_015b20 p06.
+000240b4	DBCachedTextMenu::pageUp	database	confirmed	Byte-exact tu_015b20 p06.
+000240ec	DBCachedTextMenu::pageDown	database	confirmed	Byte-exact tu_015b20 p06.
+00024128	DBCachedTextMenu::moveDown	database	confirmed	Byte-exact tu_015b20 p06.
+00024164	DBCachedTextMenu::moveUp	database	confirmed	Byte-exact tu_015b20 p06.
 000241a0	DBCachedTextMenu::prefetchNext	database	confirmed	Byte-exact tu_015b20 p06.
 000242dc	DBCachedTextMenu::prefetchPrevious	database	confirmed	Byte-exact tu_015b20 p06.
 00024410	DBCachedTextMenu::getItem	database	confirmed	Byte-exact tu_015b20 p06.
-00024584	DBCachedTextMenu::vfunc6	database	confirmed	Byte-exact tu_015b20 p06.
+00024584	DBCachedTextMenu::getItemData	database	confirmed	Byte-exact tu_015b20 p06.
 000246f8	DBCachedTextMenu::restorePosition	database	confirmed	Byte-exact tu_015b20 p06.
 00024834	DBCachedTextMenu::open	database	confirmed	Byte-exact tu_015b20 p06.
-00024a14	DBCachedTextMenu::vfunc12	database	confirmed	Byte-exact tu_015b20 p06.
+00024a14	DBCachedTextMenu::removeItem	database	confirmed	Byte-exact tu_015b20 p06.
 00024d28	deleteCachedTextItem	database	confirmed	Byte-exact tu_015b20 p06.
 00024d6c	freeCachedData	database	confirmed	Byte-exact tu_015b20 p06.
-00024d98	DBCachedTextMenu::vfunc14	database	confirmed	Byte-exact tu_015b20 p06.
+00024d98	DBCachedTextMenu::setSearch	database	confirmed	Byte-exact tu_015b20 p06.
 00025240	DBCachedTextMenu::DBCachedTextMenu	database	confirmed	Byte-exact tu_015b20 p06.
 0002540c	DBCachedTextMenu::~DBCachedTextMenu	database	confirmed	Byte-exact tu_015b20 p06.
 000254dc	DBCachedTextMenu::deletingDtor	database	confirmed	Byte-exact tu_015b20 p06.
@@ -142,22 +142,22 @@ addr	name	subsystem	confidence	comment
 00025c8c	IconMenu::IconMenu	menus	confirmed	Byte-exact tu_015b20 p06.
 00025e48	IconMenu::~IconMenu	menus	confirmed	Byte-exact tu_015b20 p06.
 00025ec8	IconMenu::deletingDtor	menus	confirmed	Byte-exact tu_015b20 p06.
-00025efc	IconMenu::vfunc7	menus	confirmed	Byte-exact tu_015b20 p06.
+00025efc	IconMenu::drawList	menus	confirmed	Byte-exact tu_015b20 p06.
 00026fa0	IconMenu::getItem	menus	confirmed	Byte-exact tu_015b20 p06.
 00027014	prepareGlobalRomCache	menus	confirmed	Byte-exact tu_015b20 p06.
-00027724	IconMenu::vfunc4	menus	confirmed	Byte-exact tu_015b20 p06.
+00027724	IconMenu::onSelect	menus	confirmed	Byte-exact tu_015b20 p06.
 0002797c	IconMenu::freeItems	menus	confirmed	Byte-exact tu_015b20 p06.
 00027a30	IconMenu::addItem	menus	confirmed	Byte-exact tu_015b20 p06.
-00027a68	IconMenu::vfunc11	menus	confirmed	Byte-exact tu_015b20 p06.
-00027bc4	IconMenu::vfunc3	menus	confirmed	Byte-exact tu_015b20 p06.
+00027a68	IconMenu::reloadTheme	menus	confirmed	Byte-exact tu_015b20 p06.
+00027bc4	IconMenu::handleKey	menus	confirmed	Byte-exact tu_015b20 p06.
 000282d0	SettingMenuItem::SettingMenuItem	menus	confirmed	Byte-exact tu_015b20 p06.
 000283b8	SettingMenuItem::~SettingMenuItem	menus	confirmed	Byte-exact tu_015b20 p06.
 00028408	SettingMenuItem::reload	menus	confirmed	Byte-exact tu_015b20 p06.
 0002849c	SettingMenu::SettingMenu	menus	confirmed	Byte-exact tu_015b20 p07.
 00028614	SettingMenu::~SettingMenu	menus	confirmed	Byte-exact tu_015b20 p07.
 00028748	SettingMenu::deletingDtor	menus	confirmed	Byte-exact tu_015b20 p07.
-0002877c	SettingMenu::vfunc11	menus	confirmed	Byte-exact tu_015b20 p07.
-00028994	SettingMenu::vfunc7	menus	confirmed	Byte-exact tu_015b20 p07.
+0002877c	SettingMenu::reloadTheme	menus	confirmed	Byte-exact tu_015b20 p07.
+00028994	SettingMenu::drawList	menus	confirmed	Byte-exact tu_015b20 p07.
 000294f8	previewVolume	menus	confirmed	Byte-exact tu_015b20 p07.
 000295a8	SettingMenu::decrease	menus	confirmed	Byte-exact tu_015b20 p07.
 000298ec	SettingMenu::increase	menus	confirmed	Byte-exact tu_015b20 p07.
@@ -165,35 +165,35 @@ addr	name	subsystem	confidence	comment
 00029c4c	resetEmulatorSettings	menus	confirmed	Byte-exact tu_015b20 p07.
 00029c74	resetAllSettings	menus	confirmed	Byte-exact tu_015b20 p07.
 00029dc8	SettingMenu::select	menus	confirmed	Byte-exact tu_015b20 p07.
-0002a5d4	SettingMenu::vfunc3	menus	confirmed	Byte-exact tu_015b20 p07.
-0002a6ec	SettingMenu::vfunc18	menus	confirmed	Byte-exact tu_015b20 p07.
+0002a5d4	SettingMenu::handleKey	menus	confirmed	Byte-exact tu_015b20 p07.
+0002a6ec	SettingMenu::freeListItem	menus	confirmed	Byte-exact tu_015b20 p07.
 0002a7b0	DeviceInfoItem::DeviceInfoItem	menus	confirmed	Byte-exact tu_015b20 p07.
 0002a83c	DeviceInfoMenu::DeviceInfoMenu	menus	confirmed	Byte-exact tu_015b20 p07.
 0002a934	DeviceInfoMenu::~DeviceInfoMenu	menus	confirmed	Byte-exact tu_015b20 p07.
 0002a9d4	DeviceInfoMenu::deletingDtor	menus	confirmed	Byte-exact tu_015b20 p07.
-0002aa08	DeviceInfoMenu::vfunc11	menus	confirmed	Byte-exact tu_015b20 p07.
-0002aae4	DeviceInfoMenu::vfunc7	menus	confirmed	Byte-exact tu_015b20 p07.
+0002aa08	DeviceInfoMenu::reloadTheme	menus	confirmed	Byte-exact tu_015b20 p07.
+0002aae4	DeviceInfoMenu::drawList	menus	confirmed	Byte-exact tu_015b20 p07.
 0002b028	formatDeviceUuid	menus	confirmed	Byte-exact tu_015b20 p07.
 0002b0f8	DeviceInfoMenu::loadInfo	menus	confirmed	Byte-exact tu_015b20 p07.
-0002b504	DeviceInfoMenu::vfunc18	menus	confirmed	Byte-exact tu_015b20 p07.
-0002b5bc	display_memset_2b5bc	menus	confirmed	Byte-exact tu_015b20 p07.
+0002b504	DeviceInfoMenu::freeListItem	menus	confirmed	Byte-exact tu_015b20 p07.
+0002b5bc	applyPanelTiming	menus	confirmed	Byte-exact tu_015b20 p07.
 0002b788	ColorMenu::ColorMenu	menus	confirmed	Byte-exact tu_015b20 p08.
 0002b8bc	ColorMenu::~ColorMenu	menus	confirmed	Byte-exact tu_015b20 p08.
 0002b96c	ColorMenu::deletingDtor	menus	confirmed	Byte-exact tu_015b20 p08.
-0002b9a0	ColorMenu::vfunc7	menus	confirmed	Byte-exact tu_015b20 p08.
-0002c274	ColorMenu::vfunc3	menus	confirmed	Byte-exact tu_015b20 p08.
-0002c73c	ColorMenu::vfunc4	menus	confirmed	Byte-exact tu_015b20 p08.
-0002c760	ColorMenu::vfunc18	menus	confirmed	Byte-exact tu_015b20 p08.
+0002b9a0	ColorMenu::drawList	menus	confirmed	Byte-exact tu_015b20 p08.
+0002c274	ColorMenu::handleKey	menus	confirmed	Byte-exact tu_015b20 p08.
+0002c73c	ColorMenu::onSelect	menus	confirmed	Byte-exact tu_015b20 p08.
+0002c760	ColorMenu::freeListItem	menus	confirmed	Byte-exact tu_015b20 p08.
 0002c824	ColorMenu::loadItems	menus	confirmed	Byte-exact tu_015b20 p08.
 0002c950	LanguageMenu::LanguageMenu	menus	confirmed	Byte-exact tu_015b20 p08.
 0002caa8	LanguageMenu::~LanguageMenu	menus	confirmed	Byte-exact tu_015b20 p08.
 0002caf4	LanguageMenu::deletingDtor	menus	confirmed	Byte-exact tu_015b20 p08.
-0002cb28	LanguageMenu::vfunc4	menus	confirmed	Byte-exact tu_015b20 p08.
+0002cb28	LanguageMenu::onSelect	menus	confirmed	Byte-exact tu_015b20 p08.
 0002cc14	ThemeMenu::ThemeMenu	menus	confirmed	Byte-exact tu_015b20 p08.
 0002cd80	ThemeMenu::~ThemeMenu	menus	confirmed	Byte-exact tu_015b20 p08.
 0002cdbc	ThemeMenu::deletingDtor	menus	confirmed	Byte-exact tu_015b20 p08.
-0002cdf0	ThemeMenu::vfunc4	menus	confirmed	Byte-exact tu_015b20 p08.
-0002cfc0	fileType_2cfc0	menus	confirmed	Byte-exact tu_015b20 p08.
+0002cdf0	ThemeMenu::onSelect	menus	confirmed	Byte-exact tu_015b20 p08.
+0002cfc0	findEmuForFile	menus	confirmed	Byte-exact tu_015b20 p08.
 0002d158	requestUpgrade	menus	confirmed	Byte-exact tu_015b20 p08.
 0002d1bc	FileAction::execute	menus	confirmed	Byte-exact tu_015b20 p08.
 0002d574	fileBrowserFilter	menus	confirmed	Byte-exact tu_015b20 p08.
@@ -201,11 +201,11 @@ addr	name	subsystem	confidence	comment
 0002d908	FileBrowserMenu::~FileBrowserMenu	menus	confirmed	Byte-exact tu_015b20 p08.
 0002da58	FileBrowserMenu::deletingDtor	menus	confirmed	Byte-exact tu_015b20 p08.
 0002da8c	FileBrowserMenu::count	menus	confirmed	Byte-exact tu_015b20 p08.
-0002dad4	FileBrowserMenu::vfunc4	menus	confirmed	Byte-exact tu_015b20 p08.
+0002dad4	FileBrowserMenu::onSelect	menus	confirmed	Byte-exact tu_015b20 p08.
 0002db8c	FileBrowserMenu::getItem	menus	confirmed	Byte-exact tu_015b20 p08.
 0002dc14	FileBrowserMenu::itemIcon	menus	confirmed	Byte-exact tu_015b20 p08.
-0002dcbc	FileBrowserMenu::vfunc7	menus	confirmed	Byte-exact tu_015b20 p08.
-0002e0f0	FileBrowserMenu::vfunc3	menus	confirmed	Byte-exact tu_015b20 p08.
+0002dcbc	FileBrowserMenu::drawList	menus	confirmed	Byte-exact tu_015b20 p08.
+0002e0f0	FileBrowserMenu::handleKey	menus	confirmed	Byte-exact tu_015b20 p08.
 0002e318	freeSurfaceCallback	menus	confirmed	Byte-exact tu_015b20 p08.
 0002e344	LoadSurfaceWorker::run	menus	confirmed	Byte-exact tu_015b20 p08.
 0002e3ec	LoadSurfaceWorker::finished	menus	confirmed	Byte-exact tu_015b20 p08.
@@ -222,7 +222,7 @@ addr	name	subsystem	confidence	comment
 0002fc74	MenuWindow::onHide	windows	confirmed	Byte-exact tu_015b20 p09.
 0002ff04	MenuWindow::handleInput	windows	confirmed	Byte-exact tu_015b20 p09.
 000310ac	MenuWindow::cacheBackground	windows	confirmed	Byte-exact tu_015b20 p09.
-000311f4	drawPageDots_311f4	windows	confirmed	Byte-exact tu_015b20 p09.
+000311f4	drawPageCount	windows	confirmed	Byte-exact tu_015b20 p09.
 00031398	MenuWindow::draw	windows	confirmed	Byte-exact tu_015b20 p09.
 00031ed4	MenuWindow::setHeaderIcon	windows	confirmed	Byte-exact tu_015b20 p09.
 00032040	FloatWindow::FloatWindow	windows	confirmed	Byte-exact tu_015b20 p09.
@@ -297,7 +297,7 @@ addr	name	subsystem	confidence	comment
 00036eb0	closeFramebuffer	core	confirmed	Byte-exact tu_015b20 p11.
 00036ee8	runWindowLoop	core	confirmed	Byte-exact tu_015b20 p11.
 000373c4	createRootWindow	core	confirmed	Byte-exact tu_015b20 p11.
-000374bc	files_374bc	core	confirmed	Byte-exact tu_015b20 p11.
+000374bc	windowTitle	core	confirmed	Byte-exact tu_015b20 p11.
 00037610	createRomListMenu	core	confirmed	Byte-exact tu_015b20 p11.
 00037760	smallMenuFont	core	confirmed	Byte-exact tu_015b20 p11.
 00037784	createMenu	core	confirmed	Byte-exact tu_015b20 p11.
@@ -330,12 +330,12 @@ addr	name	subsystem	confidence	comment
 000395f4	ListMenu::getPageEnd	ui_framework	confirmed	Byte-exact source: src/tu_015b20.cpp.
 0003961c	ListMenu::getSearch[abi:cxx11]	ui_framework	confirmed	Byte-exact source: src/tu_015b20.cpp.
 00039650	ListMenu::getRect	render	confirmed	Byte-exact source: src/tu_015b20.cpp.
-00039678	ListMenu::vfunc6	ui_framework	confirmed	Byte-exact source: src/tu_015b20.cpp.
-000396a0	ListMenu::vfunc11	ui_framework	confirmed	Byte-exact source: src/tu_015b20.cpp.
-000396c0	ListMenu::vfunc12	ui_framework	confirmed	Byte-exact source: src/tu_015b20.cpp.
-000396e4	ListMenu::vfunc13	ui_framework	confirmed	Byte-exact source: src/tu_015b20.cpp.
-00039704	ListMenu::vfunc14	ui_framework	confirmed	Byte-exact source: src/tu_015b20.cpp.
-00039728	ListMenu::vfunc15	ui_framework	confirmed	Byte-exact source: src/tu_015b20.cpp.
+00039678	ListMenu::getItemData	ui_framework	confirmed	Byte-exact source: src/tu_015b20.cpp.
+000396a0	ListMenu::reloadTheme	ui_framework	confirmed	Byte-exact source: src/tu_015b20.cpp.
+000396c0	ListMenu::removeItem	ui_framework	confirmed	Byte-exact source: src/tu_015b20.cpp.
+000396e4	ListMenu::clearItems	ui_framework	confirmed	Byte-exact source: src/tu_015b20.cpp.
+00039704	ListMenu::setSearch	ui_framework	confirmed	Byte-exact source: src/tu_015b20.cpp.
+00039728	ListMenu::onUnhandledEvent	ui_framework	confirmed	Byte-exact source: src/tu_015b20.cpp.
 00039750	Action::Action	wifi	confirmed	Byte-exact source: src/tu_015b20.cpp.
 00039794	Action::~Action	wifi	confirmed	Byte-exact source: src/tu_015b20.cpp.
 000397c8	Action::deletingDtor	wifi	confirmed	Byte-exact source: src/tu_015b20.cpp.
@@ -403,7 +403,7 @@ addr	name	subsystem	confidence	comment
 0003aa10	IconMenu::setField68	render	confirmed	Byte-exact source: src/tu_015b20.cpp.
 0003aa50	IconMenu::setFontFn	render	confirmed	Byte-exact source: src/tu_015b20.cpp.
 0003aa80	IconMenu::setField74	render	confirmed	Byte-exact source: src/tu_015b20.cpp.
-0003aab0	DeviceInfoMenu::vfunc4	ui_framework	confirmed	Byte-exact source: src/tu_015b20.cpp.
+0003aab0	DeviceInfoMenu::onSelect	ui_framework	confirmed	Byte-exact source: src/tu_015b20.cpp.
 0003aad4	MenuWindow::getMenu	ui_framework	confirmed	Byte-exact source: src/tu_015b20.cpp.
 0003aafc	MenuWindow::setStrB4	actions	confirmed	Byte-exact source: src/tu_015b20.cpp.
 0003ab30	MenuWindow::setPath	games	confirmed	Byte-exact source: src/tu_015b20.cpp.
@@ -1270,11 +1270,11 @@ addr	name	subsystem	confidence	comment
 00050674	HardwareTestMenu::HardwareTestMenu	hardware	confirmed	Byte-exact tu_04cb68 function.
 000507d4	HardwareTestMenu::~HardwareTestMenu	hardware	confirmed	Byte-exact tu_04cb68 function.
 00050818	HardwareTestMenu::deletingDtor	hardware_test	confirmed	
-0005084c	HardwareTestMenu::vfunc4	hardware	confirmed	Byte-exact tu_04cb68 function.
+0005084c	HardwareTestMenu::onSelect	hardware	confirmed	Byte-exact tu_04cb68 function.
 00050ce8	testResultLabel	hardware	confirmed	Byte-exact tu_04cb68 function.
 00050d40	testResultColor	hardware	confirmed	Byte-exact tu_04cb68 function.
-00050dd4	HardwareTestMenu::vfunc7	hardware	confirmed	Byte-exact tu_04cb68 function.
-00051390	HardwareTestMenu::vfunc18	hardware	confirmed	Byte-exact tu_04cb68 function.
+00050dd4	HardwareTestMenu::drawList	hardware	confirmed	Byte-exact tu_04cb68 function.
+00051390	HardwareTestMenu::freeListItem	hardware	confirmed	Byte-exact tu_04cb68 function.
 00051454	HardwareTestMenu::initializeTests	hardware	confirmed	Byte-exact tu_04cb68 function.
 00051670	KeyTestWindow2::onHide	ui_framework	inferred	
 00051690	KeyTestWindow2::onShow	ui_framework	confirmed	
@@ -4277,18 +4277,18 @@ addr	name	subsystem	confidence	comment
 0013a2f8	WifiMenuDrawer::WifiMenuDrawer	render	confirmed	Byte-exact source: src/tu_138c50.cpp.
 0013a3d8	WifiMenuDrawer::~WifiMenuDrawer	render	confirmed	Byte-exact source: src/tu_138c50.cpp.
 0013a44c	WifiMenuDrawer::deletingDtor	render	confirmed	Byte-exact source: src/tu_138c50.cpp.
-0013a480	WifiMenuDrawer::vfunc3	wifi	confirmed	Byte-exact source: src/tu_138c50.cpp.
-0013a5ac	WifiMenuDrawer::vfunc4	wifi	confirmed	Byte-exact source: src/tu_138c50.cpp.
+0013a480	WifiMenuDrawer::handleKey	wifi	confirmed	Byte-exact source: src/tu_138c50.cpp.
+0013a5ac	WifiMenuDrawer::onSelect	wifi	confirmed	Byte-exact source: src/tu_138c50.cpp.
 0013a664	WifiMenuDrawer::getItem	wifi	confirmed	Byte-exact source: src/tu_138c50.cpp.
-0013a6ec	WifiMenuDrawer::vfunc7	render	confirmed	Byte-exact source: src/tu_138c50.cpp.
+0013a6ec	WifiMenuDrawer::drawList	render	confirmed	Byte-exact source: src/tu_138c50.cpp.
 0013abd4	WifiMenuDrawer::count	wifi	confirmed	Byte-exact source: src/tu_138c50.cpp.
-0013ac04	WifiMenuDrawer::vfunc13	wifi	confirmed	Byte-exact source: src/tu_138c50.cpp.
+0013ac04	WifiMenuDrawer::clearItems	wifi	confirmed	Byte-exact source: src/tu_138c50.cpp.
 0013ad38	WifiMenu::WifiMenu	wifi	confirmed	Byte-exact source: src/tu_138c50.cpp.
 0013b078	WifiMenu::~WifiMenu	render	confirmed	Byte-exact source: src/tu_138c50.cpp.
 0013b17c	WifiMenu::deletingDtor	wifi	confirmed	
-0013b1b0	WifiMenu::vfunc7	render	confirmed-class	
-0013b250	WifiMenu::vfunc4	wifi	confirmed	Byte-exact source: src/tu_138c50.cpp.
-0013b2c0	WifiMenu::vfunc15	wifi	confirmed-class	
+0013b1b0	WifiMenu::drawList	render	confirmed	Byte-exact source: src/tu_138c50.cpp.
+0013b250	WifiMenu::onSelect	wifi	confirmed	Byte-exact source: src/tu_138c50.cpp.
+0013b2c0	WifiMenu::onUnhandledEvent	wifi	confirmed	Byte-exact source: src/tu_138c50.cpp.
 0013bb64	HotspotSwitchAction::execute	wifi	confirmed	
 0013bcc0	writeConfigValue	launch	confirmed	Byte-exact source: src/tu_138c50.cpp.
 0013bea8	readConfigValue	wifi	confirmed	Byte-exact source: src/tu_138c50.cpp.
@@ -4297,8 +4297,8 @@ addr	name	subsystem	confidence	comment
 0013c264	HotspotMenu::HotspotMenu	wifi	confirmed	Byte-exact source: src/tu_138c50.cpp.
 0013c380	HotspotMenu::~HotspotMenu	wifi	confirmed	Byte-exact source: src/tu_138c50.cpp.
 0013c3e4	HotspotMenu::deletingDtor	wifi	confirmed	
-0013c418	HotspotMenu::vfunc7	wifi	confirmed-class	
-0013c448	HotspotMenu::vfunc15	ui_framework	confirmed-class	
+0013c418	HotspotMenu::drawList	wifi	confirmed	Byte-exact source: src/tu_138c50.cpp.
+0013c448	HotspotMenu::onUnhandledEvent	ui_framework	confirmed	Byte-exact source: src/tu_138c50.cpp.
 0013c470	ItemDrawable::ItemDrawable	wifi	confirmed	Byte-exact source: src/tu_138c50.cpp.
 0013c4b4	ItemDrawable::~ItemDrawable	wifi	confirmed	Byte-exact source: src/tu_138c50.cpp.
 0013c528	ItemDrawable::deletingDtor	wifi	confirmed	Byte-exact source: src/tu_138c50.cpp.
@@ -4309,7 +4309,7 @@ addr	name	subsystem	confidence	comment
 0013c5f4	WifiItem::WifiItem	wifi	confirmed	Byte-exact source: src/tu_138c50.cpp.
 0013c6dc	WifiItem::~WifiItem	wifi	confirmed	Byte-exact source: src/tu_138c50.cpp.
 0013c728	WifiItem::deletingDtor	wifi	confirmed	
-0013c75c	WifiMenuDrawer::vfunc11	ui_framework	confirmed	Byte-exact source: src/tu_138c50.cpp.
+0013c75c	WifiMenuDrawer::reloadTheme	ui_framework	confirmed	Byte-exact source: src/tu_138c50.cpp.
 0013c77c	WifiConnectAction::WifiConnectAction	wifi	confirmed	Byte-exact source: src/tu_138c50.cpp.
 0013c844	WifiConnectAction::~WifiConnectAction	wifi	confirmed	Byte-exact source: src/tu_138c50.cpp.
 0013c890	WifiConnectAction::deletingDtor	wifi	confirmed	
@@ -4690,14 +4690,14 @@ addr	name	subsystem	confidence	comment
 00148bc4	MultiDBCachedTextMenu::prepare	render	confirmed	Byte-exact source: src/tu_1484d4.cpp.
 00148eac	MultiDBCachedTextMenu::fetchForward	games	confirmed	Byte-exact source: src/tu_1484d4.cpp.
 00148f30	MultiDBCachedTextMenu::fetchBackward	games	confirmed	Byte-exact source: src/tu_1484d4.cpp.
-00148fac	MultiDBCachedTextMenu::vfunc16	games	confirmed-class	
-00148fe8	MultiDBCachedTextMenu::vfunc17	games	confirmed-class	
-00149024	MultiDBCachedTextMenu::vfunc9	games	confirmed-class	
-00149060	MultiDBCachedTextMenu::vfunc10	games	confirmed-class	
+00148fac	MultiDBCachedTextMenu::pageUp	games	confirmed	Byte-exact source: src/tu_1484d4.cpp.
+00148fe8	MultiDBCachedTextMenu::pageDown	games	confirmed	Byte-exact source: src/tu_1484d4.cpp.
+00149024	MultiDBCachedTextMenu::moveDown	games	confirmed	Byte-exact source: src/tu_1484d4.cpp.
+00149060	MultiDBCachedTextMenu::moveUp	games	confirmed	Byte-exact source: src/tu_1484d4.cpp.
 0014909c	MultiDBCachedTextMenu::restorePosition	games	inferred	
 00149138	MultiDBCachedTextMenu::prepareBGWorkers	games	confirmed	Byte-exact source: src/tu_1484d4.cpp.
 00149514	MultiDBCachedTextMenu::getItem	games	inferred	
-00149824	MultiDBCachedTextMenu::vfunc6	games	confirmed-class	
+00149824	MultiDBCachedTextMenu::getItemData	games	confirmed	Byte-exact source: src/tu_1484d4.cpp.
 00149b54	MultiDBCachedTextMenu::count	ui_framework	confirmed	Byte-exact source: src/tu_1484d4.cpp.
 00149b7c	DBEntry::DBEntry	database	confirmed	Byte-exact source: src/tu_1484d4.cpp.
 00149bac	DBEntry::~DBEntry	database	confirmed	Byte-exact source: src/tu_1484d4.cpp.

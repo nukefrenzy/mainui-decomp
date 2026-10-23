@@ -37,11 +37,11 @@ masks or relaxed unit ends are used. `src/data.tsv` now checks 58 extents / 8,68
 | --- | --- |
 | `src/tu_015b20.h` | Scope RapidXml's assertion diagnostic filename to its original SDK path. Standard declarations are included first and `RAPIDXML_NO_STDLIB` prevents their reinclusion within the scoped macro. The fetched vendor header remains unchanged. |
 | `src/HardwareTestWindows.h` | Include `KeyTestWindow2.h` before declaring `SDLKeyTestWindow`, restoring reverse class emission order for vtables and RTTI. |
-| `src/WifiMenus.h` | Declare shared literal identities and place WifiMenu/HotspotMenu before WifiConnectAction to restore data emission order. Bind WifiMenuDrawer's renderer to existing slot 7 (`vfunc7`) and declare existing event slot 15 pure virtual. Derived renderers call the base renderer explicitly. |
+| `src/WifiMenus.h` | Declare shared literal identities and place WifiMenu/HotspotMenu before WifiConnectAction to restore data emission order. Bind WifiMenuDrawer's renderer to existing slot 7 (`drawList`, then numbered vfunc7) and declare existing event slot 15 pure virtual. Derived renderers call the base renderer explicitly. |
 
 No object fields or virtual slots were added. Raw pointer comparison exposed the two
 incorrect base vtable entries that masked text comparisons could not establish.
-The registered symbols for `donoting_action` and `WifiMenuDrawer::vfunc7` were updated
+The registered symbols for `donoting_action` and `WifiMenuDrawer::vfunc7` (now `drawList`) were updated
 and `src/MATCHES.md` regenerated.
 
 ## Validation and limits

@@ -4,9 +4,9 @@ class HardwareTestMenu : public TextMenu {
 public:
     HardwareTestMenu();
     ~HardwareTestMenu() override;
-    int vfunc4() override;
-    void vfunc7(SDL_Surface*) override;
-    void vfunc18() override;
+    int onSelect() override;
+    void drawList(SDL_Surface*) override;
+    void freeListItem() override;
     void initializeTests();
     int stressSeconds;
 };

@@ -7,14 +7,14 @@ class WifiMenuDrawer : public ListMenu {
 public:
     WifiMenuDrawer();
     virtual ~WifiMenuDrawer();
-    virtual int vfunc3();
-    virtual int vfunc4();
+    virtual int handleKey();
+    virtual int onSelect();
     virtual void *getItem(int index);
     virtual int count();
-    virtual void vfunc11() {}
-    virtual void vfunc13();
-    void vfunc7(SDL_Surface *) override;
-    int vfunc15(int) override = 0;
+    virtual void reloadTheme() {}
+    virtual void clearItems();
+    void drawList(SDL_Surface *) override;
+    int onUnhandledEvent(int) override = 0;
     std::vector<ItemDrawable *> items;
     SDL_Surface *background;
     int rowHeight;
@@ -24,9 +24,9 @@ class WifiMenu : public WifiMenuDrawer {
 public:
     WifiMenu();
     virtual ~WifiMenu();
-    virtual void vfunc7(SDL_Surface *);
-    virtual int vfunc4();
-    virtual int vfunc15(int event);
+    virtual void drawList(SDL_Surface *);
+    virtual int onSelect();
+    virtual int onUnhandledEvent(int event);
     SDL_Surface *lock, *check, *signal2, *signal3, *signal4;
     WifiAP scan[32];
     int scanCount, connectingIndex;
@@ -36,8 +36,8 @@ class HotspotMenu : public WifiMenuDrawer {
 public:
     HotspotMenu();
     virtual ~HotspotMenu();
-    virtual void vfunc7(SDL_Surface *);
-    virtual int vfunc15(int event);
+    virtual void drawList(SDL_Surface *);
+    virtual int onUnhandledEvent(int event);
 };
 
 class WifiConnectAction : public Action {

@@ -357,9 +357,8 @@ int WifiOnOffDialogAction::execute(void *)
     return -1;
 }
 // Shared base of both screens: a list of ItemDrawable rows, 60 px high, below the title bar.
-// ListMenu's virtual slots are still numbered: vfunc3 handles a button, vfunc4 activates the
-// selected row, vfunc7 draws, vfunc13 frees the rows and vfunc15 receives user events (its
-// original name, "onUnhandledEvent", survives in a log message).
+// The ListMenu slots it overrides: handleKey (a button), onSelect (activate the row), drawList,
+// clearItems (free the rows) and onUnhandledEvent (user events; an original name).
 WifiMenuDrawer::WifiMenuDrawer() : ListMenu(false)
 {
     rect.x = 0; rect.y = 60; rect.w = 640; rect.h = 360;
@@ -369,14 +368,14 @@ WifiMenuDrawer::WifiMenuDrawer() : ListMenu(false)
 WifiMenuDrawer::~WifiMenuDrawer()
 {
     if (background) SDL_FreeSurface(background);
-    vfunc13();
+    clearItems();
 }
-// A button: ListMenu moves the cursor; results 5 and 6 on the first row (the switch) run its
-// action instead.
-int WifiMenuDrawer::vfunc3()
+// A button: ListMenu's handling, except that left/right on the first row (the "< On/Off >"
+// switch) runs its action.
+int WifiMenuDrawer::handleKey()
 {
-    int action = ListMenu::vfunc3();
-    if (action == 5 || action == 6) {
+    int action = ListMenu::handleKey();
+    if (action == LIST_LEFT || action == LIST_RIGHT) {
         if (cur == 0) {
             ItemDrawable *item = (ItemDrawable *)getItem(cur);
             printf("mi=%p, mi->theaction=%p\n", item, item ? item->action : NULL);
@@ -390,7 +389,7 @@ int WifiMenuDrawer::vfunc3()
     return action;
 }
 // Activate: run the selected row's action.
-int WifiMenuDrawer::vfunc4()
+int WifiMenuDrawer::onSelect()
 {
     ItemDrawable *item = (ItemDrawable *)getItem(cur);
     if (item && item->action) {
@@ -406,7 +405,7 @@ void *WifiMenuDrawer::getItem(int index)
 }
 // Draws the visible page of six rows (scrolling with the cursor), the stripes behind the first
 // five, the highlight, and "no network" text when Wi-Fi is on but nothing was found.
-void WifiMenuDrawer::vfunc7(SDL_Surface *dst)
+void WifiMenuDrawer::drawList(SDL_Surface *dst)
 {
     int index;
     int row;
@@ -454,7 +453,7 @@ void WifiMenuDrawer::vfunc7(SDL_Surface *dst)
 }
 int WifiMenuDrawer::count() { return items.size(); }
 // Deletes every row (the first one separately, as the original does).
-void WifiMenuDrawer::vfunc13()
+void WifiMenuDrawer::clearItems()
 {
     for (int i = 0; i < 1; i++) { ItemDrawable *item = items[i]; delete item; }
     for (int i = 1; i < items.size(); i++) { ItemDrawable *item = items[i]; delete item; }
@@ -496,9 +495,9 @@ WifiMenu::~WifiMenu()
     if (overlay) SDL_FreeSurface(overlay);
 }
 // While the hotspot is on, the list is dimmed by the overlay.
-void WifiMenu::vfunc7(SDL_Surface *dst)
+void WifiMenu::drawList(SDL_Surface *dst)
 {
-    WifiMenuDrawer::vfunc7(dst);
+    WifiMenuDrawer::drawList(dst);
     if (getHotspotOn()) {
         SDL_Rect src = {0, 0, 640, 330};
         SDL_Rect pos = {0, 90, 0, 0};
@@ -506,21 +505,21 @@ void WifiMenu::vfunc7(SDL_Surface *dst)
     }
 }
 // Remembers which row is being connected, for the check mark.
-int WifiMenu::vfunc4()
+int WifiMenu::onSelect()
 {
     if (getHotspotOn() == 0) {
         if (cur >= 0) connectingIndex = cur;
     }
-    return WifiMenuDrawer::vfunc4();
+    return WifiMenuDrawer::onSelect();
 }
 // Wi-Fi events: rebuild the rows from the scan (current network first), move the check mark
 // after a successful connect, or show "connection failed".
 // Original quirk, kept as-is: the current network's bars use different thresholds from the
 // others (level <= 0 / == 2 instead of == 0 / == 1).
-int WifiMenu::vfunc15(int event)
+int WifiMenu::onUnhandledEvent(int event)
 {
     if (event == EVENT_WIFI_SCAN_DONE) {
-        vfunc13();
+        clearItems();
         items.push_back(new WifiOnOffLabel(new WifiOnOffDialogAction, true));
         scanCount = copyScanResults(scan, 32);
         printf("get_wifi_scan_result return %d\n", scanCount);
@@ -574,7 +573,7 @@ int WifiMenu::vfunc15(int event)
         window->onShow();
         g_windowStack->push_back(window);
     } else if (event == EVENT_WIFI_SWITCHED) {
-        puts("wifi on off ok"); vfunc13();
+        puts("wifi on off ok"); clearItems();
         items.push_back(new WifiOnOffLabel(new WifiOnOffDialogAction, true));
     }
     return -1;
@@ -661,8 +660,8 @@ HotspotMenu::~HotspotMenu()
 {
     saveSystemJson(g_keyShm, g_themePath, g_fontSize);
 }
-void HotspotMenu::vfunc7(SDL_Surface *dst) { WifiMenuDrawer::vfunc7(dst); }
-int HotspotMenu::vfunc15(int event) { return -1; }
+void HotspotMenu::drawList(SDL_Surface *dst) { WifiMenuDrawer::drawList(dst); }
+int HotspotMenu::onUnhandledEvent(int event) { return -1; }
 
 
 // __func__ strings of the original functions, used in the log messages above.

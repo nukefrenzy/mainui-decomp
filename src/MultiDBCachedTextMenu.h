@@ -34,12 +34,12 @@ public:
     virtual ~MultiDBCachedTextMenu();                    // 0x14879c (D2), 0x14889c (D0)
     virtual void restorePosition(int a, int cur, int c); // 0x14909c
     virtual void *getItem(int index);                    // 0x149514
-    virtual void *vfunc6(int index);                     // 0x149824
+    virtual void *getItemData(int index);                     // 0x149824
     virtual int  count() { return total; }               // 0x149b54
-    virtual int  vfunc9();                               // 0x149024
-    virtual int  vfunc10();                              // 0x149060
-    virtual int  vfunc16();                              // 0x148fac
-    virtual int  vfunc17();                              // 0x148fe8
+    virtual int  moveDown();                               // 0x149024
+    virtual int  moveUp();                              // 0x149060
+    virtual int  pageUp();                              // 0x148fac
+    virtual int  pageDown();                              // 0x148fe8
 
     int  openCache(EmuInfo &emu, char *buf, size_t size);   // 0x1488d0
     void prepare();                                      // 0x148bc4

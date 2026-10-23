@@ -1,77 +1,78 @@
 // p09 0x2e424-0x3225c: MenuWindow and FloatWindow.
-// 0x2e424
+// 0x2e424: a window that shows a list (built in onShow by createMenu, or the ROM list for an
+// emulator in entry) under a title from the language strings.
 MenuWindow::MenuWindow(int titleLabelId, int id, void *entry)
-    : TrimusWindow(titleLabelId, id), helper60(2), helper80(freeSurfaceCallback) {
+    : TrimusWindow(titleLabelId, id), thumbnailLoader(2), thumbnailCache(freeSurfaceCallback) {
     this->menu = NULL;
-    flag1c = false;
-    flag1d = false;
-    field38 = 0;
+    menuChanged = false;
+    hasPreview = false;
+    previewImage = 0;
     savedCurPos = 0;
     savedPageStart = 0;
     savedPageEnd = 0;
-    flag1c = false;
-    flag1d = false;
-    field54 = true;
-    surface58 = 0;
+    menuChanged = false;
+    hasPreview = false;
+    rightOpensDetail = true;
+    cachedScreen = 0;
     emuEntry = entry;
-    field94 = false;
+    showFullPath = false;
     iconTF = loadSkinImage(g_themePath, g_skinSubdir, "skin/icon-TF.png", g_backBuffer, 0);
     themePath = g_themePath;
-    surfaceFC = 0;
-    ownsSurfaceFC = false;
+    headerIcon = 0;
+    ownsHeaderIcon = false;
 }
-// 0x2e6d4
+// 0x2e6d4: the same with a list that is already built (Wi-Fi, hotspot, the root menu).
 MenuWindow::MenuWindow(int titleLabelId, int id, ListMenu *menu)
-    : TrimusWindow(titleLabelId, id), helper60(2), helper80(freeSurfaceCallback) {
+    : TrimusWindow(titleLabelId, id), thumbnailLoader(2), thumbnailCache(freeSurfaceCallback) {
     this->menu = menu;
-    flag1c = false;
-    flag1d = false;
-    field38 = 0;
+    menuChanged = false;
+    hasPreview = false;
+    previewImage = 0;
     savedCurPos = 0;
     savedPageStart = 0;
     savedPageEnd = 0;
-    flag1c = false;
-    flag1d = false;
-    field54 = true;
-    surface58 = 0;
+    menuChanged = false;
+    hasPreview = false;
+    rightOpensDetail = true;
+    cachedScreen = 0;
     emuEntry = 0;
     iconTF = loadSkinImage(g_themePath, g_skinSubdir, "skin/icon-TF.png", g_backBuffer, 0);
     themePath = g_themePath;
-    surfaceFC = 0;
-    ownsSurfaceFC = false;
+    headerIcon = 0;
+    ownsHeaderIcon = false;
 }
-// 0x2e978
+// 0x2e978: the same with a literal title (a folder name).
 MenuWindow::MenuWindow(const char *folder, int id, void *entry)
-    : TrimusWindow(-1, id), helper60(2), helper80(freeSurfaceCallback) {
+    : TrimusWindow(-1, id), thumbnailLoader(2), thumbnailCache(freeSurfaceCallback) {
     this->menu = NULL;
-    flag1c = false;
-    flag1d = false;
-    field38 = 0;
+    menuChanged = false;
+    hasPreview = false;
+    previewImage = 0;
     savedCurPos = 0;
     savedPageStart = 0;
     savedPageEnd = 0;
-    flag1c = false;
-    flag1d = false;
-    field54 = true;
-    surface58 = 0;
+    menuChanged = false;
+    hasPreview = false;
+    rightOpensDetail = true;
+    cachedScreen = 0;
     emuEntry = entry;
-    field94 = false;
-    str98 = folder;
+    showFullPath = false;
+    titleText = folder;
     iconTF = loadSkinImage(g_themePath, g_skinSubdir, "skin/icon-TF.png", g_backBuffer, 0);
     themePath = g_themePath;
-    surfaceFC = 0;
-    ownsSurfaceFC = false;
+    headerIcon = 0;
+    ownsHeaderIcon = false;
 }
 // 0x2ec3c (D0 0x2ed78)
 MenuWindow::~MenuWindow() {
-    if (surface58 != 0) {
-        SDL_FreeSurface(surface58);
+    if (cachedScreen != 0) {
+        SDL_FreeSurface(cachedScreen);
     }
     if (iconTF != 0) {
         SDL_FreeSurface(iconTF);
     }
-    if (ownsSurfaceFC && surfaceFC != 0) {
-        SDL_FreeSurface(surfaceFC);
+    if (ownsHeaderIcon && headerIcon != 0) {
+        SDL_FreeSurface(headerIcon);
     }
 }
 
@@ -87,7 +88,8 @@ extern SDL_Color g_hintColor;
 // 0x1822a8
 extern char g_countBuffer[0x100];
 // 0x180754
-// 0x2edac
+// 0x2edac: what is saved in /tmp/state.json for this window: position, emulator or RetroArch-app
+// name, folder and search string.
 void MenuWindow::saveState(cJSON *obj) {
     cJSON *position = cJSON_CreateNumber(menu->getCur());
     cJSON_AddItemToObject(obj, "currpos", position);
@@ -98,14 +100,14 @@ void MenuWindow::saveState(cJSON *obj) {
     if (emuEntry) {
         EmuInfo *emu = (EmuInfo*)emuEntry;
         cJSON *name = cJSON_CreateString(emu->label.c_str());
-        if (id == 5) cJSON_AddItemToObject(obj, "emuname", name);
+        if (id == WIN_ROM_LIST) cJSON_AddItemToObject(obj, "emuname", name);
         else cJSON_AddItemToObject(obj, "raname", name);
     }
-    if (strB4.length() != 0) cJSON_AddStringToObject(obj, "ppath", strB4.c_str());
+    if (parentPath.length() != 0) cJSON_AddStringToObject(obj, "ppath", parentPath.c_str());
     std::string search = menu->getSearch();
     if (search.length() != 0) cJSON_AddStringToObject(obj, "searchstr", search.c_str());
 }
-// 0x2efcc
+// 0x2efcc: reads that back (onShow then rebuilds the list at the saved position).
 int MenuWindow::restoreState(cJSON *obj) {
     cJSONItem *position = (cJSONItem*)cJSON_GetObjectItem(obj, "currpos");
     cJSONItem *start = (cJSONItem*)cJSON_GetObjectItem(obj, "pagestart");
@@ -118,61 +120,63 @@ int MenuWindow::restoreState(cJSON *obj) {
     cJSON *name = cJSON_GetObjectItem(obj, "emuname");
     if (name) {
         const char *label = cJSON_GetStringValue(name);
-        int index = findEmuByLabelPrefix(&g_romSourcesA, label);
+        int index = findEmuByLabelPrefix(&g_emuFolders, label);
         if (index >= 0) {
-            emuEntry = &g_romSourcesA[index];
-            str100 = g_romSourcesA[index].label;
+            emuEntry = &g_emuFolders[index];
+            headerText = g_emuFolders[index].label;
         } else emuEntry = NULL;
     } else {
         name = cJSON_GetObjectItem(obj, "raname");
         const char *label = cJSON_GetStringValue(name);
-        int index = findEmuByLabelPrefix(&g_romSourcesB, label);
-        if (index >= 0) emuEntry = &g_romSourcesB[index];
+        int index = findEmuByLabelPrefix(&g_rappFolders, label);
+        if (index >= 0) emuEntry = &g_rappFolders[index];
         else emuEntry = NULL;
     }
     cJSONItem *folder = (cJSONItem*)cJSON_GetObjectItem(obj, "ppath");
-    if (folder && folder->type == 16) strB4 = folder->valuestring;
+    if (folder && folder->type == 16) parentPath = folder->valuestring;
     cJSONItem *search = (cJSONItem*)cJSON_GetObjectItem(obj, "searchstr");
     if (search && search->type == 16) path = search->valuestring;
     return 0;
 }
-// 0x2f290
+// 0x2f290: builds the list when first shown: the global search, a ROM list (at the position last
+// used in that folder) or createMenu(id).
 void MenuWindow::onShow() {
     if (menu == NULL) {
-        if (id == 24) {
+        if (id == WIN_SEARCH) {
             menu = new MultiDBCachedTextMenu(path);
             if (menu) menu->restorePosition(savedCurPos, savedPageStart, savedPageEnd);
-        } else if (id != 5 && id != 17) {
+        } else if (id != WIN_ROM_LIST && id != WIN_RETROARCH_LIST) {
             menu = createMenu(id, path);
             if (menu) menu->restorePosition(savedCurPos, savedPageStart, savedPageEnd);
         } else {
             if (emuEntry) {
                 EmuInfo *emu = (EmuInfo*)emuEntry;
                 RomListPosition position;
-                menu = createRomListMenu(emu, id, &strB4, &path);
+                menu = createRomListMenu(emu, id, &parentPath, &path);
                 std::string folder = emu->path;
-                if (strB4.length() != 0) folder = emu->path + "/" + strB4;
+                if (parentPath.length() != 0) folder = emu->path + "/" + parentPath;
                 if (getRomListPosition(&g_romListPositions, folder, &position) >= 0) menu->restorePosition(position.current, position.start, position.selected);
                 else menu->restorePosition(savedCurPos, savedPageStart, savedPageEnd);
             }
         }
-        flag1d = isListMenuId(id) && id != 4 && id != 3;
+        hasPreview = isListMenuId(id) && id != WIN_FILES && id != WIN_APPS;
         if (menu) isListMenuId(id);
     }
 }
-// 0x2f6c4
+// 0x2f6c4: keeps the preview image for the selected row: an app's icon, or the ROM's image from the
+// database or the Imgs folder; loads it in the background if it is not cached.
 void MenuWindow::updateThumbnail() {
-    if (flag1d) {
+    if (hasPreview) {
         TextItem *item = (TextItem*)menu->getItem(menu->getCur());
         if (item) {
             std::string unused;
             std::string image;
-            if (item->action->result == 3) {
+            if (item->action->result == WIN_APPS) {
                 AppAction *action = (AppAction*)item->action;
                 AppInfo *app = action->app;
                 image = app->iconSelected;
             } else {
-                const char *explicitPath = (const char*)menu->vfunc6(menu->getCur());
+                const char *explicitPath = (const char*)menu->getItemData(menu->getCur());
                 if (explicitPath) {
                     image = explicitPath;
                     struct stat st;
@@ -184,30 +188,31 @@ void MenuWindow::updateThumbnail() {
                     image = makeThumbPath(&game, emu->imagePath.c_str());
                 }
             }
-            if (image.size() != 0 && (image.compare(str20) != 0 || field38 == NULL)) {
-                str20 = image;
-                field38 = (SDL_Surface*)helper80.get(image);
-                if (field38 == NULL) {
-                    LoadSurfaceWorker *worker = new LoadSurfaceWorker(image, &helper80);
-                    helper60.addWorker(worker);
-                    str3c = image;
-                } else str3c = "";
+            if (image.size() != 0 && (image.compare(shownImageKey) != 0 || previewImage == NULL)) {
+                shownImageKey = image;
+                previewImage = (SDL_Surface*)thumbnailCache.get(image);
+                if (previewImage == NULL) {
+                    LoadSurfaceWorker *worker = new LoadSurfaceWorker(image, &thumbnailCache);
+                    thumbnailLoader.addWorker(worker);
+                    pendingImageKey = image;
+                } else pendingImageKey = "";
             } else {
                 if (image.size() == 0) {
-                    str20 = "";
-                    field38 = NULL;
+                    shownImageKey = "";
+                    previewImage = NULL;
                 }
             }
         }
     }
 }
-// 0x2fb14
+// 0x2fb14: each frame: drop removed favourites, follow the selection with the preview, and reload
+// images after a theme change.
 void MenuWindow::update() {
     if (menu) {
-        bool changed = refreshMenu_1c0ac(menu, id);
-        if (flag1c != true) flag1c = changed;
+        bool changed = removeDeletedFavorites(menu, id);
+        if (menuChanged != true) menuChanged = changed;
         updateThumbnail();
-        menu->vfunc11();
+        menu->reloadTheme();
     }
     if (themePath.compare(g_themePath) != 0) {
         if (iconTF) SDL_FreeSurface(iconTF);
@@ -215,49 +220,53 @@ void MenuWindow::update() {
         themePath = g_themePath;
     }
 }
-// 0x2fc74
+// 0x2fc74: on close: save the favourites if any were removed, and remember the position in a ROM
+// folder.
 void MenuWindow::onHide() {
     if (menu) {
-        if (id == 2 && flag1c) {
+        if (id == WIN_FAVORITES && menuChanged) {
             TextMenu *text = (TextMenu*)menu;
-            power_label_1a4bc("/mnt/SDCARD/Roms/favourite.json", text->getItems());
+            saveFavorites("/mnt/SDCARD/Roms/favourite.json", text->getItems());
         }
-        if (emuEntry && (id == 5 || id == 17)) {
+        if (emuEntry && (id == WIN_ROM_LIST || id == WIN_RETROARCH_LIST)) {
             EmuInfo *emu = (EmuInfo*)emuEntry;
             int position = menu->getCur();
             int start = menu->getPageStart();
             int end = menu->getPageEnd();
             std::string search = menu->getSearch();
             if (search.length() == 0) {
-                if (strB4.length() != 0) setRomListPosition(&g_romListPositions, emu->path + "/" + strB4, position, start, end);
+                if (parentPath.length() != 0) setRomListPosition(&g_romListPositions, emu->path + "/" + parentPath, position, start, end);
                 else setRomListPosition(&g_romListPositions, std::string(emu->path), position, start, end);
             }
         }
         delete menu;
     }
 }
-// 0x2ff04
+// 0x2ff04: one button: the list handles it first. MENU opens the options pop-up for the row (open,
+// add to favourites, delete the ROM, search; or refresh the ROMs on the main and games menus;
+// remove or clear in favourites; clear Recent). RIGHT opens the game's detail window; START toggles
+// the full ROM path in the header.
 int MenuWindow::handleInput() {
     int rows;
     PopUpWindow *popup;
     int key;
     if (menu) {
-        key = menu->vfunc3();
-        if (key == 11) {
-            if (id == 5 || id == 17 || id == 3 || id == 24) {
+        key = menu->handleKey();
+        if (key == BUTTON_MENU) {
+            if (id == WIN_ROM_LIST || id == WIN_RETROARCH_LIST || id == WIN_APPS || id == WIN_SEARCH) {
                 TextItem *item = (TextItem*)menu->getItem(menu->getCur());
                 if (item) {
                     unsigned char canOperate = item->action->finished();
                     if (canOperate) {
                         rows = 2;
                         TextMenu *options = new TextMenu(false, false, 6, NULL);
-                        if (id == 3) options->addItem(new TextItem(languageString(STR_OPEN), NULL, item->action, false));
+                        if (id == WIN_APPS) options->addItem(new TextItem(languageString(STR_OPEN), NULL, item->action, false));
                         else options->addItem(new TextItem(languageString(STR_OPEN), NULL, item->action, false));
                         options->addItem(new TextItem(languageString(STR_ADD_FAVORITE), NULL, new AddFavoriteAction(item, id), true));
-                        if (id == 5 || id == 17) {
+                        if (id == WIN_ROM_LIST || id == WIN_RETROARCH_LIST) {
                             DeleteRomAction *remove = new DeleteRomAction(menu, id);
-                            remove->field0c = menu->getCur();
-                            Action *confirm = new PopupDialogAction(116, 117, true, remove);
+                            remove->itemIndex = menu->getCur();
+                            Action *confirm = new PopupDialogAction(STR_REMOVE_ROM, STR_REMOVE_ROM_TEXT, true, remove);
                             options->addItem(new TextItem(languageString(STR_DELETE), NULL, confirm, true));
                             rows++;
                             std::string search = menu->getSearch();
@@ -276,7 +285,7 @@ int MenuWindow::handleInput() {
                         popup->onShow();
                         g_windowStack->push_back((TrimusWindow*)popup);
                     } else {
-                        if (id != 3) {
+                        if (id != WIN_APPS) {
                             std::string search = menu->getSearch();
                             printf("popup menu search str is %s\n", search.c_str());
                             if (search.length() == 0) {
@@ -292,41 +301,41 @@ int MenuWindow::handleInput() {
                         }
                     }
                 }
-            } else if (id == 0 || id == 1 || id == 16) {
+            } else if (id == WIN_MAIN || id == WIN_GAMES || id == WIN_RETROARCH) {
                 TextMenu *options = new TextMenu(false, false, 6, NULL);
                 Action *reset = new GeneralAction(-1, resetEmulatorSettings, NULL);
-                Action *progress = new PopupProgressAction(53, reset);
+                Action *progress = new PopupProgressAction(STR_REFRESH, reset);
                 options->addItem(new TextItem(languageString(STR_REFRESH_ROMS_2), NULL, progress, true));
                 options->setFlag5c(false);
                 PopUpWindow *window = new PopUpWindow(53, options, "skin/bg-pop-menu-1.png");
                 window->onShow();
                 g_windowStack->push_back((TrimusWindow*)window);
-            } else if (id == 2) {
+            } else if (id == WIN_FAVORITES) {
                 TextItem *item = (TextItem*)menu->getItem(menu->getCur());
                 if (item) {
                     TextMenu *options = new TextMenu(false, false, 6, NULL);
-                    if (item->action->result == 3) options->addItem(new TextItem(languageString(STR_OPEN), NULL, item->action, false));
+                    if (item->action->result == WIN_APPS) options->addItem(new TextItem(languageString(STR_OPEN), NULL, item->action, false));
                     else options->addItem(new TextItem(languageString(STR_OPEN), NULL, item->action, false));
                     RemoveFavoriteAction *remove = new RemoveFavoriteAction(item, id);
-                    Action *confirm = new PopupDialogAction(81, 82, true, remove);
+                    Action *confirm = new PopupDialogAction(STR_REMOVE_FAVORITE, STR_REMOVE_FAVORITE_TEXT, true, remove);
                     printf("item->theaction->mWinType=%d, mitem = %p, menuitem = %p\n", item->action->result, remove, item);
                     options->addItem(new TextItem(languageString(STR_REMOVE), NULL, confirm, true));
                     ClearFavoriteAction *clear = new ClearFavoriteAction(menu, id);
-                    Action *clearConfirm = new PopupDialogAction(79, 80, true, clear);
+                    Action *clearConfirm = new PopupDialogAction(STR_CLEAR_FAVORITE, STR_CLEAR_FAVORITE_TEXT, true, clear);
                     options->addItem(new TextItem(languageString(STR_CLEAR), NULL, clearConfirm, true));
                     options->setFlag5c(false);
                     PopUpWindow *window = new PopUpWindow(1, options, "skin/bg-pop-menu-3.png");
                     window->onShow();
                     g_windowStack->push_back((TrimusWindow*)window);
                 }
-            } else if (id == 10) {
+            } else if (id == WIN_RECENT) {
                 TextItem *item = (TextItem*)menu->getItem(menu->getCur());
                 if (item) {
                     TextMenu *options = new TextMenu(false, false, 6, NULL);
-                    if (id == 3) options->addItem(new TextItem(languageString(STR_OPEN), NULL, item->action, false));
+                    if (id == WIN_APPS) options->addItem(new TextItem(languageString(STR_OPEN), NULL, item->action, false));
                     else options->addItem(new TextItem(languageString(STR_OPEN), NULL, item->action, false));
                     ClearRecentAction *clear = new ClearRecentAction(menu, id);
-                    Action *confirm = new PopupDialogAction(77, 78, true, clear);
+                    Action *confirm = new PopupDialogAction(STR_CLEAR_LIST, STR_CLEAR_RECENT_TEXT, true, clear);
                     options->addItem(new TextItem(languageString(STR_CLEAR), NULL, confirm, true));
                     options->setFlag5c(false);
                     PopUpWindow *window = new PopUpWindow(49, options, "skin/bg-pop-menu-2.png");
@@ -334,42 +343,42 @@ int MenuWindow::handleInput() {
                     g_windowStack->push_back((TrimusWindow*)window);
                 }
             }
-        } else if (key == 6) {
-            if (menu && menu->count() > 0 && id != 9) {
-                if (field54) {
+        } else if (key == LIST_RIGHT) {
+            if (menu && menu->count() > 0 && id != WIN_DEVICE_INFO) {
+                if (rightOpensDetail) {
                     TextItem *item = (TextItem*)menu->getItem(menu->getCur());
-                    void *data = menu->vfunc6(menu->getCur());
+                    void *data = menu->getItemData(menu->getCur());
                     if (item && item->action) return item->action->progress((int*)item, menu->getCur());
-                } else field54 = true;
+                } else rightOpensDetail = true;
             }
-        } else if (key == 5) {
-        } else if (key == 10) field94 = !field94;
+        } else if (key == LIST_LEFT) {
+        } else if (key == BUTTON_START) showFullPath = !showFullPath;
         return key;
     } else {
         int result = handleGlobalInput(NULL);
-        if (result == 2) return 1;
+        if (result == BUTTON_B) return 1;
         else return 0;
     }
 }
-// 0x310ac
+// 0x310ac: draws the window into an off-screen copy (with the status icons).
 void MenuWindow::cacheBackground() {
-    if (surface58) {
-        SDL_FreeSurface(surface58);
-        surface58 = NULL;
+    if (cachedScreen) {
+        SDL_FreeSurface(cachedScreen);
+        cachedScreen = NULL;
     }
-    surface58 = createSurface(g_backBuffer->w, g_backBuffer->h);
-    if (surface58) {
-        draw(surface58);
+    cachedScreen = createSurface(g_backBuffer->w, g_backBuffer->h);
+    if (cachedScreen) {
+        draw(cachedScreen);
         int x = 0;
         int next = 0;
-        x = drawBatteryIndicator(surface58, true);
+        x = drawBatteryIndicator(cachedScreen, true);
         next = drawWifiIndicator(g_backBuffer, x, true);
         if (next >= 0) x = next;
         if (g_volumeIndicatorVisible) drawKeyStateIndicator(g_backBuffer, x, true);
     }
 }
-// 0x311f4
-int drawPageDots_311f4(SDL_Surface *dst, int current, int total) {
+// 0x311f4: the "current/total" count at the bottom right.
+int drawPageCount(SDL_Surface *dst, int current, int total) {
     int y = 420;
     int height = TTF_FontHeight(g_labelFont);
     SDL_Rect area;
@@ -385,20 +394,21 @@ int drawPageDots_311f4(SDL_Surface *dst, int current, int total) {
     drawText(dst, g_labelFont, area, g_countBuffer, g_listColor, 2, false);
     return 0;
 }
-// 0x31398
+// 0x31398: title frame, the list, the preview image on the right (with its background) and, for
+// lists, the count or the "empty" image and the header (search string, emulator name or full path).
 int MenuWindow::draw(SDL_Surface *dst) {
     char *canonical;
     char *relative;
     int unused = 0;
-    if (titleLabelId != 157) drawScreenFrame(dst, titleLabelId >= 0 ? languageString(titleLabelId) : str98.c_str(), id, !isListMenuId(id));
+    if (titleLabelId != 157) drawScreenFrame   /* 157: the root menu, titled "MIYOO" */(dst, titleLabelId >= 0 ? languageString(titleLabelId) : titleText.c_str(), id, !isListMenuId(id));
     else drawScreenFrame(dst, "MIYOO", id, !isListMenuId(id));
-    bool hasImage = field38 || (str3c.size() != 0 && str3c.compare(str20) == 0);
+    bool hasImage = previewImage || (pendingImageKey.size() != 0 && pendingImageKey.compare(shownImageKey) == 0);
     if (menu && menu->count() > 0) {
-        menu->vfunc7(dst);
-        if (flag1d && hasImage) menu->field04 = 250;
-        else menu->field04 = 0;
+        menu->drawList(dst);
+        if (hasPreview && hasImage) menu->previewWidth = 250;
+        else menu->previewWidth = 0;
     }
-    if (flag1d) {
+    if (hasPreview) {
         if (menu && menu->count() > 0 && hasImage) {
             SDL_Rect bounds;
             SDL_Rect dest;
@@ -421,16 +431,16 @@ int MenuWindow::draw(SDL_Surface *dst) {
                 bounds.w = 250;
                 bounds.h = 360;
             }
-            if (field38) {
-                dest.x = bounds.x+(250-field38->w)/2;
-                dest.y = bounds.y+(360-field38->h)/2;
-                SDL_UpperBlit(field38, NULL, dst, &dest);
+            if (previewImage) {
+                dest.x = bounds.x+(250-previewImage->w)/2;
+                dest.y = bounds.y+(360-previewImage->h)/2;
+                SDL_UpperBlit(previewImage, NULL, dst, &dest);
             }
         }
     }
     if (isListMenuId(id)) {
         SDL_Rect area;
-        if (menu && menu->count() > 0) drawPageDots_311f4(dst, menu->getCur()+1, menu->count());
+        if (menu && menu->count() > 0) drawPageCount(dst, menu->getCur()+1, menu->count());
         else if (g_emptyImage) {
             area.x = (640-g_emptyImage->w)/2;
             area.y = (480-g_emptyImage->h)/2;
@@ -439,17 +449,17 @@ int MenuWindow::draw(SDL_Surface *dst) {
         area.x = area.y = 0;
         area.w = 640;
         area.h = 60;
-        if (id != 5 && id != 17) {
+        if (id != WIN_ROM_LIST && id != WIN_RETROARCH_LIST) {
             if (path.length() != 0) {
                 std::string label(languageString(STR_SEARCH));
                 label += std::string(":")+path;
                 drawText(dst, g_titleFont, area, label.c_str(), g_wifiEmptyColor, 1, true);
-            } else drawText(dst, g_titleFont, area, files_374bc(id), g_wifiEmptyColor, 1, true);
+            } else drawText(dst, g_titleFont, area, windowTitle(id), g_wifiEmptyColor, 1, true);
         } else {
             EmuInfo *emu = (EmuInfo*)emuEntry;
             if (emu) {
                 int now = milliseconds();
-                if (field94) {
+                if (showFullPath) {
                     if (iconTF) {
                         SDL_Rect icon;
                         icon.x = 20;
@@ -478,44 +488,44 @@ int MenuWindow::draw(SDL_Surface *dst) {
     }
     return 0;
 }
-// 0x31ed4
+// 0x31ed4: an icon (optionally scaled to 128x48) and text for the header.
 void MenuWindow::setHeaderIcon(SDL_Surface *icon, const char *text, bool scale, bool owns) {
     if (icon) {
         if (scale) {
-            surfaceFC = SDL_CreateRGBSurface(0, 128, 48, 32, 0xff, 0xff00, 0xff0000, 0xff000000);
-            if (surfaceFC) {
-                scalePixels(0, 0, icon->w, icon->h, 128, 48, icon->w, 0, (int*)icon->pixels, (int*)surfaceFC->pixels);
+            headerIcon = SDL_CreateRGBSurface(0, 128, 48, 32, 0xff, 0xff00, 0xff0000, 0xff000000);
+            if (headerIcon) {
+                scalePixels(0, 0, icon->w, icon->h, 128, 48, icon->w, 0, (int*)icon->pixels, (int*)headerIcon->pixels);
                 if (owns) SDL_FreeSurface(icon);
-                ownsSurfaceFC = true;
+                ownsHeaderIcon = true;
             } else {
-                ownsSurfaceFC = owns;
-                surfaceFC = icon;
+                ownsHeaderIcon = owns;
+                headerIcon = icon;
             }
         } else {
-            surfaceFC = icon;
-            ownsSurfaceFC = owns;
+            headerIcon = icon;
+            ownsHeaderIcon = owns;
         }
     }
-    str100 = text;
+    headerText = text;
 }
-// 0x32040
+// 0x32040: base of the pop-ups and dialogs: drawn over a dimmed copy of the screen behind them.
 FloatWindow::FloatWindow(int title) : TrimusWindow(title, -1) {
-    surface0c = NULL;
+    backdrop = NULL;
 }
 // 0x32094 (D0 0x320f0)
 FloatWindow::~FloatWindow() {
-    if (surface0c) SDL_FreeSurface(surface0c);
+    if (backdrop) SDL_FreeSurface(backdrop);
 }
-// 0x32124
+// 0x32124: draw the dimmed backdrop.
 int FloatWindow::draw(SDL_Surface *dst) {
-    SDL_UpperBlit(surface0c, NULL, dst, NULL);
+    SDL_UpperBlit(backdrop, NULL, dst, NULL);
     return 0;
 }
-// 0x32160
+// 0x32160: when shown: copy the screen and dim it (except the bottom bar).
 void FloatWindow::onShow() {
-    if (surface0c == NULL) {
-        surface0c = SDL_CreateRGBSurface(0, 640, 480, 32, 0, 0, 0, 0);
-        SDL_UpperBlit(g_backBuffer, NULL, surface0c, NULL);
+    if (backdrop == NULL) {
+        backdrop = SDL_CreateRGBSurface(0, 640, 480, 32, 0, 0, 0, 0);
+        SDL_UpperBlit(g_backBuffer, NULL, backdrop, NULL);
         SDL_Surface *shade = createSurface(640, 480);
         if (shade) {
             SDL_Rect source = {
@@ -525,7 +535,7 @@ void FloatWindow::onShow() {
                 0, 0, 0, 0
             };
             SDL_FillRect(shade, NULL, 0xaa000000);
-            SDL_UpperBlit(shade, &source, surface0c, &dest);
+            SDL_UpperBlit(shade, &source, backdrop, &dest);
             SDL_FreeSurface(shade);
         }
     }

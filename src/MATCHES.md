@@ -55,15 +55,15 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `ClearRecentAction::execute(void*)` | 0x19fd8 | 84 | tu_015b20.cpp |
 | `AddFavoriteAction::execute(void*)` | 0x1a02c | 1056 | tu_015b20.cpp |
 | `DeleteRomAction::execute(void*)` | 0x1a44c | 112 | tu_015b20.cpp |
-| `power_label_1a4bc(char const*, std::vector<void*>*)` | 0x1a4bc | 672 | tu_015b20.cpp |
-| `launch_label_1a75c(char const*, char const*)` | 0x1a75c | 456 | tu_015b20.cpp |
-| `buildMenu_1a924(char const*)` | 0x1a924 | 2284 | tu_015b20.cpp |
+| `saveFavorites(char const*, std::vector<void*>*)` | 0x1a4bc | 672 | tu_015b20.cpp |
+| `removeFavorite(char const*, char const*)` | 0x1a75c | 456 | tu_015b20.cpp |
+| `buildFavoriteList(char const*)` | 0x1a924 | 2284 | tu_015b20.cpp |
 | `isFavourite(char*, FILE*, char const*)` | 0x1b210 | 632 | tu_015b20.cpp |
-| `buildMenu_1b488(std::list<RecentItem>*)` | 0x1b488 | 1908 | tu_015b20.cpp |
-| `buildMenu_1bbfc(std::vector<AppInfo>*)` | 0x1bbfc | 680 | tu_015b20.cpp |
-| `display_getlcd_1bea4(int, int, int, int)` | 0x1bea4 | 236 | tu_015b20.cpp |
+| `buildRecentList(std::list<RecentItem>*)` | 0x1b488 | 1908 | tu_015b20.cpp |
+| `buildAppList(std::vector<AppInfo>*)` | 0x1bbfc | 680 | tu_015b20.cpp |
+| `setLcdColor(int, int, int, int)` | 0x1bea4 | 236 | tu_015b20.cpp |
 | `initAudioSettings(void*)` | 0x1bf90 | 284 | tu_015b20.cpp |
-| `refreshMenu_1c0ac(void*, int)` | 0x1c0ac | 336 | tu_015b20.cpp |
+| `removeDeletedFavorites(void*, int)` | 0x1c0ac | 336 | tu_015b20.cpp |
 | `restoreWindowState(std::vector<TrimusWindow*>*)` | 0x1c1fc | 840 | tu_015b20.cpp |
 | `saveWindowState(std::vector<TrimusWindow*>*, char const*)` | 0x1c544 | 540 | tu_015b20.cpp |
 | `setRomListPosition(std::vector<RomListPosition>*, std::string const&, int, int, int)` | 0x1c760 | 368 | tu_015b20.cpp |
@@ -80,60 +80,60 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `ListMenu::ListMenu(bool)` | 0x1d8fc | 160 | tu_015b20.cpp |
 | `ListMenu::setRect(SDL_Rect*)` | 0x1d99c | 60 | tu_015b20.cpp |
 | `ListMenu::restorePosition(int, int, int)` | 0x1d9d8 | 272 | tu_015b20.cpp |
-| `ListMenu::vfunc9()` | 0x1dae8 | 132 | tu_015b20.cpp |
-| `ListMenu::vfunc10()` | 0x1db6c | 112 | tu_015b20.cpp |
-| `ListMenu::vfunc16()` | 0x1dbdc | 84 | tu_015b20.cpp |
-| `ListMenu::vfunc17()` | 0x1dc30 | 152 | tu_015b20.cpp |
+| `ListMenu::moveDown()` | 0x1dae8 | 132 | tu_015b20.cpp |
+| `ListMenu::moveUp()` | 0x1db6c | 112 | tu_015b20.cpp |
+| `ListMenu::pageUp()` | 0x1dbdc | 84 | tu_015b20.cpp |
+| `ListMenu::pageDown()` | 0x1dc30 | 152 | tu_015b20.cpp |
 | `ListMenu::recordKey(int)` | 0x1dcc8 | 300 | tu_015b20.cpp |
 | `ListMenu::keyRepeating()` | 0x1ddf4 | 64 | tu_015b20.cpp |
-| `ListMenu::vfunc3()` | 0x1de34 | 756 | tu_015b20.cpp |
+| `ListMenu::handleKey()` | 0x1de34 | 756 | tu_015b20.cpp |
 | `TextMenuDrawer::TextMenuDrawer(bool, bool, int, char const*)` | 0x1e128 | 720 | tu_015b20.cpp |
 | `TextMenuDrawer::~TextMenuDrawer()` | 0x1e3f8 | 236 | tu_015b20.cpp |
 | `TextMenuDrawer::~TextMenuDrawer() (deleting)` | 0x1e4e4 | 52 | tu_015b20.cpp |
-| `TextMenuDrawer::vfunc4()` | 0x1e518 | 184 | tu_015b20.cpp |
-| `TextMenuDrawer::vfunc11()` | 0x1e5d0 | 412 | tu_015b20.cpp |
+| `TextMenuDrawer::onSelect()` | 0x1e518 | 184 | tu_015b20.cpp |
+| `TextMenuDrawer::reloadTheme()` | 0x1e5d0 | 412 | tu_015b20.cpp |
 | `TextMenuDrawer::makeSelectedBackground(SDL_Surface*)` | 0x1e76c | 252 | tu_015b20.cpp |
 | `drawListNumber(int, SDL_Rect*, SDL_Surface*, void*)` | 0x1e868 | 920 | tu_015b20.cpp |
 | `truncateUtf8(char*, int, int)` | 0x1ec00 | 484 | tu_015b20.cpp |
 | `TextMenuDrawer::drawHighlighted(SDL_Surface*, void*, SDL_Rect, char const*, SDL_Color, int, bool, char const*, char const*)` | 0x1ede4 | 2044 | tu_015b20.cpp |
 | `TextMenuDrawer::setBackground(char const*)` | 0x1f5e0 | 180 | tu_015b20.cpp |
 | `TextMenuDrawer::freeSelectedBackground(bool)` | 0x1f694 | 92 | tu_015b20.cpp |
-| `TextMenuDrawer::vfunc7(SDL_Surface*)` | 0x1f6f0 | 3556 | tu_015b20.cpp |
-| `TextMenuDrawer::vfunc3()` | 0x204d4 | 44 | tu_015b20.cpp |
+| `TextMenuDrawer::drawList(SDL_Surface*)` | 0x1f6f0 | 3556 | tu_015b20.cpp |
+| `TextMenuDrawer::handleKey()` | 0x204d4 | 44 | tu_015b20.cpp |
 | `TextMenu::TextMenu(bool, bool, int, char const*)` | 0x20500 | 112 | tu_015b20.cpp |
 | `TextMenu::~TextMenu()` | 0x20570 | 84 | tu_015b20.cpp |
 | `TextMenu::~TextMenu() (deleting)` | 0x205c4 | 52 | tu_015b20.cpp |
-| `TextMenu::vfunc18()` | 0x205f8 | 232 | tu_015b20.cpp |
-| `TextMenu::vfunc13()` | 0x206e0 | 52 | tu_015b20.cpp |
+| `TextMenu::freeListItem()` | 0x205f8 | 232 | tu_015b20.cpp |
+| `TextMenu::clearItems()` | 0x206e0 | 52 | tu_015b20.cpp |
 | `TextMenu::getItem(int)` | 0x20714 | 136 | tu_015b20.cpp |
-| `TextMenu::vfunc12(int)` | 0x2079c | 252 | tu_015b20.cpp |
+| `TextMenu::removeItem(int)` | 0x2079c | 252 | tu_015b20.cpp |
 | `TextMenu::addItem(void*)` | 0x20898 | 56 | tu_015b20.cpp |
 | `TextMenu::insertSorted(void*, int (*)(TextItem*, TextItem*))` | 0x208d0 | 364 | tu_015b20.cpp |
 | `TextMenu::addUnique(TextItem*)` | 0x20a3c | 224 | tu_015b20.cpp |
-| `database_strlen_20b1c(char*)` | 0x20b1c | 184 | tu_015b20.cpp |
+| `romFolderName(char*)` | 0x20b1c | 184 | tu_015b20.cpp |
 | `importGameList(char const*, int, char const*, sqlite3*)` | 0x20bd4 | 3140 | tu_015b20.cpp |
 | `isHiddenRomFile(EmuInfo*, char const*, char const*, int)` | 0x21818 | 1336 | tu_015b20.cpp |
 | `scanRomDir(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, EmuInfo*, char const*, bool, sqlite3*, char*, char*, int, char*, int, unsigned long*, int*)` | 0x21d50 | 3020 | tu_015b20.cpp |
 | `rebuildRomCache(EmuInfo*, int, char const*, sqlite3*)` | 0x2291c | 876 | tu_015b20.cpp |
 | `isRomFile(char const*, char const*)` | 0x22c88 | 264 | tu_015b20.cpp |
-| `database_lang_22d90(EmuInfo*, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, char*, int)` | 0x22d90 | 1416 | tu_015b20.cpp |
-| `buildRomList_23318(EmuInfo*, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*)` | 0x23318 | 560 | tu_015b20.cpp |
+| `prepareRomCache(EmuInfo*, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, char*, int)` | 0x22d90 | 1416 | tu_015b20.cpp |
+| `buildRomList(EmuInfo*, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*)` | 0x23318 | 560 | tu_015b20.cpp |
 | `DBCacheWorker::run()` | 0x23548 | 2868 | tu_015b20.cpp |
 | `DBCacheWorker::finished()` | 0x2407c | 56 | tu_015b20.cpp |
-| `DBCachedTextMenu::vfunc16()` | 0x240b4 | 56 | tu_015b20.cpp |
-| `DBCachedTextMenu::vfunc17()` | 0x240ec | 60 | tu_015b20.cpp |
-| `DBCachedTextMenu::vfunc9()` | 0x24128 | 60 | tu_015b20.cpp |
-| `DBCachedTextMenu::vfunc10()` | 0x24164 | 60 | tu_015b20.cpp |
+| `DBCachedTextMenu::pageUp()` | 0x240b4 | 56 | tu_015b20.cpp |
+| `DBCachedTextMenu::pageDown()` | 0x240ec | 60 | tu_015b20.cpp |
+| `DBCachedTextMenu::moveDown()` | 0x24128 | 60 | tu_015b20.cpp |
+| `DBCachedTextMenu::moveUp()` | 0x24164 | 60 | tu_015b20.cpp |
 | `DBCachedTextMenu::prefetchNext()` | 0x241a0 | 316 | tu_015b20.cpp |
 | `DBCachedTextMenu::prefetchPrevious()` | 0x242dc | 308 | tu_015b20.cpp |
 | `DBCachedTextMenu::getItem(int)` | 0x24410 | 372 | tu_015b20.cpp |
-| `DBCachedTextMenu::vfunc6(int)` | 0x24584 | 372 | tu_015b20.cpp |
+| `DBCachedTextMenu::getItemData(int)` | 0x24584 | 372 | tu_015b20.cpp |
 | `DBCachedTextMenu::restorePosition(int, int, int)` | 0x246f8 | 316 | tu_015b20.cpp |
 | `DBCachedTextMenu::open(char const*, char const*, char const*)` | 0x24834 | 480 | tu_015b20.cpp |
-| `DBCachedTextMenu::vfunc12(int)` | 0x24a14 | 788 | tu_015b20.cpp |
+| `DBCachedTextMenu::removeItem(int)` | 0x24a14 | 788 | tu_015b20.cpp |
 | `deleteCachedTextItem(SDL_Surface*)` | 0x24d28 | 68 | tu_015b20.cpp |
 | `freeCachedData(SDL_Surface*)` | 0x24d6c | 44 | tu_015b20.cpp |
-| `DBCachedTextMenu::vfunc14(char const*)` | 0x24d98 | 1192 | tu_015b20.cpp |
+| `DBCachedTextMenu::setSearch(char const*)` | 0x24d98 | 1192 | tu_015b20.cpp |
 | `DBCachedTextMenu::DBCachedTextMenu(char const*, EmuInfo*, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)` | 0x25240 | 460 | tu_015b20.cpp |
 | `DBCachedTextMenu::~DBCachedTextMenu()` | 0x2540c | 208 | tu_015b20.cpp |
 | `DBCachedTextMenu::~DBCachedTextMenu()` | 0x254dc | 52 | tu_015b20.cpp |
@@ -147,22 +147,22 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `IconMenu::IconMenu(int, int, bool, bool, int, int, bool)` | 0x25c8c | 444 | tu_015b20.cpp |
 | `IconMenu::~IconMenu()` | 0x25e48 | 128 | tu_015b20.cpp |
 | `IconMenu::~IconMenu()` | 0x25ec8 | 52 | tu_015b20.cpp |
-| `IconMenu::vfunc7(SDL_Surface*)` | 0x25efc | 4260 | tu_015b20.cpp |
+| `IconMenu::drawList(SDL_Surface*)` | 0x25efc | 4260 | tu_015b20.cpp |
 | `IconMenu::getItem(int)` | 0x26fa0 | 116 | tu_015b20.cpp |
 | `prepareGlobalRomCache()` | 0x27014 | 1808 | tu_015b20.cpp |
-| `IconMenu::vfunc4()` | 0x27724 | 600 | tu_015b20.cpp |
+| `IconMenu::onSelect()` | 0x27724 | 600 | tu_015b20.cpp |
 | `IconMenu::freeItems()` | 0x2797c | 180 | tu_015b20.cpp |
 | `IconMenu::addItem(void*)` | 0x27a30 | 56 | tu_015b20.cpp |
-| `IconMenu::vfunc11()` | 0x27a68 | 348 | tu_015b20.cpp |
-| `IconMenu::vfunc3()` | 0x27bc4 | 1804 | tu_015b20.cpp |
+| `IconMenu::reloadTheme()` | 0x27a68 | 348 | tu_015b20.cpp |
+| `IconMenu::handleKey()` | 0x27bc4 | 1804 | tu_015b20.cpp |
 | `SettingMenuItem::SettingMenuItem(int, char const*, int)` | 0x282d0 | 232 | tu_015b20.cpp |
 | `SettingMenuItem::~SettingMenuItem()` | 0x283b8 | 80 | tu_015b20.cpp |
 | `SettingMenuItem::reload()` | 0x28408 | 148 | tu_015b20.cpp |
 | `SettingMenu::SettingMenu()` | 0x2849c | 376 | tu_015b20.cpp |
 | `SettingMenu::~SettingMenu()` | 0x28614 | 308 | tu_015b20.cpp |
 | `SettingMenu::~SettingMenu()` | 0x28748 | 52 | tu_015b20.cpp |
-| `SettingMenu::vfunc11()` | 0x2877c | 536 | tu_015b20.cpp |
-| `SettingMenu::vfunc7(SDL_Surface*)` | 0x28994 | 2916 | tu_015b20.cpp |
+| `SettingMenu::reloadTheme()` | 0x2877c | 536 | tu_015b20.cpp |
+| `SettingMenu::drawList(SDL_Surface*)` | 0x28994 | 2916 | tu_015b20.cpp |
 | `previewVolume(unsigned int, void*)` | 0x294f8 | 176 | tu_015b20.cpp |
 | `SettingMenu::decrease()` | 0x295a8 | 836 | tu_015b20.cpp |
 | `SettingMenu::increase()` | 0x298ec | 836 | tu_015b20.cpp |
@@ -170,35 +170,35 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `resetEmulatorSettings(void*)` | 0x29c4c | 40 | tu_015b20.cpp |
 | `resetAllSettings(void*)` | 0x29c74 | 340 | tu_015b20.cpp |
 | `SettingMenu::select()` | 0x29dc8 | 2060 | tu_015b20.cpp |
-| `SettingMenu::vfunc3()` | 0x2a5d4 | 280 | tu_015b20.cpp |
-| `SettingMenu::vfunc18()` | 0x2a6ec | 196 | tu_015b20.cpp |
+| `SettingMenu::handleKey()` | 0x2a5d4 | 280 | tu_015b20.cpp |
+| `SettingMenu::freeListItem()` | 0x2a6ec | 196 | tu_015b20.cpp |
 | `DeviceInfoItem::DeviceInfoItem(char const*, char const*)` | 0x2a7b0 | 140 | tu_015b20.cpp |
 | `DeviceInfoMenu::DeviceInfoMenu()` | 0x2a83c | 248 | tu_015b20.cpp |
 | `DeviceInfoMenu::~DeviceInfoMenu()` | 0x2a934 | 160 | tu_015b20.cpp |
 | `DeviceInfoMenu::~DeviceInfoMenu()` | 0x2a9d4 | 52 | tu_015b20.cpp |
-| `DeviceInfoMenu::vfunc11()` | 0x2aa08 | 220 | tu_015b20.cpp |
-| `DeviceInfoMenu::vfunc7(SDL_Surface*)` | 0x2aae4 | 1348 | tu_015b20.cpp |
+| `DeviceInfoMenu::reloadTheme()` | 0x2aa08 | 220 | tu_015b20.cpp |
+| `DeviceInfoMenu::drawList(SDL_Surface*)` | 0x2aae4 | 1348 | tu_015b20.cpp |
 | `formatDeviceUuid(char*, unsigned int)` | 0x2b028 | 208 | tu_015b20.cpp |
 | `DeviceInfoMenu::loadInfo()` | 0x2b0f8 | 1036 | tu_015b20.cpp |
-| `DeviceInfoMenu::vfunc18()` | 0x2b504 | 184 | tu_015b20.cpp |
-| `display_memset_2b5bc()` | 0x2b5bc | 460 | tu_015b20.cpp |
+| `DeviceInfoMenu::freeListItem()` | 0x2b504 | 184 | tu_015b20.cpp |
+| `applyPanelTiming()` | 0x2b5bc | 460 | tu_015b20.cpp |
 | `ColorMenu::ColorMenu()` | 0x2b788 | 308 | tu_015b20.cpp |
 | `ColorMenu::~ColorMenu()` | 0x2b8bc | 176 | tu_015b20.cpp |
 | `ColorMenu::~ColorMenu()` | 0x2b96c | 52 | tu_015b20.cpp |
-| `ColorMenu::vfunc7(SDL_Surface*)` | 0x2b9a0 | 2260 | tu_015b20.cpp |
-| `ColorMenu::vfunc3()` | 0x2c274 | 1224 | tu_015b20.cpp |
-| `ColorMenu::vfunc4()` | 0x2c73c | 36 | tu_015b20.cpp |
-| `ColorMenu::vfunc18()` | 0x2c760 | 196 | tu_015b20.cpp |
+| `ColorMenu::drawList(SDL_Surface*)` | 0x2b9a0 | 2260 | tu_015b20.cpp |
+| `ColorMenu::handleKey()` | 0x2c274 | 1224 | tu_015b20.cpp |
+| `ColorMenu::onSelect()` | 0x2c73c | 36 | tu_015b20.cpp |
+| `ColorMenu::freeListItem()` | 0x2c760 | 196 | tu_015b20.cpp |
 | `ColorMenu::loadItems()` | 0x2c824 | 300 | tu_015b20.cpp |
 | `LanguageMenu::LanguageMenu(std::vector<LanguageChoice, std::allocator<LanguageChoice> >)` | 0x2c950 | 344 | tu_015b20.cpp |
 | `LanguageMenu::~LanguageMenu()` | 0x2caa8 | 76 | tu_015b20.cpp |
 | `LanguageMenu::~LanguageMenu()` | 0x2caf4 | 52 | tu_015b20.cpp |
-| `LanguageMenu::vfunc4()` | 0x2cb28 | 236 | tu_015b20.cpp |
+| `LanguageMenu::onSelect()` | 0x2cb28 | 236 | tu_015b20.cpp |
 | `ThemeMenu::ThemeMenu()` | 0x2cc14 | 364 | tu_015b20.cpp |
 | `ThemeMenu::~ThemeMenu()` | 0x2cd80 | 60 | tu_015b20.cpp |
 | `ThemeMenu::~ThemeMenu()` | 0x2cdbc | 52 | tu_015b20.cpp |
-| `ThemeMenu::vfunc4()` | 0x2cdf0 | 464 | tu_015b20.cpp |
-| `fileType_2cfc0(char const*)` | 0x2cfc0 | 408 | tu_015b20.cpp |
+| `ThemeMenu::onSelect()` | 0x2cdf0 | 464 | tu_015b20.cpp |
+| `findEmuForFile(char const*)` | 0x2cfc0 | 408 | tu_015b20.cpp |
 | `requestUpgrade(void*)` | 0x2d158 | 100 | tu_015b20.cpp |
 | `FileAction::execute(void*)` | 0x2d1bc | 952 | tu_015b20.cpp |
 | `fileBrowserFilter(char const*, char const*)` | 0x2d574 | 396 | tu_015b20.cpp |
@@ -206,11 +206,11 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `FileBrowserMenu::~FileBrowserMenu()` | 0x2d908 | 336 | tu_015b20.cpp |
 | `FileBrowserMenu::~FileBrowserMenu()` | 0x2da58 | 52 | tu_015b20.cpp |
 | `FileBrowserMenu::count()` | 0x2da8c | 72 | tu_015b20.cpp |
-| `FileBrowserMenu::vfunc4()` | 0x2dad4 | 184 | tu_015b20.cpp |
+| `FileBrowserMenu::onSelect()` | 0x2dad4 | 184 | tu_015b20.cpp |
 | `FileBrowserMenu::getItem(int)` | 0x2db8c | 136 | tu_015b20.cpp |
 | `FileBrowserMenu::itemIcon(TextItem*)` | 0x2dc14 | 168 | tu_015b20.cpp |
-| `FileBrowserMenu::vfunc7(SDL_Surface*)` | 0x2dcbc | 1076 | tu_015b20.cpp |
-| `FileBrowserMenu::vfunc3()` | 0x2e0f0 | 552 | tu_015b20.cpp |
+| `FileBrowserMenu::drawList(SDL_Surface*)` | 0x2dcbc | 1076 | tu_015b20.cpp |
+| `FileBrowserMenu::handleKey()` | 0x2e0f0 | 552 | tu_015b20.cpp |
 | `freeSurfaceCallback(SDL_Surface*)` | 0x2e318 | 44 | tu_015b20.cpp |
 | `LoadSurfaceWorker::run()` | 0x2e344 | 168 | tu_015b20.cpp |
 | `LoadSurfaceWorker::finished()` | 0x2e3ec | 56 | tu_015b20.cpp |
@@ -227,7 +227,7 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `MenuWindow::onHide()` | 0x2fc74 | 656 | tu_015b20.cpp |
 | `MenuWindow::handleInput()` | 0x2ff04 | 4520 | tu_015b20.cpp |
 | `MenuWindow::cacheBackground()` | 0x310ac | 328 | tu_015b20.cpp |
-| `drawPageDots_311f4(SDL_Surface*, int, int)` | 0x311f4 | 420 | tu_015b20.cpp |
+| `drawPageCount(SDL_Surface*, int, int)` | 0x311f4 | 420 | tu_015b20.cpp |
 | `MenuWindow::draw(SDL_Surface*)` | 0x31398 | 2876 | tu_015b20.cpp |
 | `MenuWindow::setHeaderIcon(SDL_Surface*, char const*, bool, bool)` | 0x31ed4 | 364 | tu_015b20.cpp |
 | `FloatWindow::FloatWindow(int)` | 0x32040 | 84 | tu_015b20.cpp |
@@ -302,7 +302,7 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `closeFramebuffer()` | 0x36eb0 | 56 | tu_015b20.cpp |
 | `runWindowLoop(std::vector<TrimusWindow*, std::allocator<TrimusWindow*> >*, std::atomic<bool>*)` | 0x36ee8 | 1244 | tu_015b20.cpp |
 | `createRootWindow(std::vector<TrimusWindow*, std::allocator<TrimusWindow*> >*)` | 0x373c4 | 248 | tu_015b20.cpp |
-| `files_374bc(int)` | 0x374bc | 340 | tu_015b20.cpp |
+| `windowTitle(int)` | 0x374bc | 340 | tu_015b20.cpp |
 | `createRomListMenu(EmuInfo*, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*)` | 0x37610 | 336 | tu_015b20.cpp |
 | `smallMenuFont()` | 0x37760 | 36 | tu_015b20.cpp |
 | `createMenu(int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)` | 0x37784 | 4272 | tu_015b20.cpp |
@@ -387,11 +387,11 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `TestMenuItem::~TestMenuItem()` | 0x50624 | 80 | tu_04cb68.cpp |
 | `HardwareTestMenu::HardwareTestMenu()` | 0x50674 | 352 | tu_04cb68.cpp |
 | `HardwareTestMenu::~HardwareTestMenu()` | 0x507d4 | 68 | tu_04cb68.cpp |
-| `HardwareTestMenu::vfunc4()` | 0x5084c | 1180 | tu_04cb68.cpp |
+| `HardwareTestMenu::onSelect()` | 0x5084c | 1180 | tu_04cb68.cpp |
 | `testResultLabel(int)` | 0x50ce8 | 88 | tu_04cb68.cpp |
 | `testResultColor(int)` | 0x50d40 | 148 | tu_04cb68.cpp |
-| `HardwareTestMenu::vfunc7(SDL_Surface*)` | 0x50dd4 | 1468 | tu_04cb68.cpp |
-| `HardwareTestMenu::vfunc18()` | 0x51390 | 196 | tu_04cb68.cpp |
+| `HardwareTestMenu::drawList(SDL_Surface*)` | 0x50dd4 | 1468 | tu_04cb68.cpp |
+| `HardwareTestMenu::freeListItem()` | 0x51390 | 196 | tu_04cb68.cpp |
 | `HardwareTestMenu::initializeTests()` | 0x51454 | 540 | tu_04cb68.cpp |
 | `scalePixels(int, int, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, int, int*, int*)` | 0x11cdc8 | 376 | tu_11cdc8.cpp |
 | `sdCardSpace[abi:cxx11]()` | 0x11cf40 | 600 | tu_11cdc8.cpp |
@@ -547,18 +547,18 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `WifiMenuDrawer::WifiMenuDrawer()` | 0x13a2f8 | 224 | tu_138c50.cpp |
 | `WifiMenuDrawer::~WifiMenuDrawer()` | 0x13a3d8 | 116 | tu_138c50.cpp |
 | `WifiMenuDrawer::~WifiMenuDrawer()` | 0x13a44c | 52 | tu_138c50.cpp |
-| `WifiMenuDrawer::vfunc3()` | 0x13a480 | 300 | tu_138c50.cpp |
-| `WifiMenuDrawer::vfunc4()` | 0x13a5ac | 184 | tu_138c50.cpp |
+| `WifiMenuDrawer::handleKey()` | 0x13a480 | 300 | tu_138c50.cpp |
+| `WifiMenuDrawer::onSelect()` | 0x13a5ac | 184 | tu_138c50.cpp |
 | `WifiMenuDrawer::getItem(int)` | 0x13a664 | 136 | tu_138c50.cpp |
-| `WifiMenuDrawer::vfunc7(SDL_Surface*)` | 0x13a6ec | 1256 | tu_138c50.cpp |
+| `WifiMenuDrawer::drawList(SDL_Surface*)` | 0x13a6ec | 1256 | tu_138c50.cpp |
 | `WifiMenuDrawer::count()` | 0x13abd4 | 48 | tu_138c50.cpp |
-| `WifiMenuDrawer::vfunc13()` | 0x13ac04 | 308 | tu_138c50.cpp |
+| `WifiMenuDrawer::clearItems()` | 0x13ac04 | 308 | tu_138c50.cpp |
 | `WifiMenu::WifiMenu()` | 0x13ad38 | 832 | tu_138c50.cpp |
 | `WifiMenu::~WifiMenu()` | 0x13b078 | 260 | tu_138c50.cpp |
 | `WifiMenu::~WifiMenu()` | 0x13b17c | 52 | tu_138c50.cpp |
-| `WifiMenu::vfunc7(SDL_Surface*)` | 0x13b1b0 | 160 | tu_138c50.cpp |
-| `WifiMenu::vfunc4()` | 0x13b250 | 112 | tu_138c50.cpp |
-| `WifiMenu::vfunc15(int)` | 0x13b2c0 | 2212 | tu_138c50.cpp |
+| `WifiMenu::drawList(SDL_Surface*)` | 0x13b1b0 | 160 | tu_138c50.cpp |
+| `WifiMenu::onSelect()` | 0x13b250 | 112 | tu_138c50.cpp |
+| `WifiMenu::onUnhandledEvent(int)` | 0x13b2c0 | 2212 | tu_138c50.cpp |
 | `HotspotSwitchAction::execute(void*)` | 0x13bb64 | 348 | tu_138c50.cpp |
 | `writeConfigValue(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)` | 0x13bcc0 | 488 | tu_138c50.cpp |
 | `readConfigValue(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)` | 0x13bea8 | 524 | tu_138c50.cpp |
@@ -567,8 +567,8 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `HotspotMenu::HotspotMenu()` | 0x13c264 | 284 | tu_138c50.cpp |
 | `HotspotMenu::~HotspotMenu()` | 0x13c380 | 100 | tu_138c50.cpp |
 | `HotspotMenu::~HotspotMenu()` | 0x13c3e4 | 52 | tu_138c50.cpp |
-| `HotspotMenu::vfunc7(SDL_Surface*)` | 0x13c418 | 48 | tu_138c50.cpp |
-| `HotspotMenu::vfunc15(int)` | 0x13c448 | 40 | tu_138c50.cpp |
+| `HotspotMenu::drawList(SDL_Surface*)` | 0x13c418 | 48 | tu_138c50.cpp |
+| `HotspotMenu::onUnhandledEvent(int)` | 0x13c448 | 40 | tu_138c50.cpp |
 | `ImeWindow::ImeWindow(int title, Action *callback, int label)` | 0x13edfc | 1060 | tu_13edfc.cpp |
 | `ImeWindow::~ImeWindow()` | 0x13f220 | 688 | tu_13edfc.cpp |
 | `ImeWindow::~ImeWindow() [deleting]` | 0x13f4d0 | 52 | tu_13edfc.cpp |
@@ -601,14 +601,14 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `MultiDBCachedTextMenu::prepare()` | 0x148bc4 | 744 | tu_1484d4.cpp |
 | `MultiDBCachedTextMenu::fetchForward()` | 0x148eac | 132 | tu_1484d4.cpp |
 | `MultiDBCachedTextMenu::fetchBackward()` | 0x148f30 | 124 | tu_1484d4.cpp |
-| `MultiDBCachedTextMenu::vfunc16()` | 0x148fac | 60 | tu_1484d4.cpp |
-| `MultiDBCachedTextMenu::vfunc17()` | 0x148fe8 | 60 | tu_1484d4.cpp |
-| `MultiDBCachedTextMenu::vfunc9()` | 0x149024 | 60 | tu_1484d4.cpp |
-| `MultiDBCachedTextMenu::vfunc10()` | 0x149060 | 60 | tu_1484d4.cpp |
+| `MultiDBCachedTextMenu::pageUp()` | 0x148fac | 60 | tu_1484d4.cpp |
+| `MultiDBCachedTextMenu::pageDown()` | 0x148fe8 | 60 | tu_1484d4.cpp |
+| `MultiDBCachedTextMenu::moveDown()` | 0x149024 | 60 | tu_1484d4.cpp |
+| `MultiDBCachedTextMenu::moveUp()` | 0x149060 | 60 | tu_1484d4.cpp |
 | `MultiDBCachedTextMenu::restorePosition(int, int, int)` | 0x14909c | 156 | tu_1484d4.cpp |
 | `MultiDBCachedTextMenu::prepareBGWorkers(int, int)` | 0x149138 | 988 | tu_1484d4.cpp |
 | `MultiDBCachedTextMenu::getItem(int)` | 0x149514 | 784 | tu_1484d4.cpp |
-| `MultiDBCachedTextMenu::vfunc6(int)` | 0x149824 | 816 | tu_1484d4.cpp |
+| `MultiDBCachedTextMenu::getItemData(int)` | 0x149824 | 816 | tu_1484d4.cpp |
 | `MultiDBCachedTextMenu::count()` | 0x149b54 | 40 | tu_1484d4.cpp |
 | `int stub_4acfc()` | 0x14acfc | 28 | tu_14acfc.c |
 | `int exitDeviceHook()` | 0x14ad18 | 28 | tu_14acfc.c |

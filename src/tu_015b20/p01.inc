@@ -29,7 +29,7 @@ const char *keyEventName(int key)
     }
 }
 
-// 0x15d00
+// 0x15d00: show the frame (SDL double buffering).
 void flipDisplay()
 {
     SDL_Flip(g_screen);
@@ -183,7 +183,7 @@ void drawTextOnBg(SDL_Surface *dst, SDL_Surface *bg, SDL_Rect *rect, const char 
 // returns the next slot, or -1 when there is nothing to draw.
 int drawKeyStateIndicator(SDL_Surface *dst, int slot, bool focused)
 {
-    int v = GetKeyShm(g_keyShm, 0);
+    int v = GetKeyShm(g_keyShm, MONITOR_VOLUME);
     if (v < 0)
         v = 0;
     if (v > 20)
@@ -502,7 +502,7 @@ int powerOff(void *arg)
 // Patched command retains its original 32-byte slot at 0x151aa8.
 extern const char g_powerOffCommand[32] = "mainui_off_order";
 
-// 0x176a8
+// 0x176a8: the power-off countdown's end: power off.
 void powerOffNow()
 {
     powerOff(0);
@@ -692,7 +692,7 @@ int compareLabels(const void *a, const void *b)
     return strcmp(x->label.c_str(), y->label.c_str());
 }
 
-// 0x17fc0
+// 0x17fc0: writes the command MainUI leaves for the shell script that runs it (MainUI exits next).
 void writeCmdToRun(const char *cmd)
 {
     FILE *f = fopen("/tmp/cmd_to_run.sh", "w+");
@@ -722,7 +722,7 @@ void showLaunchScreen(const char *cmd)
     writeCmdToRun(cmd);
 }
 
-// 0x18170
+// 0x18170: an action that does nothing (its original name, from __func__, includes the typo).
 int donoting_action(void *a, void *b)
 {
     puts(__func__);
@@ -734,7 +734,7 @@ int donoting_action(void *a, void *b)
 // after opening the swap dialog when the emulator needs swap and none is enabled.
 int launchRom(const char *label, EmuInfo *emu, const char *rompath, const char *imgpath, int type)
 {
-    bool audioFix = GetKeyShm(g_keyShm, 13) != 0;
+    bool audioFix = GetKeyShm(g_keyShm, MONITOR_AUDIOFIX) != 0;
     char *cwd = getcwd(g_cwdBuf, 4096);
     if (audioFix && emu->noAudioFix != 0) {
         audioFix = false;
@@ -797,7 +797,7 @@ int launchApp_buildCommand(AppInfo *app, int type)
     } else {
         return -1;
     }
-    bool audioFix = GetKeyShm(g_keyShm, 13) != 0;
+    bool audioFix = GetKeyShm(g_keyShm, MONITOR_AUDIOFIX) != 0;
     if (audioFix && app->noAudioFix != 0) {
         audioFix = false;
         system("touch /tmp/no_audioserver");

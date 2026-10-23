@@ -12,7 +12,7 @@ int AppAction::progress(int *a, int b)
 {
     TextItem *item = (TextItem *)a;
     if (detail) {
-        GameDetailWindow *w = new GameDetailWindow(0x54, 8, app->label.c_str(), item->label.c_str(),
+        GameDetailWindow *w = new GameDetailWindow(STR_GAMEINFO, WIN_GAME_INFO, app->label.c_str(), item->label.c_str(),
                                                    app->launch.c_str(), app->iconSelected.c_str(),
                                                    b, result, item->favorite);
         w->onShow();
@@ -189,18 +189,18 @@ int RemoveFavoriteAction::execute(void *param)
 int SearchAction::execute(void *param)
 {
     const char *key = (const char *)param;
-    MenuWindow *w = new MenuWindow(0x99, id, emu);
+    MenuWindow *w = new MenuWindow(STR_SEARCH, id, emu);
     w->setPath(key);
     w->onShow();
     g_windowStack->push_back(w);
     return -1;
 }
 
-// 0x19c18: the same, over every ROM list (menu 0x18).
+// 0x19c18: the same, over every ROM list (WIN_SEARCH).
 int GlobalSearchAction::execute(void *param)
 {
     const char *key = (const char *)param;
-    MenuWindow *w = new MenuWindow(0x99, 0x18, (void *)0);
+    MenuWindow *w = new MenuWindow(STR_SEARCH, WIN_SEARCH, (void *)0);
     w->setPath(key);
     w->onShow();
     g_windowStack->push_back(w);
@@ -210,12 +210,12 @@ int GlobalSearchAction::execute(void *param)
 // 0x19d24: ask for a search string; the keyboard runs a SearchAction with it.
 int PopupSearchIME::execute(void *param)
 {
-    ImeWindow *w = new ImeWindow(0x99, new SearchAction(arg, id, emu), 0x99);
+    ImeWindow *w = new ImeWindow(STR_SEARCH, new SearchAction(arg, id, emu), STR_SEARCH);
     pushWindow(w);
     return 4;
 }
 
-// 0x19dc0
+// 0x19dc0: opens a yes/no dialog for an action (the pop-up that offered it closes: result 4).
 int PopupDialogAction::execute(void *param)
 {
     DialogWindow *w = new DialogWindow(title, text, flag, action);
@@ -223,7 +223,7 @@ int PopupDialogAction::execute(void *param)
     return 4;
 }
 
-// 0x19e44
+// 0x19e44: runs an action behind a "please wait" dialog.
 int PopupProgressAction::execute(void *param)
 {
     ProgressDialog *w = new ProgressDialog(title, action);
@@ -246,21 +246,21 @@ int GeneralAction::execute(void *param)
     }
 }
 
-// 0x19f64
+// 0x19f64: "Clear" in favourites: delete favourite.json and empty the list.
 int ClearFavoriteAction::execute(void *param)
 {
     if (!unlink("/mnt/SDCARD/Roms/favourite.json")) {
-        menu->vfunc13();
+        menu->clearItems();
         sync();
     }
     return 1;
 }
 
-// 0x19fd8
+// 0x19fd8: "Clear" in Recent: empty the list and delete recentlist.json.
 int ClearRecentAction::execute(void *param)
 {
     clearRecent(&g_recentGames);
-    menu->vfunc13();
+    menu->clearItems();
     return 1;
 }
 
@@ -270,7 +270,7 @@ int AddFavoriteAction::execute(void *param)
     const char *label = 0;
     const char *launch = 0;
     const char *rompath = 0;
-    if (result != 3 && result != 5 && result != 0x11 && result != 0x18) {
+    if (result != WIN_APPS && result != WIN_ROM_LIST && result != WIN_RETROARCH_LIST && result != WIN_SEARCH) {
         printf("add to favorite error: unkown win %d\n", result);
         return 1;
     }
@@ -279,7 +279,7 @@ int AddFavoriteAction::execute(void *param)
         printf("open %s %p\n", "/mnt/SDCARD/Roms/favourite.json", f);
         cJSON *obj = cJSON_CreateObject();
         if (obj != NULL) {
-            if (result != 3) {
+            if (result != WIN_APPS) {
                 EmuAction *emu = (EmuAction *)item->action;
                 if (emu != NULL) {
                     if (emu->emu != NULL) {

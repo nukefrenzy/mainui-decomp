@@ -1,9 +1,16 @@
-// ImeWindow: keyboard input, key navigation, drawing, and vector<ImeKey> tail.
-// Proven 0x13edfc-0x143720: 12,936-byte body, then 67 generated tail functions.
-// Case order and true/false branch order below preserve GCC 8 -O0 layout.
+// tu_13edfc (0x13edfc-0x143720): ImeWindow, the on-screen keyboard.
+//
+// Four rows of ten character keys (digits, then QWERTY) and a bottom row of five wide keys:
+// shift, symbols, space, delete and OK. The D-pad moves between keys and A presses one; the
+// wide keys also have shortcut buttons (L2 shift, R2 symbols, X space, Y delete, START OK), and
+// B cancels. OK passes the text to the window's Action (connect to Wi-Fi, save a hotspot
+// setting, ...). Body 12,936 bytes, then 67 generated tail functions. Case order and true/false
+// branch order below preserve GCC 8 -O0 layout.
 #include <stdio.h>
 #include <string.h>
 #include "ImeWindow.h"
+#include "Input.h"
+#include "WindowIds.h"
 
 extern "C" {
 void SDL_FreeSurface(SDL_Surface *);
@@ -12,6 +19,8 @@ unsigned int SDL_MapRGB(SDL_PixelFormat *, unsigned char, unsigned char, unsigne
 int SDL_FillRect(SDL_Surface *, SDL_Rect *, unsigned int);
 }
 extern char *g_themePath;
+// Key ids by column (10) and row (5): rows 0-3 are the character rows, row 4 the wide key below
+// each column. Used to lay the keys out and to move up and down.
 int g_imeKeyMap[10][5] = {
     {6, 16, 26, 35, 0},
     {7, 17, 27, 36, 0},
@@ -26,7 +35,7 @@ int g_imeKeyMap[10][5] = {
 }; // 0x17fbd4
 extern void *g_imeFont; // 0x18217c
 extern SDL_Color g_imeTextColor; // 0x182284
-SDL_Color g_imeInputColor; // 0x182498, original zero-initialized BSS
+SDL_Color g_imeInputColor; // 0x182498, original zero-initialized BSS: the typed text is black
 SDL_Surface *loadImeImage(const char *, const char *, const char *); // 0x12a140
 const char *languageString(int); // 0x135150
 union SDL_Event;
@@ -38,7 +47,8 @@ int drawTextLines(SDL_Surface *, void *, SDL_Rect *, const char *, const char *,
 static_assert(sizeof(ImeKey) == 100, "ImeKey layout");
 static_assert(sizeof(ImeWindow) == 0xf0, "ImeWindow layout");
 
-ImeWindow::ImeWindow(int title, Action *callback, int label) : TrimusWindow(title, 0x16)
+// title and label are language string ids (LangStrings.h).
+ImeWindow::ImeWindow(int title, Action *callback, int label) : TrimusWindow(title, WIN_KEYBOARD)
 {
     btn1Focused = loadImeImage(g_themePath, "./", "skin/bg-btn-01-f.png");
     btn1Normal = loadImeImage(g_themePath, "./", "skin/bg-btn-01-n.png");
@@ -88,6 +98,7 @@ ImeWindow::~ImeWindow()
     if (callback) delete callback;
 }
 
+// The ids of the keys in the same row as key (same y), left to right.
 void ImeWindow::rowKeys(std::vector<int> &out, int key)
 {
     int index = -1;
@@ -104,6 +115,8 @@ void ImeWindow::rowKeys(std::vector<int> &out, int key)
         }
     }
 }
+// The ids of key's column, top to bottom, from g_imeKeyMap; OK is appended when moving up (or in
+// the last column), so moving up from the top row can wrap to it.
 void ImeWindow::columnKeys(std::vector<int> &out, int key, bool up)
 {
     int col = -1;
@@ -118,12 +131,13 @@ void ImeWindow::columnKeys(std::vector<int> &out, int key, bool up)
         }
         if (col >= 0) break;
     }
-    if (col < 0 && key == 0x2c) col = 9;
+    if (col < 0 && key == IME_KEY_OK) col = 9;
     if (col >= 0 && col < 10) {
         for (int i = 0; i < 5; i++) out.push_back(g_imeKeyMap[col][i]);
-        if (col == 9 || up) out.push_back(0x2c);
+        if (col == 9 || up) out.push_back(IME_KEY_OK);
     }
 }
+// Moves the selection left or right within its row, wrapping around.
 void ImeWindow::moveHorizontal(bool left)
 {
     std::vector<int> row;
@@ -147,6 +161,7 @@ void ImeWindow::moveHorizontal(bool left)
         }
     }
 }
+// Moves the selection up or down within its column, wrapping around.
 void ImeWindow::moveVertical(bool up)
 {
     std::vector<int> column;
@@ -171,48 +186,51 @@ void ImeWindow::moveVertical(bool up)
     }
 }
 
+// One button: returns the Action's result on OK, 1 (close) on B, -1 to stay open.
+// Original quirks, kept as-is: X adds a space without checking the 128-byte limit, and A on a
+// key returns 0 rather than -1.
 int ImeWindow::handleInput()
 {
     int action = handleGlobalInput(0);
     switch (action) {
-    case 10:
+    case BUTTON_START:
         printf("ImeWindow action %s\n", text);
         if (callback) return callback->execute(text);
         break;
-    case 4:
+    case BUTTON_Y:
         if ((unsigned int)length < 128) {
             if (length > 0) length--;
             text[length] = 0;
         }
         break;
-    case 3: text[length] = ' '; length++; break;
-    case 12:
+    case BUTTON_X: text[length] = ' '; length++; break;
+    case BUTTON_HOTKEY1:
         shifted = !shifted;
-        if (shifted) setKeyIcons(0, shiftActive, l2);
-        else setKeyIcons(0, shift, l2);
+        if (shifted) setKeyIcons(IME_KEY_SHIFT, shiftActive, l2);
+        else setKeyIcons(IME_KEY_SHIFT, shift, l2);
         break;
-    case 13:
+    case BUTTON_HOTKEY2:
         symbols = !symbols;
-        if (symbols) setKeyIcons(1, character, r2);
-        else setKeyIcons(1, abc, r2);
+        if (symbols) setKeyIcons(IME_KEY_SYMBOLS, character, r2);
+        else setKeyIcons(IME_KEY_SYMBOLS, abc, r2);
         break;
-    case 1:
+    case BUTTON_A:
         if ((unsigned int)length < 128) {
-            if (keys[selected].id == 0x2b) {
+            if (keys[selected].id == IME_KEY_DELETE) {
                 if (length > 0) length--;
                 text[length] = 0;
-            } else if (keys[selected].id == 0x27) {
+            } else if (keys[selected].id == IME_KEY_SPACE) {
                 text[length] = ' ';
                 length++;
-            } else if (keys[selected].id == 0) {
+            } else if (keys[selected].id == IME_KEY_SHIFT) {
                 shifted = !shifted;
-                if (shifted) setKeyIcons(0, shiftActive, l2);
-                else setKeyIcons(0, shift, l2);
-            } else if (keys[selected].id == 1) {
+                if (shifted) setKeyIcons(IME_KEY_SHIFT, shiftActive, l2);
+                else setKeyIcons(IME_KEY_SHIFT, shift, l2);
+            } else if (keys[selected].id == IME_KEY_SYMBOLS) {
                 symbols = !symbols;
-                if (symbols) setKeyIcons(1, character, r2);
-                else setKeyIcons(1, abc, r2);
-            } else if (keys[selected].id == 0x2c) {
+                if (symbols) setKeyIcons(IME_KEY_SYMBOLS, character, r2);
+                else setKeyIcons(IME_KEY_SYMBOLS, abc, r2);
+            } else if (keys[selected].id == IME_KEY_OK) {
                 printf("ImeWindow action %s\n", text);
                 if (callback) return callback->execute(text);
             } else if (symbols) {
@@ -222,16 +240,18 @@ int ImeWindow::handleInput()
             } else { text[length] = keys[selected].lower[0]; length++; }
         }
         return 0;
-    case 2: return 1;
-    case 7: moveHorizontal(true); break;
-    case 8: moveHorizontal(false); break;
-    case 5: moveVertical(true); break;
-    case 6: moveVertical(false); break;
+    case BUTTON_B: return 1;
+    case BUTTON_LEFT: moveHorizontal(true); break;
+    case BUTTON_RIGHT: moveHorizontal(false); break;
+    case BUTTON_UP: moveVertical(true); break;
+    case BUTTON_DOWN: moveVertical(false); break;
     default: break;
     }
     return -1;
 }
 
+// Draws every key in its current mode: background (focused for the selection), the wide keys'
+// icon and button hint, and the character.
 void ImeWindow::drawKeys(SDL_Surface *dst, int x, int y)
 {
     const char *str = NULL;
@@ -265,6 +285,7 @@ void ImeWindow::drawKeys(SDL_Surface *dst, int x, int y)
             drawText(dst, g_imeFont, keys[i].rect, str, g_imeTextColor, 1, false);
     }
 }
+// Title frame, a black panel, the input field with the text, and the keys.
 int ImeWindow::draw(SDL_Surface *dst)
 {
     drawScreenFrame(dst, languageString(titleLabelId), id, true);
@@ -278,6 +299,7 @@ int ImeWindow::draw(SDL_Surface *dst)
     drawKeys(dst, 0, 114);
     return 0;
 }
+// Changes a key's icon and hint (shift and symbols show their state this way).
 void ImeWindow::setKeyIcons(int key, SDL_Surface *icon, SDL_Surface *hint)
 {
     for (int i = 0; keys.size() > i; i++) {
@@ -299,11 +321,11 @@ void ImeWindow::initKey(ImeKey &key, int id, SDL_Surface *focused, SDL_Surface *
     key.icon = icon;
     key.hint = hint;
     switch (id) {
-    case 0: key.lower = ""; key.upper = ""; key.symbol = ""; break;
-    case 1: key.lower = ""; key.upper = ""; key.symbol = ""; break;
-    case 39: key.lower = ""; key.upper = ""; key.symbol = ""; break;
-    case 43: key.lower = ""; key.upper = ""; key.symbol = ""; break;
-    case 44: key.lower = ""; key.upper = ""; key.symbol = ""; break;
+    case IME_KEY_SHIFT: key.lower = ""; key.upper = ""; key.symbol = ""; break;
+    case IME_KEY_SYMBOLS: key.lower = ""; key.upper = ""; key.symbol = ""; break;
+    case IME_KEY_SPACE: key.lower = ""; key.upper = ""; key.symbol = ""; break;
+    case IME_KEY_DELETE: key.lower = ""; key.upper = ""; key.symbol = ""; break;
+    case IME_KEY_OK: key.lower = ""; key.upper = ""; key.symbol = ""; break;
     case 6: key.lower = "1"; key.upper = "1"; key.symbol = "1"; break;
     case 7: key.lower = "2"; key.upper = "2"; key.symbol = "2"; break;
     case 8: key.lower = "3"; key.upper = "3"; key.symbol = "3"; break;
@@ -346,6 +368,7 @@ void ImeWindow::initKey(ImeKey &key, int id, SDL_Surface *focused, SDL_Surface *
     case 5: key.lower = "/"; key.upper = "/"; key.symbol = "."; break;
     }
 }
+// Lays out the 40 character keys (52 px squares, 8 px apart) and the five wide keys below.
 void ImeWindow::buildKeys()
 {
     keys.clear();
@@ -371,15 +394,15 @@ void ImeWindow::buildKeys()
     key.rect.w = width;
     key.rect.h = height;
     key.rect.x = 24; key.rect.y = 362;
-    initKey(key, 0, btn2Focused, btn2Normal, shift, l2); keys.push_back(key);
+    initKey(key, IME_KEY_SHIFT, btn2Focused, btn2Normal, shift, l2); keys.push_back(key);
     key.rect.x = 144; key.rect.y = 362;
-    initKey(key, 1, btn2Focused, btn2Normal, abc, r2); keys.push_back(key);
+    initKey(key, IME_KEY_SYMBOLS, btn2Focused, btn2Normal, abc, r2); keys.push_back(key);
     key.rect.x = 264; key.rect.y = 362;
-    initKey(key, 39, btn2Focused, btn2Normal, space, xIcon); keys.push_back(key);
+    initKey(key, IME_KEY_SPACE, btn2Focused, btn2Normal, space, xIcon); keys.push_back(key);
     key.rect.x = 384; key.rect.y = 362;
-    initKey(key, 43, btn2Focused, btn2Normal, del, yIcon); keys.push_back(key);
+    initKey(key, IME_KEY_DELETE, btn2Focused, btn2Normal, del, yIcon); keys.push_back(key);
     key.rect.x = 504; key.rect.y = 362;
-    initKey(key, 44, btn2Focused, btn2Normal, ok, start); keys.push_back(key);
+    initKey(key, IME_KEY_OK, btn2Focused, btn2Normal, ok, start); keys.push_back(key);
 }
 void ImeWindow::onHide() {}
 void ImeWindow::onShow() {}

@@ -120,7 +120,7 @@ SDL_cond*g_statusCond;
 SDL_Surface*g_screen,*g_backBuffer;
 std::list<RecentItem> g_recentGames;
 std::vector<AppInfo> g_appFolder;
-std::vector<EmuInfo> g_romSourcesA,g_romSourcesB;
+std::vector<EmuInfo> g_emuFolders,g_rappFolders;   // /mnt/SDCARD/Emu and /RApp entries
 std::vector<Theme> g_themeList;
 char g_keyShm[8];               // libshmvar handle for the settings shared with keymon (ShmVar.h)
 char*g_themePath;
@@ -386,9 +386,9 @@ int main(int argc,char**argv) {
     loadRecentList(&g_recentGames);
     encrypter_init();
     // Emulator, app and RetroArch-app folders; each entry has its own config.json.
-    loadEmuFolder(&g_romSourcesA,"/mnt/SDCARD/Emu");
+    loadEmuFolder(&g_emuFolders,"/mnt/SDCARD/Emu");
     loadAppFolder(&g_appFolder,"/mnt/SDCARD/App");
-    loadEmuFolder(&g_romSourcesB,"/mnt/SDCARD/RApp");
+    loadEmuFolder(&g_rappFolders,"/mnt/SDCARD/RApp");
     initAudioSettings(g_keyShm);
     ensureSwap(0);
     stopBackgroundThread();

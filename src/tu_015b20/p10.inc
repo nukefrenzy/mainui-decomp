@@ -7,7 +7,8 @@ struct WindowUserEvent {
 };
 static_assert(sizeof(WindowUserEvent) == 16, "SDL timer event prefix");
 extern "C" unsigned SDL_MapRGB(SDL_PixelFormat *, unsigned char, unsigned char, unsigned char);
-// 0x3225c
+// 0x3225c: a pop-up list (the options of MENU) over the dimmed screen, sized to its background
+// image (skin/bg-pop-menu-N.png).
 PopUpWindow::PopUpWindow(int titleLabelId, TextMenu *list, const char *file) : FloatWindow(titleLabelId) {
     background = loadSkinImage(g_themePath, g_skinSubdir, file, g_backBuffer, false);
     menu = list;
@@ -37,10 +38,10 @@ PopUpWindow::~PopUpWindow() {
     if (background) SDL_FreeSurface(background);
     puts("~PopupWindow end");
 }
-// 0x32568
+// 0x32568: nothing to do on close.
 void PopUpWindow::onHide() {
 }
-// 0x32588
+// 0x32588: the dimmed backdrop, the footer with OK/Cancel, the pop-up background and its rows.
 int PopUpWindow::draw(SDL_Surface *dst) {
     FloatWindow::draw(dst);
     if (g_background) {
@@ -73,36 +74,37 @@ int PopUpWindow::draw(SDL_Surface *dst) {
             source.h = menu->getRect()->h;
             SDL_UpperBlit(g_background, &source, dst, menu->getRect());
         }
-        menu->vfunc7(dst);
+        menu->drawList(dst);
     }
     return 0;
 }
-// 0x32784
+// 0x32784: the list handles the buttons (1 closes).
 int PopUpWindow::handleInput() {
-    if (menu) return menu->vfunc3();
+    if (menu) return menu->handleKey();
     return 1;
 }
-// 0x327e4
+// 0x327e4: a short message with one button image; it closes on any key or after 5 s (and then calls
+// fn).
 NotifyWindow::NotifyWindow(const char *message, const char *button, const char *file, void (*fn)()) : FloatWindow(-1) {
     text = message;
-    field10 = NULL;
-    surface2c = loadSkinImage(g_themePath, g_skinSubdir, "skin/pop-bg.png", g_backBuffer, false);
-    surface30 = loadSkinImage(g_themePath, g_skinSubdir, file, g_backBuffer, false);
-    field34 = button;
+    notifyTimer = NULL;
+    notifyBackground = loadSkinImage(g_themePath, g_skinSubdir, "skin/pop-bg.png", g_backBuffer, false);
+    notifyButton = loadSkinImage(g_themePath, g_skinSubdir, file, g_backBuffer, false);
+    buttonLabel = button;
     callback = fn;
 }
 // 0x32920 (D0 0x329cc)
 NotifyWindow::~NotifyWindow() {
-    if (field10) SDL_RemoveTimer(field10);
-    if (surface2c) SDL_FreeSurface(surface2c);
-    if (surface30) SDL_FreeSurface(surface30);
+    if (notifyTimer) SDL_RemoveTimer(notifyTimer);
+    if (notifyBackground) SDL_FreeSurface(notifyBackground);
+    if (notifyButton) SDL_FreeSurface(notifyButton);
 }
-// 0x32a00
+// 0x32a00: timer: post EVENT_NOTIFY_TIMEOUT and run the callback.
 static unsigned notifyTimeout(unsigned interval, void *arg) {
     void (*fn)() = (void(*)())arg;
     WindowUserEvent event;
-    event.type = 24;
-    event.code = 0;
+    event.type = SDL_USEREVENT;
+    event.code = EVENT_NOTIFY_TIMEOUT;
     timeval now;
     gettimeofday(&now, NULL);
     printf("timeout sec = %d\n", now.tv_sec);
@@ -110,137 +112,140 @@ static unsigned notifyTimeout(unsigned interval, void *arg) {
     if (fn) fn();
     return interval;
 }
-// 0x32aa0
+// 0x32aa0: start the 5 s timer; without a pop-up skin, cut a bordered box out of the background
+// instead.
 void NotifyWindow::onShow() {
     FloatWindow::onShow();
     timeval now;
     gettimeofday(&now, NULL);
     printf("init sec = %d\n", now.tv_sec);
-    field10 = SDL_AddTimer(5000, notifyTimeout, (void*)callback);
-    if (surface2c == NULL && g_background) {
-        surface2c = SDL_CreateRGBSurface(0, 240, 90, 32, 0, 0, 0, 0);
+    notifyTimer = SDL_AddTimer(5000, notifyTimeout, (void*)callback);
+    if (notifyBackground == NULL && g_background) {
+        notifyBackground = SDL_CreateRGBSurface(0, 240, 90, 32, 0, 0, 0, 0);
         SDL_Rect r = {
             200, 195, 240, 90
         };
-        SDL_UpperBlit(g_background, &r, surface2c, NULL);
+        SDL_UpperBlit(g_background, &r, notifyBackground, NULL);
         r.x = 0;
         r.y = 0;
         r.w = 240;
         r.h = 1;
-        SDL_FillRect(surface2c, &r, SDL_MapRGB(surface2c->format, 255, 255, 255));
+        SDL_FillRect(notifyBackground, &r, SDL_MapRGB(notifyBackground->format, 255, 255, 255));
         r.x = 0;
         r.y = 89;
         r.w = 240;
         r.h = 1;
-        SDL_FillRect(surface2c, &r, SDL_MapRGB(surface2c->format, 255, 255, 255));
+        SDL_FillRect(notifyBackground, &r, SDL_MapRGB(notifyBackground->format, 255, 255, 255));
         r.x = 0;
         r.y = 0;
         r.w = 1;
         r.h = 90;
-        SDL_FillRect(surface2c, &r, SDL_MapRGB(surface2c->format, 255, 255, 255));
+        SDL_FillRect(notifyBackground, &r, SDL_MapRGB(notifyBackground->format, 255, 255, 255));
         r.x = 239;
         r.y = 0;
         r.w = 1;
         r.h = 90;
-        SDL_FillRect(surface2c, &r, SDL_MapRGB(surface2c->format, 255, 255, 255));
+        SDL_FillRect(notifyBackground, &r, SDL_MapRGB(notifyBackground->format, 255, 255, 255));
     }
 }
-// 0x32d0c
+// 0x32d0c: any key release or the timeout closes it.
 int NotifyWindow::handleInput() {
     SDL_Event event;
     int key = handleGlobalInput(&event);
-    if (event.type == 3) return 1;
-    else if (event.type == 24 && event.user.code == 0) return 1;
+    if (event.type == SDL_KEYUP) return 1;
+    else if (event.type == SDL_USEREVENT && event.user.code == EVENT_NOTIFY_TIMEOUT) return 1;
     return -1;
 }
-// 0x32d74
+// 0x32d74: the box, the message (several lines) and the button with its label.
 int NotifyWindow::draw(SDL_Surface *dst) {
     FloatWindow::draw(dst);
     SDL_Rect r;
-    if (surface2c) {
-        r.x = (640-surface2c->w)/2;
-        r.y = (480-surface2c->h)/2;
-        r.w = surface2c->w;
-        r.h = surface2c->h;
-        SDL_UpperBlit(surface2c, NULL, dst, &r);
+    if (notifyBackground) {
+        r.x = (640-notifyBackground->w)/2;
+        r.y = (480-notifyBackground->h)/2;
+        r.w = notifyBackground->w;
+        r.h = notifyBackground->h;
+        SDL_UpperBlit(notifyBackground, NULL, dst, &r);
     } else {
         r.x = 200;
         r.y = 195;
         r.w = 240;
         r.h = 90;
     }
-    if (surface30) {
-        r.h -= surface30->h/2;
-        r.y -= surface30->h/4;
+    if (notifyButton) {
+        r.h -= notifyButton->h/2;
+        r.y -= notifyButton->h/4;
     }
     drawTextLines(dst, g_titleFont, &r, text.c_str(), "\n", &g_selectedTextColor, 1, false);
-    if (surface30 && surface2c) {
-        r.x = (640-surface30->w)/2;
-        r.y = 468-(480-surface2c->h)/2-surface30->h;
-        SDL_UpperBlit(surface30, NULL, dst, &r);
-        r.w = surface30->w;
-        r.h = surface30->h;
-        drawText(dst, g_titleFont, r, field34, g_imeTextColor, 1, false);
+    if (notifyButton && notifyBackground) {
+        r.x = (640-notifyButton->w)/2;
+        r.y = 468-(480-notifyBackground->h)/2-notifyButton->h;
+        SDL_UpperBlit(notifyButton, NULL, dst, &r);
+        r.w = notifyButton->w;
+        r.h = notifyButton->h;
+        drawText(dst, g_titleFont, r, buttonLabel, g_imeTextColor, 1, false);
     }
     return 0;
 }
-// 0x33060
+// 0x33060: the power-off countdown: "Power off in N seconds" from 10; any button cancels (calling
+// cancel), the end calls timeout.
 CountDownWindow::CountDownWindow(int label, void (*timeout)(), void (*cancel)()) : NotifyWindow("", languageString(STR_CANCEL), "skin/bg-button-f.png", timeout) {
     title = label;
     seconds = 10;
-    field40 = NULL;
+    tickTimer = NULL;
     onCancel = cancel;
 }
 // 0x330fc (D0 0x33158)
 CountDownWindow::~CountDownWindow() {
-    if (field40) SDL_RemoveTimer(field40);
+    if (tickTimer) SDL_RemoveTimer(tickTimer);
 }
-// 0x3318c
+// 0x3318c: timer: post EVENT_COUNTDOWN_TICK every second.
 static unsigned countdownTick(unsigned interval, void *arg) {
     WindowUserEvent event;
-    event.type = 24;
-    event.code = 22;
+    event.type = SDL_USEREVENT;
+    event.code = EVENT_COUNTDOWN_TICK;
     if (SDL_PushEvent(&event) < 0) puts("Failed to push SDL event");
     return interval;
 }
-// 0x331ec
+// 0x331ec: start the full-length timeout and the one-second tick.
 void CountDownWindow::onShow() {
     NotifyWindow::onShow();
-    snprintf(raw4c, 128, languageString(title), seconds);
-    text = raw4c;
-    if (field10) SDL_RemoveTimer(field10);
-    field10 = SDL_AddTimer(seconds*1000, notifyTimeout, (void*)callback);
-    field40 = SDL_AddTimer(1000, countdownTick, NULL);
+    snprintf(countdownText, 128, languageString(title), seconds);
+    text = countdownText;
+    if (notifyTimer) SDL_RemoveTimer(notifyTimer);
+    notifyTimer = SDL_AddTimer(seconds*1000, notifyTimeout, (void*)callback);
+    tickTimer = SDL_AddTimer(1000, countdownTick, NULL);
 }
-// 0x332d8
+// 0x332d8: a tick counts down; any other input except status events cancels.
 int CountDownWindow::handleInput() {
     int key = handleGlobalInput(NULL);
-    if (key != 18 && key != 19 && key != 22) {
+    if (key != EVENT_BATTERY && key != EVENT_HOTPLUG && key != EVENT_COUNTDOWN_TICK) {
         if (onCancel) onCancel();
         return 1;
     } else {
-        if (key == 22) {
+        if (key == EVENT_COUNTDOWN_TICK) {
             seconds--;
-            snprintf(raw4c, 128, languageString(title), seconds);
-            text = raw4c;
-            SDL_RemoveTimer(field40);
-            field40 = SDL_AddTimer(1000, countdownTick, NULL);
+            snprintf(countdownText, 128, languageString(title), seconds);
+            text = countdownText;
+            SDL_RemoveTimer(tickTimer);
+            tickTimer = SDL_AddTimer(1000, countdownTick, NULL);
         }
         return -1;
     }
 }
-// 0x333ec
+// 0x333ec: a yes/no question: heading and message are language strings; OK runs action (owned when
+// owns).
 DialogWindow::DialogWindow(int heading, int message, bool owns, Action *act) : FloatWindow(-1) {
     title = heading;
     text = message;
     selected = 1;
-    surface1c = loadSkinImage(g_themePath, g_skinSubdir, "skin/pop-bg.png", g_backBuffer, false);
-    if (surface1c) {
-        flag31 = false;
-        surface20 = NULL;
+    popupBackground = loadSkinImage(g_themePath, g_skinSubdir, "skin/pop-bg.png", g_backBuffer, false);
+    if (popupBackground) {
+        noPopupSkin = false;
+        buttonHighlight = NULL;
     } else {
-        surface20 = loadSkinImage(g_themePath, g_skinSubdir, "skin/bg-list-s.png", g_backBuffer, false);
-        flag31 = true;
+        buttonHighlight = loadSkinImage(g_themePath, g_skinSubdir, "skin/bg-list-s.png", g_backBuffer, false);
+        noPopupSkin = true;
     }
     iconA = g_iconA;
     iconB = g_iconB;
@@ -249,59 +254,59 @@ DialogWindow::DialogWindow(int heading, int message, bool owns, Action *act) : F
 }
 // 0x33570 (D0 0x33630)
 DialogWindow::~DialogWindow() {
-    if (surface1c) SDL_FreeSurface(surface1c);
-    if (surface20) SDL_FreeSurface(surface20);
+    if (popupBackground) SDL_FreeSurface(popupBackground);
+    if (buttonHighlight) SDL_FreeSurface(buttonHighlight);
     if (action) delete action;
 }
-// 0x33664
+// 0x33664: without a pop-up skin, draw a bordered box with two button cells instead.
 void DialogWindow::onShow() {
     FloatWindow::onShow();
-    if (g_background && flag31) {
-        surface1c = SDL_CreateRGBSurface(0, 240, 120, 32, 0, 0, 0, 0);
+    if (g_background && noPopupSkin) {
+        popupBackground = SDL_CreateRGBSurface(0, 240, 120, 32, 0, 0, 0, 0);
         SDL_Rect r = {
             0, 0, 240, 120
         };
-        SDL_UpperBlit(g_background, &r, surface1c, NULL);
+        SDL_UpperBlit(g_background, &r, popupBackground, NULL);
         r.x = 0;
         r.y = 0;
         r.w = 240;
         r.h = 1;
-        SDL_FillRect(surface1c, &r, SDL_MapRGB(surface1c->format, 255, 255, 255));
+        SDL_FillRect(popupBackground, &r, SDL_MapRGB(popupBackground->format, 255, 255, 255));
         r.x = 0;
         r.y = 119;
         r.w = 240;
         r.h = 1;
-        SDL_FillRect(surface1c, &r, SDL_MapRGB(surface1c->format, 255, 255, 255));
+        SDL_FillRect(popupBackground, &r, SDL_MapRGB(popupBackground->format, 255, 255, 255));
         r.x = 0;
         r.y = 0;
         r.w = 1;
         r.h = 120;
-        SDL_FillRect(surface1c, &r, SDL_MapRGB(surface1c->format, 255, 255, 255));
+        SDL_FillRect(popupBackground, &r, SDL_MapRGB(popupBackground->format, 255, 255, 255));
         r.x = 239;
         r.y = 0;
         r.w = 1;
         r.h = 120;
-        SDL_FillRect(surface1c, &r, SDL_MapRGB(surface1c->format, 255, 255, 255));
+        SDL_FillRect(popupBackground, &r, SDL_MapRGB(popupBackground->format, 255, 255, 255));
         r.x = 0;
         r.y = 90;
         r.w = 240;
         r.h = 1;
-        SDL_FillRect(surface1c, &r, SDL_MapRGB(surface1c->format, 255, 255, 255));
+        SDL_FillRect(popupBackground, &r, SDL_MapRGB(popupBackground->format, 255, 255, 255));
         r.x = 120;
         r.y = 90;
         r.w = 1;
         r.h = 30;
-        SDL_FillRect(surface1c, &r, SDL_MapRGB(surface1c->format, 255, 255, 255));
+        SDL_FillRect(popupBackground, &r, SDL_MapRGB(popupBackground->format, 255, 255, 255));
     }
 }
-// 0x33934
+// 0x33934: the plain look: message and two buttons, Cancel and OK, the selected one highlighted.
 int DialogWindow::drawFallback(SDL_Surface *dst) {
     SDL_Rect r;
     r.x = 200;
     r.y = 180;
     r.w = 240;
     r.h = 120;
-    if (surface1c) SDL_UpperBlit(surface1c, NULL, dst, &r);
+    if (popupBackground) SDL_UpperBlit(popupBackground, NULL, dst, &r);
     r.h = 90;
     drawText(dst, g_titleFont, r, languageString(text), g_selectedTextColor, 1, false);
     for (int i = 0; i < 2; i++) {
@@ -310,44 +315,44 @@ int DialogWindow::drawFallback(SDL_Surface *dst) {
         r.w = 120;
         r.h = 30;
         if (i == selected) {
-            if (surface20) {
+            if (buttonHighlight) {
                 SDL_Rect source;
                 source.x = 0;
                 source.y = 0;
                 source.w = r.w;
                 source.h = r.h;
-                SDL_UpperBlit(surface20, &source, dst, &r);
+                SDL_UpperBlit(buttonHighlight, &source, dst, &r);
             }
             drawText(dst, g_titleFont, r, (i == 0 ? languageString(STR_CANCEL) : languageString(STR_OK)), g_imeTextColor, 1, false);
         } else drawText(dst, g_titleFont, r, (i == 0 ? languageString(STR_CANCEL) : languageString(STR_OK)), g_imeTextColor, 1, false);
     }
     return 0;
 }
-// 0x33bac
+// 0x33bac: the skinned look: heading, message, and A = OK / B = Cancel hints.
 int DialogWindow::draw(SDL_Surface *dst) {
     FloatWindow::draw(dst);
-    if (flag31 != true && surface1c) {
+    if (noPopupSkin != true && popupBackground) {
         SDL_Rect r;
-        r.x = (640-surface1c->w)/2;
-        r.y = (480-surface1c->h)/2;
-        r.w = surface1c->w;
-        r.h = surface1c->h;
-        SDL_UpperBlit(surface1c, NULL, dst, &r);
+        r.x = (640-popupBackground->w)/2;
+        r.y = (480-popupBackground->h)/2;
+        r.w = popupBackground->w;
+        r.h = popupBackground->h;
+        SDL_UpperBlit(popupBackground, NULL, dst, &r);
         r.h = 50;
         drawText(dst, g_titleFont, r, languageString(title), g_emptyColor, 1, false);
-        r.y = (480-surface1c->h)/2+50;
+        r.y = (480-popupBackground->h)/2+50;
         r.h = 100;
         drawTextLines(dst, g_titleFont, &r, languageString(text), "\n", &g_selectedTextColor, 1, false);
-        r.x = (640-surface1c->w)/2+230;
-        r.y = (480-surface1c->h)/2+160;
-        r.w = surface1c->w;
+        r.x = (640-popupBackground->w)/2+230;
+        r.y = (480-popupBackground->h)/2+160;
+        r.w = popupBackground->w;
         r.h = iconA->h;
         SDL_UpperBlit(iconA, NULL, dst, &r);
         r.x = r.x+iconA->w+10;
         r.y += 5;
         drawText(dst, g_titleFont, r, languageString(STR_OK), g_clearColor, 3, false);
-        r.x = (640-surface1c->w)/2+230;
-        r.y = (480-surface1c->h)/2+iconA->h+170;
+        r.x = (640-popupBackground->w)/2+230;
+        r.y = (480-popupBackground->h)/2+iconA->h+170;
         SDL_UpperBlit(iconB, NULL, dst, &r);
         r.x = r.x+iconB->w+10;
         r.y += 5;
@@ -355,22 +360,22 @@ int DialogWindow::draw(SDL_Surface *dst) {
     } else return drawFallback(dst);
     return 0;
 }
-// 0x3400c
+// 0x3400c: A or Y on OK runs the action; B, X or A on Cancel closes; left/right choose the button.
 int DialogWindow::handleInput() {
     int key = handleGlobalInput(NULL);
     switch (key) {
-    case 1: case 4: if (selected == 1 && action) return action->execute(NULL);
+    case BUTTON_A: case BUTTON_Y: if (selected == 1 && action) return action->execute(NULL);
         return 1;
-    case 2: case 3: return 1;
-    case 7: if (selected > 0) selected--;
+    case BUTTON_B: case BUTTON_X: return 1;
+    case BUTTON_LEFT: if (selected > 0) selected--;
         break;
-    case 8: if (selected < 1) selected++;
+    case BUTTON_RIGHT: if (selected < 1) selected++;
         break;
     default: break;
     }
     return -1;
 }
-// 0x34134
+// 0x34134: thread: run the dialog's action while g_busy is set.
 static int progressThread(void *arg) {
     ProgressDialog *dialog = (ProgressDialog*)arg;
     g_busy = 1;
@@ -378,44 +383,46 @@ static int progressThread(void *arg) {
     g_busy = 0;
     return 0;
 }
-// 0x34184
+// 0x34184: a "please wait" pop-up that runs an action on a thread (e.g. Wi-Fi connect, refresh
+// ROMs).
 ProgressDialog::ProgressDialog(int heading, Action *act) : FloatWindow(-1) {
     title = heading;
     action = act;
-    surface30 = loadSkinImage(g_themePath, g_skinSubdir, "skin/pop-bg.png", g_backBuffer, false);
-    surface2c = loadSkinImage(g_themePath, g_skinSubdir, "skin/bg-button-f.png", g_backBuffer, false);
-    field38 = NULL;
+    progressBackground = loadSkinImage(g_themePath, g_skinSubdir, "skin/pop-bg.png", g_backBuffer, false);
+    progressButton = loadSkinImage(g_themePath, g_skinSubdir, "skin/bg-button-f.png", g_backBuffer, false);
+    actionThread = NULL;
 }
 // 0x342ac (D0 0x3437c)
 ProgressDialog::~ProgressDialog() {
-    if (surface30) SDL_FreeSurface(surface30);
-    if (surface2c) SDL_FreeSurface(surface2c);
+    if (progressBackground) SDL_FreeSurface(progressBackground);
+    if (progressButton) SDL_FreeSurface(progressButton);
     if (action) delete action;
 }
-// 0x343b0
+// 0x343b0: start the action thread.
 void ProgressDialog::onShow() {
     FloatWindow::onShow();
-    field38 = SDL_CreateThread(progressThread, this);
+    actionThread = SDL_CreateThread(progressThread, this);
 }
 // 0x343f4
 void ProgressDialog::runAction() {
     action->execute(NULL);
 }
-// 0x34438
+// 0x34438: wait for the action to finish.
 void ProgressDialog::onHide() {
-    SDL_WaitThread(field38, NULL);
+    SDL_WaitThread(actionThread, NULL);
 }
-// 0x34468
+// 0x34468: draws the pop-up and animates the dots until the action finishes (this blocks the window
+// loop).
 int ProgressDialog::draw(SDL_Surface *dst) {
     FloatWindow::draw(g_backBuffer);
     int frame = 0;
     SDL_Rect r;
-    if (surface30) {
-        r.x = (640-surface30->w)/2;
-        r.y = (480-surface30->h)/2;
-        r.w = surface30->w;
-        r.h = surface30->h;
-        SDL_UpperBlit(surface30, NULL, g_backBuffer, &r);
+    if (progressBackground) {
+        r.x = (640-progressBackground->w)/2;
+        r.y = (480-progressBackground->h)/2;
+        r.w = progressBackground->w;
+        r.h = progressBackground->h;
+        SDL_UpperBlit(progressBackground, NULL, g_backBuffer, &r);
     } else {
         r.x = 200;
         r.y = 195;
@@ -434,12 +441,12 @@ int ProgressDialog::draw(SDL_Surface *dst) {
             r.w = 140;
             r.h = dot->h;
             if (frame/5%4 == 0) {
-                SDL_UpperBlit(surface0c, &r, g_backBuffer, &r);
-                if (surface30) {
+                SDL_UpperBlit(backdrop, &r, g_backBuffer, &r);
+                if (progressBackground) {
                     target = r;
-                    target.x = r.x-(640-surface30->w)/2;
-                    target.y = r.y-(480-surface30->h)/2;
-                    SDL_UpperBlit(surface30, &target, g_backBuffer, &r);
+                    target.x = r.x-(640-progressBackground->w)/2;
+                    target.y = r.y-(480-progressBackground->h)/2;
+                    SDL_UpperBlit(progressBackground, &target, g_backBuffer, &r);
                 }
             }
             if (frame/5%4 == 1) SDL_UpperBlit(dot, NULL, g_backBuffer, &r);
@@ -462,23 +469,24 @@ int ProgressDialog::draw(SDL_Surface *dst) {
     if (dot) SDL_FreeSurface(dot);
     return 0;
 }
-// 0x349f0
+// 0x349f0: closes as soon as the loop gets input back (the action is done).
 int ProgressDialog::handleInput() {
     return 1;
 }
-// 0x34a14
+// 0x34a14: an empty game detail window (state restore fills it).
 GameDetailWindow::GameDetailWindow(int title, int id) : TrimusWindow(title, id) {
     type = 0;
     param = 0;
     favorite = false;
-    field84 = 0;
-    field88 = 0;
-    flag94 = true;
-    field8c = 0;
-    field98 = 0;
+    thumbnailImage = 0;
+    favoriteImage = 0;
+    animatePending = true;
+    animationCapture = 0;
+    parentMenu = 0;
     param90 = 0;
 }
-// 0x34b1c
+// 0x34b1c: a game detail window: title, item (emulator label), game path, thumbnail folder, list
+// index, window id of the list (kind) and favourite mark.
 GameDetailWindow::GameDetailWindow(int title, int id, const char *name, const char *item, const char *game, const char *icon, int index, int kind, bool fav) : TrimusWindow(title, id) {
     this->item = item;
     this->name = name;
@@ -487,53 +495,55 @@ GameDetailWindow::GameDetailWindow(int title, int id, const char *name, const ch
     type = kind;
     param = index;
     favorite = fav;
-    field84 = NULL;
-    field88 = NULL;
-    field8c = NULL;
-    flag94 = true;
+    thumbnailImage = NULL;
+    favoriteImage = NULL;
+    animationCapture = NULL;
+    animatePending = true;
     param90 = index;
-    field98 = NULL;
+    parentMenu = NULL;
     loadInfo();
 }
 // 0x34d0c (D0 0x34d98)
 GameDetailWindow::~GameDetailWindow() {
 }
-// 0x34dcc
+// 0x34dcc: free the images.
 void GameDetailWindow::onHide() {
-    if (field84) {
-        SDL_FreeSurface(field84);
-        field84 = NULL;
+    if (thumbnailImage) {
+        SDL_FreeSurface(thumbnailImage);
+        thumbnailImage = NULL;
     }
-    if (field88) {
-        SDL_FreeSurface(field88);
-        field88 = NULL;
+    if (favoriteImage) {
+        SDL_FreeSurface(favoriteImage);
+        favoriteImage = NULL;
     }
-    if (field8c) {
-        SDL_FreeSurface(field8c);
-        field8c = NULL;
+    if (animationCapture) {
+        SDL_FreeSurface(animationCapture);
+        animationCapture = NULL;
     }
 }
-// 0x34e6c
+// 0x34e6c: load the thumbnail (or the default one) and the favourite mark.
 void GameDetailWindow::onShow() {
     printf("Load thumbnail %s\n", thumbPath.c_str());
-    field84 = loadThumbnail(thumbPath.c_str(), 250, 360);
-    if (field84 == NULL) field84 = loadSkinImage(g_themePath, g_skinSubdir, "./skin/thumb-default.png", g_backBuffer, false);
-    if (favorite) field88 = loadSkinImage(g_themePath, g_skinSubdir, "skin/ic-favorite-mark.png", g_backBuffer, false);
+    thumbnailImage = loadThumbnail(thumbPath.c_str(), 250, 360);
+    if (thumbnailImage == NULL) thumbnailImage = loadSkinImage(g_themePath, g_skinSubdir, "./skin/thumb-default.png", g_backBuffer, false);
+    if (favorite) favoriteImage = loadSkinImage(g_themePath, g_skinSubdir, "skin/ic-favorite-mark.png", g_backBuffer, false);
 }
-// 0x34f84
+// 0x34f84: find the list this window was opened from (the window below it), to move through it with
+// up/down.
 void GameDetailWindow::update() {
-    if (g_windowStack && !field98) {
+    if (g_windowStack && !parentMenu) {
         if (g_windowStack->size() > 2) {
             MenuWindow *parent = (MenuWindow*)(*g_windowStack)[g_windowStack->size()-2];
-            field98 = (TextMenuDrawer*)parent->getMenu();
-            printf("parent win is %s, %d: %p\n", parent->getTitle(), parent->getId(), field98);
+            parentMenu = (TextMenuDrawer*)parent->getMenu();
+            printf("parent win is %s, %d: %p\n", parent->getTitle(), parent->getId(), parentMenu);
         }
     }
 }
-// 0x35080
+// 0x35080: wraps the game name onto up to four lines of about 15 bytes (not splitting UTF-8
+// characters), adding "-" or "...".
 void GameDetailWindow::loadInfo() {
     int length = name.length();
-    images.clear();
+    nameLines.clear();
     std::string line;
     int count = 0;
     int start = 0;
@@ -545,22 +555,22 @@ void GameDetailWindow::loadInfo() {
         start = end;
         count++;
         if (end < length && line.at(line.length()-1) != ' ' && count <= 3) line = line+"-";
-        images.push_back(line);
+        nameLines.push_back(line);
     }
     if (start < length-1) {
         if (count < 4) {
             line = name.substr(start);
-            images.push_back(line);
+            nameLines.push_back(line);
             start += line.length();
         } else {
-            line = images.back();
-            images.pop_back();
+            line = nameLines.back();
+            nameLines.pop_back();
             line += "...";
-            images.push_back(line);
+            nameLines.push_back(line);
         }
     }
 }
-// 0x353a0
+// 0x353a0: show another game.
 void GameDetailWindow::resetDetails(const char *heading, const char *label, const char *game, const char *icon, int index, int kind, bool fav) {
     name = heading;
     item = label;
@@ -570,14 +580,14 @@ void GameDetailWindow::resetDetails(const char *heading, const char *label, cons
     type = kind;
     param = index;
     favorite = fav;
-    if (field84) SDL_FreeSurface(field84);
-    field84 = loadThumbnail(thumbPath.c_str(), 250, 360);
-    if (field84 == NULL) field84 = loadSkinImage(g_themePath, g_skinSubdir, "./skin/thumb-default.png", g_backBuffer, false);
+    if (thumbnailImage) SDL_FreeSurface(thumbnailImage);
+    thumbnailImage = loadThumbnail(thumbPath.c_str(), 250, 360);
+    if (thumbnailImage == NULL) thumbnailImage = loadSkinImage(g_themePath, g_skinSubdir, "./skin/thumb-default.png", g_backBuffer, false);
     loadInfo();
 }
-// 0x35538
+// 0x35538: show the game of a list row (app or ROM).
 void GameDetailWindow::resetFromItem(TextItem *row, int index) {
-    if (row->action->result == 3) {
+    if (row->action->result == WIN_APPS) {
         AppAction *action = (AppAction*)row->action;
         AppInfo *app = action->app;
         int kind = action->result;
@@ -590,32 +600,32 @@ void GameDetailWindow::resetFromItem(TextItem *row, int index) {
         resetDetails(row->label.c_str(), emu->label.c_str(), action->rompath.c_str(), action->imgpath.c_str(), index, kind, row->favorite);
     }
 }
-// 0x356e4
+// 0x356e4: the thumbnail on the left, the list number, the wrapped name and the favourite mark.
 int GameDetailWindow::draw(SDL_Surface *dst) {
-    if (titleLabelId != 157) drawScreenFrame(dst, languageString(titleLabelId), id, true);
+    if (titleLabelId != 157) drawScreenFrame(dst, languageString(titleLabelId), id, true);   /* 157: "MIYOO" */
     else drawScreenFrame(dst, "MIYOO", id, true);
     SDL_Rect r;
-    if (field84) {
+    if (thumbnailImage) {
         int height = 360;
         SDL_Rect source;
         SDL_Rect dest;
-        if (field84->w > 250) {
+        if (thumbnailImage->w > 250) {
             source.w = 250;
-            source.x = (field84->w-250)/2;
+            source.x = (thumbnailImage->w-250)/2;
         } else {
-            source.w = field84->w;
+            source.w = thumbnailImage->w;
             source.x = 0;
         }
-        if (field84->h > height) {
+        if (thumbnailImage->h > height) {
             source.h = height;
-            source.y = (field84->h-height)/2;
+            source.y = (thumbnailImage->h-height)/2;
         } else {
-            source.h = field84->h;
+            source.h = thumbnailImage->h;
             source.y = 0;
         }
         dest.x = (250-source.w)/2;
-        dest.y = (360-field84->h)/2+60;
-        SDL_UpperBlit(field84, &source, dst, &dest);
+        dest.y = (360-thumbnailImage->h)/2+60;
+        SDL_UpperBlit(thumbnailImage, &source, dst, &dest);
     }
     if (g_numberBg && g_listNumber) {
         r.x = 280;
@@ -626,63 +636,64 @@ int GameDetailWindow::draw(SDL_Surface *dst) {
     }
     r.x = 284;
     r.w = 350;
-    if (images.size() == 0) {
+    if (nameLines.size() == 0) {
         r.y = 145;
         r.h = 35;
         drawText(dst, g_titleFont, r, name.c_str(), g_imeTextColor, 0, false);
     } else {
-        for (int i = 0; i < images.size(); i++) {
+        for (int i = 0; i < nameLines.size(); i++) {
             r.y = i*35+145;
             r.h = 35;
-            drawText(dst, g_titleFont, r, images[i].c_str(), g_imeTextColor, 0, false);
+            drawText(dst, g_titleFont, r, nameLines[i].c_str(), g_imeTextColor, 0, false);
         }
     }
-    if (field88 && favorite) {
+    if (favoriteImage && favorite) {
         r.x = 284;
         r.y = r.y+r.h+10;
-        SDL_UpperBlit(field88, NULL, dst, &r);
-        r.x = r.x+field88->w+10;
+        SDL_UpperBlit(favoriteImage, NULL, dst, &r);
+        r.x = r.x+favoriteImage->w+10;
         r.w = 630-r.x;
         r.h = 35;
         drawText(dst, g_titleFont, r, languageString(STR_FAVORITE_LOWER), g_imeTextColor, 0, false);
     }
     return 0;
 }
-// 0x35bbc
+// 0x35bbc: A/Y launch the game with its emulator; B, X or LEFT close; up/down move to the
+// previous/next game of the list.
 int GameDetailWindow::handleInput() {
     int key = handleGlobalInput(NULL);
     switch (key) {
-    case 1: case 4:
-        if (type == 5) {
-            int index = findEmuByLabelPrefix(&g_romSourcesA, item.c_str());
+    case BUTTON_A: case BUTTON_Y:
+        if (type == WIN_ROM_LIST) {
+            int index = findEmuByLabelPrefix(&g_emuFolders, item.c_str());
             printf("find emu %s return %d\n", item.c_str(), index);
-            if (index >= 0 && (unsigned)index < g_romSourcesA.size()) return launchRom(name.c_str(), &g_romSourcesA[index], launch.c_str(), thumbPath.c_str(), type);
-        } else if (type == 17) {
-            int index = findEmuByLabelPrefix(&g_romSourcesB, item.c_str());
+            if (index >= 0 && (unsigned)index < g_emuFolders.size()) return launchRom(name.c_str(), &g_emuFolders[index], launch.c_str(), thumbPath.c_str(), type);
+        } else if (type == WIN_RETROARCH_LIST) {
+            int index = findEmuByLabelPrefix(&g_rappFolders, item.c_str());
             printf("find emu %s return %d\n", item.c_str(), index);
-            if (index >= 0 && (unsigned)index < g_romSourcesB.size()) return launchRom(name.c_str(), &g_romSourcesB[index], launch.c_str(), thumbPath.c_str(), type);
+            if (index >= 0 && (unsigned)index < g_rappFolders.size()) return launchRom(name.c_str(), &g_rappFolders[index], launch.c_str(), thumbPath.c_str(), type);
         } else printf("unsupport game type %d\n", type);
         return 1;
-    case 2: case 3: case 7: return 1;
-    case 5:
-        if (field98) {
-            field98->vfunc10();
-            TextItem *row = (TextItem*)field98->getItem(field98->getCur());
-            if (row) resetFromItem(row, field98->getCur());
+    case BUTTON_B: case BUTTON_X: case BUTTON_LEFT: return 1;
+    case BUTTON_UP:
+        if (parentMenu) {
+            parentMenu->moveUp();
+            TextItem *row = (TextItem*)parentMenu->getItem(parentMenu->getCur());
+            if (row) resetFromItem(row, parentMenu->getCur());
         }
         break;
-    case 6:
-        if (field98) {
-            field98->vfunc9();
-            TextItem *row = (TextItem*)field98->getItem(field98->getCur());
-            if (row) resetFromItem(row, field98->getCur());
+    case BUTTON_DOWN:
+        if (parentMenu) {
+            parentMenu->moveDown();
+            TextItem *row = (TextItem*)parentMenu->getItem(parentMenu->getCur());
+            if (row) resetFromItem(row, parentMenu->getCur());
         }
     // The final case falls through to this shared exit in the original.
     default: break;
     }
     return -1;
 }
-// 0x35fe4
+// 0x35fe4: what /tmp/state.json keeps of this window.
 extern "C" cJSON *cJSON_CreateBool(int);
 void GameDetailWindow::saveState(cJSON *obj) {
     cJSON *a = cJSON_CreateString(name.c_str());
@@ -698,7 +709,7 @@ void GameDetailWindow::saveState(cJSON *obj) {
     cJSON *f = cJSON_CreateBool(favorite);
     cJSON_AddItemToObject(obj, "favourite", f);
 }
-// 0x36140
+// 0x36140: reads it back.
 int GameDetailWindow::restoreState(cJSON *obj) {
     cJSONItem *entry = (cJSONItem*)cJSON_GetObjectItem(obj, "gamename");
     name = entry->valuestring;
@@ -714,14 +725,14 @@ int GameDetailWindow::restoreState(cJSON *obj) {
     favorite = entry->valueint != 0;
     return 0;
 }
-// 0x36288
+// 0x36288: slides the window in from the right over the captured list (20 eased steps), once.
 void GameDetailWindow::animateIn(SDL_Surface *dst, FlipFn flip) {
-    if (flag94) {
-        flag94 = false;
+    if (animatePending) {
+        animatePending = false;
         SDL_Flip(g_screen);
-        if (field8c && param == param90) {
-            int width = field8c->w;
-            int height = field8c->h;
+        if (animationCapture && param == param90) {
+            int width = animationCapture->w;
+            int height = animationCapture->h;
             SDL_Surface *surface = createSurface(width, height);
             if (surface) {
                 int now = 0;
@@ -743,7 +754,7 @@ void GameDetailWindow::animateIn(SDL_Surface *dst, FlipFn flip) {
                     SDL_Rect dest;
                     dest.x = 0;
                     dest.y = 0;
-                    SDL_UpperBlit(field8c, &source, dst, &dest);
+                    SDL_UpperBlit(animationCapture, &source, dst, &dest);
                     source.x = 0;
                     source.y = 0;
                     source.w = x;
@@ -758,12 +769,12 @@ void GameDetailWindow::animateIn(SDL_Surface *dst, FlipFn flip) {
         }
     }
 }
-// 0x36534
+// 0x36534: slides it back out.
 void GameDetailWindow::animateOut(SDL_Surface *dst, FlipFn flip) {
-    flag94 = true;
-    if (field8c && param == param90) {
-        int width = field8c->w;
-        int height = field8c->h;
+    animatePending = true;
+    if (animationCapture && param == param90) {
+        int width = animationCapture->w;
+        int height = animationCapture->h;
         SDL_Surface *surface = createSurface(width, height);
         if (surface) {
             draw(surface);
@@ -787,25 +798,26 @@ void GameDetailWindow::animateOut(SDL_Surface *dst, FlipFn flip) {
                 source.h = height;
                 dest.x = 0;
                 dest.y = 0;
-                SDL_UpperBlit(field8c, &source, dst, &dest);
+                SDL_UpperBlit(animationCapture, &source, dst, &dest);
                 flip();
             }
             SDL_FreeSurface(surface);
         }
     }
 }
-// 0x3675c
+// 0x3675c: keep a copy of the screen to slide over.
 void GameDetailWindow::captureBackground(SDL_Surface *source) {
     if (source) {
-        field8c = createSurface(source->w, source->h);
-        if (field8c) SDL_UpperBlit(source, NULL, field8c, NULL);
+        animationCapture = createSurface(source->w, source->h);
+        if (animationCapture) SDL_UpperBlit(source, NULL, animationCapture, NULL);
     }
 }
-// 0x367d8
+// 0x367d8: timer posting EVENT_NOTIFY_TIMEOUT; the ADC info window (p11) uses it as a 500 ms
+// refresh tick.
 static unsigned detailTimeout(unsigned interval, void *arg) {
     WindowUserEvent event;
-    event.type = 24;
-    event.code = 0;
+    event.type = SDL_USEREVENT;
+    event.code = EVENT_NOTIFY_TIMEOUT;
     if (SDL_PushEvent(&event) < 0) puts("Failed to push SDL event");
     return interval;
 }

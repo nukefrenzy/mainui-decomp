@@ -5,14 +5,17 @@ int removeRecent(std::list<RecentItem>*, const char*);
 extern SDL_Surface *g_gameIcon; // 0x1821f8
 extern SDL_Surface *g_folderIcon; // 0x1821f4
 
-// 0x23548
+// 0x23548: background job of the ROM lists: loads rows [offset, offset+len) of a folder (or of a
+// search, by pinyin or Chinese pinyin) from the cache database into the items cache, skipping rows
+// already cached; each row is a game (type 0) or a subfolder, with its favourite mark, and its
+// image path goes to the data cache.
 void DBCacheWorker::run() {
     if (db != NULL) {
         std::string key;
         int i = 0;
         for (i = 0; i < len; i++) {
-            snprintf(raw04, 512, "%d", offset + i);
-            key = table + std::string("_") + raw04;
+            snprintf(sqlBuffer, 512, "%d", offset + i);
+            key = table + std::string("_") + sqlBuffer;
             void *cached = items->get(key);
             if (cached == NULL) break;
         }
@@ -20,16 +23,16 @@ void DBCacheWorker::run() {
             FILE *f = fopen("/mnt/SDCARD/Roms/favourite.json", "r");
             TextItem *item = NULL;
             if (search.length() == 0) {
-                snprintf(raw04, 512, "SELECT * FROM %s_roms WHERE ppath='%s' ORDER BY type DESC, disp LIMIT %d,%d;", dbName.c_str(), dir.c_str(), offset + i, len-i);
+                snprintf(sqlBuffer, 512, "SELECT * FROM %s_roms WHERE ppath='%s' ORDER BY type DESC, disp LIMIT %d,%d;", dbName.c_str(), dir.c_str(), offset + i, len-i);
             } else {
                 if (emu->hasCpinyin && strcmp(getLanguageFile(), "ch.lang") == 0)
-                    snprintf(raw04, 512, "SELECT * FROM %s_roms WHERE type=0 AND cpinyin like '%%%s%%' ORDER BY type DESC, disp LIMIT %d,%d;", dbName.c_str(), search.c_str(), offset + i, len-i);
+                    snprintf(sqlBuffer, 512, "SELECT * FROM %s_roms WHERE type=0 AND cpinyin like '%%%s%%' ORDER BY type DESC, disp LIMIT %d,%d;", dbName.c_str(), search.c_str(), offset + i, len-i);
                 else
-                    snprintf(raw04, 512, "SELECT * FROM %s_roms WHERE type=0 AND pinyin like '%%%s%%' ORDER BY type DESC, disp LIMIT %d,%d;", dbName.c_str(), search.c_str(), offset + i, len-i);
-                printf("mDBStrBuf = %s\n", raw04);
+                    snprintf(sqlBuffer, 512, "SELECT * FROM %s_roms WHERE type=0 AND pinyin like '%%%s%%' ORDER BY type DESC, disp LIMIT %d,%d;", dbName.c_str(), search.c_str(), offset + i, len-i);
+                printf("mDBStrBuf = %s\n", sqlBuffer);
             }
             sqlite3_stmt *stmt;
-            if (sqlite3_prepare_v2(db, raw04, -1, &stmt, NULL) == 0) {
+            if (sqlite3_prepare_v2(db, sqlBuffer, -1, &stmt, NULL) == 0) {
                 for (; i<len; i++) {
                     int rc;
                     if ((rc = sqlite3_step(stmt)) == 100) {
@@ -46,21 +49,21 @@ void DBCacheWorker::run() {
                         if (sqlite3_column_type(stmt, 1) == 3 && sqlite3_column_type(stmt, 2) == 3 && sqlite3_column_type(stmt, 4) == 1 && sqlite3_column_type(stmt, 5) == 3) {
                             if (type == 0) {
                                 bool preview = search.length() != 0 && flag;
-                                item = new TextItem(label, preview?NULL:g_gameIcon, new EmuAction(emu, label, path, image, x, true, type), true);
-                                item->str28 = emu->label;
+                                item = new TextItem(label, preview?NULL:g_gameIcon, new EmuAction(emu, label, path, image, rowWindowId, true, type), true);
+                                item->subtitle = emu->label;
                                 item->favorite = isFavourite(NULL, f, path);
-                                item->flag24 = preview;
+                                item->showThumbnail = preview;
                             } else {
-                                EmuAction *action = new EmuAction(emu, label, path, image, x, false, type);
+                                EmuAction *action = new EmuAction(emu, label, path, image, rowWindowId, false, type);
                                 action->folderArg = disp;
                                 item = new TextItem(label, g_folderIcon, action, true);
                             }
-                            if (emu->hasCpinyin && strcmp(getLanguageFile(), "ch.lang") == 0) item->str40 = cpinyin;
-                            else item->str40 = pinyin;
-                            snprintf(raw04, 512, "%d", offset + i);
-                            key = table + std::string("_") + raw04;
+                            if (emu->hasCpinyin && strcmp(getLanguageFile(), "ch.lang") == 0) item->displayLabel = cpinyin;
+                            else item->displayLabel = pinyin;
+                            snprintf(sqlBuffer, 512, "%d", offset + i);
+                            key = table + std::string("_") + sqlBuffer;
                             items->put(key, item);
-                            printf("put %s to cache , type=%d, path =%s, py=%s\n", key.c_str(), type, path, item->str40.c_str());
+                            printf("put %s to cache , type=%d, path =%s, py=%s\n", key.c_str(), type, path, item->displayLabel.c_str());
                         }
                         if (sqlite3_column_type(stmt, 3) == 3 && image[0] != 0) data->put(key, strdup(image));
                     } else {
@@ -74,129 +77,131 @@ void DBCacheWorker::run() {
         }
     }
 }
-// 0x2407c
+// 0x2407c: the rows are in: ask for a redraw.
 void DBCacheWorker::finished() {
     SDL_Event event;
-    event.type = 24;
-    event.user.code = 24;
+    event.type = SDL_USEREVENT;
+    event.user.code = EVENT_REDRAW;
     SDL_PushEvent(&event);
 }
 
-// 0x240b4
-int DBCachedTextMenu::vfunc16() {
-    int result = ListMenu::vfunc16();
+// 0x240b4: page up: move as usual, then queue the rows that came into view.
+int DBCachedTextMenu::pageUp() {
+    int result = ListMenu::pageUp();
     prefetchPrevious();
     return result;
 }
 
-// 0x240ec
-int DBCachedTextMenu::vfunc17() {
-    int result = ListMenu::vfunc17();
+// 0x240ec: the same for page down.
+int DBCachedTextMenu::pageDown() {
+    int result = ListMenu::pageDown();
     prefetchNext();
     return result;
 }
 
-// 0x24128
-int DBCachedTextMenu::vfunc9() {
-    int result = ListMenu::vfunc9();
+// 0x24128: the same for down.
+int DBCachedTextMenu::moveDown() {
+    int result = ListMenu::moveDown();
     prefetchNext();
     return result;
 }
 
-// 0x24164
-int DBCachedTextMenu::vfunc10() {
-    int result = ListMenu::vfunc10();
+// 0x24164: the same for up.
+int DBCachedTextMenu::moveUp() {
+    int result = ListMenu::moveUp();
     prefetchPrevious();
     return result;
 }
 
-// 0x241a0
+// 0x241a0: queue the six rows from the cursor down.
 void DBCachedTextMenu::prefetchNext() {
-    if (field140) {
+    if (cacheDb) {
         int offset = cur;
         int len = 6;
         if (offset + len>total)len = total-offset;
-        DBCacheWorker *worker = new DBCacheWorker(field140, str15c, dbName, offset, len, field174, &items, &data, field414, &dir, &str18, false);
+        DBCacheWorker *worker = new DBCacheWorker(cacheDb, tablePrefix, dbName, offset, len, listWindowId, &items, &data, emuInfo, &dir, &searchText, false);
         workers.addWorker(worker);
     }
 }
 
-// 0x242dc
+// 0x242dc: queue the rows above the cursor (up to five, and the cursor row).
 void DBCachedTextMenu::prefetchPrevious() {
-    if (field140) {
+    if (cacheDb) {
         int offset = cur-5;
         int len = 6;
         if (offset<0) {
             offset = 0;
             len = cur + 1;
         }
-        DBCacheWorker *worker = new DBCacheWorker(field140, str15c, dbName, offset, len, field174, &items, &data, field414, &dir, &str18, false);
+        DBCacheWorker *worker = new DBCacheWorker(cacheDb, tablePrefix, dbName, offset, len, listWindowId, &items, &data, emuInfo, &dir, &searchText, false);
         workers.addWorker(worker);
     }
 }
 
-// 0x24410
+// 0x24410: the row at index if it has been loaded, else NULL (not loaded yet).
 void *DBCachedTextMenu::getItem(int index) {
-    snprintf(raw194, 640, "%d", index);
-    std::string key = dbName + std::string("_") + raw194;
+    snprintf(keyBuffer, 640, "%d", index);
+    std::string key = dbName + std::string("_") + keyBuffer;
     void *item = items.get(key);
     if (item)return item;
     return NULL;
 }
 
-// 0x24584
-void *DBCachedTextMenu::vfunc6(int index) {
-    snprintf(raw194, 640, "%d", index);
-    std::string key = dbName + std::string("_") + raw194;
+// 0x24584: a row's image path if loaded, else NULL.
+void *DBCachedTextMenu::getItemData(int index) {
+    snprintf(keyBuffer, 640, "%d", index);
+    std::string key = dbName + std::string("_") + keyBuffer;
     void *item = data.get(key);
     if (item)return item;
     return NULL;
 }
 
-// 0x246f8
+// 0x246f8: back to the list: restore the position and load the visible page.
 void DBCachedTextMenu::restorePosition(int a, int b, int c) {
     ListMenu::restorePosition(a, b, c);
     int len = pageEnd-pageStart + 1;
     if (pageEnd == 0)len = 6;
-    DBCacheWorker *worker = new DBCacheWorker(field140, str15c, dbName, pageStart, len, field174, &items, &data, field414, &dir, &str18, false);
+    DBCacheWorker *worker = new DBCacheWorker(cacheDb, tablePrefix, dbName, pageStart, len, listWindowId, &items, &data, emuInfo, &dir, &searchText, false);
     workers.addWorker(worker);
 }
 
-// 0x24834
+// 0x24834: opens the cache database at path for the table prefix and folder, and loads the first
+// rows.
 int DBCachedTextMenu::open(const char *path, const char *table, const char *folder) {
-    if (field140) {
-        sqlite3_close(field140);
-        field140 = NULL;
+    if (cacheDb) {
+        sqlite3_close(cacheDb);
+        cacheDb = NULL;
     }
-    int rc = sqlite3_open(path, &field140);
+    int rc = sqlite3_open(path, &cacheDb);
     name = path;
-    str15c = table;
+    tablePrefix = table;
     dir = folder;
-    if (rc != 0)printf("open db %s fail, db is %p\n", path, field140);
+    if (rc != 0)printf("open db %s fail, db is %p\n", path, cacheDb);
     else {
         int len = pageEnd-pageStart + 1;
         if (pageEnd == 0)len = 5;
-        DBCacheWorker *worker = new DBCacheWorker(field140, str15c, dbName, 0, 6, field174, &items, &data, field414, &dir, &str18, false);
+        DBCacheWorker *worker = new DBCacheWorker(cacheDb, tablePrefix, dbName, 0, 6, listWindowId, &items, &data, emuInfo, &dir, &searchText, false);
         workers.addWorker(worker);
     }
     return rc;
 }
 
-// 0x24a14
-void DBCachedTextMenu::vfunc12(int index) {
+// 0x24a14: deletes the ROM at index: the file itself, its database row, its favourite and its
+// Recent entry; then recounts the folder and reloads the page.
+void DBCachedTextMenu::removeItem(int index) {
     TextItem *item = (TextItem*)getItem(index);
     if (item && item->action) {
         EmuAction *action = (EmuAction*)item->action;
         if (action->rompath.length() != 0) {
             unlink(action->rompath.c_str());
-            snprintf(raw194, 640, "DELETE FROM %s_roms WHERE path='%s'", str15c.c_str(), action->rompath.c_str());
+            snprintf(keyBuffer, 640, "DELETE FROM %s_roms WHERE path='%s'", tablePrefix.c_str(), action->rompath.c_str());
             sqlite3_stmt *stmt;
             char *err;
-            if (sqlite3_exec(field140, raw194, NULL, NULL, &err) == 0) {
-                launch_label_1a75c(item->label.c_str(), "/mnt/SDCARD/Roms/favourite.json");
+            if (sqlite3_exec(cacheDb, keyBuffer, NULL, NULL, &err) == 0) {
+                removeFavorite(item->label.c_str(), "/mnt/SDCARD/Roms/favourite.json");
                 removeRecent(&g_recentGames, action->rompath.c_str());
-                snprintf(raw194, 640, "SELECT COUNT(*) FROM %s_roms WHERE ppath='%s'", str15c.c_str(), dir.length() == 0?".":dir.c_str());
-                if (sqlite3_prepare_v2(field140, raw194, -1, &stmt, NULL) == 0) {
+                snprintf(keyBuffer, 640, "SELECT COUNT(*) FROM %s_roms WHERE ppath='%s'", tablePrefix.c_str(), dir.length() == 0?".":dir.c_str());
+                if (sqlite3_prepare_v2(cacheDb, keyBuffer, -1, &stmt, NULL) == 0) {
                     if (sqlite3_step(stmt) == 100) {
                         int n = sqlite3_column_int(stmt, 0);
                         setTotal(n);
@@ -214,7 +219,7 @@ void DBCachedTextMenu::vfunc12(int index) {
     }
 }
 
-// 0x24d28
+// 0x24d28: free callbacks of the row cache (TextItem) and the data cache (strings).
 static void deleteCachedTextItem(SDL_Surface *p) {
     TextItem *item = (TextItem*)p;
     delete item;
@@ -226,74 +231,78 @@ static void freeCachedData(SDL_Surface *p) {
     free(data);
 }
 
-// 0x24d98
-void DBCachedTextMenu::vfunc14(const char *search) {
+// 0x24d98: filters the list by a search string (pinyin initials) if anything matches: remembers the
+// position in the folder, then shows the first matches.
+void DBCachedTextMenu::setSearch(const char *search) {
     printf("search %s\n", search);
-    str18 = search;
-    if (str18.length() != 0) {
+    searchText = search;
+    if (searchText.length() != 0) {
         const int size = 512;
         char *buf = (char*)malloc(size);
         sqlite3_stmt *stmt;
-        if (field414->hasCpinyin && strcmp(getLanguageFile(), "ch.lang") == 0)
-            snprintf(buf, size, "SELECT COUNT(*) FROM %s_roms WHERE type=0 AND cpinyin like '%%%s%%'", str15c.c_str(), search);
-        else snprintf(buf, size, "SELECT COUNT(*) FROM %s_roms WHERE type=0 AND pinyin like '%%%s%%'", str15c.c_str(), search);
-        if (sqlite3_prepare_v2(field140, buf, -1, &stmt, NULL) == 0) {
+        if (emuInfo->hasCpinyin && strcmp(getLanguageFile(), "ch.lang") == 0)
+            snprintf(buf, size, "SELECT COUNT(*) FROM %s_roms WHERE type=0 AND cpinyin like '%%%s%%'", tablePrefix.c_str(), search);
+        else snprintf(buf, size, "SELECT COUNT(*) FROM %s_roms WHERE type=0 AND pinyin like '%%%s%%'", tablePrefix.c_str(), search);
+        if (sqlite3_prepare_v2(cacheDb, buf, -1, &stmt, NULL) == 0) {
             if (sqlite3_step(stmt) == 100) {
                 int n = sqlite3_column_int(stmt, 0);
                 if (n>0) {
                     printf("search %s found %d items\n", search, n);
-                    if (dir.length() != 0 && dir.compare(".") != 0)setRomListPosition(&g_romListPositions, field414->path + "/" + dir, cur, pageStart, pageEnd);
-                    else setRomListPosition(&g_romListPositions, std::string(field414->path), cur, pageStart, pageEnd);
+                    if (dir.length() != 0 && dir.compare(".") != 0)setRomListPosition(&g_romListPositions, emuInfo->path + "/" + dir, cur, pageStart, pageEnd);
+                    else setRomListPosition(&g_romListPositions, std::string(emuInfo->path), cur, pageStart, pageEnd);
                     setTotal(n);
                     items.clear();
                     data.clear();
                     cur = 0;
                     pageStart = 0;
                     pageEnd = 0;
-                    DBCacheWorker *worker = new DBCacheWorker(field140, str15c, dbName, 0, 5, field174, &items, &data, field414, &dir, &str18, false);
+                    DBCacheWorker *worker = new DBCacheWorker(cacheDb, tablePrefix, dbName, 0, 5, listWindowId, &items, &data, emuInfo, &dir, &searchText, false);
                     workers.addWorker(worker);
                 }
             }
-        } else printf("db exec at %d fail: %s\n", 0x1160, sqlite3_errmsg(field140));
+        } else printf("db exec at %d fail: %s\n", 0x1160, sqlite3_errmsg(cacheDb));
         sqlite3_finalize(stmt);
         free(buf);
     }
 }
 
-// 0x25240
+// 0x25240: a ROM list for one emulator (label, emu), whose rows' actions carry the window id arg;
+// three background loaders.
 DBCachedTextMenu::DBCachedTextMenu(const char *label, EmuInfo *emu, int arg, std::string search)
     :TextMenuDrawer(false, true, 6, NULL), workers(3), items(deleteCachedTextItem), data(freeCachedData) {
-    field140 = NULL;
+    cacheDb = NULL;
     total = 0;
     dbName = label;
-    field174 = arg;
-    field414 = emu;
-    str18 = search;
+    listWindowId = arg;
+    emuInfo = emu;
+    searchText = search;
 }
 
 // 0x2540c
 DBCachedTextMenu::~DBCachedTextMenu() {
-    if (field140)sqlite3_close(field140);
+    if (cacheDb)sqlite3_close(cacheDb);
 }
 
-// 0x25510
+// 0x25510: one text row: label, icon (value), action (deleted with the row when ownsAction).
 TextItem::TextItem(const char *text, SDL_Surface *surface, Action *a, bool flag) {
     label = text;
     value = surface;
     action = a;
-    flag1c = flag;
+    ownsAction = flag;
     favorite = false;
     removed = false;
-    flag24 = false;
-    field70 = NULL;
+    showThumbnail = false;
+    thumbnailSurface = NULL;
 }
 
 // 0x25620
 TextItem::~TextItem() {
-    if (action && flag1c)delete action;
-    if (field70)SDL_FreeSurface(field70);
+    if (action && ownsAction)delete action;
+    if (thumbnailSurface)SDL_FreeSurface(thumbnailSurface);
 }
-// 0x256f0
+// 0x256f0: a main-menu style icon with a language-string label; menu is the window id it opens and
+// arg its parameter (an EmuInfo for emulators). Note: callers pass the focused image as `normal`
+// and the normal one as `selected`; drawList uses them that way round.
 IconMenuItem::IconMenuItem(int id, const char *normal, const char *selected, SDL_Surface *bx, SDL_Surface *by, int menu, void *arg, bool own) {
     labelId = id;
     iconSurface = loadSkinImage(g_themePath, g_skinSubdir, normal, g_backBuffer, false);
@@ -309,7 +318,7 @@ IconMenuItem::IconMenuItem(int id, const char *normal, const char *selected, SDL
     menuId = menu;
 }
 
-// 0x258d4
+// 0x258d4: the same with a literal label (emulator and RetroArch icons).
 IconMenuItem::IconMenuItem(const char *text, const char *normal, const char *selected, SDL_Surface *bx, SDL_Surface *by, int menu, void *arg, bool own) {
     label = text;
     labelId = -1;
@@ -331,7 +340,7 @@ IconMenuItem::~IconMenuItem() {
     if (iconSelectedSurface)SDL_FreeSurface(iconSelectedSurface);
 }
 
-// 0x25b5c
+// 0x25b5c: reload both icons from the current theme.
 void IconMenuItem::reload() {
     if (iconSurface)SDL_FreeSurface(iconSurface);
     iconSurface = loadSkinImage(g_themePath, g_skinSubdir, icon.c_str(), g_backBuffer, false);
@@ -339,34 +348,35 @@ void IconMenuItem::reload() {
     iconSelectedSurface = loadSkinImage(g_themePath, g_skinSubdir, iconSelected.c_str(), g_backBuffer, false);
 }
 
-// 0x25c68
+// 0x25c68: the font of icon labels.
 static TTF_Font *defaultIconFont() {
     return g_iconFont;
 }
 
 Theme *findTheme(std::vector<Theme>*, const char*);
-// 0x25c8c
+// 0x25c8c: a grid of icons: rows x columns per page, optional separator lines (stripes) and page
+// dots, margins, and optionally the theme's grid offsets.
 IconMenu::IconMenu(int rows, int columns, bool stripes, bool dots, int marginX, int marginY, bool themeOffsets):ListMenu(true) {
-    field54 = columns;
-    field58 = rows;
-    flag5c = stripes;
-    flag5d = dots;
-    field68 = 0;
-    field6c = 0;
+    gridColumns = columns;
+    gridRows = rows;
+    showStripes = stripes;
+    showPageDots = dots;
+    iconCropWidth = 0;
+    iconCropHeight = 0;
     fontFn = defaultIconFont;
-    field74 = 0;
-    field60 = marginX;
-    field64 = marginY;
+    labelOffsetY = 0;
+    gridMarginX = marginX;
+    gridMarginY = marginY;
     Theme *theme = findTheme(&g_themeList, g_themePath);
-    flag9c = themeOffsets;
+    useThemeOffsets = themeOffsets;
     if (themeOffsets && theme) {
-        field90 = theme->field144;
-        field94 = theme->field140;
-        field98 = theme->field148;
+        iconOffsetX = theme->gridIconOffsetX;
+        iconOffsetY = theme->gridIconOffsetY;
+        textOffsetY = theme->gridTextOffsetY;
     } else {
-        field90 = 0;
-        field94 = 0;
-        field98 = 0;
+        iconOffsetX = 0;
+        iconOffsetY = 0;
+        textOffsetY = 0;
     }
 }
 
@@ -381,8 +391,9 @@ extern SDL_Surface *g_vertLine; // 0x1821cc
 extern SDL_Surface *g_dotActive; // 0x1821a0
 extern SDL_Surface *g_dotNormal; // 0x1821a4
 extern SDL_Color g_textColor; // 0x182298
-// 0x25efc
-void IconMenu::vfunc7(SDL_Surface *dst) {
+// 0x25efc: draws the visible page of the grid: separator lines, each icon with its background
+// (crop, offsets), its label, the page dots and the "page/total" count.
+void IconMenu::drawList(SDL_Surface *dst) {
     SDL_Surface *surface, *background;
     int x, y, width, height;
     int i;
@@ -392,51 +403,51 @@ void IconMenu::vfunc7(SDL_Surface *dst) {
     IconMenuItem *item;
     SDL_Rect rect, src;
     SDL_Color color = g_textColor;
-    if (field60>0) {
-        width = (640-field60-field60)/field54;
-        x = field60;
+    if (gridMarginX>0) {
+        width = (640-gridMarginX-gridMarginX)/gridColumns;
+        x = gridMarginX;
     } else {
-        width = 640/field54;
+        width = 640/gridColumns;
         x = 0;
     }
-    if (field64>0) {
-        height = (360-field64-field64)/field58;
-        y = field64 + 65;
+    if (gridMarginY>0) {
+        height = (360-gridMarginY-gridMarginY)/gridRows;
+        y = gridMarginY + 65;
     } else {
-        height = 360/field58;
+        height = 360/gridRows;
         y = 60;
     }
     if (items.size() == 0)return;
     {
         font = fontFn();
         if (pageStart == 0 && pageEnd == 0) {
-            pageEnd = field58*field54-1;
+            pageEnd = gridRows*gridColumns-1;
             cur = pageStart;
         }
         if (cur<pageStart) {
-            if (field58>1)pageStart = pageStart-field58*field54;
-            else pageStart = pageStart-field58;
+            if (gridRows>1)pageStart = pageStart-gridRows*gridColumns;
+            else pageStart = pageStart-gridRows;
             if (pageStart<0)pageStart = 0;
-            pageEnd = pageStart + field58*field54-1;
+            pageEnd = pageStart + gridRows*gridColumns-1;
         }
         if (cur>pageEnd) {
-            if (field58>1)pageStart = pageEnd + 1;
+            if (gridRows>1)pageStart = pageEnd + 1;
             else {
-                if (pageStart + field58 + field58*field54-1<items.size())pageStart = pageStart + field58;
+                if (pageStart + gridRows + gridRows*gridColumns-1<items.size())pageStart = pageStart + gridRows;
             }
-            pageEnd = pageStart + field58*field54-1;
+            pageEnd = pageStart + gridRows*gridColumns-1;
         }
         if ((unsigned)pageStart >= items.size())pageStart = items.size()-1;
         if ((unsigned)pageEnd >= items.size())pageEnd = items.size()-1;
-        if (flag5c && g_vertLine) {
+        if (showStripes && g_vertLine) {
             rect.y = 60;
-            for (i = 0;i<field54-1;i++) {
+            for (i = 0;i<gridColumns-1;i++) {
                 rect.x = (i + 1)*width;
                 SDL_UpperBlit(g_vertLine, NULL, dst, &rect);
             }
             if (g_listStripe) {
                 rect.x = 0;
-                for (i = 0;i<field58-1;i++) {
+                for (i = 0;i<gridRows-1;i++) {
                     rect.y = (i + 1)*height + 60;
                     SDL_UpperBlit(g_listStripe, NULL, dst, &rect);
                 }
@@ -444,8 +455,8 @@ void IconMenu::vfunc7(SDL_Surface *dst) {
         }
         for (i = pageStart;i <= pageEnd;i++) {
             index = i-pageStart;
-            row = index/field54;
-            column = index-row*field54;
+            row = index/gridColumns;
+            column = index-row*gridColumns;
             item = (IconMenuItem *)items.at(i);
             if (i == cur) {
                 surface = item->iconSurface;
@@ -462,44 +473,44 @@ void IconMenu::vfunc7(SDL_Surface *dst) {
                 SDL_UpperBlit(background, NULL, dst, &rect);
             }
             if (surface) {
-                if (field68>0 && field6c>0) {
-                    rect.x = column*width + x + (width-field68)/2;
+                if (iconCropWidth>0 && iconCropHeight>0) {
+                    rect.x = column*width + x + (width-iconCropWidth)/2;
                     rect.y = row*height + y + 15;
-                    src.x = (surface->w-field68)/2;
-                    src.y = (surface->h-field6c)/2;
-                    src.w = field68;
-                    src.h = field6c;
-                    if (flag9c) {
-                        if (field90)rect.x = field90 + column*width + (width-field68)/2;
-                        if (field94)rect.y = field94 + row*height;
+                    src.x = (surface->w-iconCropWidth)/2;
+                    src.y = (surface->h-iconCropHeight)/2;
+                    src.w = iconCropWidth;
+                    src.h = iconCropHeight;
+                    if (useThemeOffsets) {
+                        if (iconOffsetX)rect.x = iconOffsetX + column*width + (width-iconCropWidth)/2;
+                        if (iconOffsetY)rect.y = iconOffsetY + row*height;
                     }
                     SDL_UpperBlit(surface, &src, dst, &rect);
                     rect.x = column*width + x;
-                    rect.y = row*height + y + field6c + 21;
+                    rect.y = row*height + y + iconCropHeight + 21;
                 } else {
                     rect.x = column*width + x + (width-surface->w)/2;
                     rect.y = row*height + y + (height-surface->h)/2-10;
-                    if (flag9c) {
-                        if (field90)rect.x = field90 + column*width + (width-surface->w)/2;
-                        if (field94)rect.y = field94 + row*height;
+                    if (useThemeOffsets) {
+                        if (iconOffsetX)rect.x = iconOffsetX + column*width + (width-surface->w)/2;
+                        if (iconOffsetY)rect.y = iconOffsetY + row*height;
                     }
                     SDL_UpperBlit(surface, NULL, dst, &rect);
                     rect.x = column*width + x;
-                    if (field74)rect.y = row*height + y + height-field74;
+                    if (labelOffsetY)rect.y = row*height + y + height-labelOffsetY;
                     else rect.y = row*height + y + height*3/5;
                 }
             } else {
                 rect.x = column*width + x;
-                if (field74)rect.y = row*height + y + height-field74;
+                if (labelOffsetY)rect.y = row*height + y + height-labelOffsetY;
                 else rect.y = row*height + y + height*3/5;
             }
             rect.w = width;
             rect.h = 18;
-            if (flag9c && field98)rect.y = field98;
+            if (useThemeOffsets && textOffsetY)rect.y = textOffsetY;
             if (item->label.size() != 0)drawText(dst, font, rect, item->label.c_str(), color, 1, i == cur);
             else drawText(dst, font, rect, languageString(item->labelId), color, 1, i == cur);
         }
-        if (flag5d && g_dotActive && g_dotNormal) {
+        if (showPageDots && g_dotActive && g_dotNormal) {
             y = 390;
             width = items.size()*(g_dotActive->w + 5);
             x = (640-width)/2;
@@ -512,17 +523,18 @@ void IconMenu::vfunc7(SDL_Surface *dst) {
                 else SDL_UpperBlit(g_dotNormal, NULL, dst, &rect);
             }
         }
-        if (field58>1)drawPageDots_311f4(dst, cur/(field58*field54) + 1, (items.size() + field58*field54-1)/(field58*field54));
+        if (gridRows>1)drawPageCount(dst, cur/(gridRows*gridColumns) + 1, (items.size() + gridRows*gridColumns-1)/(gridRows*gridColumns));
     }
 }
 
-// 0x26fa0
+// 0x26fa0: the item at index.
 void *IconMenu::getItem(int index) {
     if (items.size() != 0)return items.at(index);
     return NULL;
 }
 
-// 0x27014
+// 0x27014: before a global search: counts the ROMs of every emulator and RetroArch app that has no
+// cache yet (for the progress count) and builds those caches.
 static int prepareGlobalRomCache() {
     int total = 0;
     // The original leaves this buffer allocated; retain that behavior.
@@ -533,60 +545,61 @@ static int prepareGlobalRomCache() {
     int count;
     int n;
     std::vector<int> countsB, countsA;
-    for (unsigned i = 0;i<g_romSourcesB.size();i++) {
-        path = strdup(g_romSourcesB[i].path.c_str());
-        base = database_strlen_20b1c(path);
-        snprintf(buf, size, "%s/%s_cache6.db", g_romSourcesB[i].path.c_str(), base);
+    for (unsigned i = 0;i<g_rappFolders.size();i++) {
+        path = strdup(g_rappFolders[i].path.c_str());
+        base = romFolderName(path);
+        snprintf(buf, size, "%s/%s_cache6.db", g_rappFolders[i].path.c_str(), base);
         free(path);
-        if (access(buf, 0) != 0)n = countDirectoryItems(g_romSourcesB[i].path, isRomFile);
+        if (access(buf, 0) != 0)n = countDirectoryItems(g_rappFolders[i].path, isRomFile);
         else n = 0;
         countsB.push_back(n);
         total += n;
     }
-    for (unsigned i = 0;i<g_romSourcesA.size();i++) {
-        path = strdup(g_romSourcesA[i].path.c_str());
-        base = database_strlen_20b1c(path);
-        snprintf(buf, size, "%s/%s_cache6.db", g_romSourcesA[i].path.c_str(), base);
+    for (unsigned i = 0;i<g_emuFolders.size();i++) {
+        path = strdup(g_emuFolders[i].path.c_str());
+        base = romFolderName(path);
+        snprintf(buf, size, "%s/%s_cache6.db", g_emuFolders[i].path.c_str(), base);
         free(path);
-        if (access(buf, 0) != 0)n = countDirectoryItems(g_romSourcesA[i].path, isRomFile);
+        if (access(buf, 0) != 0)n = countDirectoryItems(g_emuFolders[i].path, isRomFile);
         else n = 0;
         countsA.push_back(n);
         total += n;
     }
     g_progressTotal = total;
     int unused = 0;
-    for (unsigned i = 0;i<g_romSourcesB.size();i++) {
+    for (unsigned i = 0;i<g_rappFolders.size();i++) {
         n = countsB[i];
         if (n != 0) {
-            count = database_lang_22d90(&g_romSourcesB[i], 24, ".", "", buf, size);
-            printf("db %s %d items\n", g_romSourcesB[i].path.c_str(), count);
+            count = prepareRomCache(&g_rappFolders[i], 24, ".", "", buf, size);
+            printf("db %s %d items\n", g_rappFolders[i].path.c_str(), count);
         }
     }
-    for (unsigned i = 0;i<g_romSourcesA.size();i++) {
+    for (unsigned i = 0;i<g_emuFolders.size();i++) {
         n = countsA[i];
         if (n != 0) {
-            count = database_lang_22d90(&g_romSourcesA[i], 24, ".", "", buf, size);
-            printf("db %s %d items\n", g_romSourcesA[i].path.c_str(), count);
+            count = prepareRomCache(&g_emuFolders[i], 24, ".", "", buf, size);
+            printf("db %s %d items\n", g_emuFolders[i].path.c_str(), count);
         }
     }
     g_progressTotal = 0;
     return total;
 }
 
-// 0x27724
-int IconMenu::vfunc4() {
+// 0x27724: opens what the selected icon leads to: its menu window, or for the search icon
+// (WIN_SEARCH) builds the missing caches behind the busy screen and opens the keyboard.
+int IconMenu::onSelect() {
     MenuWindow *window;
     IconMenuItem *item = (IconMenuItem*)getItem(cur);
     if (item != NULL) {
-        if (item->menuId == 24) {
+        if (item->menuId == WIN_SEARCH) {
             bool unused = false;
             int count = 0;
             g_busy = 1;
             BusyData busy;
-            busy.type = 24;
+            busy.type = WIN_SEARCH;
             SDL_Thread *thread = SDL_CreateThread(busyScreenThread, &busy);
             count = prepareGlobalRomCache();
-            TrimusWindow *ime = new ImeWindow(153, new GlobalSearchAction, 153);
+            TrimusWindow *ime = new ImeWindow(STR_SEARCH, new GlobalSearchAction, STR_SEARCH);
             g_busy = 0;
             SDL_WaitThread(thread, NULL);
             g_windowStack->push_back((TrimusWindow*)ime);
@@ -601,7 +614,7 @@ int IconMenu::vfunc4() {
     } else return -1;
 }
 
-// 0x2797c
+// 0x2797c: deletes every item.
 void IconMenu::freeItems() {
     puts("IconMenu::freeListItem");
     for (int i = 0;i<items.size();i++) {
@@ -615,103 +628,105 @@ void IconMenu::addItem(void *item) {
     items.push_back(item);
 }
 
-// 0x27a68
-void IconMenu::vfunc11() {
-    if (str78.compare(g_themePath) != 0) {
+// 0x27a68: after a theme change: reload the icons and the theme's grid offsets.
+void IconMenu::reloadTheme() {
+    if (loadedThemePath.compare(g_themePath) != 0) {
         for (int i = 0;i<items.size();i++) {
             IconMenuItem *item = (IconMenuItem *)items.at(i);
             item->reload();
         }
-        str78 = g_themePath;
+        loadedThemePath = g_themePath;
         Theme *theme = findTheme(&g_themeList, g_themePath);
-        if (flag9c && theme) {
-            field90 = theme->field144;
-            field94 = theme->field140;
-            field98 = theme->field148;
+        if (useThemeOffsets && theme) {
+            iconOffsetX = theme->gridIconOffsetX;
+            iconOffsetY = theme->gridIconOffsetY;
+            textOffsetY = theme->gridTextOffsetY;
         }
     }
 }
 
-// 0x27bc4
-int IconMenu::vfunc3() {
+// 0x27bc4: grid navigation: up/down within the column, left/right to the previous/next item across
+// rows and pages (wrapping); A/Y open, B/X close, MENU passes through.
+int IconMenu::handleKey() {
     int key = handleGlobalInput(0);
     switch (key) {
-        case 5: {
+        case BUTTON_UP: {
             int index = cur-pageStart;
-            if (index >= field54)cur = pageStart + index-field54;
-            else cur = pageStart + (field58-1)*field54 + index%field54;
+            if (index >= gridColumns)cur = pageStart + index-gridColumns;
+            else cur = pageStart + (gridRows-1)*gridColumns + index%gridColumns;
             if (cur<pageStart)cur = pageStart;
             if (cur>pageEnd)cur = pageEnd;
             break;
         }
-        case 6: {
+        case BUTTON_DOWN: {
             int index = cur-pageStart;
-            if (index<(field58-1)*field54)cur = pageStart + index + field54;
-            else cur = pageStart + index%field54;
+            if (index<(gridRows-1)*gridColumns)cur = pageStart + index + gridColumns;
+            else cur = pageStart + index%gridColumns;
             if (cur<pageStart)cur = pageStart;
             if (cur>pageEnd)cur = pageEnd;
             break;
         }
-        case 7: {
+        case BUTTON_LEFT: {
             int previous = cur;
-            if (cur%field54 != 0)previous--;
-            else previous -= (field54*(field58-1) + 1);
+            if (cur%gridColumns != 0)previous--;
+            else previous -= (gridColumns*(gridRows-1) + 1);
             if (previous >= 0)cur = previous;
             else {
                 int n = count();
-                if (field58 == 1) {
+                if (gridRows == 1) {
                     cur = n-1;
                     pageEnd = cur;
-                    pageStart = cur-field54 + 1;
+                    pageStart = cur-gridColumns + 1;
                 } else {
                     cur = n-1;
                     pageEnd = cur;
-                    pageStart = ((cur + field58*field54-1)/(field58*field54))*(field58*field54);
+                    pageStart = ((cur + gridRows*gridColumns-1)/(gridRows*gridColumns))*(gridRows*gridColumns);
                 }
             }
             break;
         }
-        case 8: {
+        case BUTTON_RIGHT: {
             int next = cur;
-            if (cur%field54 == field54-1 && field58>1)next += field54*(field58-1) + 1;
+            if (cur%gridColumns == gridColumns-1 && gridRows>1)next += gridColumns*(gridRows-1) + 1;
             else next++;
             int n = count();
             if (next<n)cur = next;
-            else if (field58 == 1) {
+            else if (gridRows == 1) {
                 cur = 0;
                 pageStart = 0;
-                pageEnd = field58*field54-1;
+                pageEnd = gridRows*gridColumns-1;
             } else {
-                int start = ((cur + field54*field58-1)/(field54*field58))*(field54*field58);
-                int row = (cur%(field58*field54) + (field54-1))/field54;
+                int start = ((cur + gridColumns*gridRows-1)/(gridColumns*gridRows))*(gridColumns*gridRows);
+                int row = (cur%(gridRows*gridColumns) + (gridColumns-1))/gridColumns;
                 int total = count();
                 if (total>start) {
                     int remaining = total-start;
-                    int rows = (field54-1 + remaining)/field54;
+                    int rows = (gridColumns-1 + remaining)/gridColumns;
                     if (rows<row) {
-                        cur = (rows-1)*field54 + start;
+                        cur = (rows-1)*gridColumns + start;
                         pageStart = start;
                         pageEnd = total-1;
                     }
                 } else {
-                    cur = (row-1)*field54;
+                    cur = (row-1)*gridColumns;
                     pageStart = 0;
-                    pageEnd = field58*field54-1;
+                    pageEnd = gridRows*gridColumns-1;
                 }
             }
             break;
         }
-        case 1:case 4:return vfunc4();
-        case 2:case 3:return 1;
-        case 11:return 11;
-        case 12:break;
-        case 13:break;
+        case BUTTON_A:case BUTTON_Y:return onSelect();
+        case BUTTON_B:case BUTTON_X:return 1;
+        case BUTTON_MENU:return BUTTON_MENU;
+        case BUTTON_HOTKEY1:break;
+        case BUTTON_HOTKEY2:break;
         default:break;
     }
     return 0;
 }
 
-// 0x282d0
+// 0x282d0: one settings row: label, icon and the number of its handler (what A or left/right do;
+// see SettingMenu).
 SettingMenuItem::SettingMenuItem(int id, const char *path, int arg) {
     labelId = id;
     if (path != NULL)iconSurface = loadSkinImage(g_themePath, g_skinSubdir, path, g_backBuffer, false);
@@ -725,7 +740,7 @@ SettingMenuItem::~SettingMenuItem() {
     if (iconSurface)SDL_FreeSurface(iconSurface);
 }
 
-// 0x28408
+// 0x28408: reload the icon from the current theme.
 void SettingMenuItem::reload() {
     if (iconSurface)SDL_FreeSurface(iconSurface);
     iconSurface = loadSkinImage(g_themePath, g_skinSubdir, icon.c_str(), g_backBuffer, false);

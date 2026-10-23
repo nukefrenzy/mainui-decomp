@@ -1,4 +1,6 @@
-// On-screen keyboard. Recovered layout: 0xf0 bytes; each key is 100 bytes.
+// The on-screen keyboard (tu_13edfc.cpp): a window for typing a line of text (Wi-Fi password,
+// hotspot name, search), which it hands to an Action. Recovered layout: 0xf0 bytes; each key
+// is 100 bytes.
 #pragma once
 #include <string>
 #include <vector>
@@ -7,6 +9,17 @@
 #include "SDLTypes.h"
 #include "Action.h"
 
+// Ids of the five wide keys in the bottom row; the 40 character keys have ids 2-38 and 40-42
+// (see g_imeKeyMap and initKey).
+enum ImeKeyId {
+    IME_KEY_SHIFT = 0,      // L2
+    IME_KEY_SYMBOLS = 1,    // R2: letters <-> symbols
+    IME_KEY_SPACE = 39,     // X
+    IME_KEY_DELETE = 43,    // Y
+    IME_KEY_OK = 44,        // START
+};
+// One key: its rectangle, the character it types in each mode, and its images (button
+// background focused/normal, and for the wide keys an icon plus the hint of its button).
 struct ImeKey {
     int id;
     SDL_Rect rect;
@@ -34,15 +47,15 @@ public:
     virtual int restoreState(cJSON *obj);
     virtual void update();
 
-    SDL_Surface *btn1Focused, *btn1Normal, *btn2Focused, *btn2Normal; // +0x0c
+    SDL_Surface *btn1Focused, *btn1Normal, *btn2Focused, *btn2Normal; // +0x0c: small/wide keys
     SDL_Surface *abc, *character, *del, *l2, *ok, *r2; // +0x1c
     SDL_Surface *shift, *shiftActive, *space, *start, *xIcon, *yIcon; // +0x34
     SDL_Surface *inputImage; // +0x4c
-    int selected;
-    char text[128];
+    int selected;           // index into keys
+    char text[128];         // the text typed so far
     int length;
     std::vector<ImeKey> keys; // +0xd8
     bool shifted, symbols; // +0xe4
-    Action *callback; // +0xe8
-    const char *label;
+    Action *callback; // +0xe8: runs with the text on OK; owned (deleted with the window)
+    const char *label;      // the OK action's label (unused when drawing)
 };
