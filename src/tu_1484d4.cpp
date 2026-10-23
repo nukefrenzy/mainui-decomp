@@ -1,4 +1,4 @@
-// tu_1484d4: MultiDBCachedTextMenu, the global ROM search list (0x1484d4-0x149b54, then its template tail).
+// tu_1484d4 (0x1484d4-0x14acfc): MultiDBCachedTextMenu, the global ROM search list.
 //
 // A ROM search opens this list (MenuWindow::onShow). Every emulator and RetroArch-app folder keeps a
 // SQLite cache of its ROMs (<folder>/<name>_cache6.db, table <name>_roms); the menu opens each
@@ -29,7 +29,7 @@ class DBCacheWorker
 public:
     DBCacheWorker(sqlite3 *db, const std::string &dbName, const std::string &table, int offset, int len,
                   int rowWindowId, LruCache *items, LruCache *data, EmuInfo *emu, std::string *dir,
-                  std::string *search, bool flag);   // 0x3a74c
+                  std::string *search, bool previewSearchResults);   // 0x3a74c
     char raw[0x284];
 };
 
@@ -78,10 +78,10 @@ MultiDBCachedTextMenu::MultiDBCachedTextMenu(std::string search)
     textRowHeight = 90;
 }
 
-// Closes the databases. Original bug, kept as-is: the loop index is never initialised.
+// Closes the databases. Original bug, kept as-is: the loop index is never initialized.
 MultiDBCachedTextMenu::~MultiDBCachedTextMenu()
 {
-    for (unsigned int i; i < dbs.size(); i++)   // sic: i is never initialised
+    for (unsigned int i; i < dbs.size(); i++)   // sic: i is never initialized
         sqlite3_close(dbs[i].db);
 }
 

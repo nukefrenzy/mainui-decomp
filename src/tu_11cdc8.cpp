@@ -33,8 +33,6 @@
 #include "ConfigTypes.h"
 #include "MultiDBCachedTextMenu.h"
 extern "C" {
-
-
 int readWholeFile(const char *, FILE *, char **);
 }
 
@@ -43,7 +41,7 @@ static_assert(sizeof(EmuInfo) == 0xdc, "emulator layout");
 std::vector<std::string> g_platformPaths; // 0x182064
 char g_ioBuffer[128], g_pathBuffer[128]; // 0x182070, 0x1820f0: shared scratch buffers
 extern std::vector<EmuInfo> g_emuFolders, g_rappFolders;
-// 0x11cdc8: nearest-neighbour scaling of a 32-bit pixel block (16.16 fixed point); dst rows
+// 0x11cdc8: nearest-neighbor scaling of a 32-bit pixel block (16.16 fixed point); dst rows
 // are dw pixels plus `padding` skipped pixels.
 void scalePixels(int sx, int sy, unsigned sw, unsigned sh, unsigned dw, unsigned dh, unsigned stride, int padding, int *src, int *dst)
 {
@@ -572,7 +570,7 @@ int removeEmulatorConfigs()
 }
 
 // 0x11f790: creates the App, Roms and Imgs folders and the per-system ROM and image folders,
-// copying each emulator's licence file in (TrimUI layout; skipped on dual-partition cards).
+// copying each emulator's license file in (TrimUI layout; skipped on dual-partition cards).
 int initSdCardFolders()
 {
     if (dualPartition() != 0) return -1;
@@ -1190,7 +1188,7 @@ void parseListFont(const char *section, cJSON *root, std::string *font, std::str
     if (colorItem && cJSON_IsString(colorItem)) parseThemeColor(section, colorItem->valuestring, highlightcolor);
 }
 
-// 0x1229ec: the "grid" section: fonts, grid1x4/grid3x4 sizes, icon/text offsets, colours.
+// 0x1229ec: the "grid" section: fonts, grid1x4/grid3x4 sizes, icon/text offsets, colors.
 void parseGridFont(const char *section, cJSON *root, std::string *font, std::string *ascii, int *grid1x4, int *grid3x4, int *iconxoff1x4, int *iconyoff1x4, int *txtyoff1x4, SDL_Color *color, SDL_Color *selectedcolor)
 {
     cJSON *item, *number, *colorItem;

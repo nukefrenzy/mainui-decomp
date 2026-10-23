@@ -1,5 +1,5 @@
 // TrimusWindow: base of every window on MainUI's window stack.
-// Layout and virtual order verified byte-exact against MainUI-354-clean (see MATCHES.txt).
+// Its layout and virtual function order are the original's, so any class derived from it fits.
 #pragma once
 #include "CJsonApi.h"
 

@@ -1,4 +1,4 @@
-// Shared Wi-Fi drawable rows; kept before the owner body unwind section.
+// The custom-drawn rows of the Wi-Fi and hotspot screens (tu_138c50.cpp).
 #pragma once
 #include <stdio.h>
 #include <string>

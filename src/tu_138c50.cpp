@@ -35,8 +35,6 @@ int wifiMode()
 #include "WifiMenus.h"
 
 extern "C" {
-
-
 int getWifiOn();
 void setWifiOn(int);
 int getHotspotOn();
@@ -68,16 +66,6 @@ int findProcess(const char *, int);
 unsigned long milliseconds();
 SDL_Surface *createSurface(int, int);
 void pushWindow(TrimusWindow *);
-struct UserEvent {
-    unsigned char type;
-    int code;
-    void *data1, *data2;
-};
-union InputEvent {
-    unsigned char type;
-    UserEvent user;
-    char storage[20];
-};
 class ProgressDialog : public TrimusWindow
 {
 public:
@@ -109,7 +97,6 @@ public:
 
 static_assert(sizeof(WifiAP) == 0x114, "WifiAP layout");
 static_assert(sizeof(WifiStatus) == 0x74, "WifiStatus layout");
-static_assert(sizeof(UserEvent) == 16 && sizeof(InputEvent) == 20, "SDL event layouts");
 static_assert(sizeof(ListMenu) == 0x48 && sizeof(TextMenuDrawer) == 0xf8, "menu base layouts");
 static_assert(sizeof(WifiMenuDrawer) == 0x5c, "WifiMenuDrawer layout");
 static_assert(sizeof(WifiMenu) == 0x22fc && sizeof(HotspotMenu) == 0x5c, "Wi-Fi menu layouts");
@@ -289,7 +276,7 @@ int WifiConnectAction::execute(void *param)
     }
     int i = 0;
     WifiStatus status;
-    UserEvent ev;
+    SDL_UserEvent ev;
     do {
         usleep(1000000);
         status = queryWifiStatus();
@@ -369,7 +356,7 @@ void toggleWifi()
 // posts EVENT_WIFI_SWITCHED (or EVENT_WIFI_SWITCH_TIMEOUT).
 int WifiOnOffAction::execute(void *)
 {
-    UserEvent out;
+    SDL_UserEvent out;
     out.type = SDL_USEREVENT;
     out.code = EVENT_WIFI_SWITCHED;
     if (getHotspotOn() == 0) {
@@ -380,7 +367,7 @@ int WifiOnOffAction::execute(void *)
             setWifiScanEnable(1);
             unsigned int start = milliseconds();
             bool done = false;
-            InputEvent ev;
+            SDL_Event ev;
             while (SDL_WaitEvent(&ev)) {
                 switch (ev.type) {
                     case SDL_USEREVENT:
@@ -658,7 +645,7 @@ int WifiMenu::onUnhandledEvent(int event)
             else
                 item->connected = 0;
         }
-        UserEvent ev;
+        SDL_UserEvent ev;
         ev.type = SDL_USEREVENT;
         ev.code = EVENT_REDRAW;
         if (SDL_PushEvent(&ev) < 0) printf("%s : %d Failed to push SDL event: %s\n", wifi_function_name_4, 731, SDL_GetError());

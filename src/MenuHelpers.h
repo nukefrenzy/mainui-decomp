@@ -38,7 +38,7 @@ struct WorkerQueue { // 0x20 bytes
     BGWorker *takeWorker();
     int limit;                      // most waiting jobs kept
     SDL_mutex *mutex;               // guards workers and running
-    SDL_cond *condition;            // signalled when a job arrives or at shutdown
+    SDL_cond *condition;            // signaled when a job arrives or at shutdown
     std::list<BGWorker *> workers;  // waiting jobs, newest first
     SDL_Thread *thread;
     bool running;

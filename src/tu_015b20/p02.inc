@@ -1,5 +1,4 @@
-// p02 0x18c54-0x1a44c: actions: App, RemoveFavorite, Search, GlobalSearch, Popup*, General, Clear*, AddFavorite
-// Functions in address order.
+// tu_015b20 part p02 (0x18c54-0x1a44c): list actions (apps, favorites, search, dialogs) and the busy screens.
 
 // 0x18c54: launch the app (writes /tmp/cmd_to_run.sh; the caller then quits MainUI).
 int AppAction::execute(void *param)
@@ -151,7 +150,7 @@ int busyScreenThread(void *arg)
     return 0;
 }
 
-// 0x198a8: thread body: plain background, a centred text line and the dot animation below it.
+// 0x198a8: thread body: plain background, a centered text line and the dot animation below it.
 int loadingScreenThread(void *arg)
 {
     drawBackground(g_backBuffer);
@@ -178,7 +177,7 @@ int loadingScreenThread(void *arg)
     return 0;
 }
 
-// 0x19acc: mark the item removed from the favourites list.
+// 0x19acc: mark the item removed from the favorites list.
 int RemoveFavoriteAction::execute(void *param)
 {
     item->removed = true;
@@ -218,7 +217,7 @@ int PopupSearchIME::execute(void *param)
 // 0x19dc0: opens a yes/no dialog for an action (the pop-up that offered it closes: result 4).
 int PopupDialogAction::execute(void *param)
 {
-    DialogWindow *w = new DialogWindow(title, text, flag, action);
+    DialogWindow *w = new DialogWindow(title, text, ownsAction, action);
     pushWindow(w);
     return 4;
 }
@@ -246,7 +245,7 @@ int GeneralAction::execute(void *param)
     }
 }
 
-// 0x19f64: "Clear" in favourites: delete favourite.json and empty the list.
+// 0x19f64: "Clear" in favorites: delete favourite.json and empty the list.
 int ClearFavoriteAction::execute(void *param)
 {
     if (!unlink("/mnt/SDCARD/Roms/favourite.json")) {
@@ -293,7 +292,7 @@ int AddFavoriteAction::execute(void *param)
                     printf("add to favorite error: emu param %p\n", emu);
                 }
                 printf("add to favorite label %s, launch %s, type %d, rompath %s\n", label, launch, result, rompath);
-                if (launch != NULL && !isFavourite(0, f, rompath)) {
+                if (launch != NULL && !isFavorite(0, f, rompath)) {
                     if (cJSON_AddStringToObject(obj, "label", label) && cJSON_AddStringToObject(obj, "launch", launch) &&
                         cJSON_AddNumberToObject(obj, "type", result) && cJSON_AddStringToObject(obj, "rompath", rompath)) {
                         char *s = cJSON_PrintUnformatted(obj);

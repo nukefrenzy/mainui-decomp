@@ -1,4 +1,3 @@
-#include "PlatformApi.h"
 // tu_14f730 (0x14f730-0x150ad8): the device check MainUI runs before anything else.
 //
 // A chip on I2C bus 1 (8-bit address 0x7a; probably a vendor authentication chip) must answer a
@@ -11,6 +10,7 @@
 // Separately built vendor code: compiled with GCC 7.3.0 (deps gcc73; its .comment string is
 // MainUI's second one), -O0 -fsigned-char -fPIC. Byte arrays are unsigned. The library and
 // vendor are unknown, and the storage names are reconstructions (see the comments).
+#include "PlatformApi.h"
 typedef unsigned char byte;
 extern byte i2cRead(byte, byte, byte *, int);
 extern byte i2cWrite(byte, byte, byte *, int);

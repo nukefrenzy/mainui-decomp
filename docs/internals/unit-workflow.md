@@ -20,7 +20,7 @@ contributed. So a unit is:
    appears when the body uses the right types and headers.
 
 Draft boundaries from `tools/tusplit.py` are often wrong at the tail end; `unitcheck` reports the real
-end. Neighbours of proven units have one proven boundary, so work outward from them.
+end. Neighbors of proven units have one proven boundary, so work outward from them.
 
 ## Steps
 
@@ -308,7 +308,7 @@ the original SDK path is embedded, without modifying the fetched dependency.
 
 The full linked .rodata comparison now checks every byte, including relocated pointers,
 without masks. Keep this check alongside unit and linked-text proofs; see
-`docs/rodata-recovery.md` for examples and shared-header changes.
+[rodata-recovery.md](rodata-recovery.md) for examples and shared-header changes.
 
 ### Recover initialized storage and check unwind section order
 
@@ -328,10 +328,10 @@ the full link, raw vtables and all unit checks before accepting an unwind-order 
 Local zero definitions can use assembler .comm and be allocated after public objects.
 Check actual symbol addresses, not only the apparent source order or all-zero BSS bytes.
 Do not infer an unknown allocation from the size deficit alone. Details and unresolved
-extents: `docs/writable-data-recovery.md`.
+extents: [writable-data-recovery.md](writable-data-recovery.md).
 
 The first UI unit's iostream object illustrates local .comm ordering: public definitions
 for framebuffer/private state moved ahead of it, whereas TU-local definitions place them
 after it with the original relative offsets. This fixes order without settling an earlier
 four-byte allocation gap. A next-object address bounds an interval; it does not establish
-that every unreferenced byte belongs to the preceding array. See `docs/byte-identical-build.md` (BSS layout).
+that every unreferenced byte belongs to the preceding array. See [BSS layout](byte-identical-build.md#bss-layout).

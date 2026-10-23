@@ -1,4 +1,4 @@
-// p11 0x36838-0x39240: ADC information, window loop, menu factory and charging.
+// tu_015b20 part p11 (0x36838-0x39240): ADC info, the window loop, the menu factory and the charging screen.
 #include <fcntl.h>
 #include "../HardwareTestMenu.h"
 
@@ -142,7 +142,7 @@ void runWindowLoop(std::vector<TrimusWindow *> *windows, std::atomic<bool> *runn
     TrimusWindow *window;
     int windowId;
     int next;
-    MainEvent event;
+    SDL_Event event;
     while (SDL_PollEvent(&event)) {
     }
     g_windowStack = windows;
@@ -252,16 +252,15 @@ ListMenu *createRomListMenu(EmuInfo *emu, int id, std::string *dir, std::string 
     } else
         return NULL;
 }
-// 0x37760: absent from the original Ghidra function export.
+// 0x37760: returns the theme's small font.
 static TTF_Font *smallMenuFont()
 {
     return g_smallFont;
 }
-// The target binary replaces these constructor/append calls after compilation.
-// Keep GCC's argument setup and exception cleanup, but emit the original mov r0,r0
-// at the twelve patched BL sites. Other calls retain the ordinary R_ARM_CALL relocation.
-// This assembler macro is scoped to createMenu; the byte checker therefore checks
-// the NOPs themselves instead of masking them as unresolved calls.
+// Onion patched twelve calls in createMenu to NOPs (mov r0, r0) after compiling, which disables
+// six menu items (docs/onion-changes.md). This macro reproduces that: while createMenu is
+// assembled, a `bl` at one of the listed offsets from the function start becomes the NOP, and
+// every other call stays a normal call. The arguments are still set up, as in the original.
 asm(R"(
 .set .Lmainui_patched_calls, 0
 .macro bl target
@@ -281,8 +280,8 @@ asm(R"(
 .endm
 )");
 // 0x37784: builds the list for a window id: the main menu, the games and RetroArch icons,
-// favourites, apps, file browser, settings (and the fixes submenu), device info, hardware test,
-// Recent, language, colour and theme lists, or the ROM list of an emulator.
+// favorites, apps, file browser, settings (and the fixes submenu), device info, hardware test,
+// Recent, language, color and theme lists, or the ROM list of an emulator.
 ListMenu *createMenu(int id, std::string path)
 {
     printf("createMenu %d\n", id);

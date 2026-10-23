@@ -1,4 +1,4 @@
-// p09 0x2e424-0x3225c: MenuWindow and FloatWindow.
+// tu_015b20 part p09 (0x2e424-0x3225c): MenuWindow (the window around every list) and FloatWindow.
 // 0x2e424: a window that shows a list (built in onShow by createMenu, or the ROM list for an
 // emulator in entry) under a title from the language strings.
 MenuWindow::MenuWindow(int titleLabelId, int id, void *entry)
@@ -221,7 +221,7 @@ void MenuWindow::updateThumbnail()
         }
     }
 }
-// 0x2fb14: each frame: drop removed favourites, follow the selection with the preview, and reload
+// 0x2fb14: each frame: drop removed favorites, follow the selection with the preview, and reload
 // images after a theme change.
 void MenuWindow::update()
 {
@@ -237,7 +237,7 @@ void MenuWindow::update()
         themePath = g_themePath;
     }
 }
-// 0x2fc74: on close: save the favourites if any were removed, and remember the position in a ROM
+// 0x2fc74: on close: save the favorites if any were removed, and remember the position in a ROM
 // folder.
 void MenuWindow::onHide()
 {
@@ -263,8 +263,8 @@ void MenuWindow::onHide()
     }
 }
 // 0x2ff04: one button: the list handles it first. MENU opens the options pop-up for the row (open,
-// add to favourites, delete the ROM, search; or refresh the ROMs on the main and games menus;
-// remove or clear in favourites; clear Recent). RIGHT opens the game's detail window; START toggles
+// add to favorites, delete the ROM, search; or refresh the ROMs on the main and games menus;
+// remove or clear in favorites; clear Recent). RIGHT opens the game's detail window; START toggles
 // the full ROM path in the header.
 int MenuWindow::handleInput()
 {

@@ -1,7 +1,7 @@
-// tu_129f9c (0x129f9c-0x12ce28): the theme: fonts, images, colours and sounds.
+// tu_129f9c (0x129f9c-0x12ce28): the theme: fonts, images, colors and sounds.
 //
 // A theme is a folder (Theme.h; found by loadThemeFolder) with skin/ images, sound/
-// files and font settings. loadTheme copies its colours into globals, opens the five fonts
+// files and font settings. loadTheme copies its colors into globals, opens the five fonts
 // (English or multi-language ones, depending on the language and on the CJK font being present),
 // and loads every skin image, the volume/battery/Wi-Fi icons and the sounds into the globals
 // below, which all drawing code uses. Anything missing from the theme is taken from the default
@@ -14,18 +14,13 @@
 #include <cstddef>
 #include "Theme.h"
 extern "C" {
-void TTF_CloseFont(void *);
-int TTF_FontHeight(void *);
-
-
 void *Mix_LoadWAV_RW(void *, int);
-void Mix_FreeChunk(void *);
 const char *getLanguageFile();
 }
 bool languageFontExists();
 SDL_Surface *loadSkinImage(const char *, const char *, const char *, SDL_Surface *, bool);
 extern SDL_Surface *g_backBuffer;
-// Fonts (TTF_Font*), images (from skin/), sounds and colours set by loadTheme. Several names
+// Fonts (TTF_Font*), images (from skin/), sounds and colors set by loadTheme. Several names
 // describe where the value is used rather than the theme key it comes from.
 void *g_imeFont; // 0x18217c
 void *g_iconFont; // 0x182180
@@ -276,7 +271,7 @@ int changeLanguageFonts(Theme *theme, int *size)
     if (!g_iconFont) fprintf(stderr, lit_change_font_bold_fail_s, SDL_GetError());
     return 0;
 }
-// A copy of image drawn over the matching (centred) part of the background, so translucent
+// A copy of image drawn over the matching (centered) part of the background, so translucent
 // skin parts can be blitted later without the background behind them. NULL if no image.
 SDL_Surface *compositeThemeImage(SDL_Surface *image, SDL_Surface *background)
 {
@@ -298,7 +293,7 @@ SDL_Surface *compositeThemeImage(SDL_Surface *image, SDL_Surface *background)
     }
     return NULL;
 }
-// The built-in theme ("Default", in ./): font sizes and colours.
+// The built-in theme ("Default", in ./): font sizes and colors.
 void setDefaultTheme(Theme *theme)
 {
     theme->name = lit_default;

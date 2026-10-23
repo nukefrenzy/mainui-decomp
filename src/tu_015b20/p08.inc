@@ -1,4 +1,4 @@
-// p08 0x2b788-0x2e424: colour/language/theme menus and file navigation.
+// tu_015b20 part p08 (0x2b788-0x2e424): color, language, theme and file-browser menus.
 extern bool g_customDisplayTiming; // 0x17e6ec
 extern Theme g_skin; // 0x181974
 Theme *findTheme(std::vector<Theme> *, const char *);
@@ -12,7 +12,7 @@ void zipCloseEntry(ZipEntry *); // 0x14d858
 void zipClose(ZipFile *); // 0x14da1c
 }
 
-// 0x2b788: the display colour menu (WIN_COLOR): lightness, hue, saturation and contrast, each 0-20.
+// 0x2b788: the display color menu (WIN_COLOR): lightness, hue, saturation and contrast, each 0-20.
 ColorMenu::ColorMenu() : TextMenu(false, true, 6, NULL)
 {
     loadItems();
@@ -350,11 +350,7 @@ int FileAction::execute(void *param)
             if (type >= 0 && (unsigned)type < g_emuFolders.size()) return launchRom(item->label.c_str(), &g_emuFolders[type], path.c_str(), NULL, WIN_ROM_LIST);
         }
     } else if (kind == FILE_KIND_DIRECTORY) {
-        struct FileEvent {
-            unsigned char type;
-            int code;
-            void *data1, *data2;
-        } event;
+        SDL_UserEvent event;
         event.type = SDL_USEREVENT;
         event.code = EVENT_OPEN_DIRECTORY;
         event.data1 = (void *)path.c_str();
@@ -364,7 +360,7 @@ int FileAction::execute(void *param)
 }
 
 // 0x2d574: which files the browser lists: ROMs of a known extension, update zips that contain an
-// "updater" entry, and licence files.
+// "updater" entry, and license files.
 static bool fileBrowserFilter(const char *name, const char *path)
 {
     if (findEmuForFile(name) >= 0) return true;
@@ -551,7 +547,7 @@ void LoadSurfaceWorker::run()
 // 0x2e3ec: the image is in: ask for a redraw.
 void LoadSurfaceWorker::finished()
 {
-    MainEvent event;
+    SDL_Event event;
     event.type = SDL_USEREVENT;
     event.user.code = EVENT_REDRAW;
     SDL_PushEvent(&event);

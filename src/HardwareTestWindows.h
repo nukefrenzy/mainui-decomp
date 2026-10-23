@@ -1,4 +1,4 @@
-// Hardware-test window layouts, proven with tu_04cb68.cpp.
+// The factory hardware-test windows (keys, LCD, sound, SD card; tu_04cb68.cpp).
 #pragma once
 #include "TrimusWindow.h"
 #include "CJsonApi.h"

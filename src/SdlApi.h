@@ -1,5 +1,5 @@
 // The SDL 1.2, SDL_ttf, SDL_mixer and SDL_image functions MainUI calls, declared once. The
-// recovered code uses its own minimal structs (SDLTypes.h) instead of the SDL headers, so fonts,
+// code here uses its own minimal structs (SDLTypes.h) instead of the SDL headers, so fonts,
 // sounds and music are plain pointers and events are passed as void * (each file keeps the
 // SDL_Event layout it needs). C and C++.
 #pragma once

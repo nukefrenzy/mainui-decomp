@@ -29,19 +29,7 @@ static_assert(sizeof(RomListPosition) == 36, "ROM position record");
 struct SDL_mutex;
 struct SDL_cond;
 struct SDL_Thread;
-// SDL 1.2 SDL_Event as MainUI posts it (SDL_USEREVENT with a code).
-union MainEvent {
-    unsigned char type;
-    struct {
-        unsigned char type;
-        int code;
-        void *data1, *data2;
-    } user;
-    char storage[20];
-};
 extern "C" {
-
-
 int GetKeyShm(void *, int);
 int SetKeyShm(void *, int, int);
 int readAxpStatus(int *, int *, int *);
@@ -143,7 +131,7 @@ void appExit(int code)
 void pollBatteryStatus()
 {
     int battery = GetKeyShm(g_keyShm, MONITOR_ADC_VALUE);
-    MainEvent event;
+    SDL_Event event;
     int bat, voltage, plug;
     readAxpStatus(&bat, &voltage, &plug);
     plug = plug == 2 || plug == 3;   // charger connected
@@ -173,7 +161,7 @@ void pollWifiStatus()
     }
     if (changed) {
         g_lastWifiState = state;
-        MainEvent event;
+        SDL_Event event;
         event.type = SDL_USEREVENT;
         event.user.code = EVENT_WIFI_STATUS;
         if (SDL_PushEvent(&event) < 0) puts("Failed to push SDL event");
@@ -189,12 +177,12 @@ void pollVolumeChange()
         g_lastVolumeTime = now;
         printf("volume change %ld\n", g_lastVolumeTime);
         SetKeyShm(g_keyShm, MONITOR_VOLUME_CHANGED, 0);
-        MainEvent event;
+        SDL_Event event;
         event.type = SDL_USEREVENT;
         event.user.code = EVENT_VOLUME_SHOWN;
         if (SDL_PushEvent(&event) < 0) puts("Failed to push SDL event");
     } else if (now - g_lastVolumeTime > 3000) {
-        MainEvent event;
+        SDL_Event event;
         event.type = SDL_USEREVENT;
         event.user.code = EVENT_VOLUME_HIDDEN;
         if (SDL_PushEvent(&event) < 0) puts("Failed to push SDL event");
@@ -222,7 +210,7 @@ int statusPollThread(void *arg)
 // hotplugLoop callback: posts EVENT_HOTPLUG when sound card 2 (/dev/dsp1) is plugged or unplugged.
 void pushHotplugEvent(int card, int plugged)
 {
-    MainEvent event;
+    SDL_Event event;
     event.type = SDL_USEREVENT;
     event.user.code = EVENT_HOTPLUG;
     if (card == 2) {

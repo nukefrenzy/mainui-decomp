@@ -1,5 +1,4 @@
-// p04 0x1d9d8-0x20500: ListMenu base slots, TextMenuDrawer
-// Functions in address order.
+// tu_015b20 part p04 (0x1d9d8-0x20500): ListMenu navigation and TextMenuDrawer drawing.
 #include <sys/time.h>   // gettimeofday (no inline functions, so it does not move the tail)
 
 extern SDL_Color g_highlightColor;     // 0x18228c (only drawListNumber uses it)
@@ -242,7 +241,7 @@ SDL_Surface *TextMenuDrawer::makeSelectedBackground(SDL_Surface *src)
     return sel;
 }
 
-// 0x1e868: draw `n` (at most 9999, as "%04d") centred in `rect`: digit images from g_listNumber
+// 0x1e868: draw `n` (at most 9999, as "%04d") centered in `rect`: digit images from g_listNumber
 // (ten digits side by side) over g_numberBg, or plain text when the theme has no such images.
 // Returns the width drawn. Called by GameDetailWindow::draw.
 int drawListNumber(int n, SDL_Rect *rect, SDL_Surface *dst, TTF_Font *font)
@@ -275,7 +274,7 @@ int drawListNumber(int n, SDL_Rect *rect, SDL_Surface *dst, TTF_Font *font)
     }
 }
 
-// 0x1ec00 (not in the Ghidra export, unreferenced): cut the UTF-8 string `s` (`len` bytes) to
+// 0x1ec00 (unreferenced): cut the UTF-8 string `s` (`len` bytes) to
 // about `width` columns (ASCII 1, other characters 1.5) and end it with up to three dots.
 int truncateUtf8(char *s, int len, int width)
 {
@@ -312,7 +311,7 @@ int truncateUtf8(char *s, int len, int width)
 
 // 0x1ede4: draw a row label with the part matching the search `key` (found through the pinyin
 // `initials`) in g_accentColor. Align 0/3 draws left to right, 2/4 right to left, anything else
-// centred (pieces drawn with align 3).
+// centered (pieces drawn with align 3).
 void TextMenuDrawer::drawHighlighted(SDL_Surface *dst, TTF_Font *font, SDL_Rect rect,
                                      const char *text, SDL_Color color, int align, bool shadow,
                                      const char *key, const char *initials)
@@ -404,7 +403,7 @@ void TextMenuDrawer::freeSelectedBackground(bool really)
 // current item, then per row: row background, selection background, icon (TextItem::value is an
 // SDL_Surface* here), the label with the search match highlighted, or for two-line items
 // (showThumbnail) a 71x71 thumbnail (thumbnailSurface, loaded from thumbnailPath), the label and str28 below it; finally
-// the favourite mark.
+// the favorite mark.
 void TextMenuDrawer::drawList(SDL_Surface *dst)
 {
     int i;

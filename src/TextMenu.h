@@ -1,4 +1,5 @@
-// Text-row menu shared with hardware tests; preserve inline definition order.
+// TextMenu: a list of text rows (TextItem), used by most menus and the hardware tests. Keep the
+// inline functions in this order; it decides where the compiler places them.
 #pragma once
 #include <stdio.h>
 #include "TextMenuDrawer.h"

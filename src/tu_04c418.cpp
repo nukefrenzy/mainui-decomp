@@ -2,8 +2,7 @@
 //
 // A list is a pointer to its head node; the last node points back to the head, and an empty
 // list is NULL. Functions that can change the head return the new one. Nothing in MainUI calls
-// these. 1,872 bytes, ten functions, no generated tail; the 0x04c418 and 0x04c7a8 starts are
-// missing from the Ghidra export.
+// these. 1,872 bytes, ten functions, no generated tail.
 #include <cstdlib>
 struct RingNode {
     void *value;

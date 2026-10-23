@@ -5,12 +5,6 @@
 // drawing code looks it up. Body 2,348 bytes plus 110 generated functions.
 #include "MenuHelpers.h"
 #include "SdlApi.h"
-extern "C" {
-void SDL_DestroyMutex(SDL_mutex *);
-int SDL_mutexV(SDL_mutex *);
-void SDL_DestroyCond(SDL_cond *);
-int SDL_CondWait(SDL_cond *, SDL_mutex *);
-}
 static_assert(sizeof(LruCache) == 0x14 && sizeof(WorkerQueue) == 0x20, "helper layouts");
 LruCache::LruCache(void (*callback)(SDL_Surface *))
 {

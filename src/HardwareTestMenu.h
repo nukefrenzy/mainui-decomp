@@ -1,5 +1,5 @@
+// HardwareTestMenu: the Settings > Hardware Test list (built by createMenu). Include after TextMenu.h.
 #pragma once
-// Include after the TextMenu definition; shared with the main menu factory.
 class HardwareTestMenu : public TextMenu
 {
 public:

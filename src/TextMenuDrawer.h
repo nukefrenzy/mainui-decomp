@@ -1,4 +1,5 @@
-// Drawing base for text rows; included after Action helpers to preserve the main UI tail order.
+// TextMenuDrawer: draws lists of text rows. Include it after the Action headers: include order
+// decides where the compiler places inline code (docs/internals/unit-workflow.md, "Tail order").
 #pragma once
 #include "ListMenu.h"
 

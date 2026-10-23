@@ -53,7 +53,7 @@ addr	name	subsystem	confidence	comment
 0001a4bc	saveFavorites	power	confirmed	Byte-exact source: src/tu_015b20.cpp.
 0001a75c	removeFavorite	launch	confirmed	Byte-exact source: src/tu_015b20.cpp.
 0001a924	buildFavoriteList	render	confirmed	Byte-exact source: src/tu_015b20.cpp.
-0001b210	isFavourite	config	confirmed	Byte-exact source: src/tu_015b20.cpp.
+0001b210	isFavorite	config	confirmed	Byte-exact source: src/tu_015b20.cpp.
 0001b488	buildRecentList	config	confirmed	Byte-exact source: src/tu_015b20.cpp.
 0001bbfc	buildAppList	config	confirmed	Byte-exact source: src/tu_015b20.cpp.
 0001bea4	setLcdColor	display	confirmed	Byte-exact source: src/tu_015b20.cpp.
@@ -86,14 +86,14 @@ addr	name	subsystem	confidence	comment
 0001e3f8	TextMenuDrawer::~TextMenuDrawer	ui_framework	confirmed	Byte-exact (p04).
 0001e4e4	TextMenuDrawer::deletingDtor	ui_framework	confirmed	Byte-exact deleting dtor (p04).
 0001e518	TextMenuDrawer::onSelect	ui_framework	confirmed	Byte-exact onSelect shared by text menus (p04): getItem(cur)->action->execute(item), -1 if none or negative.
-0001e5d0	TextMenuDrawer::reloadTheme	ui_framework	confirmed	Byte-exact slot 11 (p04): reload selection background and favourite mark after a theme change.
+0001e5d0	TextMenuDrawer::reloadTheme	ui_framework	confirmed	Byte-exact slot 11 (p04): reload selection background and favorite mark after a theme change.
 0001e76c	TextMenuDrawer::makeSelectedBackground	ui_framework	confirmed	Byte-exact (p04): copy a surface into a new 32-bit RGBA surface; no caller found.
 0001e868	drawListNumber	render	confirmed	Byte-exact (p04): draw n (<=9999, %04d) with g_listNumber digits over g_numberBg, else text; called by GameDetailWindow::draw.
 0001ec00	truncateUtf8	render	confirmed	Byte-exact (p04): cut a UTF-8 string to a width (ASCII 1, other 1.5) and add dots; unreferenced; missed by Ghidra export.
-0001ede4	TextMenuDrawer::drawHighlighted	ui_framework	confirmed	Byte-exact (p04): row label with the pinyinFind search match drawn in the highlight colour.
+0001ede4	TextMenuDrawer::drawHighlighted	ui_framework	confirmed	Byte-exact (p04): row label with the pinyinFind search match drawn in the highlight color.
 0001f5e0	TextMenuDrawer::setBackground	ui_framework	confirmed	Byte-exact (p04): load a skin image into +0x54 and remember it; no caller found.
 0001f694	TextMenuDrawer::freeSelectedBackground	ui_framework	confirmed	Byte-exact (p04): no caller found.
-0001f6f0	TextMenuDrawer::drawList	ui_framework	confirmed	Byte-exact draw (p04): page clamp, row/selection backgrounds, icon, highlighted label or thumbnail + two lines, favourite mark.
+0001f6f0	TextMenuDrawer::drawList	ui_framework	confirmed	Byte-exact draw (p04): page clamp, row/selection backgrounds, icon, highlighted label or thumbnail + two lines, favorite mark.
 000204d4	TextMenuDrawer::handleKey	ui_framework	confirmed	Byte-exact slot 3 (p04): ListMenu::vfunc3().
 00020500	TextMenu::TextMenu	ui_framework	confirmed	Byte-exact ctor: TextMenuDrawer(a, b, c, background), empty item vector at +0xf8.
 00020570	TextMenu::~TextMenu	ui_framework	confirmed	Byte-exact dtor: frees the items via slot 18.
@@ -4841,9 +4841,9 @@ addr	name	subsystem	confidence	comment
 0014fa34	xorSwapHalves	misc	confirmed	Byte-exact source: src/tu_14f730.c.
 0014fb40	rotateBytesRight	misc	confirmed	Byte-exact source: src/tu_14f730.c.
 0014fbfc	transformDeviceBlock	misc	confirmed	Byte-exact source: src/tu_14f730.c.
-001500b4	runtime_500b4	lib_runtime	library	
-00150320	runtime_50320	lib_runtime	library	
-00150504	runtime_50504	lib_runtime	library	
+001500b4	beginDeviceAuth	device	confirmed	Byte-exact source: src/tu_14f730.c.
+00150320	sendDeviceKey	device	confirmed	Byte-exact source: src/tu_14f730.c.
+00150504	authenticateDevice	device	confirmed	Byte-exact source: src/tu_14f730.c.
 00150ad8	runtime_50ad8	lib_runtime	library	
 00150cc4	runtime_50cc4	lib_runtime	library	
 00150ce4	runtime_50ce4	lib_runtime	library	

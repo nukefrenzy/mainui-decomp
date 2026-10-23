@@ -6,8 +6,7 @@
 // then every other .lang file, sorted by file name. languageString() returns a string in the
 // language chosen in system.json. For each language it also writes a reduced <lang>.short with
 // ids 88-155 (see tu_14da50.c). Languages other than English need the CJK font on the SD card.
-// Body 4,768 bytes plus 110 generated functions; the draft start 0x133f60 was part of the
-// preceding file's allocator tail.
+// Body 4,768 bytes plus 110 generated functions.
 #include "PlatformApi.h"
 #include "CJsonApi.h"
 #include <cstdio>
@@ -19,12 +18,6 @@
 #include "Language.h"
 struct cJSON;
 extern "C" {
-void cJSON_Delete(cJSON *);
-
-void cJSON_free(void *);
-const char *cJSON_GetErrorPtr();
-
-
 int readWholeFile(const char *, FILE *, char **);
 const char *getLanguageFile();
 }

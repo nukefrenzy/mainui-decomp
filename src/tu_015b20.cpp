@@ -1,7 +1,12 @@
-// tu_015b20 (0x15b20-0x49c3c), the first and largest file. The part files below are included
-// textually in address order, so the whole compiles as one translation unit.
+// tu_015b20 (0x15b20-0x49c3c): the main user interface, MainUI's largest source file.
 //
-// Header/inline definition order reproduces the 798-section tail; see the integration notes.
+// Drawing helpers, the window stack and loop, every menu and dialog, launching, favorites and the
+// menu factory. It is split into the part files tu_015b20/p01.inc-p11.inc, included below in
+// address order so the whole still compiles as one translation unit; tu_015b20.h holds the
+// declarations they share.
+//
+// Header/inline definition order reproduces the 798-function template tail (see
+// docs/internals/unit-workflow.md, "Tail order").
 // <string> supplies the first char_traits helpers; <iostream> follows the UI declarations so
 // its system-error string helpers do not precede the ListMenu/TextMenu vector instantiations.
 // The static init (0x39228) constructs std::ios_base::Init and then the pending window queue.
@@ -16,8 +21,8 @@
 std::vector<TrimusWindow *> *g_windowStack; // 0x17ff38
 std::vector<TrimusWindow *> g_pendingWindows;
 
-// Recovered POD storage. Original addresses describe the target, not this partial link.
-unsigned char g_deviceId[5]; // 0x17ff48: consumed extent; original full allocation size unknown
+// Global variables. Each comment gives the address in the original binary.
+unsigned char g_deviceId[5]; // 0x17ff48: the five device-id bytes; the full size is unknown
 unsigned int g_unrefBss_17ff50; // 0x17ff50: unreferenced storage at this address in the Onion and stock builds; size and position proven, name, type and partition unknown
 char g_launchCmd[2048]; // 0x17ff54
 char g_countBuffer[256]; // 0x180754

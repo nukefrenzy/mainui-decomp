@@ -1,12 +1,12 @@
 // Window ids: the `id` of every TrimusWindow and the menu a MenuWindow shows (createMenu(id),
 // tu_015b20/p11.inc). Main-menu icons carry the id of the menu they open, a window's id is
-// saved in /tmp/state.json to reopen it after a launch, and the favourites file records the id
+// saved in /tmp/state.json to reopen it after a launch, and the favorites file records the id
 // of the list a game was added from. Only WIN_SETTING and WIN_FIXES are original names (they
 // survive in log messages); the rest are named after what createMenu builds. Values only.
 #pragma once
 
 enum WindowId {
-    WIN_MAIN = 0,            // the main menu: Recent, Favourites, Games, RetroArch, Apps, Settings
+    WIN_MAIN = 0,            // the main menu: Recent, Favorites, Games, RetroArch, Apps, Settings
     WIN_GAMES = 1,           // emulator icons (one per Emu/ folder)
     WIN_FAVORITES = 2,       // /mnt/SDCARD/Roms/favourite.json
     WIN_APPS = 3,            // App/ folders
@@ -23,7 +23,7 @@ enum WindowId {
     WIN_LANGUAGE = 14,
     WIN_RETROARCH = 16,      // RetroArch-app icons (one per RApp/ folder)
     WIN_RETROARCH_LIST = 17, // one RetroArch app's games
-    WIN_COLOR = 18,          // display colour settings
+    WIN_COLOR = 18,          // display color settings
     WIN_THEME = 19,
     WIN_FIXES = 20,          // the "Fixes" settings (audio fix)
     WIN_WIFI = 21,

@@ -1,5 +1,4 @@
 // MenuWindow: one screen holding a ListMenu. sizeof == 0x11c.
-// Offsets verified byte-exact against MainUI-354-clean (see MATCHES.txt).
 #pragma once
 #include <string>
 #include "CJsonApi.h"
@@ -38,7 +37,7 @@ public:
     std::string shownImageKey;           // +0x20  selected thumbnail cache key
     SDL_Surface *previewImage;         // +0x38  thumbnail borrowed from thumbnailCache
     std::string pendingImageKey;           // +0x3c  thumbnail key awaiting a worker
-    bool rightOpensDetail;         // +0x54  initialised to true
+    bool rightOpensDetail;         // +0x54  initialized to true
     SDL_Surface *cachedScreen;       // +0x58  freed in destructor
     void *emuEntry;        // +0x5c  emulator / RetroArch app entry for ROM lists (ids 5, 0x11)
     WorkerQueue thumbnailLoader;        // +0x60

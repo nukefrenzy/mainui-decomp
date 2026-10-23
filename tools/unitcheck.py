@@ -13,7 +13,7 @@ discarded. So:
    file). Many tiny templates have identical code (std::forward, std::move, trivial ctors), so
    the walk backtracks over that choice. The end of the walk is the unit's real end; it is
    compared with docs/tu-map.tsv. Proven units must finish at their recorded end; --end can
-   require a known neighbouring boundary while proving a draft unit. This forces backtracking
+   require a known neighboring boundary while proving a draft unit. This forces backtracking
    past short layouts that discard byte-identical pointer templates found in earlier files.
 3. If no such layout exists, the walk reports where it breaks, and each section is then matched
    to its first identical code in the tail and listed in binary order with its object order, so an

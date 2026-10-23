@@ -1,10 +1,8 @@
-// p07 0x2849c-0x2b788: settings controls, actions and device information.
+// tu_015b20 part p07 (0x2849c-0x2b788): the settings and device-information menus, display panel setup.
 #include "../KeySettingWindow.h"
 #include "../KeyTestWindow2.h"
 #include "../WifiMenus.h"
 extern "C" {
-
-
 void setKeymap(const char *);
 void setLanguageFile(const char *);
 int MI_SYS_ReadUuid(unsigned long long *);
@@ -334,8 +332,8 @@ static int resetEmulatorSettings(void *arg)
     return 1;
 }
 
-// 0x29c74: factory reset: also deletes favourites, system.json and the saved list positions,
-// restores the default volume, brightness and colours, clears Recent, the keymap and the language.
+// 0x29c74: factory reset: also deletes favorites, system.json and the saved list positions,
+// restores the default volume, brightness and colors, clears Recent, the keymap and the language.
 static int resetAllSettings(void *arg)
 {
     resetEmulatorSettings(NULL);
@@ -362,7 +360,7 @@ static int resetAllSettings(void *arg)
 }
 
 // 0x29dc8: A on a row: opens what it stands for (device info, fixes, IO test, ADC info, language,
-// key setting, colour, themes, Wi-Fi, hotspot) or asks to confirm a reset or power-off.
+// key setting, color, themes, Wi-Fi, hotspot) or asks to confirm a reset or power-off.
 void SettingMenu::select()
 {
     SettingMenuItem *item = (SettingMenuItem *)items[cur];

@@ -58,7 +58,7 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `saveFavorites(char const*, std::vector<void*>*)` | 0x1a4bc | 672 | tu_015b20.cpp |
 | `removeFavorite(char const*, char const*)` | 0x1a75c | 456 | tu_015b20.cpp |
 | `buildFavoriteList(char const*)` | 0x1a924 | 2284 | tu_015b20.cpp |
-| `isFavourite(char*, FILE*, char const*)` | 0x1b210 | 632 | tu_015b20.cpp |
+| `isFavorite(char*, FILE*, char const*)` | 0x1b210 | 632 | tu_015b20.cpp |
 | `buildRecentList(std::list<RecentItem>*)` | 0x1b488 | 1908 | tu_015b20.cpp |
 | `buildAppList(std::vector<AppInfo>*)` | 0x1bbfc | 680 | tu_015b20.cpp |
 | `setLcdColor(int, int, int, int)` | 0x1bea4 | 236 | tu_015b20.cpp |

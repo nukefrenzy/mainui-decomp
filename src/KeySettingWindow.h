@@ -1,4 +1,4 @@
-// Button-mapping screen (see tu_1376fc.cpp): recovered 0x15c-byte layout.
+// KeySettingWindow: the button-mapping screen (tu_1376fc.cpp), 0x15c bytes.
 #pragma once
 #include <string>
 #include "CJsonApi.h"

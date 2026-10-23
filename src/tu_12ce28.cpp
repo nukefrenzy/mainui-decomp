@@ -2,8 +2,7 @@
 //
 // loadDirectory lists one folder as TextItem rows (folders and the files the filter accepts),
 // sorted by name; FileBrowserCache (FileBrowserCache.h) keeps the folders already visited.
-// Body 4,780 bytes plus 105 inline/template functions; the draft tu_12ef8c was part of this
-// file's generated tail.
+// Body 4,780 bytes plus 105 inline/template functions.
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>

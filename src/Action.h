@@ -1,4 +1,5 @@
-// Shared action ABI: result at +4; execute, progress, finished are slots 2-4.
+// Action: what a list row does when chosen. `result` is at +4; execute, progress and finished
+// are virtual slots 2-4.
 #pragma once
 class Action
 {

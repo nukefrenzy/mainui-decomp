@@ -1,5 +1,4 @@
-// p05 0x20500-0x23548: TextMenu, database/ROM-scan helpers
-// Functions in address order.
+// tu_015b20 part p05 (0x20500-0x23548): TextMenu and the ROM cache database (scan, gamelist.xml import).
 #include <sys/time.h>
 #include <fstream>
 #include <iterator>
@@ -243,7 +242,7 @@ int importGameList(const char *xml, int arg, const char *table, sqlite3 *db)
     return count;
 }
 
-// 0x21818: true if a directory entry is not a ROM of this emulator (hidden files, BIOS, licences,
+// 0x21818: true if a directory entry is not a ROM of this emulator (hidden files, BIOS, licenses,
 // saves, or an extension outside the emulator's list; a .bin with a matching .cue).
 bool isHiddenRomFile(EmuInfo *emu, const char *path, const char *name, int hideBios)
 {

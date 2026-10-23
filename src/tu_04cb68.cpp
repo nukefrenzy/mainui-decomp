@@ -1,7 +1,7 @@
 // tu_04cb68 (0x04cb68-0x051b5c): the factory hardware tests (Settings > Hardware Test).
 //
 // HardwareTestMenu lists six tests, each with a PASS/FAIL/UNTEST result: keys (press each button
-// in turn within 12 s), LCD (colour bars), sound (music at three volumes), USB host (type on a
+// in turn within 12 s), LCD (color bars), sound (music at three volumes), USB host (type on a
 // USB keyboard), SD card (write and read back 2 MiB, with speeds) and a stress test (run a
 // bundled arcade ROM; the menu shows how long it has run). Results are saved together with the
 // device serial and only shown again on the same device. KeyTestWindow2 ("IO Test") lights up
@@ -23,7 +23,7 @@
 #include "WindowIds.h"
 
 // Button codes in the tests: the original numbering (keyEventName's "key_*" names), which is
-// MainButton's except that START is 9 and SELECT 10, and L2/R2 are 12/13, labelled L and R.
+// MainButton's except that START is 9 and SELECT 10, and L2/R2 are 12/13, labeled L and R.
 // 14-17 only occur in the IO test.
 enum TestKey {
     TEST_A = 1,
@@ -58,26 +58,9 @@ enum {
     TEST_FAIL = -1
 };
 extern "C" {
-
-
 SDL_Surface *TTF_RenderUTF8_Blended(void *, const char *, SDL_Color);
 }
 
-// SDL 1.2 SDL_Event as the tests read it.
-union HardwareEvent {
-    unsigned char type;
-    struct {
-        unsigned char type, which, state, padding, scan;
-        int key, mod;
-        unsigned short unicode;
-    } keyboard;
-    struct {
-        unsigned char type;
-        int code;
-        void *data1, *data2;
-    } user;
-    char bytes[20];
-};
 extern char *g_themePath;
 extern SDL_Surface *g_backBuffer;
 extern void *g_imeFont;
@@ -100,11 +83,11 @@ int saveTestResults(int *);
 // return the event's (meaningless) code field, as in the original.
 int readTestInput()
 {
-    HardwareEvent event;
+    SDL_Event event;
     while (SDL_WaitEvent(&event)) {
         switch (event.type) {
             case SDL_KEYUP:
-                switch (event.keyboard.key) {
+                switch (event.key.keysym.sym) {
                     case MIYOO_KEY_UP: return TEST_UP;
                     case MIYOO_KEY_DOWN: return TEST_DOWN;
                     case MIYOO_KEY_LEFT: return TEST_LEFT;
@@ -182,7 +165,7 @@ const char *SDLKeyTestWindow::keyName(int key)
     }
 }
 
-// Draws text aligned in bounds (align 0 left, 1 centre, 2 right) with the bytes
+// Draws text aligned in bounds (align 0 left, 1 center, 2 right) with the bytes
 // [begin, begin+length) in red, e.g. the key to press. Returns the width.
 int drawHighlightedText(SDL_Surface *dst, void *font, SDL_Rect bounds, const char *text, SDL_Color color, int align, int begin, int length)
 {
@@ -267,28 +250,14 @@ unsigned testKeyTimer(unsigned interval, void *data)
     SDLKeyTestWindow *next = (SDLKeyTestWindow *)data;
     next->seconds--;
     if (next->seconds <= 0) {
-        union {
-            unsigned char type;
-            struct {
-                unsigned char type;
-                int code;
-                void *data1, *data2;
-            } user;
-        } event;
+        SDL_UserEvent event;
         event.type = SDL_USEREVENT;
-        event.user.code = EVENT_TEST_TIMEOUT;
+        event.code = EVENT_TEST_TIMEOUT;
         if (SDL_PushEvent(&event) < 0) puts("Failed to push SDL event");
     } else {
-        union {
-            unsigned char type;
-            struct {
-                unsigned char type;
-                int code;
-                void *data1, *data2;
-            } user;
-        } event;
+        SDL_UserEvent event;
         event.type = SDL_USEREVENT;
-        event.user.code = EVENT_REDRAW;
+        event.code = EVENT_REDRAW;
         if (SDL_PushEvent(&event) < 0) puts("Failed to push SDL event");
         next->restartTimer();
     }
@@ -469,19 +438,19 @@ int KeyTestWindow2::mapKey(SDLKey key)
 int KeyTestWindow2::handleInput()
 {
     int key = -1;
-    HardwareEvent event;
+    SDL_Event event;
     if (SDL_WaitEvent(&event)) {
         switch (event.type) {
             case 2:
-                key = mapKey((SDLKey)event.keyboard.key);
+                key = mapKey((SDLKey)event.key.keysym.sym);
                 if (key > 0 && key < 18) {
                     pressed[key] = 1;
                     if (key == 11) menuHeld = true;
                     return -1;
                 }
             case 3:
-                if (event.keyboard.key == 32 && menuHeld) return 1;
-                key = mapKey((SDLKey)event.keyboard.key);
+                if (event.key.keysym.sym == 32 && menuHeld) return 1;
+                key = mapKey((SDLKey)event.key.keysym.sym);
                 if (key > 0 && key < 18) {
                     pressed[key] = 0;
                     released[key] = 1;
@@ -682,8 +651,8 @@ int KeyTestWindow2::draw(SDL_Surface *dst)
     return 0;
 }
 
-// The LCD test: five vertical colour bars (up/down switches to plain red, left/right rotates
-// the colours); A passes, B fails.
+// The LCD test: five vertical color bars (up/down switches to plain red, left/right rotates
+// the colors); A passes, B fails.
 LCDTestWindow::LCDTestWindow() : TrimusWindow(-1, WIN_TEST)
 {
     mode = 0;
@@ -814,16 +783,9 @@ unsigned soundTestTimer(unsigned interval, void *data)
 {
     SoundTestWindow *window = (SoundTestWindow *)data;
     window->playNext();
-    union {
-        unsigned char type;
-        struct {
-            unsigned char type;
-            int code;
-            void *data1, *data2;
-        } user;
-    } event;
+    SDL_UserEvent event;
     event.type = SDL_USEREVENT;
-    event.user.code = EVENT_REDRAW;
+    event.code = EVENT_REDRAW;
     if (SDL_PushEvent(&event) < 0) puts("Failed to push SDL event");
     return 0;
 }
@@ -862,10 +824,10 @@ void SoundTestWindow::onShow()
 // The USB keyboard test's input: the raw SDL key of each release (or a user event's code).
 int readUsbTestInput()
 {
-    HardwareEvent event;
+    SDL_Event event;
     while (SDL_WaitEvent(&event)) {
         switch (event.type) {
-            case 3: return event.keyboard.key;
+            case 3: return event.key.keysym.sym;
             case 24: return event.user.code;
             default: break;
         }
@@ -941,18 +903,11 @@ void SDCardTestWindow::testWrite()
     int count;
     int elapsed;
     timeval start, end, now;
-    union {
-        unsigned char type;
-        struct {
-            unsigned char type;
-            int code;
-            void *data1, *data2;
-        } user;
-    } event;
+    SDL_UserEvent event;
     gettimeofday(&start, NULL);
     writeBytes = 0;
     event.type = SDL_USEREVENT;
-    event.user.code = EVENT_REDRAW;
+    event.code = EVENT_REDRAW;
     lastUpdate = 0;
     if (f) {
         buf = malloc(1024);
@@ -991,18 +946,11 @@ void SDCardTestWindow::testRead()
     int count;
     int elapsed;
     timeval start, end, now;
-    union {
-        unsigned char type;
-        struct {
-            unsigned char type;
-            int code;
-            void *data1, *data2;
-        } user;
-    } event;
+    SDL_UserEvent event;
     gettimeofday(&start, NULL);
     readBytes = 0;
     event.type = SDL_USEREVENT;
-    event.user.code = EVENT_REDRAW;
+    event.code = EVENT_REDRAW;
     lastUpdate = 0;
     if (f) {
         buf = (char *)malloc(1024);

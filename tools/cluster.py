@@ -180,7 +180,7 @@ for a, cs in ctor_of.items():
                 evidence.setdefault(a, "class")
                 break
 
-# Propagate to unlabelled functions by neighbour majority (2 rounds)
+# Propagate to unlabeled functions by neighbor majority (2 rounds)
 for _ in range(2):
     new = {}
     for a in internal:
@@ -192,7 +192,7 @@ for _ in range(2):
             new[a] = votes.most_common(1)[0][0]
     for a, s in new.items():
         subsys[a] = s
-        evidence[a] = "neighbour"
+        evidence[a] = "neighbor"
 
 # Provisional names
 names = {}
@@ -222,7 +222,7 @@ for a, f in internal.items():
         if not hint and imports_of[a]:
             hint = "_" + re.sub(r"\W", "", imports_of[a][0].split("::")[-1].split("(")[0])[:20]
         nm = f"{tag}{hint}_{a[-5:]}"
-        conf = "guess" if evidence.get(a) == "neighbour" or a not in evidence else "inferred"
+        conf = "guess" if evidence.get(a) == "neighbor" or a not in evidence else "inferred"
     names[a] = {"name": nm, "subsystem": tag, "confidence": conf}
 
 json.dump(names, open(f"{out_dir}/names.json", "w"), indent=0)

@@ -96,8 +96,8 @@ const char g_pwmDutyPath[40] __attribute__((aligned(4))) = "/dev/null";
 const char g_pwmDisabledEnable[1] __attribute__((aligned(4))) = "";
 const char g_pwmEnablePath[36] __attribute__((aligned(4))) = "/sys/class/pwm/pwmchip0/pwm0/enable";
 
-// Original 0x14aea0 disables the PWM-period write. Preserve argument loads and
-// the literal NOP, with no call relocation, as for the patched menu/drawing calls.
+// Onion patched the PWM-period write at 0x14aea0 to a NOP; this block reproduces that patch,
+// as for the patched menu and drawing calls (docs/onion-changes.md).
 __asm__(
     ".set .Linit_pwm_nops, 0\n"
     ".macro bl target\n"

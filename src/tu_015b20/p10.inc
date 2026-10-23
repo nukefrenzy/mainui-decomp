@@ -1,11 +1,4 @@
-// p10 0x3225c-0x36838: popup, dialog and game-detail windows.
-// SDL timer callbacks only allocate the 16-byte user-event prefix.
-struct WindowUserEvent {
-    unsigned char type;
-    int code;
-    void *data1, *data2;
-};
-static_assert(sizeof(WindowUserEvent) == 16, "SDL timer event prefix");
+// tu_015b20 part p10 (0x3225c-0x36838): pop-ups, dialogs, the power-off countdown and the game detail window.
 
 // 0x3225c: a pop-up list (the options of MENU) over the dimmed screen, sized to its background
 // image (skin/bg-pop-menu-N.png).
@@ -111,7 +104,7 @@ NotifyWindow::~NotifyWindow()
 static unsigned notifyTimeout(unsigned interval, void *arg)
 {
     void (*fn)() = (void (*)())arg;
-    WindowUserEvent event;
+    SDL_UserEvent event;
     event.type = SDL_USEREVENT;
     event.code = EVENT_NOTIFY_TIMEOUT;
     timeval now;
@@ -217,7 +210,7 @@ CountDownWindow::~CountDownWindow()
 // 0x3318c: timer: post EVENT_COUNTDOWN_TICK every second.
 static unsigned countdownTick(unsigned interval, void *arg)
 {
-    WindowUserEvent event;
+    SDL_UserEvent event;
     event.type = SDL_USEREVENT;
     event.code = EVENT_COUNTDOWN_TICK;
     if (SDL_PushEvent(&event) < 0) puts("Failed to push SDL event");
@@ -269,7 +262,7 @@ DialogWindow::DialogWindow(int heading, int message, bool owns, Action *act) : F
     iconA = g_iconA;
     iconB = g_iconB;
     action = act;
-    flag = owns;
+    ownsAction = owns;
 }
 // 0x33570 (D0 0x33630)
 DialogWindow::~DialogWindow()
@@ -514,7 +507,7 @@ int ProgressDialog::handleInput()
 // 0x34a14: an empty game detail window (state restore fills it).
 GameDetailWindow::GameDetailWindow(int title, int id) : TrimusWindow(title, id)
 {
-    type = 0;
+    sourceWindowId = 0;
     listIndex = 0;
     favorite = false;
     thumbnailImage = 0;
@@ -525,14 +518,14 @@ GameDetailWindow::GameDetailWindow(int title, int id) : TrimusWindow(title, id)
     openedIndex = 0;
 }
 // 0x34b1c: a game detail window: title, item (emulator label), game path, thumbnail folder, list
-// index, window id of the list (kind) and favourite mark.
+// index, window id of the list (kind) and favorite mark.
 GameDetailWindow::GameDetailWindow(int title, int id, const char *name, const char *item, const char *game, const char *icon, int index, int kind, bool fav) : TrimusWindow(title, id)
 {
     this->item = item;
     this->name = name;
     launch = game;
     thumbPath = makeThumbPath(&launch, icon);
-    type = kind;
+    sourceWindowId = kind;
     listIndex = index;
     favorite = fav;
     thumbnailImage = NULL;
@@ -563,7 +556,7 @@ void GameDetailWindow::onHide()
         animationCapture = NULL;
     }
 }
-// 0x34e6c: load the thumbnail (or the default one) and the favourite mark.
+// 0x34e6c: load the thumbnail (or the default one) and the favorite mark.
 void GameDetailWindow::onShow()
 {
     printf("Load thumbnail %s\n", thumbPath.c_str());
@@ -623,7 +616,7 @@ void GameDetailWindow::resetDetails(const char *heading, const char *label, cons
     launch = game;
     thumbPath = makeThumbPath(&launch, icon);
     printf("GameDetailWindow::resetDetailsInternal(name %s ,label %s) thumbnail path %s\n", heading, label, thumbPath.c_str());
-    type = kind;
+    sourceWindowId = kind;
     listIndex = index;
     favorite = fav;
     if (thumbnailImage) SDL_FreeSurface(thumbnailImage);
@@ -647,7 +640,7 @@ void GameDetailWindow::resetFromItem(TextItem *row, int index)
         resetDetails(row->label.c_str(), emu->label.c_str(), action->rompath.c_str(), action->imgpath.c_str(), index, kind, row->favorite);
     }
 }
-// 0x356e4: the thumbnail on the left, the list number, the wrapped name and the favourite mark.
+// 0x356e4: the thumbnail on the left, the list number, the wrapped name and the favorite mark.
 int GameDetailWindow::draw(SDL_Surface *dst)
 {
     if (titleLabelId != 157)
@@ -716,16 +709,16 @@ int GameDetailWindow::handleInput()
     switch (key) {
         case BUTTON_A:
         case BUTTON_Y:
-            if (type == WIN_ROM_LIST) {
+            if (sourceWindowId == WIN_ROM_LIST) {
                 int index = findEmuByLabelPrefix(&g_emuFolders, item.c_str());
                 printf("find emu %s return %d\n", item.c_str(), index);
-                if (index >= 0 && (unsigned)index < g_emuFolders.size()) return launchRom(name.c_str(), &g_emuFolders[index], launch.c_str(), thumbPath.c_str(), type);
-            } else if (type == WIN_RETROARCH_LIST) {
+                if (index >= 0 && (unsigned)index < g_emuFolders.size()) return launchRom(name.c_str(), &g_emuFolders[index], launch.c_str(), thumbPath.c_str(), sourceWindowId);
+            } else if (sourceWindowId == WIN_RETROARCH_LIST) {
                 int index = findEmuByLabelPrefix(&g_rappFolders, item.c_str());
                 printf("find emu %s return %d\n", item.c_str(), index);
-                if (index >= 0 && (unsigned)index < g_rappFolders.size()) return launchRom(name.c_str(), &g_rappFolders[index], launch.c_str(), thumbPath.c_str(), type);
+                if (index >= 0 && (unsigned)index < g_rappFolders.size()) return launchRom(name.c_str(), &g_rappFolders[index], launch.c_str(), thumbPath.c_str(), sourceWindowId);
             } else
-                printf("unsupport game type %d\n", type);
+                printf("unsupport game type %d\n", sourceWindowId);
             return 1;
         case BUTTON_B:
         case BUTTON_X:
@@ -760,7 +753,7 @@ void GameDetailWindow::saveState(cJSON *obj)
     cJSON_AddItemToObject(obj, "thumbpath", thumb);
     cJSON *gameIndex = cJSON_CreateNumber(listIndex);
     cJSON_AddItemToObject(obj, "gameidx", gameIndex);
-    cJSON *gameType = cJSON_CreateNumber(type);
+    cJSON *gameType = cJSON_CreateNumber(sourceWindowId);
     cJSON_AddItemToObject(obj, "gametype", gameType);
     cJSON *isFavorite = cJSON_CreateBool(favorite);
     cJSON_AddItemToObject(obj, "favourite", isFavorite);
@@ -777,7 +770,7 @@ int GameDetailWindow::restoreState(cJSON *obj)
     entry = (cJSONItem *)cJSON_GetObjectItem(obj, "gameidx");
     listIndex = entry->valueint;
     entry = (cJSONItem *)cJSON_GetObjectItem(obj, "gametype");
-    type = entry->valueint;
+    sourceWindowId = entry->valueint;
     entry = (cJSONItem *)cJSON_GetObjectItem(obj, "favourite");
     favorite = entry->valueint != 0;
     return 0;
@@ -876,7 +869,7 @@ void GameDetailWindow::captureBackground(SDL_Surface *source)
 // refresh tick.
 static unsigned detailTimeout(unsigned interval, void *arg)
 {
-    WindowUserEvent event;
+    SDL_UserEvent event;
     event.type = SDL_USEREVENT;
     event.code = EVENT_NOTIFY_TIMEOUT;
     if (SDL_PushEvent(&event) < 0) puts("Failed to push SDL event");

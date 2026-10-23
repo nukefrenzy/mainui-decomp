@@ -1,5 +1,4 @@
-// p03 0x1a44c-0x1d9d8: DeleteRomAction, helpers, TrimusWindow, ListMenu ctor
-// Functions in address order.
+// tu_015b20 part p03 (0x1a44c-0x1d9d8): favorites, Recent and app lists, ROM deletion, the window base.
 
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -22,7 +21,7 @@ int DeleteRomAction::execute(void *param)
     return 1;
 }
 
-// Rewrites a favourites file from a list: one JSON object per line.
+// Rewrites a favorites file from a list: one JSON object per line.
 void saveFavorites(const char *path, std::vector<void *> *items)
 {
     FILE *f = fopen(path, "w");
@@ -67,7 +66,7 @@ void saveFavorites(const char *path, std::vector<void *> *items)
     }
 }
 
-// Removes the lines whose "label" starts with label from a favourites file (via /tmp/favourite.tmp).
+// Removes the lines whose "label" starts with label from a favorites file (via /tmp/favourite.tmp).
 void removeFavorite(const char *label, const char *path)
 {
     if (label == NULL)
@@ -101,7 +100,7 @@ void removeFavorite(const char *label, const char *path)
     }
 }
 
-// Builds the favourites list from a file of JSON lines (type 3 apps, 5/17 ROMs). Drops duplicates and
+// Builds the favorites list from a file of JSON lines (type 3 apps, 5/17 ROMs). Drops duplicates and
 // rewrites the file if any were found.
 TextMenu *buildFavoriteList(const char *path)
 {
@@ -213,7 +212,7 @@ TextMenu *buildFavoriteList(const char *path)
 }
 
 // Looks for "rompath" (quoted) in buf, or else in each line of f.
-bool isFavourite(char *buf, FILE *f, const char *rompath)
+bool isFavorite(char *buf, FILE *f, const char *rompath)
 {
     std::string key;
     std::string quote("\"");
@@ -240,7 +239,7 @@ bool isFavourite(char *buf, FILE *f, const char *rompath)
     return false;
 }
 
-// Builds the recent-games list; favourites are marked from favourite.json.
+// Builds the recent-games list; favorites are marked from favourite.json.
 TextMenu *buildRecentList(std::list<RecentItem> *list)
 {
     if (list->size() != 0) {
@@ -284,7 +283,7 @@ TextMenu *buildRecentList(std::list<RecentItem> *list)
                 }
             }
             if (f != NULL && item != NULL)
-                item->favorite = isFavourite(0, f, it->label.c_str());
+                item->favorite = isFavorite(0, f, it->label.c_str());
             if (item == NULL || !menu->addUnique(item))
                 delete item;
         }
@@ -296,7 +295,7 @@ TextMenu *buildRecentList(std::list<RecentItem> *list)
     }
 }
 
-// Builds the app list (with descriptions and icons); favourites are marked from favourite.json.
+// Builds the app list (with descriptions and icons); favorites are marked from favourite.json.
 TextMenu *buildAppList(std::vector<AppInfo> *apps)
 {
     if (apps->size() != 0) {
@@ -310,7 +309,7 @@ TextMenu *buildAppList(std::vector<AppInfo> *apps)
             item->thumbnailPath = (*apps)[i].icon;
             item->showThumbnail = true;
             if (f != NULL)
-                item->favorite = isFavourite(0, f, (*apps)[i].label.c_str());
+                item->favorite = isFavorite(0, f, (*apps)[i].label.c_str());
             if (!menu->addUnique(item))
                 delete item;
         }
@@ -340,7 +339,7 @@ void initBacklightPwm();                // 0x14ae74
 int setBacklight(int level);            // 0x14aed4
 }
 
-// Sets the panel colour from the settings scale (luma 0-, hue/saturation x5, contrast).
+// Sets the panel color from the settings scale (luma 0-, hue/saturation x5, contrast).
 int setLcdColor(int luma, int hue, int saturation, int contrast)
 {
     LcdParam param;
@@ -369,7 +368,7 @@ void initAudioSettings(void *shm)
     printf("restore background music volume %d\n", GetKeyShm(shm, MONITOR_BGM_VOLUME) * 128 / 20);
 }
 
-// Deletes the items marked removed from a favourites list (menu id 2); true if any were removed.
+// Deletes the items marked removed from a favorites list (menu id 2); true if any were removed.
 bool removeDeletedFavorites(void *menu, int id)
 {
     bool changed = false;

@@ -1,7 +1,7 @@
-# CLAUDE.md — mainui-decomp
+# AGENTS.md — mainui-decomp
 
 Reverse engineering and byte-matching decompilation of the Miyoo Mini Plus **MainUI** launcher
-(Onion OS build). Read `README.md`, `docs/program-map.md` and `docs/byte-identical-build.md` before
+(Onion OS build). Read `README.md`, `docs/source-guide.md` and `docs/internals/byte-identical-build.md` before
 starting work.
 
 ## Working agreement
@@ -39,7 +39,7 @@ Ghidra 12.1.4: import with defaults, auto-analyze, run `ghidra/ApplyMainUINames.
    `python3 tools/progress.py --matches-md src/MATCHES.md`. CI (`.github/workflows/match.yml`) re-checks all of them
    and posts the progress summary.
 
-Work file by file (full recipe, -O0 idioms and the tail-order rule: `docs/unit-workflow.md`): `docs/tu-map.tsv` (from `tools/tusplit.py`) gives each unit's range, `src/tu_<lo>.cpp` holds its
+Work file by file (full recipe, -O0 idioms and the tail-order rule: `docs/internals/unit-workflow.md`): `docs/tu-map.tsv` (from `tools/tusplit.py`) gives each unit's range, `src/tu_<lo>.cpp` holds its
 functions in address order, and `tools/unitcheck.py src/tu_<lo>.cpp` checks the whole unit as the linker lays it out
 (body, then template/inline tail; CI runs it on every unit via `scripts/run_units.sh`). Briefs: `tools/packet.py --tu <unit>`; patterns: `tools/autoderive.py --tu <unit>`.
 
@@ -57,7 +57,7 @@ export scripts in `tools/ghidra/`). Never downgrade a confirmed name to a guess.
 names.tsv), run `tools/linkaudit.py` then `tools/syncnames.py`, which copies every Miyoo function's name
 from the audit link into names.tsv. CI runs `syncnames.py --check`.
 
-## Key facts (details in docs/program-map.md)
+## Key facts (details in docs/source-guide.md)
 
 - Window stack: `runWindowLoop` 0x36ee8, `pushWindow` 0x36d88, `createMenu(id, path)` 0x37784, `IconMenu::onSelect` 0x27724.
 - `TrimusWindow` (12 bytes): vtable, `titleLabelId` +4, `id` +8; 11 virtual slots, all identified.
@@ -72,12 +72,12 @@ from the audit link into names.tsv. CI runs `syncnames.py --check`.
 Done: program map, exact toolchain + flags, match toolkit + CI, window layouts, item/action wiring,
 all 22 Miyoo translation units, and a **byte-identical build**: `scripts/build-mainui.sh` builds
 MainUI from `src/` and requires its SHA-256 to equal the original's (CI runs it via
-`tools/linkaudit.py --require-ready`). Read `docs/byte-identical-build.md`. The built binary stays in
-`build/` and is never committed or published. Device run on Brad's Miyoo Mini Plus (2026-10-22):
-the built binary boots and runs (see `docs/byte-identical-build.md`).
+`tools/linkaudit.py --require-ready`). Read `docs/internals/byte-identical-build.md`. The built binary stays in
+`build/` and is never committed or published. Device run on a Miyoo Mini Plus (2026-10-22):
+the built binary boots and runs (see `docs/internals/byte-identical-build.md`).
 
 The starter LD_PRELOAD hook library remains a separate optional feature: same toolchain, wrap
-SDL_PollEvent for a hotkey, compile-test here and device-test by Brad.
+SDL_PollEvent for a hotkey, compile-test here and device-test by the maintainer.
 
 Later candidates: input/hotkeys, status bar indicators, ROM lists + DB, launching, themes, settings shared memory,
 Wi-Fi, the `librsautil` + UUID device check, and a diff against stock Miyoo (June 10 2023 build).

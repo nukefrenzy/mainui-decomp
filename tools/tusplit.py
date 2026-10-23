@@ -118,7 +118,7 @@ ap.add_argument("--orig", default=os.path.join(ROOT, "MainUI-354-clean"))
 ap.add_argument("--report", action="store_true", help="also print one line per function with its marks")
 a = ap.parse_args()
 
-# Fixed regions (docs/program-map.md). Miyoo code starts after the C runtime (_start, *_tm_clones,
+# Fixed regions (docs/source-guide.md, "What is in the binary"). Miyoo code starts after the C runtime (_start, *_tm_clones,
 # __do_global_dtors_aux, frame_dummy), which ends at frame_dummy (Ghidra's _INIT_0) at 0x15b1c.
 FIXED = [(0x14d20, 0x15b20, "runtime", "PLT, _start, crtbegin"),
          (0x51b60, 0x57920, "lib_cjson", "cJSON 1.7.10, byte-exact (verify-libs.sh)"),

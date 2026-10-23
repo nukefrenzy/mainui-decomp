@@ -50,7 +50,7 @@ tu_015b20.cpp	_ZN15DeleteRomAction7executeEPv	1a44c	112	-	-	DeleteRomAction::exe
 tu_015b20.cpp	saveFavorites	1a4bc	672	-	-	saveFavorites(char const*, std::vector<void*>*)
 tu_015b20.cpp	removeFavorite	1a75c	456	-	-	removeFavorite(char const*, char const*)
 tu_015b20.cpp	buildFavoriteList	1a924	2284	-	-	buildFavoriteList(char const*)
-tu_015b20.cpp	isFavourite	1b210	632	-	-	isFavourite(char*, FILE*, char const*)
+tu_015b20.cpp	isFavorite	1b210	632	-	-	isFavorite(char*, FILE*, char const*)
 tu_015b20.cpp	buildRecentList	1b488	1908	-	-	buildRecentList(std::list<RecentItem>*)
 tu_015b20.cpp	buildAppList	1bbfc	680	-	-	buildAppList(std::vector<AppInfo>*)
 tu_015b20.cpp	setLcdColor	1bea4	236	-	-	setLcdColor(int, int, int, int)

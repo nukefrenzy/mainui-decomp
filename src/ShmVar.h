@@ -1,5 +1,5 @@
 // Settings that MainUI shares with the keymon daemon through libshmvar (System V shared memory,
-// key "KMON"). keymon applies them to the hardware (volume, backlight, display colour) and reports
+// key "KMON"). keymon applies them to the hardware (volume, backlight, display color) and reports
 // back through a few of them (volume changed, battery level). MainUI reads and writes them with
 // GetKeyShm/SetKeyShm, passing the libshmvar handle it keeps in g_keyShm.
 // Key names and order are libshmvar's own (Onion: include/shmvar/shmvar.h). Values only, so C and

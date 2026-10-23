@@ -32,8 +32,6 @@ class TextItem;
 #include "ConfigTypes.h"
 typedef void TTF_Font;
 extern "C" {
-
-
 SDL_Surface *TTF_RenderUTF8_Blended(TTF_Font *font, const char *text, SDL_Color fg);
 
 
@@ -64,40 +62,6 @@ extern char g_launchCmd[0x800];             // 0x17ff54, command written to /tmp
 extern int g_fbFd;                          // 0x17e488
 extern void *g_themeMusic;                  // 0x182268
 extern void *g_changeSound;                 // 0x18226c
-// SDL 1.2 events as handleGlobalInput reads them.
-struct SDL_keysym {
-    unsigned char scancode;
-    int sym;
-    int mod;
-    unsigned short unicode;
-};
-struct SDL_KeyboardEvent {
-    unsigned char type, which, state;
-    SDL_keysym keysym;
-};
-struct SDL_MouseButtonEvent {
-    unsigned char type, which, button, state;
-    unsigned short x, y;
-};
-union SDL_Event {
-    unsigned char type;
-    SDL_KeyboardEvent key;
-    SDL_MouseButtonEvent button;
-    struct {
-        unsigned char type;
-        int code;
-        void *data1, *data2;
-    } user;
-};
-union MainEvent {                           // SDL_Event as pushed by MainUI (SDL_USEREVENT = 24)
-    unsigned char type;
-    struct {
-        unsigned char type;
-        int code;
-        void *data1, *data2;
-    } user;
-    char storage[20];
-};
 #include "WifiStatus.h"
 extern "C" WifiStatus *getWifiStatus();     // 0x14e564
 int wifiMode();                             // 0x138c50: 2 station, 3 hotspot
@@ -291,18 +255,18 @@ public:
 class PopupDialogAction : public Action
 {
 public:
-    PopupDialogAction(int title, int text, bool flag, Action *action) : Action(-1)
+    PopupDialogAction(int title, int text, bool ownsAction, Action *action) : Action(-1)
     {
         this->title = title;
         this->text = text;
-        this->flag = flag;
+        this->ownsAction = ownsAction;
         this->action = action;
     } // 0x3a4bc
     virtual ~PopupDialogAction() {}
     virtual int execute(void *param);                        // 0x19dc0
     int title;          // +0x08
     int text;           // +0x0c
-    bool flag;          // +0x10
+    bool ownsAction;          // +0x10
     Action *action;     // +0x14  run by the dialog
 };
 
@@ -340,7 +304,7 @@ void drawBackground(SDL_Surface *dst);      // 0x17450
 // Every class here inherits Action's slots 3/4 (0x397fc returns -1, 0x39828 returns 0) except AppAction.
 struct cJSON;
 int clearRecent(std::list<RecentItem> *list);                // 0x120e20 (tu_11cdc8)
-bool isFavourite(char *buf, FILE *f, const char *rompath);   // 0x1b210 (p03)
+bool isFavorite(char *buf, FILE *f, const char *rompath);   // 0x1b210 (p03)
 
 // p02 render helpers (0x18dd4-0x19acc): busy animation while a background job runs. g_launchCmd
 // doubles as the counter text buffer, g_titleFont/g_wifiEmptyColor/g_background are p01's globals.
@@ -400,14 +364,14 @@ char *GetGameName(const char *langFile, const char *name);
 
 // Non-member functions called across parts (p01/p02 functions are defined before every later part).
 // p03
-void saveFavorites(const char *path, std::vector<void *> *items); // 0x1a4bc  writes a favourites file
-void removeFavorite(const char *label, const char *path);   // 0x1a75c  removes a favourite
-TextMenu *buildFavoriteList(const char *path);                    // 0x1a924  favourites list
+void saveFavorites(const char *path, std::vector<void *> *items); // 0x1a4bc  writes a favorites file
+void removeFavorite(const char *label, const char *path);   // 0x1a75c  removes a favorite
+TextMenu *buildFavoriteList(const char *path);                    // 0x1a924  favorites list
 TextMenu *buildRecentList(std::list<RecentItem> *list);         // 0x1b488  recent games
 TextMenu *buildAppList(std::vector<AppInfo> *apps);          // 0x1bbfc  app list
 int setLcdColor(int luma, int hue, int saturation, int contrast); // 0x1bea4  MI_DISP LCD params
 void initAudioSettings(void *shm);                              // 0x1bf90  key shm
-bool removeDeletedFavorites(void *menu, int id);                     // 0x1c0ac  deletes removed favourites (id 2)
+bool removeDeletedFavorites(void *menu, int id);                     // 0x1c0ac  deletes removed favorites (id 2)
 int restoreWindowState(std::vector<TrimusWindow *> *stack);     // 0x1c1fc
 void saveWindowState(std::vector<TrimusWindow *> *stack, const char *path); // 0x1c544
 void setRomListPosition(std::vector<RomListPosition> *list, const std::string &path,
@@ -418,7 +382,7 @@ int loadRomListPositions(std::vector<RomListPosition> *list);   // 0x1c994
 void saveRomListPositions(std::vector<RomListPosition> *list); // 0x1cc90
 SDL_Surface *loadThumbnail(const char *path, int w, int h);     // 0x1cee0
 std::string makeThumbPath(std::string *game, const char *img);  // 0x1d318
-// createSurface 0x1d720 and isFavourite 0x1b210 are declared with p02 above.
+// createSurface 0x1d720 and isFavorite 0x1b210 are declared with p02 above.
 // p04
 int drawListNumber(int n, SDL_Rect *rect, SDL_Surface *dst, TTF_Font *font); // 0x1e868
 // p05
@@ -459,7 +423,7 @@ class DBCacheWorker : public BGWorker
 public:
     DBCacheWorker(sqlite3 *db, const std::string &dbName, const std::string &table, int offset, int len,
                   int rowWindowId, LruCache *items, LruCache *data, EmuInfo *emu, std::string *dir,
-                  std::string *search, bool flag)                // 0x3a74c
+                  std::string *search, bool previewSearchResults)                // 0x3a74c
     {
         this->db = db;
         this->dbName = dbName;
@@ -472,7 +436,7 @@ public:
         this->emu = emu;
         this->dir = *dir;
         this->search = *search;
-        this->flag = flag;
+        this->previewSearchResults = previewSearchResults;
     }
     virtual ~DBCacheWorker() {}                                // 0x3a8d8 (D0 0x3a954)
     virtual void run();                                        // 0x23548
@@ -483,7 +447,7 @@ public:
     std::string table;            // +0x220
     std::string dir;              // +0x238
     std::string search;           // +0x250
-    bool flag;             // +0x268
+    bool previewSearchResults;             // +0x268
     int offset;           // +0x26c
     int len;              // +0x270
     int rowWindowId;                // +0x274
@@ -530,9 +494,9 @@ class IconMenuItem
 {
 public:
     IconMenuItem(int labelId, const char *icon, const char *iconSelected,
-                 SDL_Surface *background, SDL_Surface *backgroundSelected, int menuId, void *param, bool flag);                         // 0x256f0
+                 SDL_Surface *background, SDL_Surface *backgroundSelected, int menuId, void *param, bool ownsParam);                         // 0x256f0
     IconMenuItem(const char *label, const char *icon, const char *iconSelected,
-                 SDL_Surface *background, SDL_Surface *backgroundSelected, int menuId, void *param, bool flag);             // 0x258d4 (labelId -1)
+                 SDL_Surface *background, SDL_Surface *backgroundSelected, int menuId, void *param, bool ownsParam);             // 0x258d4 (labelId -1)
     ~IconMenuItem();                                           // 0x25a8c
     void reload();                                            // 0x25b5c
     SDL_Surface *iconSurface;       // +0x00
@@ -542,7 +506,7 @@ public:
     std::string verboseLabel;             // +0x28
     int labelId;           // +0x40
     void *param;             // +0x44
-    bool flag;              // +0x48
+    bool ownsParam;              // +0x48
     int menuId;            // +0x4c  createMenu id opened by IconMenu::onSelect
     std::string icon;              // +0x50
     std::string iconSelected;      // +0x68
@@ -596,7 +560,7 @@ enum SettingHandler {
     SETTING_REFRESH_ROMS = 4,    // delete the ROM caches
     SETTING_FACTORY_RESET = 5,
     SETTING_DEVICE_INFO = 7,
-    SETTING_IO_TEST = 8,         // KeyTestWindow2 (labelled "Hardware Test")
+    SETTING_IO_TEST = 8,         // KeyTestWindow2 (labeled "Hardware Test")
     SETTING_ADC_INFO = 9,
     SETTING_LANGUAGE = 11,
     SETTING_HIBERNATE = 12,      // sleep after 5/15/30 min or never
@@ -787,7 +751,7 @@ public:
 class DialogWindow : public FloatWindow
 {
 public:
-    DialogWindow(int title, int text, bool flag, Action *action);   // 0x333ec
+    DialogWindow(int title, int text, bool ownsAction, Action *action);   // 0x333ec
     virtual ~DialogWindow();                                   // 0x33570 (D0 0x33630)
     virtual int handleInput();                                // 0x3400c
     virtual int draw(SDL_Surface *dst);                       // 0x33bac
@@ -801,7 +765,7 @@ public:
     SDL_Surface *iconA;             // +0x24  g_iconA
     SDL_Surface *iconB;             // +0x28  g_iconB
     Action *action;            // +0x2c
-    bool flag;              // +0x30
+    bool ownsAction;              // +0x30
     bool noPopupSkin;            // +0x31
 };
 
@@ -830,7 +794,7 @@ class GameDetailWindow : public TrimusWindow
 public:
     GameDetailWindow(int title, int id);                       // 0x34a14
     GameDetailWindow(int title, int id, const char *name, const char *item, const char *launch,
-                     const char *icon, int listIndex, int type, bool favorite); // 0x34b1c
+                     const char *icon, int listIndex, int sourceWindowId, bool favorite); // 0x34b1c
     virtual ~GameDetailWindow();                               // 0x34d0c (D0 0x34d98)
     virtual int handleInput();                                // 0x35bbc
     virtual int draw(SDL_Surface *dst);                       // 0x356e4
@@ -851,9 +815,9 @@ public:
     std::string launch;            // +0x54
     std::vector<std::string> nameLines; // +0x6c  wrapped title lines
     int listIndex;             // +0x78  item index
-    int type;              // +0x7c
+    int sourceWindowId;              // +0x7c
     bool favorite;          // +0x80
-    SDL_Surface *thumbnailImage, *favoriteImage, *animationCapture; // thumbnail, favourite mark, animation capture
+    SDL_Surface *thumbnailImage, *favoriteImage, *animationCapture; // thumbnail, favorite mark, animation capture
     int openedIndex;           // +0x90  list index when opened (the slide plays only for that game)
     bool animatePending;            // +0x94  true
     TextMenuDrawer *parentMenu;        // +0x98  parent text/ROM menu
@@ -932,7 +896,7 @@ static_assert(sizeof(IconMenu) == 0xa0 && offsetof(IconMenu, loadedThemePath) ==
 static_assert(sizeof(SettingMenuItem) == 0x24 && sizeof(SettingMenu) == 0x128 && sizeof(DeviceInfoMenu) == 0x120, "settings");
 static_assert(sizeof(ColorMenu) == 0x10c && sizeof(LanguageMenu) == 0x110 && sizeof(ThemeMenu) == 0x104, "p08 menus");
 static_assert(sizeof(FileBrowserMenu) == 0x80 && offsetof(FileBrowserMenu, dirItems) == 0x64, "FileBrowserMenu");
-static_assert(sizeof(DBCacheWorker) == 0x284 && offsetof(DBCacheWorker, flag) == 0x268, "DBCacheWorker");
+static_assert(sizeof(DBCacheWorker) == 0x284 && offsetof(DBCacheWorker, previewSearchResults) == 0x268, "DBCacheWorker");
 static_assert(sizeof(LoadSurfaceWorker) == 0x24, "LoadSurfaceWorker");
 static_assert(sizeof(FloatWindow) == 0x10 && sizeof(PopUpWindow) == 0x18 && sizeof(NotifyWindow) == 0x3c, "float windows");
 static_assert(sizeof(CountDownWindow) == 0xcc && sizeof(DialogWindow) == 0x34 && sizeof(ProgressDialog) == 0x3c, "dialogs");

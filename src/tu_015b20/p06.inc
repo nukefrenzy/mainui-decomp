@@ -1,4 +1,4 @@
-// p06 0x23548-0x2849c: cached ROM rows, icon menus, settings items.
+// tu_015b20 part p06 (0x23548-0x2849c): ROM cache rows, icon menus and settings rows.
 
 
 int removeRecent(std::list<RecentItem> *, const char *);
@@ -7,7 +7,7 @@ extern SDL_Surface *g_folderIcon; // 0x1821f4
 
 // 0x23548: background job of the ROM lists: loads rows [offset, offset+len) of a folder (or of a
 // search, by pinyin or Chinese pinyin) from the cache database into the items cache, skipping rows
-// already cached; each row is a game (type 0) or a subfolder, with its favourite mark, and its
+// already cached; each row is a game (type 0) or a subfolder, with its favorite mark, and its
 // image path goes to the data cache.
 void DBCacheWorker::run()
 {
@@ -49,10 +49,10 @@ void DBCacheWorker::run()
                         if (label == NULL) label = disp;
                         if (sqlite3_column_type(stmt, 1) == 3 && sqlite3_column_type(stmt, 2) == 3 && sqlite3_column_type(stmt, 4) == 1 && sqlite3_column_type(stmt, 5) == 3) {
                             if (type == 0) {
-                                bool preview = search.length() != 0 && flag;
+                                bool preview = search.length() != 0 && previewSearchResults;
                                 item = new TextItem(label, preview ? NULL : g_gameIcon, new EmuAction(emu, label, path, image, rowWindowId, true, type), true);
                                 item->subtitle = emu->label;
-                                item->favorite = isFavourite(NULL, f, path);
+                                item->favorite = isFavorite(NULL, f, path);
                                 item->showThumbnail = preview;
                             } else {
                                 EmuAction *action = new EmuAction(emu, label, path, image, rowWindowId, false, type);
@@ -202,7 +202,7 @@ int DBCachedTextMenu::open(const char *path, const char *table, const char *fold
     return rc;
 }
 
-// 0x24a14: deletes the ROM at index: the file itself, its database row, its favourite and its
+// 0x24a14: deletes the ROM at index: the file itself, its database row, its favorite and its
 // Recent entry; then recounts the folder and reloads the page.
 void DBCachedTextMenu::removeItem(int index)
 {
@@ -343,7 +343,7 @@ IconMenuItem::IconMenuItem(int id, const char *normal, const char *selected, SDL
     background = bx;
     backgroundSelected = by;
     param = arg;
-    flag = own;
+    ownsParam = own;
     menuId = menu;
 }
 
@@ -359,14 +359,14 @@ IconMenuItem::IconMenuItem(const char *text, const char *normal, const char *sel
     background = bx;
     backgroundSelected = by;
     param = arg;
-    flag = own;
+    ownsParam = own;
     menuId = menu;
 }
 
 // 0x25a8c
 IconMenuItem::~IconMenuItem()
 {
-    if (flag && param) free((void *)param);
+    if (ownsParam && param) free((void *)param);
     if (iconSurface) SDL_FreeSurface(iconSurface);
     if (iconSelectedSurface) SDL_FreeSurface(iconSelectedSurface);
 }

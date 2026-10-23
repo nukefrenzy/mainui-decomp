@@ -156,7 +156,10 @@ def main():
     changed = 0
     for row in body:
         sym = wanted.get(row[0])
-        if sym is None or row[3] in ('library', 'library-exact'):
+        if sym is None or row[3] == 'library-exact':
+            continue
+        # Library rows keep their names, except runtime_<addr> placeholders inside a Miyoo unit.
+        if row[3] == 'library' and not row[1].startswith('runtime_'):
             continue
         name = plain_name(sym, plain.get(sym, sym))
         if name == row[1]:

@@ -1,6 +1,6 @@
 // tu_14b860 (0x14b860-0x14cb24): system settings.
 //
-// /mnt/SDCARD/system.json holds the user's settings (volume, brightness, display colour, theme,
+// /mnt/SDCARD/system.json holds the user's settings (volume, brightness, display color, theme,
 // language, button keymap, Wi-Fi switch, ...). loadSystemJson copies them into the memory that
 // MainUI shares with the keymon daemon (see ShmVar.h), which applies them to the hardware;
 // saveSystemJson writes the shared values back. The language, keymap and the Wi-Fi and hotspot
@@ -133,7 +133,7 @@ void setHotspotOn(int on)       // 0x14bc78
 }
 
 // Loads /mnt/SDCARD/system.json into the shared settings. A missing or invalid key gets its
-// default; display colour values must be 0-20. Also returns the theme path (a strdup, or NULL if
+// default; display color values must be 0-20. Also returns the theme path (a strdup, or NULL if
 // unset or the folder no longer exists) and font size when theme/fontSize are not NULL. If the
 // file cannot be read or parsed, every setting gets its default and the keymap is cleared.
 void loadSystemJson(void *shm, char **theme, int *fontSize)    // 0x14bca8
@@ -288,7 +288,7 @@ void loadThemeAndFontSize(char **theme, int *fontSize)     // 0x14c460
 // Writes the shared settings, keymap, language, theme, font size and Wi-Fi switch to
 // /mnt/SDCARD/system.json, then syncs the SD card. Nothing is written if any of the main
 // values could not be created.
-// Original behaviour, kept as-is: the file is opened without O_TRUNC, so if the new text is
+// Original behavior, kept as-is: the file is opened without O_TRUNC, so if the new text is
 // shorter than the old file, the old file's tail remains after it.
 void saveSystemJson(void *shm, const char *theme, int fontSize)    // 0x14c5fc
 {

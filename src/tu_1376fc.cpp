@@ -24,30 +24,7 @@
 #include "WindowIds.h"
 
 struct SDL_Thread;
-// The SDL 1.2 SDL_Event members this file uses (20 bytes).
-struct KeyEvent {
-    unsigned char type, which, state, padding;
-    unsigned char scancode;
-    int sym, mod;
-    unsigned short unicode;
-};
-struct UserEvent {
-    unsigned char type;
-    int code;
-    void *data1, *data2;
-};
-union InputEvent {
-    unsigned char type;
-    KeyEvent key;
-    UserEvent user;
-    char storage[20];
-};
 extern "C" {
-
-
-int SDL_PushEvent(void *);
-
-
 const char *getKeymap();
 void setKeymap(const char *);
 void saveSystemJson(void *, const char *, int);
@@ -70,7 +47,6 @@ SDL_Thread *g_touchThread;
 bool g_touchRunning, g_touchPressed;
 int g_touchX = -1, g_touchY = -1;
 static_assert(sizeof(KeySettingWindow) == 0x15c, "KeySettingWindow layout");
-static_assert(sizeof(InputEvent) == 20, "SDL event layout");
 
 extern const char g_keyEventReadFormat[44];
 
@@ -120,7 +96,7 @@ int touchInputThread(void *)
         int count = 1;
         pollfd *fds = (pollfd *)calloc(1, sizeof(pollfd));
         int result;
-        InputEvent event;
+        SDL_Event event;
         input_event input;
         fds[0].fd = fd;
         fds[0].events = POLLIN;
@@ -201,11 +177,11 @@ enum MappingKey {
 // buttons and events are ignored. Returns 0 if SDL stops delivering events.
 int waitMappingKey()
 {
-    InputEvent event;
+    SDL_Event event;
     while (SDL_WaitEvent(&event)) {
         switch (event.type) {
             case SDL_KEYUP:
-                switch (event.key.sym) {
+                switch (event.key.keysym.sym) {
                     case MIYOO_KEY_A: return BUTTON_A;
                     case MIYOO_KEY_B: return BUTTON_B;
                     case MIYOO_KEY_X: return BUTTON_X;

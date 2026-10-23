@@ -1,7 +1,6 @@
-// p01 0x15b20-0x18c54: runtime helpers, handleGlobalInput, launch, writeCmdToRun; EmuAction
-// Functions in address order.
+// tu_015b20 part p01 (0x15b20-0x18c54): runtime helpers, text drawing, the status bar, global input, launching.
 
-// 0x15b20: name of a key or event code (Ghidra missed this start; no caller in the binary).
+// 0x15b20: name of a key or event code (no caller in the binary).
 const char *keyEventName(int key)
 {
     switch (key) {
@@ -35,11 +34,9 @@ void flipDisplay()
     SDL_Flip(g_screen);
 }
 
-// 0x15d24: draws `text` in `rect` (align 0 left, 1 centred, 3 vertically centred, 4 right and
-// vertically centred, else right), optionally over a shadow; returns the text width. The shadow blit
-// is a NOP in this build.
-// Preserve the target binary's post-build NOP patch(es), including argument setup.
-// Only these function-relative BL sites lose their relocation; other calls are unchanged.
+// 0x15d24: draws `text` in `rect` (align 0 left, 1 centered, 3 vertically centered, 4 right and
+// vertically centered, else right), optionally over a shadow; returns the text width. The shadow blit
+// was patched to a NOP by Onion; the asm block below reproduces that patch at its offset.
 asm(R"(
 .set .Ldraw_text_nops, 0
 .macro bl target
@@ -133,7 +130,7 @@ int drawTextLines(SDL_Surface *dst, TTF_Font *font, SDL_Rect *rect, const char *
     return 0;
 }
 
-// 0x1622c: blits `bg` at `rect` and `icon` centred on it (or centred in 48x48 without `bg`).
+// 0x1622c: blits `bg` at `rect` and `icon` centered on it (or centered in 48x48 without `bg`).
 void drawIconOnBg(SDL_Surface *dst, SDL_Surface *bg, SDL_Rect *rect, SDL_Surface *icon)
 {
     if (bg != NULL) {
@@ -162,7 +159,7 @@ void drawSkinIconOnBg(SDL_Surface *dst, SDL_Surface *bg, SDL_Rect *rect, const c
     SDL_FreeSurface(icon);
 }
 
-// 0x16450: blits `bg` at `rect` and centres `text` on it.
+// 0x16450: blits `bg` at `rect` and centers `text` on it.
 void drawTextOnBg(SDL_Surface *dst, SDL_Surface *bg, SDL_Rect *rect, const char *text)
 {
     if (bg != NULL) {
@@ -219,9 +216,7 @@ int drawKeyStateIndicator(SDL_Surface *dst, int slot, bool focused)
 }
 
 // 0x16788: Wi-Fi status icon (hotspot, or signal level when connected). The background blits
-// are NOPs in this build.
-// Preserve the target binary's post-build NOP patch(es), including argument setup.
-// Only these function-relative BL sites lose their relocation; other calls are unchanged.
+// were patched to NOPs by Onion; the asm block below reproduces those patches at their offsets.
 asm(R"(
 .set .Ldraw_wifi_nops, 0
 .macro bl target
@@ -511,7 +506,7 @@ void powerOffNow()
 // 0x176c0: asks the window loop to power off (EVENT_POWER_OFF); MainUI then shows a countdown.
 int sendPowerOffEvent(int, int)
 {
-    MainEvent event;
+    SDL_Event event;
     event.type = SDL_USEREVENT;
     event.user.code = EVENT_POWER_OFF;
     puts("send poweroff event");
