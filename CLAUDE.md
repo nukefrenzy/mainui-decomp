@@ -53,6 +53,9 @@ as the disassembly shows. Externs (calls, globals, strings) are link-time words 
 `<subsystem>_<hint>_<addr>`; signposts only), `library`. Hand-verified names live in `tools/manual_names.py`
 (`M = {...}`); regenerate with `tools/cluster.py` then `tools/manual_names.py` (inputs come from the Ghidra
 export scripts in `tools/ghidra/`). Never downgrade a confirmed name to a guess.
+**The source is the master for function names:** after renaming anything in `src/` (or regenerating
+names.tsv), run `tools/linkaudit.py` then `tools/syncnames.py`, which copies every Miyoo function's name
+from the audit link into names.tsv. CI runs `syncnames.py --check`.
 
 ## Key facts (details in docs/program-map.md)
 
