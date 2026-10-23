@@ -103,8 +103,8 @@ literal words; no additional masking is needed.
   `switch (event.type) { case KEYUP: switch (sym) { ...; default: break; } default: break; }`
   emits the shared `nop` used by both unmatched event types and unmatched keys. An outer
   `if`, or a `break` between the switches, changes branch targets or adds/removes instructions.
-- Chained stores can retain a reload at -O0: `touchX = touchY = -1` reloads `touchY` before
-  storing `touchX`; two independent assignments do not match. Conversely, the input-device
+- Chained stores can retain a reload at -O0: `g_touchX = g_touchY = -1` reloads `g_touchY` before
+  storing `g_touchX`; two independent assignments do not match. Conversely, the input-device
   name buffers each require their own zero assignment, rather than a chained byte assignment.
 
 - Separate `continue` statements can have separate trailing `nop` blocks. In the language

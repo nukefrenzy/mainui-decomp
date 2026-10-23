@@ -66,7 +66,7 @@ Addresses in the source and in `ghidra/` refer only to this exact binary.
 
 | Path | Contents |
 | --- | --- |
-| `src/` | The source: one file per original source file (named by content; address ranges in `docs/tu-map.tsv`), and shared headers |
+| `src/` | The source: one file per original source file (named by content, except `stb_zlib.cpp`, the one original name known; address ranges in `docs/tu-map.tsv`), and shared headers |
 | `docs/` | Documentation (see above) |
 | `ghidra/` | Function and class names for Ghidra, and the script that applies them |
 | `scripts/` | Fetch inputs, build, run all checks |

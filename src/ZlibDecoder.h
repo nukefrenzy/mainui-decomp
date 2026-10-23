@@ -1,4 +1,4 @@
-// Streaming DEFLATE decoder (ZlibDecoder.cpp), adapted from stb_image's zlib code. The zip reader
+// Streaming DEFLATE decoder (stb_zlib.cpp), adapted from stb_image's zlib code. The zip reader
 // (ZipReader.c) uses it, reading straight from the archive file.
 #pragma once
 #include <stdio.h>

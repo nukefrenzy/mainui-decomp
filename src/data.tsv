@@ -7,11 +7,11 @@ MainUI.cpp	g_fbFd	17e488	4	bytes	declared extent; original ELF initial bytes
 MainUI.cpp	g_panelInfo	17e48c	188	bytes	full MI_PANEL_ParamConfig_t-compatible object; timing prefix and trailing SDK fields checked
 MainUI.cpp	g_panelCommands	17e548	341	bytes	MIPI command/length/payload stream with FE FE delay markers and FF FF terminator
 MainUI.cpp	g_customDisplayTiming	17e6ec	1	bytes	declared extent; original ELF initial bytes
-ZlibDecoder.cpp	g_lengthBase	17f9c0	124	bytes	declared extent; original ELF initial bytes
-ZlibDecoder.cpp	g_lengthExtra	17fa3c	124	bytes	declared extent; original ELF initial bytes
-ZlibDecoder.cpp	g_distanceBase	17fab8	128	bytes	declared extent; original ELF initial bytes
-ZlibDecoder.cpp	g_distanceExtra	17fb38	128	bytes	declared extent; original ELF initial bytes
-ZlibDecoder.cpp	g_codeLengthOrder	17fbb8	19	bytes	declared extent; original ELF initial bytes
+stb_zlib.cpp	g_lengthBase	17f9c0	124	bytes	declared extent; original ELF initial bytes
+stb_zlib.cpp	g_lengthExtra	17fa3c	124	bytes	declared extent; original ELF initial bytes
+stb_zlib.cpp	g_distanceBase	17fab8	128	bytes	declared extent; original ELF initial bytes
+stb_zlib.cpp	g_distanceExtra	17fb38	128	bytes	declared extent; original ELF initial bytes
+stb_zlib.cpp	g_codeLengthOrder	17fbb8	19	bytes	declared extent; original ELF initial bytes
 ImeWindow.cpp	g_imeKeyMap	17fbd4	200	bytes	declared extent; original ELF initial bytes
 BuiltinStrings.c	g_defaultStrings	17fc9c	624	cstring_table	156 original pointer entries; verify each pointed-to string in order
 DeviceAuth.c	cipherKeys1	17ff0c	16	bytes	declared extent; original ELF initial bytes

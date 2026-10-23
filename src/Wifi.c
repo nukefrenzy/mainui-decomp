@@ -1,5 +1,4 @@
-// Wifi.c (0x14e0cc-0x14f730): the Wi-Fi client backend, driving wpa_supplicant through the
-// wpa_cli command-line tool.
+// Wifi.c (0x14e0cc-0x14f730): the Wi-Fi client backend (wpa_supplicant, through wpa_cli).
 //
 // A monitor thread (started from main) runs every 3 seconds: it refreshes the connection status
 // (wpa_cli status + signal_poll, parsed from /tmp/wpa_status.txt) and hands it to main's

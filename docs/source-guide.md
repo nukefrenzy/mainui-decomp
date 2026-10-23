@@ -32,10 +32,10 @@ same screens from `/tmp/state.json`.
 ## How the source is organized
 
 The original program was built from 22 separate source files (translation units), and `src/` has
-one file for each. The original file names aren't recorded in the binary, so each file is named
-after what it contains. Its first comment line gives the address range it covers, and
-[tu-map.tsv](tu-map.tsv) lists all the ranges. Functions appear **in the original address
-order**.
+one file for each. Only one original file name survives in the binary: `stb_zlib.cpp`, named in
+its assert messages. The others are named after what they contain. Each file's first comment line
+gives the address range it covers, and [tu-map.tsv](tu-map.tsv) lists all the ranges. Functions
+appear **in the original address order**.
 
 | File | Contents |
 | --- | --- |
@@ -46,7 +46,7 @@ order**.
 | [Config.cpp](../src/Config.cpp) | reading Emu/App/RApp/Themes `config.json` folders, the Recent list, device and SD card helpers, image loading |
 | [Theme.cpp](../src/Theme.cpp) | loading a theme: fonts, images, colors, sounds |
 | [FileBrowser.cpp](../src/FileBrowser.cpp) | reading folders for the file browser |
-| [ZlibDecoder.cpp](../src/ZlibDecoder.cpp) | a DEFLATE (zlib) decoder adapted from stb_image |
+| [stb_zlib.cpp](../src/stb_zlib.cpp) | a DEFLATE (zlib) decoder adapted from stb_image |
 | [MenuHelpers.cpp](../src/MenuHelpers.cpp) | `LruCache` and `WorkerQueue` (thumbnail loading) |
 | [Language.cpp](../src/Language.cpp) | user-interface languages |
 | [KeySettingWindow.cpp](../src/KeySettingWindow.cpp) | the button-mapping screen |

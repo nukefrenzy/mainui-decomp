@@ -15,8 +15,9 @@
 #include "MainUI.h"
 #include <iostream>
 
-// 0x17ff3c, the only global with a constructor (ctor 0x3b130, dtor 0x49be0 via __aeabi_atexit).
-// Declared after the headers and before the body to preserve template first-use order.
+// The window stack, and the windows queued by pushWindow. g_pendingWindows (0x17ff3c) is the only
+// global with a constructor (ctor 0x3b130, dtor 0x49be0 via __aeabi_atexit); it is defined here,
+// after the headers and before the functions, so template code is first used in the original order.
 std::vector<TrimusWindow *> *g_windowStack; // 0x17ff38
 std::vector<TrimusWindow *> g_pendingWindows;
 
@@ -26,8 +27,8 @@ unsigned int g_unrefBss_17ff50; // 0x17ff50: unreferenced storage at this addres
 char g_launchCmd[2048]; // 0x17ff54
 char g_countBuffer[256]; // 0x180754
 SDL_Thread *g_loadingThread; // 0x180854
-// These TU-local objects follow iostream's local .comm initializer; making them
-// public moved them ahead of it. Original target addresses are listed below.
+// File-local (static) state. These must stay static: the compiler places static objects after
+// iostream's own storage, which is where the original has them.
 static fb_var_screeninfo g_fbVar; // 0x18085c
 static bool g_settingsDirty; // 0x1808fc
 static int g_powerDownCount; // 0x180900
@@ -5452,8 +5453,8 @@ int ThemeMenu::onSelect()
     return -1;
 }
 
-// Legacy suffix table retained in the target even though fileType reads configured extensions.
-// Original writable pointer table: 0x17e6f0-0x17e764.
+// A table of ROM file extensions that nothing reads any more (fileType uses each emulator's
+// configured extensions instead). It is writable data at 0x17e6f0-0x17e764 in the original.
 const char *g_legacyExtensions[] = {
     ".smc", ".fig", ".sfc", ".gd3", ".gd7", ".dx2", ".bsx", ".swc",
     ".gen", ".md", ".smd", ".32x", ".sms", ".rom", ".gg", ".sg",

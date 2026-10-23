@@ -158,14 +158,16 @@ def main():
         sym = wanted.get(row[0])
         if sym is None or row[3] == 'library-exact':
             continue
-        # Library rows keep their names, except runtime_<addr> placeholders inside a Miyoo unit.
-        if row[3] == 'library' and not row[1].startswith('runtime_'):
+        # Names ending in their own address (runtime_500b4, stb_302cc, buildRomList_23318) are
+        # placeholders: the source name replaces them. Other library rows keep their names.
+        placeholder = re.fullmatch(r'\w+_[0-9a-f]{5,6}', row[1]) is not None
+        if row[3] == 'library' and not placeholder:
             continue
         name = plain_name(sym, plain.get(sym, sym))
         if name == row[1]:
             continue
         # A hand name that only adds a suffix (e.g. an overload's GameDetailWindow_empty) stays.
-        if row[3] != 'guess' and row[1].startswith(name) and len(row[1]) > len(name):
+        if row[3] != 'guess' and not placeholder and row[1].startswith(name) and len(row[1]) > len(name):
             continue
         changed += 1
         if args.check:

@@ -112,7 +112,7 @@ addr	name	subsystem	confidence	comment
 0002291c	rebuildRomCache	database	confirmed	Byte-exact DROP/CREATE <table>_roms then scanRomDir over EmuInfo path/imagePath in one transaction.
 00022c88	isRomFile	files	confirmed	Byte-exact countDirectoryItems filter: known file type or .zip, never [BIOS]/neogeo/gngeo.
 00022d90	prepareRomCache	database	confirmed	Byte-exact open <path>/<name>_cache6.db and count rows (folder ppath or pinyin/cpinyin search); empty cache is rebuilt from gamelist.xml, else the file system. Name kept: shared prototype.
-00023318	buildRomList_23318	database	confirmed	Byte-exact create_rom_browser_menu: new DBCachedTextMenu(emu label, emu, arg, search), count via 0x22d90, setTotal, open the cache. Name kept: shared prototype.
+00023318	buildRomList	database	confirmed	Byte-exact create_rom_browser_menu: new DBCachedTextMenu(emu label, emu, arg, search), count via 0x22d90, setTotal, open the cache. Name kept: shared prototype.
 00023548	DBCacheWorker::run	database	confirmed	Byte-exact MainUI.cpp.
 0002407c	DBCacheWorker::finished	database	confirmed	Byte-exact MainUI.cpp.
 000240b4	DBCachedTextMenu::pageUp	database	confirmed	Byte-exact MainUI.cpp.
@@ -3980,25 +3980,25 @@ addr	name	subsystem	confidence	comment
 00130210	std::_Construct<DirectoryItems,DirectoryItems>	library	confirmed	Byte-exact source: src/FileBrowser.cpp.
 0013025c	std::operator==<DirectoryItems*>	library	confirmed	Byte-exact source: src/FileBrowser.cpp.
 001302a4	std::move_iterator<DirectoryItems*>::base	library	confirmed	Byte-exact source: src/FileBrowser.cpp.
-001302cc	stb_302cc	lib_stb	library	
-001302f4	stb_302f4	lib_stb	library	
-001303b0	stb_303b0	lib_stb	library	
-00130414	stb_30414	lib_stb	library	
-0013080c	stb_3080c	lib_stb	library	
-001308b8	stb_308b8	lib_stb	library	
-00130964	stb_30964	lib_stb	library	
-001309f4	stb_309f4	lib_stb	library	
-00130c10	stb_30c10	lib_stb	library	
-00130ff0	stb_30ff0	lib_stb	library	
-00131120	historyWrite	misc	confirmed	Byte-exact source: src/ZlibDecoder.cpp.
-0013118c	historyRead	misc	confirmed	Byte-exact source: src/ZlibDecoder.cpp.
-001311f0	parse_zlib_header	misc	confirmed	Byte-exact source: src/ZlibDecoder.cpp.
-001312d8	parse_huffman_block	misc	confirmed	Byte-exact source: src/ZlibDecoder.cpp.
-00131644	parse_uncompressed_block	misc	confirmed	Byte-exact source: src/ZlibDecoder.cpp.
-001317a4	stb_317a4	lib_stb	library	
-00131a68	openZlib	misc	confirmed	Byte-exact source: src/ZlibDecoder.cpp.
-00131b64	readZlib	misc	confirmed	Byte-exact source: src/ZlibDecoder.cpp.
-00131ce8	stbi_zlib_decode_malloc	misc	confirmed	Byte-exact source: src/ZlibDecoder.cpp.
+001302cc	zerror	lib_stb	confirmed	Byte-exact source: src/stb_zlib.cpp.
+001302f4	bit_reverse16	lib_stb	confirmed	Byte-exact source: src/stb_zlib.cpp.
+001303b0	bit_reverse	lib_stb	confirmed	Byte-exact source: src/stb_zlib.cpp.
+00130414	zbuild_huffman	lib_stb	confirmed	Byte-exact source: src/stb_zlib.cpp.
+0013080c	zget8	lib_stb	confirmed	Byte-exact source: src/stb_zlib.cpp.
+001308b8	fill_bits	lib_stb	confirmed	Byte-exact source: src/stb_zlib.cpp.
+00130964	zreceive	lib_stb	confirmed	Byte-exact source: src/stb_zlib.cpp.
+001309f4	zhuffman_decode	lib_stb	confirmed	Byte-exact source: src/stb_zlib.cpp.
+00130c10	compute_huffman_codes	lib_stb	confirmed	Byte-exact source: src/stb_zlib.cpp.
+00130ff0	init_default_huffman	lib_stb	confirmed	Byte-exact source: src/stb_zlib.cpp.
+00131120	historyWrite	misc	confirmed	Byte-exact source: src/stb_zlib.cpp.
+0013118c	historyRead	misc	confirmed	Byte-exact source: src/stb_zlib.cpp.
+001311f0	parse_zlib_header	misc	confirmed	Byte-exact source: src/stb_zlib.cpp.
+001312d8	parse_huffman_block	misc	confirmed	Byte-exact source: src/stb_zlib.cpp.
+00131644	parse_uncompressed_block	misc	confirmed	Byte-exact source: src/stb_zlib.cpp.
+001317a4	parse_header	lib_stb	confirmed	Byte-exact source: src/stb_zlib.cpp.
+00131a68	openZlib	misc	confirmed	Byte-exact source: src/stb_zlib.cpp.
+00131b64	readZlib	misc	confirmed	Byte-exact source: src/stb_zlib.cpp.
+00131ce8	stbi_zlib_decode_malloc	misc	confirmed	Byte-exact source: src/stb_zlib.cpp.
 00131e34	LruCache::LruCache	ui_framework	confirmed	24-byte MenuWindow member at +0x80, takes a surface-free callback.
 00131e94	LruCache::~LruCache	ui_framework	confirmed	Byte-exact source: src/MenuHelpers.cpp.
 00131ed8	LruCache::clear	database	confirmed	Byte-exact source: src/MenuHelpers.cpp.

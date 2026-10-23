@@ -472,25 +472,25 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `FileBrowserCache::parent()` | 0x12dd38 | 504 | FileBrowser.cpp |
 | `FileBrowserCache::child(char const*)` | 0x12df30 | 420 | FileBrowser.cpp |
 | `FileAction::FileAction(char const*, int)` | 0x12e0d4 | 156 | FileBrowser.cpp |
-| `zerror(char const*)` | 0x1302cc | 40 | ZlibDecoder.cpp |
-| `bit_reverse16(int)` | 0x1302f4 | 188 | ZlibDecoder.cpp |
-| `bit_reverse(int, int)` | 0x1303b0 | 100 | ZlibDecoder.cpp |
-| `zbuild_huffman(zhuffman*, unsigned char*, int)` | 0x130414 | 1016 | ZlibDecoder.cpp |
-| `zget8(zbuf*)` | 0x13080c | 172 | ZlibDecoder.cpp |
-| `fill_bits(zbuf*)` | 0x1308b8 | 172 | ZlibDecoder.cpp |
-| `zreceive(zbuf*, int)` | 0x130964 | 144 | ZlibDecoder.cpp |
-| `zhuffman_decode(zbuf*, zhuffman*)` | 0x1309f4 | 540 | ZlibDecoder.cpp |
-| `compute_huffman_codes(zbuf*)` | 0x130c10 | 992 | ZlibDecoder.cpp |
-| `init_default_huffman()` | 0x130ff0 | 304 | ZlibDecoder.cpp |
-| `historyWrite(zbuf*, unsigned char)` | 0x131120 | 108 | ZlibDecoder.cpp |
-| `historyRead(zbuf*, int)` | 0x13118c | 100 | ZlibDecoder.cpp |
-| `parse_zlib_header(zbuf*)` | 0x1311f0 | 232 | ZlibDecoder.cpp |
-| `parse_huffman_block(zbuf*, int)` | 0x1312d8 | 876 | ZlibDecoder.cpp |
-| `parse_uncompressed_block(zbuf*, int)` | 0x131644 | 352 | ZlibDecoder.cpp |
-| `parse_header(zbuf*)` | 0x1317a4 | 708 | ZlibDecoder.cpp |
-| `openZlib(unsigned char*, FILE*, int)` | 0x131a68 | 252 | ZlibDecoder.cpp |
-| `readZlib(zbuf*, void*, int)` | 0x131b64 | 388 | ZlibDecoder.cpp |
-| `stbi_zlib_decode_malloc(unsigned char*, int, int*)` | 0x131ce8 | 332 | ZlibDecoder.cpp |
+| `zerror(char const*)` | 0x1302cc | 40 | stb_zlib.cpp |
+| `bit_reverse16(int)` | 0x1302f4 | 188 | stb_zlib.cpp |
+| `bit_reverse(int, int)` | 0x1303b0 | 100 | stb_zlib.cpp |
+| `zbuild_huffman(zhuffman*, unsigned char*, int)` | 0x130414 | 1016 | stb_zlib.cpp |
+| `zget8(zbuf*)` | 0x13080c | 172 | stb_zlib.cpp |
+| `fill_bits(zbuf*)` | 0x1308b8 | 172 | stb_zlib.cpp |
+| `zreceive(zbuf*, int)` | 0x130964 | 144 | stb_zlib.cpp |
+| `zhuffman_decode(zbuf*, zhuffman*)` | 0x1309f4 | 540 | stb_zlib.cpp |
+| `compute_huffman_codes(zbuf*)` | 0x130c10 | 992 | stb_zlib.cpp |
+| `init_default_huffman()` | 0x130ff0 | 304 | stb_zlib.cpp |
+| `historyWrite(zbuf*, unsigned char)` | 0x131120 | 108 | stb_zlib.cpp |
+| `historyRead(zbuf*, int)` | 0x13118c | 100 | stb_zlib.cpp |
+| `parse_zlib_header(zbuf*)` | 0x1311f0 | 232 | stb_zlib.cpp |
+| `parse_huffman_block(zbuf*, int)` | 0x1312d8 | 876 | stb_zlib.cpp |
+| `parse_uncompressed_block(zbuf*, int)` | 0x131644 | 352 | stb_zlib.cpp |
+| `parse_header(zbuf*)` | 0x1317a4 | 708 | stb_zlib.cpp |
+| `openZlib(unsigned char*, FILE*, int)` | 0x131a68 | 252 | stb_zlib.cpp |
+| `readZlib(zbuf*, void*, int)` | 0x131b64 | 388 | stb_zlib.cpp |
+| `stbi_zlib_decode_malloc(unsigned char*, int, int*)` | 0x131ce8 | 332 | stb_zlib.cpp |
 | `LruCache::LruCache(void (*)(SDL_Surface*))` | 0x131e34 | 96 | MenuHelpers.cpp |
 | `LruCache::~LruCache()` | 0x131e94 | 68 | MenuHelpers.cpp |
 | `LruCache::clear()` | 0x131ed8 | 216 | MenuHelpers.cpp |

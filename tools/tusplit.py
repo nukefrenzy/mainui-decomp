@@ -65,7 +65,7 @@ CUT_DROP = {
 # File names of the proven units (src/<name>.cpp or .c); new, unreviewed units get tu_<lo>.
 UNIT_NAMES = {
     0x015b20: "MainUI", 0x049c3c: "Main", 0x04c418: "RingList", 0x04cb68: "HardwareTests",
-    0x11cdc8: "Config", 0x129f9c: "Theme", 0x12ce28: "FileBrowser", 0x1302cc: "ZlibDecoder",
+    0x11cdc8: "Config", 0x129f9c: "Theme", 0x12ce28: "FileBrowser", 0x1302cc: "stb_zlib",
     0x131e34: "MenuHelpers", 0x134080: "Language", 0x1376fc: "KeySettingWindow", 0x138c50: "WifiMenus",
     0x13edfc: "ImeWindow", 0x143720: "Pinyin", 0x1484d4: "GlobalSearch", 0x14acfc: "Device",
     0x14b860: "Settings", 0x14cb24: "ZipReader", 0x14da50: "BuiltinStrings", 0x14dc18: "I2c",
@@ -85,7 +85,7 @@ UNIT_FIXED = {
                           "0x129f9c-0x12ce28; seven theme/font/image/sound functions, no tail",
     (0x12ce28, 0x1302cc): "unitcheck --end 1302cc: src/FileBrowser.cpp body + 105 template/inline functions "
                           "fill exactly 0x12ce28-0x1302cc; file-browser directory cache and traversal",
-    (0x1302cc, 0x131e34): "unitcheck --end 131e34: src/ZlibDecoder.cpp fills exactly "
+    (0x1302cc, 0x131e34): "unitcheck --end 131e34: src/stb_zlib.cpp fills exactly "
                           "0x1302cc-0x131e34; streaming stb_zlib.cpp decoder, 19 functions, no tail",
     (0x131e34, 0x134080): "unitcheck --end 134080: src/MenuHelpers.cpp body + 110 template/inline functions "
                           "fill exactly 0x131e34-0x134080; keyed cache and background worker queue",
@@ -318,7 +318,16 @@ for lo, hi in zip(bounds, bounds[1:]):
             ev.append(f"CHECK: own string span {after[0][0]:#x}-{after[0][1]:#x} follows static init {x:#x}; "
                       f"possible split near {after[0][0]:#x}")
     conf = "proven" if (lo, hi) in UNIT_FIXED else "reviewed" if lo in CUT_ADD else "review"
-    rows.append((lo, hi, UNIT_NAMES.get(lo, f"tu_{lo:06x}"), conf, "; ".join(ev), label))
+    name = UNIT_NAMES.get(lo, f"tu_{lo:06x}")
+    # A written unit is labeled with its source file's own description (first comment line).
+    for ext in (".cpp", ".c"):
+        src = os.path.join(ROOT, "src", name + ext)
+        if os.path.exists(src):
+            first = open(src).readline()
+            m = re.match(r"// \S+ \([^)]*\): (.*?)\.?$", first.strip())
+            if m:
+                label = m.group(1)
+    rows.append((lo, hi, name, conf, "; ".join(ev), label))
 
 os.makedirs(os.path.dirname(a.out), exist_ok=True)
 with open(a.out, "w") as f:

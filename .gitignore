@@ -1,6 +1,7 @@
 # Never commit Miyoo's binaries or anything generated from them
-MainUI*
-!MainUI*.md
+# (MainUI binaries: MainUI, MainUI-354-clean, MainUI-modified, ...; src/MainUI.cpp/.h are source)
+MainUI
+MainUI-*
 *.pak
 *.so
 *.o

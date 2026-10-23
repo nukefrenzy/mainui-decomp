@@ -36,7 +36,7 @@ M = {
     "0002291c": ("rebuildRomCache", "database", "confirmed", "Byte-exact DROP/CREATE <table>_roms then scanRomDir over EmuInfo path/imagePath in one transaction."),
     "00022c88": ("isRomFile", "files", "confirmed", "Byte-exact countDirectoryItems filter: known file type or .zip, never [BIOS]/neogeo/gngeo."),
     "00022d90": ("database_lang_22d90", "database", "confirmed", "Byte-exact open <path>/<name>_cache6.db and count rows (folder ppath or pinyin/cpinyin search); empty cache is rebuilt from gamelist.xml, else the file system. Name kept: shared prototype."),
-    "00023318": ("buildRomList_23318", "database", "confirmed", "Byte-exact create_rom_browser_menu: new DBCachedTextMenu(emu label, emu, arg, search), count via 0x22d90, setTotal, open the cache. Name kept: shared prototype."),
+    "00023318": ("buildRomList", "database", "confirmed", "Byte-exact create_rom_browser_menu: new DBCachedTextMenu(emu label, emu, arg, search), count via 0x22d90, setTotal, open the cache. Name kept: shared prototype."),
     "0004c418": ("ringAt", "container", "confirmed", "Byte-exact indexed access to a circular singly linked list; missed by Ghidra export."),
     "0004c7a8": ("ringCount", "container", "confirmed", "Byte-exact circular-list count; missed by Ghidra export."),
     # program entry and lifecycle

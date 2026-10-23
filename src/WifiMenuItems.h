@@ -8,7 +8,8 @@
 #include "TextMenuDrawer.h"
 #include "ImeWindow.h"
 
-// Shared literal identities preserve first-use order in the Wi-Fi owner's read-only data.
+// Strings shared by name between the Wi-Fi files, so WifiMenus.cpp's read-only data keeps the
+// original order.
 extern const char g_wifiSkinRoot[], g_wifiArrowLeft[], g_wifiArrowRight[];
 extern const char g_hotspotSwitchFormat[], g_hotspotSsidKey[], g_hotspotConfigPath[], g_hotspotPskKey[];
 

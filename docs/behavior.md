@@ -354,7 +354,7 @@ fix them, but should know they exist.
 | `loadSkinImage` prints "open ok" for absolute names even when loading failed, and `loadImage` "converts" to the image's own format (a copy). | [Config.cpp](../src/Config.cpp) |
 | The file-browser cache trim can empty the list it is trimming. | `FileBrowserCache::trim`, [FileBrowser.cpp](../src/FileBrowser.cpp) |
 | `LruCache::clear` clears its list outside the lock. | [MenuHelpers.cpp](../src/MenuHelpers.cpp) |
-| The zlib helper `stbi_zlib_decode_malloc` overwrites the start of its buffer on every read, and `openZlib` leaks when given neither input nor file. | [ZlibDecoder.cpp](../src/ZlibDecoder.cpp) |
+| The zlib helper `stbi_zlib_decode_malloc` overwrites the start of its buffer on every read, and `openZlib` leaks when given neither input nor file. | [stb_zlib.cpp](../src/stb_zlib.cpp) |
 | The zip reader computes and ignores a "remaining" limit for stored entries. | `zipRead`, [ZipReader.c](../src/ZipReader.c) |
 | `i2cRead` exits the whole program on some errors, leaks the descriptor on an ioctl error, and truncates the error to a byte. | [I2c.c](../src/I2c.c) |
 | `setWifiScanEnable` and `wifiMonitorThread` are declared to return values but return nothing. | [Wifi.c](../src/Wifi.c) |
