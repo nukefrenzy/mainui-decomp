@@ -1,5 +1,11 @@
-// tu_14da50: UI language strings (0x14da50-0x14dc18): <lang>.short files as cJSON, falling back
-// to the built-in English table. Its .rodata starts with that table's strings (0x163e5c).
+// tu_14da50 (0x14da50-0x14dc18): the built-in English strings, and a reader for <lang>.short files.
+//
+// g_defaultStrings holds the English text of all 156 user-interface strings (ids: LangStrings.h);
+// MainUI falls back to it when no language file can be read. The three functions read the
+// reduced <lang>.short files that genShortLangFile (tu_134080.cpp) writes for ids 88-155, the
+// in-game menu's strings ("Continue", "Save", "Load", "Exit Game", ...). Nothing in MainUI calls
+// them; they are presumably there for another program that shares this code.
+// Its .rodata starts with the table's strings (0x163e5c).
 // Compiled as C (call results are stored straight from r0), so there is no template tail.
 // The C units 0x14acfc-0x14f730 are split where .rodata proves a new file: GCC merges identical
 // string literals within one file even at -O0, and "w", "r" and "%d" each appear more than once.
@@ -7,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "LangStrings.h"
 
 typedef struct cJSON {
     struct cJSON *next, *prev, *child;
@@ -23,7 +30,7 @@ char *cJSON_GetStringValue(cJSON *item);
 
 int readWholeFile(const char *name, FILE *f, char **out);  // 0x14b8a4
 
-char g_langPath[128];           // 0x182680, COMMON
+char g_langPath[128];           // 0x182680, COMMON: scratch buffer for a path or a key
 char g_unrefCommon_182700[48];  // 0x182700, COMMON: unreferenced storage at this address in the Onion and stock builds; size and position proven, name, type and partition unknown; hashes after g_langPath
 const char *g_defaultStrings[156] = { // 0x17fc9c, built-in English strings
     "RetroArch", // 0
@@ -184,7 +191,8 @@ const char *g_defaultStrings[156] = { // 0x17fc9c, built-in English strings
     "Website", // 155
 };
 
-// Loads the language file <lang>.short as a cJSON object of id -> string.
+// Loads <lang>.short (from the SD card's miyoo354/app/lang if present, else the firmware's
+// /customer/app/lang) as a cJSON object mapping "88".."155" to text; NULL if unreadable.
 cJSON *loadLanguageStrings(const char *lang)    // 0x14da50
 {
     cJSON *strings = NULL;
@@ -210,9 +218,11 @@ void freeLanguageStrings(cJSON *strings)    // 0x14db54
         cJSON_Delete(strings);
 }
 
+// One string by id: from the loaded file if there is one (NULL if it lacks the id), else the
+// English table. Out-of-range ids give "wrongbeef"; negative ids are not checked.
 const char *getLanguageString(cJSON *strings, int id)   // 0x14db84
 {
-    if (id >= 156)
+    if (id >= STR_COUNT)
         return "wrongbeef";
     if (strings) {
         snprintf(g_langPath, 128, "%d", id);

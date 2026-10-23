@@ -1,6 +1,13 @@
-// Language loading, built-in fallback and abbreviated language files.
-// Proven 0x134080-0x1376fc: 4,768-byte body plus 110 generated functions.
-// The draft start 0x133f60 was part of the preceding file's allocator tail.
+// tu_134080 (0x134080-0x1376fc): user-interface languages.
+//
+// Every language is a JSON file <lang>.lang in ./lang/ with "lang" (its display name) and the 156
+// strings "0".."155" (ids: LangStrings.h). loadLanguages reads English first (writing
+// /customer/app/lang/en.lang from the built-in table if missing, or falling back to that table),
+// then every other .lang file, sorted by file name. languageString() returns a string in the
+// language chosen in system.json. For each language it also writes a reduced <lang>.short with
+// ids 88-155 (see tu_14da50.c). Languages other than English need the CJK font on the SD card.
+// Body 4,768 bytes plus 110 generated functions; the draft start 0x133f60 was part of the
+// preceding file's allocator tail.
 #include "PlatformApi.h"
 #include <cstdio>
 #include <cstdlib>
@@ -22,10 +29,12 @@ const char *getLanguageFile();
 }
 bool languageFontExists();
 extern const char *g_defaultStrings[156]; // 0x17fc9c
-std::vector<LanguageChoice> g_languageChoices; // 0x1823f4
-std::vector<Language> g_languages; // 0x182400
+std::vector<LanguageChoice> g_languageChoices; // 0x1823f4: what the language setting offers
+std::vector<Language> g_languages; // 0x182400: English first, then the others by file name
 static_assert(sizeof(Language) == 60 && sizeof(LanguageChoice) == 48, "language layouts");
 
+// Writes /customer/app/lang/<file>.short with strings 88-155 of a loaded language, unless it
+// exists already. Returns true if it was written.
 bool genShortLangFile(const std::string &file)
 {
     std::string path;
@@ -45,7 +54,7 @@ bool genShortLangFile(const std::string &file)
             char key[16] = {0};
             cJSON *json = cJSON_CreateObject();
             if (json) {
-                for (int i = 88; i < 156; i++) {
+                for (int i = 88; i < STR_COUNT; i++) {   // the in-game menu's strings
                     snprintf(key, 16, "%d", i);
                     cJSON_AddStringToObject(json, key, g_languages[index].strings[i].c_str());
                 }
@@ -65,6 +74,8 @@ bool genShortLangFile(const std::string &file)
     }
     return ok;
 }
+// Writes the built-in English table to /customer/app/lang/en.lang if that file is missing.
+// Returns true if it was written.
 bool createEnglishLangFile()
 {
     bool ok = false;
@@ -74,7 +85,7 @@ bool createEnglishLangFile()
         char key[16] = {0};
         if (json) {
             cJSON_AddStringToObject(json, "lang", "English");
-            for (int i = 0; i < 156; i++) {
+            for (int i = 0; i < STR_COUNT; i++) {
                 snprintf(key, 16, "%d", i);
                 cJSON_AddStringToObject(json, key, g_defaultStrings[i]);
             }
@@ -93,6 +104,8 @@ bool createEnglishLangFile()
     }
     return ok;
 }
+// Reads one .lang file into language (file name, display name, 156 strings). Fails if the
+// display name or any string is missing.
 bool readLanguageFile(const char *path, Language &language)
 {
     FILE *file = fopen(path, "r");
@@ -111,7 +124,7 @@ bool readLanguageFile(const char *path, Language &language)
                     if (part) {
                         language.name = part;
                         ok = true;
-                        for (int i = 0; i < 156; i++) {
+                        for (int i = 0; i < STR_COUNT; i++) {
                             snprintf(key, 16, "%d", i);
                             item = cJSON_GetObjectItem(json, key);
                             part = cJSON_GetStringValue(item);
@@ -129,6 +142,8 @@ bool readLanguageFile(const char *path, Language &language)
     printf("read lang file %s ok=%d\n", path, ok);
     return ok;
 }
+// Builds g_languages from <root>/lang/ (see the file header).
+// Original quirk, kept as-is: the paths are built as root + "./lang/...", e.g. "././lang/".
 void loadLanguages(const char *root)
 {
     bool created = createEnglishLangFile();
@@ -138,7 +153,7 @@ void loadLanguages(const char *root)
         std::string path(root);
         path += "./lang/en.lang";
         Language lang;
-        if (readLanguageFile(path.c_str(), lang) && lang.strings.size() >= 156) {
+        if (readLanguageFile(path.c_str(), lang) && lang.strings.size() >= STR_COUNT) {
             fallback = false;
             g_languages.push_back(lang);
             genShortLangFile("en.lang");
@@ -149,7 +164,7 @@ void loadLanguages(const char *root)
         lang.file = "en.lang";
         lang.name = "English";
         std::string text;
-        for (int i = 0; i < 156; i++) {
+        for (int i = 0; i < STR_COUNT; i++) {
             text = g_defaultStrings[i];
             lang.strings.push_back(text);
         }
@@ -185,6 +200,8 @@ void loadLanguages(const char *root)
         }
     }
 }
+// The languages the settings menu offers: all of them, or only English when the CJK font
+// (/mnt/SDCARD/wqy-microhei.ttc) is missing.
 std::vector<LanguageChoice> *languageChoices()
 {
     g_languageChoices.clear();
@@ -208,10 +225,12 @@ std::vector<LanguageChoice> *languageChoices()
     }
     return &g_languageChoices;
 }
+// A user-interface string (LangStrings.h) in the current language, else in English.
+// Out-of-range ids give "" or "wrongbeef".
 const char *languageString(int id)
 {
     if (id < 0) return "";
-    if (id >= 156) return "wrongbeef";
+    if (id >= STR_COUNT) return "wrongbeef";
     {
         const char *lang = getLanguageFile();
         for (int i = 0; i < g_languages.size(); i++) {

@@ -31,8 +31,8 @@ enum MiyooKey {
     MIYOO_KEY_SELECT = 305,    // SDLK_RCTRL
     MIYOO_KEY_B = 306,         // SDLK_LCTRL
     MIYOO_KEY_Y = 308,         // SDLK_LALT
-    MIYOO_KEY_LSUPER = 311,    // SDLK_LSUPER: not a Miyoo button; ignored
-    MIYOO_KEY_RSUPER = 312,    // SDLK_RSUPER: not a Miyoo button; ignored
+    MIYOO_KEY_LSUPER = 311,    // SDLK_LSUPER: probably volume up (the IO test draws it so); ignored
+    MIYOO_KEY_RSUPER = 312,    // SDLK_RSUPER: probably volume down; ignored
     MIYOO_KEY_POWER = 320,     // SDLK_POWER; repeats while held
 };
 
@@ -64,8 +64,16 @@ enum UserEventCode {
     EVENT_HOTPLUG = 19,         // an audio device was plugged or unplugged: reopen audio
     EVENT_NOTIFY = 20,          // "event_notify" in keyEventName
     EVENT_POWER_OFF = 21,       // power-off requested (power-off dialog confirmed)
+    EVENT_REDRAW = 24,          // "redraw now": posted by timers and after state changes
+    EVENT_OPEN_DIRECTORY = 25,  // the file browser chose a folder; event.user.data1 is its path
+    EVENT_TEST_TIMEOUT = 26,    // a hardware key test ran out of time
     EVENT_POWER_DIALOG = 27,    // returned (not posted) when holding power opened the power-off dialog
+    EVENT_WIFI_SCAN_DONE = 28,  // a Wi-Fi scan finished; copyScanResults has the networks
+    EVENT_WIFI_CONNECTED = 30,  // joining a network succeeded (DHCP started)
     EVENT_WIFI_STATUS = 31,     // Wi-Fi mode or connection state changed (status thread)
+    EVENT_WIFI_CONNECT_FAILED = 39,
     EVENT_VOLUME_SHOWN = 40,    // volume keys used: show the volume indicator
     EVENT_VOLUME_HIDDEN = 41,   // 3 s without volume change: hide it
+    EVENT_WIFI_SWITCHED = 42,   // Wi-Fi was switched on or off
+    EVENT_WIFI_SWITCH_TIMEOUT = 44,   // switched on, but no scan result within 10 s
 };

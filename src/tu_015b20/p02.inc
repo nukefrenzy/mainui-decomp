@@ -127,7 +127,7 @@ int busyScreenThread(void *arg)
             rect.h = bg->h;
             SDL_UpperBlit(bg, NULL, g_backBuffer, &rect);
             rect.h = 50;
-            drawText(g_backBuffer, g_imeFont, rect, languageString(0x53), g_selectedTextColor, 1, 0);
+            drawText(g_backBuffer, g_imeFont, rect, languageString(STR_SCAN_GAMES), g_selectedTextColor, 1, 0);
             SDL_UpperBlit(g_backBuffer, NULL, g_screen, NULL);
             SDL_Flip(g_screen);
             SDL_Surface *dot = loadSkinImage(g_themePath, g_skinSubdir, "skin/progress-dot.png", g_backBuffer, 0);
@@ -163,7 +163,7 @@ int loadingScreenThread(void *arg)
     rect.y = 60;
     rect.w = 640;
     rect.h = 360;
-    int w = drawText(g_backBuffer, font, rect, languageString(0x4b), g_wifiEmptyColor, 1, 0);
+    int w = drawText(g_backBuffer, font, rect, languageString(STR_LOADING_CAPS), g_wifiEmptyColor, 1, 0);
     SDL_UpperBlit(g_backBuffer, NULL, g_screen, NULL);
     SDL_Flip(g_screen);
     SDL_Surface *dot = loadSkinImage(g_themePath, g_skinSubdir, "skin/progress-dot.png", g_backBuffer, 0);

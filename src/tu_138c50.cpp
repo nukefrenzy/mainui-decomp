@@ -1,22 +1,33 @@
-// Wi-Fi/hotspot menus, actions and drawable rows; source order follows MainUI.
-// Proven 0x138c50-0x13edfc: 14,368-byte body plus 122 inline/template functions.
-// Keep ignored system() result stores and the conditional returns: they affect -O0 layout.
+// tu_138c50 (0x138c50-0x13edfc): the Wi-Fi and hotspot settings screens.
+//
+// WifiMenu lists the Wi-Fi on/off switch and, once a scan finishes, the networks found (signal
+// bars, lock, check mark for the current one). Choosing a network asks for its password if it is
+// secured (ImeWindow) and connects through the wpa_cli backend in tu_14e0cc.c, behind a progress
+// dialog. HotspotMenu switches the device into access-point mode (hostapd + udhcpd) and edits the
+// hotspot's name and password in /etc/wifi/hostapd.conf. Wi-Fi and hotspot exclude each other.
+// Results come back to the menus as user events (Input.h) through the ListMenu event slot.
+//
+// Body 14,368 bytes plus 122 inline/template functions. Keep the ignored system() result stores
+// and the conditional returns: they affect -O0 layout.
 #include "PlatformApi.h"
+#include "LangStrings.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
 #include <fstream>
 #include "WifiMenuItems.h"
+#include "Input.h"
 int findProcess(const char *, int);
 
+// What the Wi-Fi chip is doing, judged by which daemon runs (WifiMode, PlatformApi.h).
 int wifiMode()
 {
     int pid = findProcess("wpa_supplicant", 0);
-    if (pid >= 0) return 2;
+    if (pid >= 0) return WIFI_MODE_STATION;
     pid = findProcess("hostapd", 0);
-    if (pid >= 0) return 3;
-    return 1;
+    if (pid >= 0) return WIFI_MODE_HOTSPOT;
+    return WIFI_MODE_OFF;
 }
 // Establish the body unwind section before action/menu inline definitions.
 #include "WifiMenus.h"
@@ -32,8 +43,7 @@ int SDL_PushEvent(void *);
 int SDL_WaitEvent(void *);
 const char *SDL_GetError();
 int getWifiOn(); void setWifiOn(int);
-// Legacy names in tu_14b860.c: this flag actually selects hotspot/AP mode.
-int getWifiConnected(); void setWifiConnected(int);
+int getHotspotOn(); void setHotspotOn(int);
 int setWifiScanEnable(int);
 int wifiConnectOpen(const char *); int wifiConnectPsk(const char *, const char *);
 WifiStatus queryWifiStatus(); WifiStatus *getWifiStatus();
@@ -96,6 +106,7 @@ extern const char wifi_function_name_3[];
 extern const char wifi_function_name_4[];
 extern const char wifi_function_name_5[];
 
+// The Wi-Fi interface's IPv4 address, from `ip addr show wlan0`. Returns 0, or -1 if none.
 int wlanAddress(std::string &address)
 {
     int result = -1;
@@ -116,6 +127,8 @@ int wlanAddress(std::string &address)
     }
     return result;
 }
+// Hotspot -> Wi-Fi client: stops hostapd (pid) and the DHCP server, restarts wpa_supplicant
+// and the DHCP client, and saves the MAC address to /tmp/wifimac.
 void switch2WpaMode(int pid)
 {
     if (pid > 0) { printf("%s kill hostapd %d\n", wifi_function_name_0, pid); kill(pid, 15); }
@@ -131,6 +144,9 @@ void switch2WpaMode(int pid)
     rc = system("udhcpc -i wlan0 -s /etc/init.d/udhcpc.script &");
     rc = system("ifconfig | grep HWaddr | sed 's/[ ]\\+/ /g' | cut -d' ' -f5 > /tmp/wifimac");
 }
+// Wi-Fi client -> hotspot: stops wpa_supplicant and the DHCP client, gives wlan0 the address
+// 192.168.0.18 and starts hostapd and the DHCP server. (The misspelt name is the original's;
+// it survives in its log messages.)
 void swicth2ApMode()
 {
     int pid = findProcess("wpa_supplicant", 0);
@@ -154,6 +170,7 @@ extern const char g_wifiArrowLeft[] __attribute__((aligned(4))) = "skin/icon-lef
 extern const char g_wifiSkinRoot[] __attribute__((aligned(4))) = "./";
 extern const char g_wifiArrowRight[] __attribute__((aligned(4))) = "skin/icon-right-arrow-24.png";
 
+// The "Wi-Fi  < On/Off >" row; not selectable while the hotspot is on.
 WifiOnOffLabel::WifiOnOffLabel(Action *a, bool enabled) : ItemDrawable(a)
 {
     left = loadImeImage(g_themePath, g_wifiSkinRoot, g_wifiArrowLeft);
@@ -169,12 +186,12 @@ int WifiOnOffLabel::draw(SDL_Surface *dst, SDL_Rect *r, bool selected)
 {
     SDL_Rect rect = *r;
     rect.x += 20;
-    drawText(dst, g_imeFont, rect, languageString(0x83), selected ? g_wifiSelectedColor : g_imeTextColor, 3, false);
+    drawText(dst, g_imeFont, rect, languageString(STR_WIFI), selected ? g_wifiSelectedColor : g_imeTextColor, 3, false);
     rect.w = 200;
     rect.x = r->x + r->w - rect.w - (right ? right->w : 0) - 40;
     int on = getWifiOn();
-    if (on) drawText(dst, g_imeFont, rect, languageString(0x68), selected ? g_wifiSelectedColor : g_imeTextColor, 1, false);
-    else drawText(dst, g_imeFont, rect, languageString(0x69), selected ? g_wifiSelectedColor : g_imeTextColor, 1, false);
+    if (on) drawText(dst, g_imeFont, rect, languageString(STR_ON), selected ? g_wifiSelectedColor : g_imeTextColor, 1, false);
+    else drawText(dst, g_imeFont, rect, languageString(STR_OFF), selected ? g_wifiSelectedColor : g_imeTextColor, 1, false);
     if (left && right) {
         rect.y = r->y + (60 - left->h) / 2;
         rect.x = r->x + r->w - (right ? right->w : 0) - left->w - 240;
@@ -185,6 +202,7 @@ int WifiOnOffLabel::draw(SDL_Surface *dst, SDL_Rect *r, bool selected)
     }
     return 0;
 }
+// A white heading row shown above the switch while the hotspot is on.
 WifiLabel::WifiLabel(Action *a) : ItemDrawable(a) {}
 WifiLabel::~WifiLabel() {}
 int WifiLabel::draw(SDL_Surface *dst, SDL_Rect *r, bool selected)
@@ -192,9 +210,11 @@ int WifiLabel::draw(SDL_Surface *dst, SDL_Rect *r, bool selected)
     SDL_Rect rect = *r;
     SDL_FillRect(dst, r, SDL_MapRGBA(dst->format, 255, 255, 255, 255));
     rect.x += 15;
-    drawText(dst, g_imeFont, rect, languageString(0x91), g_wifiSelectedColor, 3, false);
+    drawText(dst, g_imeFont, rect, languageString(STR_HOTSPOT_IS_ON), g_wifiSelectedColor, 3, false);
     return 0;
 }
+// One network: its name on the left; signal bars, lock (secured) and check mark (connected)
+// right-aligned.
 int WifiItem::draw(SDL_Surface *dst, SDL_Rect *r, bool selected)
 {
     SDL_Rect rect = *r;
@@ -219,6 +239,9 @@ int WifiItem::draw(SDL_Surface *dst, SDL_Rect *r, bool selected)
     }
     return 0;
 }
+// Runs behind the progress dialog: joins the network, then checks the state once a second for
+// up to 11 s while it is scanning or disabled. Success starts DHCP (and turns the hotspot off)
+// and posts EVENT_WIFI_CONNECTED; anything else posts EVENT_WIFI_CONNECT_FAILED.
 int WifiConnectAction::execute(void *param)
 {
     puts("WifiConnectAction dowork");
@@ -238,33 +261,38 @@ int WifiConnectAction::execute(void *param)
         printf("%p connect result stage=%d, status=%d, ssid=%s, ip=%s, sig=(%d,%d,%d,%d), id=%d\n",
                this, status.state, status.status, status.ssid, status.ip, status.rssi, status.linkSpeed, status.noise, status.freq, status.id);
         i++;
-    } while ((status.state == 2 || status.state == 0) && i < 11);
-    if (status.state == 4) { puts("try dhcp"); wifiStartConnect(); setWifiConnected(0); usleep(2000000); ev.type = 24; ev.code = 30; }
-    else { ev.type = 24; ev.code = 39; }
+    } while ((status.state == WIFI_STATE_SCANNING || status.state == WIFI_STATE_DISABLED) && i < 11);
+    if (status.state == WIFI_STATE_COMPLETED) { puts("try dhcp"); wifiStartConnect(); setHotspotOn(0); usleep(2000000); ev.type = SDL_USEREVENT; ev.code = EVENT_WIFI_CONNECTED; }
+    else { ev.type = SDL_USEREVENT; ev.code = EVENT_WIFI_CONNECT_FAILED; }
     if (SDL_PushEvent(&ev) < 0) printf("%s %d Failed to push SDL event %s\n", wifi_function_name_2, 241, SDL_GetError());
     return -1;
 }
+// The password keyboard's OK: connect with the typed password (param) behind a progress dialog.
 int WifiConnectDialogAction::execute(void *param)
 {
-    ProgressDialog *window = new ProgressDialog(0x83, new WifiConnectAction(&ap, (char *)param, true));
+    ProgressDialog *window = new ProgressDialog(STR_WIFI, new WifiConnectAction(&ap, (char *)param, true));
     pushWindow(window);
     return 4;
 }
+// A network was chosen. Unless it is the current one: ask for the password if it is secured,
+// otherwise connect straight away.
 int WifiItemAction::execute(void *)
 {
     WifiStatus *status = getWifiStatus();
     if (!status || strcmp(status->ssid, ap.ssid) != 0) {
         if (ap.secured) {
-            ImeWindow *window = new ImeWindow(0x83, new WifiConnectDialogAction(&ap), 0x85);
+            ImeWindow *window = new ImeWindow(STR_WIFI, new WifiConnectDialogAction(&ap), STR_CONNECT);
             g_windowStack->push_back((TrimusWindow *)window);
         } else {
-            ProgressDialog *window = new ProgressDialog(0x83, new WifiConnectAction(&ap, NULL, false));
+            ProgressDialog *window = new ProgressDialog(STR_WIFI, new WifiConnectAction(&ap, NULL, false));
             window->onShow();
             g_windowStack->push_back((TrimusWindow *)window);
         }
     }
     return -1;
 }
+// Switches Wi-Fi on (power up the chip, start wpa_supplicant and DHCP) or off, and saves the
+// setting to system.json.
 void toggleWifi()
 {
     int on = getWifiOn();
@@ -283,11 +311,14 @@ void toggleWifi()
     }
     saveSystemJson(g_keyShm, g_themePath, g_fontSize);
 }
+// Runs behind the progress dialog (not while the hotspot is on). After switching on, it waits
+// up to 10 s for the first scan and passes EVENT_WIFI_SCAN_DONE on to the menu; otherwise it
+// posts EVENT_WIFI_SWITCHED (or EVENT_WIFI_SWITCH_TIMEOUT).
 int WifiOnOffAction::execute(void *)
 {
     UserEvent out;
-    out.type = 24; out.code = 42;
-    if (getWifiConnected() == 0) {
+    out.type = SDL_USEREVENT; out.code = EVENT_WIFI_SWITCHED;
+    if (getHotspotOn() == 0) {
         toggleWifi();
         int on = getWifiOn();
         printf("wifi on/off action %d\n", on);
@@ -298,9 +329,9 @@ int WifiOnOffAction::execute(void *)
             InputEvent ev;
             while (SDL_WaitEvent(&ev)) {
                 switch (ev.type) {
-                case 24:
-                    if (ev.user.code == 28) {
-                        puts("wifi on/off scan finish"); out.code = 28;
+                case SDL_USEREVENT:
+                    if (ev.user.code == EVENT_WIFI_SCAN_DONE) {
+                        puts("wifi on/off scan finish"); out.code = EVENT_WIFI_SCAN_DONE;
                         if (SDL_PushEvent(&out) < 0) printf("%s : %d Failed to push SDL event: %s\n", wifi_function_name_3, 362, SDL_GetError());
                         return -1;
                     }
@@ -309,7 +340,7 @@ int WifiOnOffAction::execute(void *)
                 }
                 unsigned int now = milliseconds();
                 if (now - start > 10000) {
-                    puts("wifi on/off timeout"); out.code = 44; break;
+                    puts("wifi on/off timeout"); out.code = EVENT_WIFI_SWITCH_TIMEOUT; break;
                 }
             }
         } else setWifiScanEnable(0);
@@ -317,13 +348,18 @@ int WifiOnOffAction::execute(void *)
     if (SDL_PushEvent(&out) < 0) printf("%s : %d Failed to push SDL event: %s\n", wifi_function_name_3, 386, SDL_GetError());
     return -1;
 }
+// Choosing the switch row: run WifiOnOffAction behind a progress dialog.
 int WifiOnOffDialogAction::execute(void *)
 {
     puts("wifi on/off");
-    ProgressDialog *window = new ProgressDialog(0x83, new WifiOnOffAction);
+    ProgressDialog *window = new ProgressDialog(STR_WIFI, new WifiOnOffAction);
     pushWindow(window);
     return -1;
 }
+// Shared base of both screens: a list of ItemDrawable rows, 60 px high, below the title bar.
+// ListMenu's virtual slots are still numbered: vfunc3 handles a button, vfunc4 activates the
+// selected row, vfunc7 draws, vfunc13 frees the rows and vfunc15 receives user events (its
+// original name, "onUnhandledEvent", survives in a log message).
 WifiMenuDrawer::WifiMenuDrawer() : ListMenu(false)
 {
     rect.x = 0; rect.y = 60; rect.w = 640; rect.h = 360;
@@ -335,6 +371,8 @@ WifiMenuDrawer::~WifiMenuDrawer()
     if (background) SDL_FreeSurface(background);
     vfunc13();
 }
+// A button: ListMenu moves the cursor; results 5 and 6 on the first row (the switch) run its
+// action instead.
 int WifiMenuDrawer::vfunc3()
 {
     int action = ListMenu::vfunc3();
@@ -351,6 +389,7 @@ int WifiMenuDrawer::vfunc3()
     }
     return action;
 }
+// Activate: run the selected row's action.
 int WifiMenuDrawer::vfunc4()
 {
     ItemDrawable *item = (ItemDrawable *)getItem(cur);
@@ -365,6 +404,8 @@ void *WifiMenuDrawer::getItem(int index)
     if (index >= 0 && index < items.size()) return items.at(index);
     return NULL;
 }
+// Draws the visible page of six rows (scrolling with the cursor), the stripes behind the first
+// five, the highlight, and "no network" text when Wi-Fi is on but nothing was found.
 void WifiMenuDrawer::vfunc7(SDL_Surface *dst)
 {
     int index;
@@ -407,11 +448,12 @@ void WifiMenuDrawer::vfunc7(SDL_Surface *dst)
     }
     if (count() <= 1 && getWifiOn()) {
         rect.x = 0; rect.y = 60; rect.w = 640; rect.h = 360;
-        drawText(dst, font, rect, languageString(0x8c), g_wifiEmptyColor, 1, false);
+        drawText(dst, font, rect, languageString(STR_SCANNING), g_wifiEmptyColor, 1, false);
         return;
     }
 }
 int WifiMenuDrawer::count() { return items.size(); }
+// Deletes every row (the first one separately, as the original does).
 void WifiMenuDrawer::vfunc13()
 {
     for (int i = 0; i < 1; i++) { ItemDrawable *item = items[i]; delete item; }
@@ -419,6 +461,8 @@ void WifiMenuDrawer::vfunc13()
     puts("TextMenu::freeListItem end");
     items.clear();
 }
+// Loads the icons, switches from hotspot back to Wi-Fi if needed and starts scanning; the
+// network rows arrive with EVENT_WIFI_SCAN_DONE. The overlay is a translucent black sheet.
 WifiMenu::WifiMenu()
 {
     scanCount = 0;
@@ -427,7 +471,7 @@ WifiMenu::WifiMenu()
     signal2 = loadImeImage(g_themePath, g_wifiSkinRoot, "skin/icon-wifi-signal-02.png");
     signal3 = loadImeImage(g_themePath, g_wifiSkinRoot, "skin/icon-wifi-signal-03.png");
     signal4 = loadImeImage(g_themePath, g_wifiSkinRoot, "skin/icon-wifi-signal-04.png");
-    if (getWifiConnected() == 0) {
+    if (getHotspotOn() == 0) {
         if (getWifiOn()) {
             int pid = findProcess("hostapd", 0);
             if (pid > 0) { puts("switch to wifi mode"); switch2WpaMode(pid); }
@@ -451,25 +495,31 @@ WifiMenu::~WifiMenu()
     if (signal4) SDL_FreeSurface(signal4);
     if (overlay) SDL_FreeSurface(overlay);
 }
+// While the hotspot is on, the list is dimmed by the overlay.
 void WifiMenu::vfunc7(SDL_Surface *dst)
 {
     WifiMenuDrawer::vfunc7(dst);
-    if (getWifiConnected()) {
+    if (getHotspotOn()) {
         SDL_Rect src = {0, 0, 640, 330};
         SDL_Rect pos = {0, 90, 0, 0};
         SDL_UpperBlit(overlay, &src, dst, &pos);
     }
 }
+// Remembers which row is being connected, for the check mark.
 int WifiMenu::vfunc4()
 {
-    if (getWifiConnected() == 0) {
+    if (getHotspotOn() == 0) {
         if (cur >= 0) connectingIndex = cur;
     }
     return WifiMenuDrawer::vfunc4();
 }
+// Wi-Fi events: rebuild the rows from the scan (current network first), move the check mark
+// after a successful connect, or show "connection failed".
+// Original quirk, kept as-is: the current network's bars use different thresholds from the
+// others (level <= 0 / == 2 instead of == 0 / == 1).
 int WifiMenu::vfunc15(int event)
 {
-    if (event == 28) {
+    if (event == EVENT_WIFI_SCAN_DONE) {
         vfunc13();
         items.push_back(new WifiOnOffLabel(new WifiOnOffDialogAction, true));
         scanCount = copyScanResults(scan, 32);
@@ -504,7 +554,7 @@ int WifiMenu::vfunc15(int event)
             }
             setWifiScanEnable(0);
         }
-    } else if (event == 30) {
+    } else if (event == EVENT_WIFI_CONNECTED) {
         printf("event wifi connected %d\n", connectingIndex);
         for (int i = 1; i < items.size(); i++) {
             WifiItem *item = (WifiItem *)items[i];
@@ -512,28 +562,30 @@ int WifiMenu::vfunc15(int event)
             else item->connected = 0;
         }
         UserEvent ev;
-        ev.type = 24; ev.code = 24;
+        ev.type = SDL_USEREVENT; ev.code = EVENT_REDRAW;
         if (SDL_PushEvent(&ev) < 0) printf("%s : %d Failed to push SDL event: %s\n", wifi_function_name_4, 731, SDL_GetError());
-    } else if (event == 39) {
+    } else if (event == EVENT_WIFI_CONNECT_FAILED) {
         printf("event wifi connect %d fail\n", connectingIndex);
         for (int i = 1; i < items.size(); i++) {
             WifiItem *item = (WifiItem *)items[i];
             item->connected = 0;
         }
-        NotifyWindow *window = new NotifyWindow(languageString(0x9a), languageString(0x2e), "skin/bg-button-f.png", 0);
+        NotifyWindow *window = new NotifyWindow(languageString(STR_CONNECT_FAILED_TEXT), languageString(STR_OK), "skin/bg-button-f.png", 0);
         window->onShow();
         g_windowStack->push_back(window);
-    } else if (event == 42) {
+    } else if (event == EVENT_WIFI_SWITCHED) {
         puts("wifi on off ok"); vfunc13();
         items.push_back(new WifiOnOffLabel(new WifiOnOffDialogAction, true));
     }
     return -1;
 }
+// The hotspot switch: on switches to access-point mode; off returns to Wi-Fi (if it is on) or
+// just stops hostapd and the DHCP server.
 int HotspotSwitchAction::execute(void *)
 {
-    int on = getWifiConnected();
+    int on = getHotspotOn();
     on = !on;
-    setWifiConnected(on);
+    setHotspotOn(on);
     if (on) {
         puts("turn on ap mode"); swicth2ApMode();
     } else {
@@ -556,12 +608,15 @@ int HotspotSwitchAction::execute(void *)
 }
 extern const char g_hotspotSwitchFormat[] __attribute__((aligned(4))) = "hotspot switch flag %d\n";
 
+// Replaces "key=..." with "key=value" in a config file (sed -i); returns system()'s result.
+// The value is not escaped.
 int writeConfigValue(const std::string &file, const std::string &key, const std::string &value)
 {
     std::string command("sed 's/^");
     command += key + "=.\\+$/" + key + "=" + value + "/g' -i " + file;
     return system(command.c_str());
 }
+// The value of the first "key=..." word in a config file, or "".
 std::string readConfigValue(const std::string &file, const std::string &key)
 {
     std::ifstream input(file);
@@ -573,14 +628,16 @@ std::string readConfigValue(const std::string &file, const std::string &key)
     }
     return "";
 }
+// The keyboard's OK for the hotspot name or password: write it, and restart the hotspot if on.
 int HotspotWriteAction::execute(void *param)
 {
     std::string value((char *)param);
     if (writeConfigValue(file, key, value) == 0) {
-        if (getWifiConnected()) { swicth2ApMode(); return 1; }
+        if (getHotspotOn()) { swicth2ApMode(); return 1; }
     }
     return -1;
 }
+// Opens the keyboard to edit a hotspot setting.
 int HotspotImePopupAction::execute(void *)
 {
     ImeWindow *window = new ImeWindow(title, new HotspotWriteAction(file, key), 0x5d);
@@ -592,12 +649,14 @@ extern const char g_hotspotSsidKey[] __attribute__((aligned(4))) = "ssid";
 extern const char g_hotspotConfigPath[] __attribute__((aligned(4))) = "/etc/wifi/hostapd.conf";
 extern const char g_hotspotPskKey[] __attribute__((aligned(4))) = "wpa_passphrase";
 
+// Three rows: the hotspot switch, its name (ssid) and its password (wpa_passphrase).
 HotspotMenu::HotspotMenu()
 {
     items.push_back(new HotspotSwitchItem);
     items.push_back(new HotspotNameItem);
     items.push_back(new HotspotPskItem);
 }
+// Saves system.json on close.
 HotspotMenu::~HotspotMenu()
 {
     saveSystemJson(g_keyShm, g_themePath, g_fontSize);
@@ -606,6 +665,7 @@ void HotspotMenu::vfunc7(SDL_Surface *dst) { WifiMenuDrawer::vfunc7(dst); }
 int HotspotMenu::vfunc15(int event) { return -1; }
 
 
+// __func__ strings of the original functions, used in the log messages above.
 const char wifi_function_name_0[] __attribute__((section(".rodata.function_names"),aligned(4))) = "switch2WpaMode";
 const char wifi_function_name_1[] __attribute__((section(".rodata.function_names"),aligned(4))) = "swicth2ApMode";
 const char wifi_function_name_2[] __attribute__((section(".rodata.function_names"),aligned(4))) = "dowork";

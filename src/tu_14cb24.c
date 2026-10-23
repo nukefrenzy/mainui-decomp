@@ -1,5 +1,9 @@
-// tu_14cb24: a small zip reader (0x14cb24-0x14da50): central directory lookup, stored and
-// deflated entries (inflate lives at 0x131a68). Used by render_COPYING_2d574.
+// tu_14cb24 (0x14cb24-0x14da50): a small read-only zip reader.
+//
+// It finds the zip's central directory, looks an entry up by name (or CRC), and reads it,
+// stored or deflated (the inflater, ZlibDecoder.h, lives at 0x131a68). Its only user is the file
+// browser's filter (fileBrowserFilter, tu_015b20/p08.inc): a TrimuiUpdate*.zip is offered only
+// if it contains an "updater" entry. Integers in zip files are little-endian.
 // Compiled as C (call results are stored straight from r0), so there is no template tail.
 // The C units 0x14acfc-0x14f730 are split where .rodata proves a new file: GCC merges identical
 // string literals within one file even at -O0, and "w", "r" and "%d" each appear more than once.
@@ -11,7 +15,7 @@
 #include <stdarg.h>
 #include <sys/stat.h>
 
-// Byte readers for the zip/gzip loader below.
+// Byte readers for the zip loader below. readByte returns 0 at end of file (or without a file).
 int readByte(FILE *f)           // 0x14cb24
 {
     if (f) {
@@ -104,6 +108,7 @@ void readFields(FILE *f, const char *fmt, ...)  // 0x14cd40
     va_end(ap);
 }
 
+// An open zip archive (zipOpen/zipClose).
 typedef struct ZipFile {
     FILE *fp;
     unsigned int cdOffset;      // +0x04 central directory offset
@@ -137,6 +142,9 @@ int findSignature(ZipFile *zip, const unsigned char *sig)  // 0x14cedc
     return -1;
 }
 
+// Finds the end-of-central-directory record ("PK\5\6") by searching backwards from the end in
+// 256-byte steps, reads the entry count and directory position from it, and checks that the
+// central directory ("PK\1\2") starts there. Single-disk archives only. Returns 0 or -1.
 int zipReadCentralDir(ZipFile *zip)     // 0x14cff0
 {
     int i = 0;
@@ -170,7 +178,7 @@ int zipReadCentralDir(ZipFile *zip)     // 0x14cff0
 }
 
 // Walks the central directory to the entry called name (or with CRC crc) and seeks to its
-// local header.
+// local header. Returns 0, or -1 if the directory ends first. (crc 0 means "match by name".)
 int zipFindEntry(ZipFile *zip, const char *name, unsigned int crc)  // 0x14d1dc
 {
     char *entryName = NULL;
@@ -184,7 +192,7 @@ int zipFindEntry(ZipFile *zip, const char *name, unsigned int crc)  // 0x14d1dc
         crc = -1;
     do {
         unsigned int sig = readU32LE(zip->fp);
-        if (sig != 0x02014b50)
+        if (sig != 0x02014b50)   // "PK\1\2": central directory entry
             goto fail;
         readFields(zip->fp, "222222 4 44 222 224 4 ", NULL, NULL, NULL, NULL, NULL, NULL, &entryCrc, NULL,
                    NULL, &nameLen, &extraLen, &commentLen, NULL, NULL, NULL, &offset);
@@ -205,6 +213,7 @@ fail:
 
 #include "ZlibDecoder.h"
 
+// One open entry being read (zipOpenEntry/zipCloseEntry).
 typedef struct ZipEntry {       // 0x1c bytes
     long pos;                   // +0x00
     zbuf *z;                // +0x04 (method 8 only)
@@ -217,6 +226,8 @@ typedef struct ZipEntry {       // 0x1c bytes
 
 void zipCloseEntry(ZipEntry *e);
 
+// Opens an entry for reading: checks its local header ("PK\3\4"), accepts methods 0 (stored)
+// and 8 (deflate) only, and positions the file at its data. NULL if missing or unsupported.
 ZipEntry *zipOpenEntry(ZipFile *zip, const char *name, unsigned int crc)   // 0x14d418
 {
     if (zipFindEntry(zip, name, crc) == 0) {
@@ -253,6 +264,8 @@ ZipEntry *zipOpenEntry(ZipFile *zip, const char *name, unsigned int crc)   // 0x
     return NULL;
 }
 
+// Reads up to len bytes of the entry's (uncompressed) data; returns the count.
+// Original quirk, kept as-is: for stored entries the "remaining" limit is computed and ignored.
 int zipRead(ZipEntry *e, void *buf, unsigned int len)  // 0x14d638
 {
     int n;
@@ -293,6 +306,7 @@ void *zipReadFile(ZipFile *zip, const char *name, unsigned int crc, unsigned int
     return buf;
 }
 
+// Frees an entry (and its inflater history window).
 void zipCloseEntry(ZipEntry *e)     // 0x14d858
 {
     if (e == NULL)
@@ -302,6 +316,8 @@ void zipCloseEntry(ZipEntry *e)     // 0x14d858
     free(e);
 }
 
+// Opens a zip archive (a regular file or a symlink) and reads its central directory.
+// Returns NULL on any error.
 ZipFile *zipOpen(const char *path)  // 0x14d8b0
 {
     ZipFile *zip = (ZipFile *)malloc(24);

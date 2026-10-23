@@ -1,11 +1,15 @@
-// Circular singly linked lists used by the hardware test code.
-// Proven 0x04c418-0x04cb68: 1,872 bytes, ten functions, no generated tail.
-// The 0x04c418 and 0x04c7a8 starts are missing from the Ghidra export.
+// tu_04c418 (0x04c418-0x04cb68): a circular singly linked list of void* values.
+//
+// A list is a pointer to its head node; the last node points back to the head, and an empty
+// list is NULL. Functions that can change the head return the new one. Nothing in MainUI calls
+// these. 1,872 bytes, ten functions, no generated tail; the 0x04c418 and 0x04c7a8 starts are
+// missing from the Ghidra export.
 #include <cstdlib>
 struct RingNode {
     void *value;
     RingNode *next;
 };
+// The node at position index (0 = head), or NULL.
 RingNode *ringAt(RingNode *head,int index) {
     int i=0;
     if (head&&index>=0) {
@@ -21,6 +25,7 @@ RingNode *ringAt(RingNode *head,int index) {
     return NULL;
 }
 
+// Frees every node, calling release (if given) on each value first.
 void freeRing(RingNode*head,void(*release)(void*)) {
     if (head) {
         RingNode*next=head;
@@ -35,6 +40,8 @@ void freeRing(RingNode*head,void(*release)(void*)) {
     }
 }
 
+// Inserts value before the first node that does not compare smaller, keeping an ascending
+// list sorted; with unique, an equal value is not added. Returns the (possibly new) head.
 RingNode *insertRingSorted(RingNode*head,void*value,int(*compare)(void*,void*),int unique) {
     RingNode*node=head;
     RingNode*previous=NULL;
@@ -70,6 +77,7 @@ RingNode *insertRingSorted(RingNode*head,void*value,int(*compare)(void*,void*),i
     return result;
 }
 
+// Sorted insert, allowing duplicates / skipping duplicates.
 RingNode *insertRing(RingNode*head,void*value,int(*compare)(void*,void*)) {
     return insertRingSorted(head,value,compare,0);
 }
@@ -78,6 +86,7 @@ RingNode *insertRingUnique(RingNode*head,void*value,int(*compare)(void*,void*)) 
     return insertRingSorted(head,value,compare,1);
 }
 
+// Number of nodes.
 int ringCount(RingNode*head) {
     RingNode*node;
     int count=0;
@@ -92,6 +101,7 @@ int ringCount(RingNode*head) {
     return count;
 }
 
+// Adds value at the end; returns the head (new only if the list was empty).
 RingNode *appendRing(RingNode*head,void*value) {
     RingNode*node;
     int count;
@@ -113,6 +123,7 @@ RingNode *appendRing(RingNode*head,void*value) {
     return head;
 }
 
+// Adds value at the front; returns the new head.
 RingNode *prependRing(RingNode*head,void*value) {
     RingNode*node;
     int count;
@@ -131,6 +142,8 @@ RingNode *prependRing(RingNode*head,void*value) {
     return added;
 }
 
+// Unlinks and frees the node `remove` (its value is not freed); returns the new head, NULL if
+// the list became empty.
 RingNode *removeRingNode(RingNode*head,RingNode*remove) {
     if (!head)return NULL;
     int count=0;
@@ -160,6 +173,7 @@ RingNode *removeRingNode(RingNode*head,RingNode*remove) {
     return result;
 }
 
+// Calls visit on every value, head first.
 void forEachRing(RingNode*head,void(*visit)(void*)) {
     RingNode*node;
     int count;

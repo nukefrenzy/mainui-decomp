@@ -1,11 +1,37 @@
-// Proven 0x04cb68-0x051b5c: 19,208 body bytes, 27 inline tail functions.
-// Four zero linker-padding bytes precede cJSON at 0x051b60.
+// tu_04cb68 (0x04cb68-0x051b5c): the factory hardware tests (Settings > Hardware Test).
+//
+// HardwareTestMenu lists six tests, each with a PASS/FAIL/UNTEST result: keys (press each button
+// in turn within 12 s), LCD (colour bars), sound (music at three volumes), USB host (type on a
+// USB keyboard), SD card (write and read back 2 MiB, with speeds) and a stress test (run a
+// bundled arcade ROM; the menu shows how long it has run). Results are saved together with the
+// device serial and only shown again on the same device. KeyTestWindow2 ("IO Test") lights up
+// each button on a picture of the device as it is pressed. Much of this comes from TrimUI's
+// firmware (paths under /usr/trimui, "Usb Host Test").
+// Body 19,208 bytes, 27 inline tail functions; four zero linker-padding bytes precede cJSON at
+// 0x051b60.
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <string>
 #include <unistd.h>
 #include "HardwareTestWindows.h"
+#include "LangStrings.h"
+#include "Input.h"
+
+// Button codes in the tests: the original numbering (keyEventName's "key_*" names), which is
+// MainButton's except that START is 9 and SELECT 10, and L2/R2 are 12/13, labelled L and R.
+// 14-17 only occur in the IO test.
+enum TestKey {
+    TEST_A = 1, TEST_B = 2, TEST_X = 3, TEST_Y = 4,
+    TEST_UP = 5, TEST_DOWN = 6, TEST_LEFT = 7, TEST_RIGHT = 8,
+    TEST_START = 9, TEST_SELECT = 10, TEST_MENU = 11,
+    TEST_L = 12, TEST_R = 13,                       // L2 and R2 (SDL TAB and BACKSPACE)
+    TEST_L1 = 14, TEST_R1 = 15,
+    TEST_VOLUME_UP = 16, TEST_VOLUME_DOWN = 17,     // SDL LSUPER / RSUPER (mask-add/mask-minus)
+};
+// g_testResults slots and values.
+enum { RESULT_KEYS, RESULT_LCD, RESULT_SOUND, RESULT_USB, RESULT_SDCARD };
+enum { TEST_UNTESTED = 0, TEST_PASS = 1, TEST_FAIL = -1 };
 extern "C" {
     int SDL_WaitEvent(void*);
     int SDL_PushEvent(void*);
@@ -16,6 +42,7 @@ extern "C" {
     int SDL_RemoveTimer(void*);
 }
 
+// SDL 1.2 SDL_Event as the tests read it.
 union HardwareEvent {
     unsigned char type;
     struct {
@@ -52,39 +79,44 @@ TestColor g_testGreen= {
 ,g_testWhite= {
     0xffffff
 };
-int g_testResults[5];
+int g_testResults[5];   // per test (RESULT_*): TEST_PASS, TEST_FAIL or TEST_UNTESTED
 TestColor g_testBlack = {0};
 // 0x181b7c
 void drawBackground(SDL_Surface*);
 int drawText(SDL_Surface*,void*,SDL_Rect,const char*,SDL_Color,int,bool);
 SDL_Surface*loadSkinImage(const char*,const char*,const char*,SDL_Surface*,bool);
 int saveTestResults(int*);
+// Waits for a button release and returns its TestKey; user events come back as their code
+// (EVENT_REDRAW, EVENT_TEST_TIMEOUT). Other buttons fall through to the user-event case and
+// return the event's (meaningless) code field, as in the original.
 int readTestInput() {
     HardwareEvent event;
     while (SDL_WaitEvent(&event)) {
         switch (event.type) {
-            case 3:switch (event.keyboard.key) {
-                case 273:return 5;
-                case 274:return 6;
-                case 276:return 7;
-                case 275:return 8;
-                case 32:return 1;
-                case 306:return 2;
-                case 304:return 3;
-                case 308:return 4;
-                case 9:return 12;
-                case 8:return 13;
-                case 305:return 10;
-                case 27:return 11;
-                case 13:return 9;
+            case SDL_KEYUP:switch (event.keyboard.key) {
+                case MIYOO_KEY_UP:return TEST_UP;
+                case MIYOO_KEY_DOWN:return TEST_DOWN;
+                case MIYOO_KEY_LEFT:return TEST_LEFT;
+                case MIYOO_KEY_RIGHT:return TEST_RIGHT;
+                case MIYOO_KEY_A:return TEST_A;
+                case MIYOO_KEY_B:return TEST_B;
+                case MIYOO_KEY_X:return TEST_X;
+                case MIYOO_KEY_Y:return TEST_Y;
+                case MIYOO_KEY_L2:return TEST_L;
+                case MIYOO_KEY_R2:return TEST_R;
+                case MIYOO_KEY_SELECT:return TEST_SELECT;
+                case MIYOO_KEY_MENU:return TEST_MENU;
+                case MIYOO_KEY_START:return TEST_START;
             }
-            case 24:return event.user.code;
+            case SDL_USEREVENT:return event.user.code;
             default:break;
         }
     }
     return 0;
 }
 
+// A "press these keys in order" test: sequence holds the keys, input reads one, and the result
+// goes to g_testResults[index]. Each key must come within 12 s (a 1 s timer counts down).
 SDLKeyTestWindow::SDLKeyTestWindow(const int*sequence,int count,int(*input)(),const char*unused,int index):TrimusWindow(-1,25) {
     readInput=input;
     keys=sequence;
@@ -95,11 +127,13 @@ SDLKeyTestWindow::SDLKeyTestWindow(const int*sequence,int count,int(*input)(),co
     timer=0;
 }
 
+// Next key: the expected one advances (and restarts the countdown); the last one passes the
+// test; EVENT_TEST_TIMEOUT fails it. Returns 1 to close the window.
 int SDLKeyTestWindow::handleInput() {
     int input=readInput();
     if (input>0) {
         if (current<keyCount) {
-            if (input==26) {
+            if (input==EVENT_TEST_TIMEOUT) {
                 g_testResults[testIndex]=-1;
                 saveTestResults(g_testResults);
                 return 1;
@@ -133,6 +167,8 @@ const char*SDLKeyTestWindow::keyName(int key) {
     }
 }
 
+// Draws text aligned in bounds (align 0 left, 1 centre, 2 right) with the bytes
+// [begin, begin+length) in red, e.g. the key to press. Returns the width.
 int drawHighlightedText(SDL_Surface*dst,void*font,SDL_Rect bounds,const char*text,SDL_Color color,int align,int begin,int length) {
     if (!font)return 0;
     SDL_Rect dest;
@@ -208,6 +244,7 @@ int SDLKeyTestWindow::draw(SDL_Surface*dst) {
     return 0;
 }
 
+// Once a second: count down; at zero post EVENT_TEST_TIMEOUT, otherwise EVENT_REDRAW.
 unsigned testKeyTimer(unsigned interval,void*data) {
     SDLKeyTestWindow*next=(SDLKeyTestWindow*)data;
     next->seconds--;
@@ -222,8 +259,8 @@ unsigned testKeyTimer(unsigned interval,void*data) {
             user;
         }
         event;
-        event.type=24;
-        event.user.code=26;
+        event.type=SDL_USEREVENT;
+        event.user.code=EVENT_TEST_TIMEOUT;
         if (SDL_PushEvent(&event)<0)puts("Failed to push SDL event");
     } else {
         union {
@@ -260,6 +297,7 @@ void SDLKeyTestWindow::onShow() {
     restartTimer();
 }
 
+// A key picture in its normal and highlighted look.
 TestKeyImage::TestKeyImage(const char*a,const char*b) {
     normal=loadSkinImage(g_themePath,"./",a,g_backBuffer,false);
     focused=loadSkinImage(g_themePath,"./",b,g_backBuffer,false);
@@ -270,25 +308,26 @@ TestKeyImage::~TestKeyImage() {
     if (focused)SDL_FreeSurface(focused);
 }
 
+// The device key test: SDLKeyTestWindow with a drawing of the buttons.
 KeyTestWindow::KeyTestWindow(const int*sequence,int count,int(*input)(),const char*unused,int index):SDLKeyTestWindow(sequence,count,input,unused,index),
  left("skin/left.png","skin/left_focus.png"),right("skin/right.png","skin/right_focus.png"),up("skin/up.png","skin/up_focus.png"),down("skin/down.png","skin/down_focus.png"),circle("skin/circle.png","skin/circle_focus.png"),rectangle("skin/rect.png","skin/rect_focus.png") {
 }
 
 const char*KeyTestWindow::keyName(int key) {
     switch (key) {
-        case 5:return "UP";
-        case 6:return "DOWN";
-        case 7:return "LEFT";
-        case 8:return "RIGHT";
-        case 1:return "A";
-        case 2:return "B";
-        case 3:return "X";
-        case 4:return "Y";
-        case 12:return "L";
-        case 13:return "R";
-        case 10:return "SELECT";
-        case 11:return "MENU";
-        case 9:return "START";
+        case TEST_UP:return "UP";
+        case TEST_DOWN:return "DOWN";
+        case TEST_LEFT:return "LEFT";
+        case TEST_RIGHT:return "RIGHT";
+        case TEST_A:return "A";
+        case TEST_B:return "B";
+        case TEST_X:return "X";
+        case TEST_Y:return "Y";
+        case TEST_L:return "L";
+        case TEST_R:return "R";
+        case TEST_SELECT:return "SELECT";
+        case TEST_MENU:return "MENU";
+        case TEST_START:return "START";
         default:return "";
     }
 }
@@ -302,43 +341,43 @@ int KeyTestWindow::draw(SDL_Surface*dst) {
     SDL_Rect rect;
     rect.x=65;
     rect.y=10;
-    SDL_UpperBlit(expecting(12)?rectangle.focused:rectangle.normal,NULL,dst,&rect);
+    SDL_UpperBlit(expecting(TEST_L)?rectangle.focused:rectangle.normal,NULL,dst,&rect);
     rect.x=225;
     rect.y=10;
-    SDL_UpperBlit(expecting(13)?rectangle.focused:rectangle.normal,NULL,dst,&rect);
+    SDL_UpperBlit(expecting(TEST_R)?rectangle.focused:rectangle.normal,NULL,dst,&rect);
     rect.x=65;
     rect.y=45;
-    SDL_UpperBlit(expecting(5)?up.focused:up.normal,NULL,dst,&rect);
+    SDL_UpperBlit(expecting(TEST_UP)?up.focused:up.normal,NULL,dst,&rect);
     rect.x=65;
     rect.y=105;
-    SDL_UpperBlit(expecting(6)?down.focused:down.normal,NULL,dst,&rect);
+    SDL_UpperBlit(expecting(TEST_DOWN)?down.focused:down.normal,NULL,dst,&rect);
     rect.x=40;
     rect.y=75;
-    SDL_UpperBlit(expecting(7)?left.focused:left.normal,NULL,dst,&rect);
+    SDL_UpperBlit(expecting(TEST_LEFT)?left.focused:left.normal,NULL,dst,&rect);
     rect.x=90;
     rect.y=75;
-    SDL_UpperBlit(expecting(8)?right.focused:right.normal,NULL,dst,&rect);
+    SDL_UpperBlit(expecting(TEST_RIGHT)?right.focused:right.normal,NULL,dst,&rect);
     rect.x=250;
     rect.y=75;
-    SDL_UpperBlit(expecting(1)?circle.focused:circle.normal,NULL,dst,&rect);
+    SDL_UpperBlit(expecting(TEST_A)?circle.focused:circle.normal,NULL,dst,&rect);
     rect.x=225;
     rect.y=105;
-    SDL_UpperBlit(expecting(2)?circle.focused:circle.normal,NULL,dst,&rect);
+    SDL_UpperBlit(expecting(TEST_B)?circle.focused:circle.normal,NULL,dst,&rect);
     rect.x=225;
     rect.y=45;
-    SDL_UpperBlit(expecting(3)?circle.focused:circle.normal,NULL,dst,&rect);
+    SDL_UpperBlit(expecting(TEST_X)?circle.focused:circle.normal,NULL,dst,&rect);
     rect.x=200;
     rect.y=75;
-    SDL_UpperBlit(expecting(4)?circle.focused:circle.normal,NULL,dst,&rect);
+    SDL_UpperBlit(expecting(TEST_Y)?circle.focused:circle.normal,NULL,dst,&rect);
     rect.x=105;
     rect.y=130;
-    SDL_UpperBlit(expecting(10)?rectangle.focused:rectangle.normal,NULL,dst,&rect);
+    SDL_UpperBlit(expecting(TEST_SELECT)?rectangle.focused:rectangle.normal,NULL,dst,&rect);
     rect.x=145;
     rect.y=130;
-    SDL_UpperBlit(expecting(11)?rectangle.focused:rectangle.normal,NULL,dst,&rect);
+    SDL_UpperBlit(expecting(TEST_MENU)?rectangle.focused:rectangle.normal,NULL,dst,&rect);
     rect.x=185;
     rect.y=130;
-    SDL_UpperBlit(expecting(9)?rectangle.focused:rectangle.normal,NULL,dst,&rect);
+    SDL_UpperBlit(expecting(TEST_START)?rectangle.focused:rectangle.normal,NULL,dst,&rect);
     snprintf(message,64,"Please press %s in %d seconds",keyName(keys[current]),seconds);
     rect.x=0;
     rect.y=160;
@@ -348,7 +387,8 @@ int KeyTestWindow::draw(SDL_Surface*dst) {
     return 0;
 }
 
-KeyTestWindow2::KeyTestWindow2():TrimusWindow(109,25) {
+// The "IO Test": shows which buttons are held. MENU + A leaves.
+KeyTestWindow2::KeyTestWindow2():TrimusWindow(STR_IO_TEST,25) {
     loadMasks();
     menuHeld=false;
 }
@@ -377,27 +417,28 @@ void KeyTestWindow2::loadMasks() {
 
 int KeyTestWindow2::mapKey(SDLKey key) {
     switch (key) {
-        case 273:return 5;
-        case 274:return 6;
-        case 276:return 7;
-        case 275:return 8;
-        case 32:return 1;
-        case 306:return 2;
-        case 304:return 3;
-        case 308:return 4;
-        case 9:return 12;
-        case 8:return 13;
-        case 305:return 10;
-        case 27:return 11;
-        case 13:return 9;
-        case 101:return 14;
-        case 116:return 15;
-        case 311:return 16;
-        case 312:return 17;
+        case MIYOO_KEY_UP:return TEST_UP;
+        case MIYOO_KEY_DOWN:return TEST_DOWN;
+        case MIYOO_KEY_LEFT:return TEST_LEFT;
+        case MIYOO_KEY_RIGHT:return TEST_RIGHT;
+        case MIYOO_KEY_A:return TEST_A;
+        case MIYOO_KEY_B:return TEST_B;
+        case MIYOO_KEY_X:return TEST_X;
+        case MIYOO_KEY_Y:return TEST_Y;
+        case MIYOO_KEY_L2:return TEST_L;
+        case MIYOO_KEY_R2:return TEST_R;
+        case MIYOO_KEY_SELECT:return TEST_SELECT;
+        case MIYOO_KEY_MENU:return TEST_MENU;
+        case MIYOO_KEY_START:return TEST_START;
+        case MIYOO_KEY_L1:return TEST_L1;
+        case MIYOO_KEY_R1:return TEST_R1;
+        case MIYOO_KEY_LSUPER:return TEST_VOLUME_UP;
+        case MIYOO_KEY_RSUPER:return TEST_VOLUME_DOWN;
     }
     return -1;
 }
 
+// Records presses and releases for draw; A released while MENU is held closes the window.
 int KeyTestWindow2::handleInput() {
     int key=-1;
     HardwareEvent event;
@@ -423,102 +464,103 @@ int KeyTestWindow2::handleInput() {
     return -1;
 }
 
+// The highlight image and its position on the device picture, per key.
 SDL_Surface*keyMask(KeyTestWindow2*window,int key) {
     switch (key) {
-        case 5:case 6:case 7:case 8:return window->maskCross;
-        case 1:case 2:case 3:case 4:return window->maskABXY;
-        case 12:case 13:case 14:case 15:return window->maskLR;
-        case 9:case 10:return window->maskStart;
-        case 11:return window->maskMenu;
-        case 16:return window->maskAdd;
-        case 17:return window->maskMinus;
+        case TEST_UP:case TEST_DOWN:case TEST_LEFT:case TEST_RIGHT:return window->maskCross;
+        case TEST_A:case TEST_B:case TEST_X:case TEST_Y:return window->maskABXY;
+        case TEST_L:case TEST_R:case TEST_L1:case TEST_R1:return window->maskLR;
+        case TEST_START:case TEST_SELECT:return window->maskStart;
+        case TEST_MENU:return window->maskMenu;
+        case TEST_VOLUME_UP:return window->maskAdd;
+        case TEST_VOLUME_DOWN:return window->maskMinus;
         default:return NULL;
     }
 }
 
 int keyMaskRect(KeyTestWindow2*window,int key,SDL_Rect*rect) {
     switch (key) {
-        case 5:rect->x=136;
+        case TEST_UP:rect->x=136;
         rect->y=278;
         rect->w=28;
         rect->h=28;
         return 0;
-        case 6:rect->x=136;
+        case TEST_DOWN:rect->x=136;
         rect->y=328;
         rect->w=28;
         rect->h=28;
         return 0;
-        case 7:rect->x=104;
+        case TEST_LEFT:rect->x=104;
         rect->y=302;
         rect->w=28;
         rect->h=28;
         return 0;
-        case 8:rect->x=163;
+        case TEST_RIGHT:rect->x=163;
         rect->y=302;
         rect->w=28;
         rect->h=28;
         return 0;
-        case 1:rect->x=286;
+        case TEST_A:rect->x=286;
         rect->y=301;
         rect->w=31;
         rect->h=31;
         return 0;
-        case 2:rect->x=256;
+        case TEST_B:rect->x=256;
         rect->y=327;
         rect->w=31;
         rect->h=31;
         return 0;
-        case 3:rect->x=256;
+        case TEST_X:rect->x=256;
         rect->y=272;
         rect->w=31;
         rect->h=31;
         return 0;
-        case 4:rect->x=230;
+        case TEST_Y:rect->x=230;
         rect->y=301;
         rect->w=31;
         rect->h=31;
         return 0;
-        case 12:rect->x=517;
+        case TEST_L:rect->x=517;
         rect->y=161;
         rect->w=38;
         rect->h=41;
         return 0;
-        case 13:rect->x=414;
+        case TEST_R:rect->x=414;
         rect->y=161;
         rect->w=38;
         rect->h=41;
         return 0;
-        case 14:rect->x=558;
+        case TEST_L1:rect->x=558;
         rect->y=161;
         rect->w=38;
         rect->h=41;
         return 0;
-        case 15:rect->x=375;
+        case TEST_R1:rect->x=375;
         rect->y=161;
         rect->w=38;
         rect->h=41;
         return 0;
-        case 10:rect->x=170;
+        case TEST_SELECT:rect->x=170;
         rect->y=365;
         rect->w=28;
         rect->h=24;
         return 0;
-        case 9:rect->x=203;
+        case TEST_START:rect->x=203;
         rect->y=365;
         rect->w=28;
         rect->h=24;
         return 0;
-        case 11:rect->x=199;
+        case TEST_MENU:rect->x=199;
         rect->y=269;
         rect->w=28;
         rect->h=24;
         return 0;
-        case 16:rect->x=39;
+        case TEST_VOLUME_UP:rect->x=39;
         rect->y=103;
         rect->w=22;
         rect->h=40;
         return 0;
-        case 17:rect->x=39;
+        case TEST_VOLUME_DOWN:rect->x=39;
         rect->y=143;
         rect->w=22;
         rect->h=40;
@@ -546,7 +588,7 @@ void drawKeyTestFooter(SDL_Surface*dst) {
     }
     icon=loadSkinImage(g_themePath,"./","skin/ic-MENU+A.png",g_backBuffer,false);
     if (icon) {
-        drawIconLabel(dst,icon,x,y,0,languageString(111));
+        drawIconLabel(dst,icon,x,y,0,languageString(STR_EXIT));
         SDL_FreeSurface(icon);
     }
 }
@@ -577,6 +619,8 @@ int KeyTestWindow2::draw(SDL_Surface*dst) {
     return 0;
 }
 
+// The LCD test: five vertical colour bars (up/down switches to plain red, left/right rotates
+// the colours); A passes, B fails.
 LCDTestWindow::LCDTestWindow():TrimusWindow(-1,25) {
     mode=0;
     colorIndex=0;
@@ -636,6 +680,8 @@ void LCDTestWindow::onHide() {
 void LCDTestWindow::onShow() {
 }
 
+// The sound test: plays the theme music at 1/3, 2/3 and full volume, six seconds each; A passes
+// once all three have played, B fails.
 SoundTestWindow::SoundTestWindow():TrimusWindow(-1,25) {
     phase=0;
     timer=0;
@@ -730,6 +776,7 @@ void SoundTestWindow::onShow() {
     timer=SDL_AddTimer(6000,soundTestTimer,this);
 }
 
+// The USB keyboard test's input: the raw SDL key of each release (or a user event's code).
 int readUsbTestInput() {
     HardwareEvent event;
     while (SDL_WaitEvent(&event)) {
@@ -742,6 +789,8 @@ int readUsbTestInput() {
     return 0;
 }
 
+// The SD card test: a thread writes 2 MiB to /mnt/SDCARD/testfile and reads it back, checking
+// every byte; the window shows progress and speeds. Any key afterwards records the result.
 SDCardTestWindow::SDCardTestWindow():TrimusWindow(-1,25) {
     thread=NULL;
     writeMS=0;
@@ -931,6 +980,7 @@ TestMenuItem::~TestMenuItem() {
     if (icon)SDL_FreeSurface(icon);
 }
 
+// Reads how long the stress test has been running (its start time is in /tmp/.stress_start_time).
 HardwareTestMenu::HardwareTestMenu():TextMenu(0,1,6,NULL) {
     initializeTests();
     stressSeconds=0;
@@ -964,12 +1014,14 @@ void showLaunchScreen(const char*);
 extern "C" int SDL_Flip(SDL_Surface*);
 bool isSpinand();
 bool sdCardMounted();
-int g_usbTestKeys[7]= {
+int g_usbTestKeys[7]= {   // the USB keyboard test: SDL keys up, down, left, right, u, s, b
     273,274,276,275,117,115,98
 };
-int g_deviceTestKeys[13]= {
-    5,6,7,8,1,2,3,4,12,13,10,11,9
+int g_deviceTestKeys[13]= {   // the key test's order
+    TEST_UP,TEST_DOWN,TEST_LEFT,TEST_RIGHT,TEST_A,TEST_B,TEST_X,TEST_Y,TEST_L,TEST_R,TEST_SELECT,TEST_MENU,TEST_START
 };
+// Opens the selected test. The SD card test needs a card when the system runs from SPI NAND;
+// the stress test launches /mnt/SDCARD/test/dino.zip in mame4allx (returning 3 to launch).
 int HardwareTestMenu::vfunc4() {
     switch (cur) {
         case 0: {
@@ -1053,6 +1105,7 @@ SDL_Color testResultColor(int result) {
 
 extern SDL_Color g_wifiSelectedColor;
 extern "C" int TTF_FontHeight(void*);
+// Draws the six rows: name and result (or the stress test's running time).
 void HardwareTestMenu::vfunc7(SDL_Surface*dst) {
     int height=TTF_FontHeight(g_imeFont);
     SDL_Rect area;
@@ -1130,6 +1183,7 @@ void HardwareTestMenu::vfunc18() {
 
 bool loadTestResults(int*,char*);
 int getSerial(char*);
+// Loads the saved results, discarding them if they were saved on another device (serial).
 void HardwareTestMenu::initializeTests() {
     char expected[16],serial[16];
     memset(g_testResults,0,20);

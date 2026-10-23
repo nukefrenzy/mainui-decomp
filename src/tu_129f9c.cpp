@@ -1,5 +1,12 @@
-// Theme fonts, surfaces and sounds, in binary address order.
-// Proven 0x129f9c-0x12ce28: seven functions, 11,916 bytes, no generated tail.
+// tu_129f9c (0x129f9c-0x12ce28): the theme: fonts, images, colours and sounds.
+//
+// A theme is a folder (Theme.h; found by loadThemeFolder) with skin/ images, sound/
+// files and font settings. loadTheme copies its colours into globals, opens the five fonts
+// (English or multi-language ones, depending on the language and on the CJK font being present),
+// and loads every skin image, the volume/battery/Wi-Fi icons and the sounds into the globals
+// below, which all drawing code uses. Anything missing from the theme is taken from the default
+// skin in the current directory ("./"). freeTheme releases it all.
+// Seven functions, 11,916 bytes, no generated tail.
 #include "PlatformApi.h"
 #include <cstdio>
 #include <cstring>
@@ -21,6 +28,8 @@ const char *getLanguageFile();
 bool languageFontExists();
 SDL_Surface *loadSkinImage(const char *, const char *, const char *, SDL_Surface *, bool);
 extern SDL_Surface *g_backBuffer;
+// Fonts (TTF_Font*), images (from skin/), sounds and colours set by loadTheme. Several names
+// describe where the value is used rather than the theme key it comes from.
 void *g_imeFont; // 0x18217c
 void *g_iconFont; // 0x182180
 void *g_smallFont; // 0x182184
@@ -87,84 +96,89 @@ extern const SDL_Color g_themeUnusedPalette[] = { // 0x161814-0x161838
 };
 static_assert(sizeof(Theme) == 0x18c && offsetof(Theme, mainSize) == 0x17c, "theme layout");
 
-// Explicit pool preserves the target's patched, distinct 28/24-byte battery paths.
-// Other literals retain original first-use order; all values are readable source constants.
-extern const char theme_literal_161838[] __attribute__((aligned(4))) = "open %s %d\n";
-extern const char theme_literal_161844[] __attribute__((aligned(4))) = "fail, try open %s\n";
-extern const char theme_literal_161858[] __attribute__((aligned(4))) = "%s/%s open ok\n";
-extern const char theme_literal_161868[] __attribute__((aligned(4))) = "%s/%s open fail, use %s/%s\n";
-extern const char theme_literal_161884[] __attribute__((aligned(4))) = "change_lang_font close %p\n";
-extern const char theme_literal_1618a0[] __attribute__((aligned(4))) = "en.lang";
-extern const char theme_literal_1618a8[] __attribute__((aligned(4))) = "wqy-microhei.ttc";
-extern const char theme_literal_1618bc[] __attribute__((aligned(4))) = "./";
-extern const char theme_literal_1618c0[] __attribute__((aligned(4))) = "HENB.TTF";
-extern const char theme_literal_1618cc[] __attribute__((aligned(4))) = "Exo-2-Bold-Italic.ttf";
-extern const char theme_literal_1618e4[] __attribute__((aligned(4))) = "change_lang_font en stitlefont %p, sfonticon %p, sfontsmall %p, sfontlabel %p\n";
-extern const char theme_literal_161934[] __attribute__((aligned(4))) = "change_lang_font stitlefont %p, sfonticon %p, sfontsmall %p, sfonotlabel %p\n";
-extern const char theme_literal_161984[] __attribute__((aligned(4))) = "change font bold fail: %s\n";
-extern const char theme_literal_1619a0[] __attribute__((aligned(4))) = "Default";
-extern const char theme_literal_1619a8[] __attribute__((aligned(4))) = "sys lang %s, path %s, support multilanguage %d\n";
-extern const char theme_literal_1619d8[] __attribute__((aligned(4))) = "sfonticon = %p\n";
-extern const char theme_literal_1619e8[] __attribute__((aligned(4))) = "init_skin sfont %p stitlefont %p, sfonticon %p, sfontsmall %p, sfontlabel %p\n";
-extern const char theme_literal_161a38[] __attribute__((aligned(4))) = "open font fail: %s\n";
-extern const char theme_literal_161a4c[] __attribute__((aligned(4))) = "open font bold fail: %s\n";
-extern const char theme_literal_161a68[] __attribute__((aligned(4))) = "skin/background.png";
-extern const char theme_literal_161a7c[] __attribute__((aligned(4))) = "open background fail: %s\n";
-extern const char theme_literal_161a98[] __attribute__((aligned(4))) = "./skin/div-line-h.png";
-extern const char theme_literal_161ab0[] __attribute__((aligned(4))) = "open div-line-h.png fail: %s\n";
-extern const char theme_literal_161ad0[] __attribute__((aligned(4))) = "./skin/div-line-v-01.png";
-extern const char theme_literal_161aec[] __attribute__((aligned(4))) = "open bg_hline fail: %s\n";
-extern const char theme_literal_161b04[] __attribute__((aligned(4))) = "./skin/dot-a.png";
-extern const char theme_literal_161b18[] __attribute__((aligned(4))) = "open dot-a fail: %s\n";
-extern const char theme_literal_161b30[] __attribute__((aligned(4))) = "./skin/dot-n.png";
-extern const char theme_literal_161b44[] __attribute__((aligned(4))) = "open dot-n fail: %s\n";
-extern const char theme_literal_161b5c[] __attribute__((aligned(4))) = "skin/nav-bar-item-bg.png";
-extern const char theme_literal_161b78[] __attribute__((aligned(4))) = "open stat_bg fail: %s\n";
-extern const char theme_literal_161b90[] __attribute__((aligned(4))) = "./skin/bg-title.png";
-extern const char theme_literal_161ba4[] __attribute__((aligned(4))) = "open bar_bg fail: %s\n";
-extern const char theme_literal_161bbc[] __attribute__((aligned(4))) = "./skin/tips-bar-bg.png";
-extern const char theme_literal_161bd4[] __attribute__((aligned(4))) = "./skin/miyoo-topbar.png";
-extern const char theme_literal_161bec[] __attribute__((aligned(4))) = "open mini_logo fail: %s\n";
-extern const char theme_literal_161c08[] __attribute__((aligned(4))) = "./skin/Empty.png";
-extern const char theme_literal_161c1c[] __attribute__((aligned(4))) = "open Empty.png fail: %s\n";
-extern const char theme_literal_161c38[] __attribute__((aligned(4))) = "./skin/list-num.png";
-extern const char theme_literal_161c4c[] __attribute__((aligned(4))) = "open list_num fail: %s\n";
-extern const char theme_literal_161c64[] __attribute__((aligned(4))) = "./skin/num-bg.png";
-extern const char theme_literal_161c78[] __attribute__((aligned(4))) = "open num_bg fail: %s\n";
-extern const char theme_literal_161c90[] __attribute__((aligned(4))) = "sound/change.wav";
-extern const char theme_literal_161ca4[] __attribute__((aligned(4))) = "Load Music %s\n";
-extern const char theme_literal_161cb4[] __attribute__((aligned(4))) = "rb";
-extern const char theme_literal_161cb8[] __attribute__((aligned(4))) = "./sound/change.wav";
-extern const char theme_literal_161ccc[] __attribute__((aligned(4))) = "Load Default Music %s\n";
-extern const char theme_literal_161ce4[] __attribute__((aligned(4))) = "load music %s fail: %s\n";
-extern const char theme_literal_161cfc[] __attribute__((aligned(4))) = "sound/enter.wav";
-extern const char theme_literal_161d0c[] __attribute__((aligned(4))) = "/etc/enter.wav";
-extern const char theme_literal_161d1c[] __attribute__((aligned(4))) = "sound/bgm.mp3";
-extern const char theme_literal_161d2c[] __attribute__((aligned(4))) = "./sound/bgm.mp3";
-extern const char theme_literal_161d3c[] __attribute__((aligned(4))) = "skin/bg-game-item-f.png";
-extern const char theme_literal_161d54[] __attribute__((aligned(4))) = "skin/bg-game-item-n.png";
-extern const char theme_literal_161d6c[] __attribute__((aligned(4))) = "skin/bg-ra-list-item.png";
-extern const char theme_literal_161d88[] __attribute__((aligned(4))) = "skin/icon-A-54.png";
-extern const char theme_literal_161d9c[] __attribute__((aligned(4))) = "skin/icon-B-54.png";
-extern const char theme_literal_161db0[] __attribute__((aligned(4))) = "skin/ic-power-charge-100%.png";
-extern const char theme_literal_161dd0[28] __attribute__((aligned(4))) = "skin/.batt-perc.png";
-extern const char theme_literal_161dec[24] __attribute__((aligned(4))) = "skin/.batt-perc.png";
-extern const char theme_literal_161e04[24] __attribute__((aligned(4))) = "skin/.batt-perc.png";
-extern const char theme_literal_161e1c[24] __attribute__((aligned(4))) = "skin/.batt-perc.png";
-extern const char theme_literal_161e34[24] __attribute__((aligned(4))) = "skin/.batt-perc.png";
-extern const char theme_literal_161e4c[] __attribute__((aligned(4))) = "skin/icon-folder.png";
-extern const char theme_literal_161e64[] __attribute__((aligned(4))) = "skin/icon-game.png";
-extern const char theme_literal_161e78[] __attribute__((aligned(4))) = "skin/preview-bg.png";
-extern const char theme_literal_161e8c[] __attribute__((aligned(4))) = "skin/icon-hotspot-wifi.png";
-extern const char theme_literal_161ea8[] __attribute__((aligned(4))) = "skin/icon-wifi-signal-04.png";
-extern const char theme_literal_161ec8[] __attribute__((aligned(4))) = "skin/icon-wifi-signal-03.png";
-extern const char theme_literal_161ee8[] __attribute__((aligned(4))) = "skin/icon-wifi-signal-02.png";
-extern const char theme_literal_161f08[] __attribute__((aligned(4))) = "skin/headphone-icon.png";
-extern const char theme_literal_161f20[] __attribute__((aligned(4))) = "skin/icon-volume-%02d.png";
-extern const char theme_literal_161f3c[] __attribute__((aligned(4))) = "load font height is %d\n";
-extern const char theme_literal_161f54[] __attribute__((aligned(4))) = "free background %p %dx%d\n";
-extern const char theme_literal_161f70[] __attribute__((aligned(4))) = "free sfont %p\n";
+// The file's strings as an explicit pool, named after their text, in the original order. The
+// pool is needed for the battery images: Onion patched all five paths to the same hidden file
+// (skin/.batt-perc.png, presumably so its own battery display replaces MainUI's), but each keeps
+// its original 28- or 24-byte slot, which ordinary literals would merge.
+extern const char lit_open_s_n[] __attribute__((aligned(4))) = "open %s %d\n"; // 0x161838
+extern const char lit_fail_try_open_s[] __attribute__((aligned(4))) = "fail, try open %s\n"; // 0x161844
+extern const char lit_s_s_open_ok[] __attribute__((aligned(4))) = "%s/%s open ok\n"; // 0x161858
+extern const char lit_s_s_open_fail_use_s[] __attribute__((aligned(4))) = "%s/%s open fail, use %s/%s\n"; // 0x161868
+extern const char lit_change_lang_font_close_p[] __attribute__((aligned(4))) = "change_lang_font close %p\n"; // 0x161884
+extern const char lit_en_lang[] __attribute__((aligned(4))) = "en.lang"; // 0x1618a0
+extern const char lit_wqy_microhei_ttc[] __attribute__((aligned(4))) = "wqy-microhei.ttc"; // 0x1618a8
+extern const char lit_here[] __attribute__((aligned(4))) = "./"; // 0x1618bc
+extern const char lit_henb_ttf[] __attribute__((aligned(4))) = "HENB.TTF"; // 0x1618c0
+extern const char lit_exo_2_bold_italic_ttf[] __attribute__((aligned(4))) = "Exo-2-Bold-Italic.ttf"; // 0x1618cc
+extern const char lit_change_lang_font_en_stitlefont_p[] __attribute__((aligned(4))) = "change_lang_font en stitlefont %p, sfonticon %p, sfontsmall %p, sfontlabel %p\n"; // 0x1618e4
+extern const char lit_change_lang_font_stitlefont_p_sfonticon[] __attribute__((aligned(4))) = "change_lang_font stitlefont %p, sfonticon %p, sfontsmall %p, sfonotlabel %p\n"; // 0x161934
+extern const char lit_change_font_bold_fail_s[] __attribute__((aligned(4))) = "change font bold fail: %s\n"; // 0x161984
+extern const char lit_default[] __attribute__((aligned(4))) = "Default"; // 0x1619a0
+extern const char lit_sys_lang_s_path_s_support[] __attribute__((aligned(4))) = "sys lang %s, path %s, support multilanguage %d\n"; // 0x1619a8
+extern const char lit_sfonticon_p[] __attribute__((aligned(4))) = "sfonticon = %p\n"; // 0x1619d8
+extern const char lit_init_skin_sfont_p_stitlefont_p[] __attribute__((aligned(4))) = "init_skin sfont %p stitlefont %p, sfonticon %p, sfontsmall %p, sfontlabel %p\n"; // 0x1619e8
+extern const char lit_open_font_fail_s[] __attribute__((aligned(4))) = "open font fail: %s\n"; // 0x161a38
+extern const char lit_open_font_bold_fail_s[] __attribute__((aligned(4))) = "open font bold fail: %s\n"; // 0x161a4c
+extern const char lit_skin_background_png[] __attribute__((aligned(4))) = "skin/background.png"; // 0x161a68
+extern const char lit_open_background_fail_s[] __attribute__((aligned(4))) = "open background fail: %s\n"; // 0x161a7c
+extern const char lit_here_skin_div_line_h_png[] __attribute__((aligned(4))) = "./skin/div-line-h.png"; // 0x161a98
+extern const char lit_open_div_line_h_png_fail[] __attribute__((aligned(4))) = "open div-line-h.png fail: %s\n"; // 0x161ab0
+extern const char lit_here_skin_div_line_v_01_png[] __attribute__((aligned(4))) = "./skin/div-line-v-01.png"; // 0x161ad0
+extern const char lit_open_bg_hline_fail_s[] __attribute__((aligned(4))) = "open bg_hline fail: %s\n"; // 0x161aec
+extern const char lit_here_skin_dot_a_png[] __attribute__((aligned(4))) = "./skin/dot-a.png"; // 0x161b04
+extern const char lit_open_dot_a_fail_s[] __attribute__((aligned(4))) = "open dot-a fail: %s\n"; // 0x161b18
+extern const char lit_here_skin_dot_n_png[] __attribute__((aligned(4))) = "./skin/dot-n.png"; // 0x161b30
+extern const char lit_open_dot_n_fail_s[] __attribute__((aligned(4))) = "open dot-n fail: %s\n"; // 0x161b44
+extern const char lit_skin_nav_bar_item_bg_png[] __attribute__((aligned(4))) = "skin/nav-bar-item-bg.png"; // 0x161b5c
+extern const char lit_open_stat_bg_fail_s[] __attribute__((aligned(4))) = "open stat_bg fail: %s\n"; // 0x161b78
+extern const char lit_here_skin_bg_title_png[] __attribute__((aligned(4))) = "./skin/bg-title.png"; // 0x161b90
+extern const char lit_open_bar_bg_fail_s[] __attribute__((aligned(4))) = "open bar_bg fail: %s\n"; // 0x161ba4
+extern const char lit_here_skin_tips_bar_bg_png[] __attribute__((aligned(4))) = "./skin/tips-bar-bg.png"; // 0x161bbc
+extern const char lit_here_skin_miyoo_topbar_png[] __attribute__((aligned(4))) = "./skin/miyoo-topbar.png"; // 0x161bd4
+extern const char lit_open_mini_logo_fail_s[] __attribute__((aligned(4))) = "open mini_logo fail: %s\n"; // 0x161bec
+extern const char lit_here_skin_empty_png[] __attribute__((aligned(4))) = "./skin/Empty.png"; // 0x161c08
+extern const char lit_open_empty_png_fail_s[] __attribute__((aligned(4))) = "open Empty.png fail: %s\n"; // 0x161c1c
+extern const char lit_here_skin_list_num_png[] __attribute__((aligned(4))) = "./skin/list-num.png"; // 0x161c38
+extern const char lit_open_list_num_fail_s[] __attribute__((aligned(4))) = "open list_num fail: %s\n"; // 0x161c4c
+extern const char lit_here_skin_num_bg_png[] __attribute__((aligned(4))) = "./skin/num-bg.png"; // 0x161c64
+extern const char lit_open_num_bg_fail_s[] __attribute__((aligned(4))) = "open num_bg fail: %s\n"; // 0x161c78
+extern const char lit_sound_change_wav[] __attribute__((aligned(4))) = "sound/change.wav"; // 0x161c90
+extern const char lit_load_music_s[] __attribute__((aligned(4))) = "Load Music %s\n"; // 0x161ca4
+extern const char lit_rb[] __attribute__((aligned(4))) = "rb"; // 0x161cb4
+extern const char lit_here_sound_change_wav[] __attribute__((aligned(4))) = "./sound/change.wav"; // 0x161cb8
+extern const char lit_load_default_music_s[] __attribute__((aligned(4))) = "Load Default Music %s\n"; // 0x161ccc
+extern const char lit_load_music_s_fail_s[] __attribute__((aligned(4))) = "load music %s fail: %s\n"; // 0x161ce4
+extern const char lit_sound_enter_wav[] __attribute__((aligned(4))) = "sound/enter.wav"; // 0x161cfc
+extern const char lit_etc_enter_wav[] __attribute__((aligned(4))) = "/etc/enter.wav"; // 0x161d0c
+extern const char lit_sound_bgm_mp3[] __attribute__((aligned(4))) = "sound/bgm.mp3"; // 0x161d1c
+extern const char lit_here_sound_bgm_mp3[] __attribute__((aligned(4))) = "./sound/bgm.mp3"; // 0x161d2c
+extern const char lit_skin_bg_game_item_f_png[] __attribute__((aligned(4))) = "skin/bg-game-item-f.png"; // 0x161d3c
+extern const char lit_skin_bg_game_item_n_png[] __attribute__((aligned(4))) = "skin/bg-game-item-n.png"; // 0x161d54
+extern const char lit_skin_bg_ra_list_item_png[] __attribute__((aligned(4))) = "skin/bg-ra-list-item.png"; // 0x161d6c
+extern const char lit_skin_icon_a_54_png[] __attribute__((aligned(4))) = "skin/icon-A-54.png"; // 0x161d88
+extern const char lit_skin_icon_b_54_png[] __attribute__((aligned(4))) = "skin/icon-B-54.png"; // 0x161d9c
+extern const char lit_skin_ic_power_charge_100_png[] __attribute__((aligned(4))) = "skin/ic-power-charge-100%.png"; // 0x161db0
+extern const char lit_battery0_path[28] __attribute__((aligned(4))) = "skin/.batt-perc.png"; // 0x161dd0
+extern const char lit_battery1_path[24] __attribute__((aligned(4))) = "skin/.batt-perc.png"; // 0x161dec
+extern const char lit_battery2_path[24] __attribute__((aligned(4))) = "skin/.batt-perc.png"; // 0x161e04
+extern const char lit_battery3_path[24] __attribute__((aligned(4))) = "skin/.batt-perc.png"; // 0x161e1c
+extern const char lit_battery4_path[24] __attribute__((aligned(4))) = "skin/.batt-perc.png"; // 0x161e34
+extern const char lit_skin_icon_folder_png[] __attribute__((aligned(4))) = "skin/icon-folder.png"; // 0x161e4c
+extern const char lit_skin_icon_game_png[] __attribute__((aligned(4))) = "skin/icon-game.png"; // 0x161e64
+extern const char lit_skin_preview_bg_png[] __attribute__((aligned(4))) = "skin/preview-bg.png"; // 0x161e78
+extern const char lit_skin_icon_hotspot_wifi_png[] __attribute__((aligned(4))) = "skin/icon-hotspot-wifi.png"; // 0x161e8c
+extern const char lit_skin_icon_wifi_signal_04_png[] __attribute__((aligned(4))) = "skin/icon-wifi-signal-04.png"; // 0x161ea8
+extern const char lit_skin_icon_wifi_signal_03_png[] __attribute__((aligned(4))) = "skin/icon-wifi-signal-03.png"; // 0x161ec8
+extern const char lit_skin_icon_wifi_signal_02_png[] __attribute__((aligned(4))) = "skin/icon-wifi-signal-02.png"; // 0x161ee8
+extern const char lit_skin_headphone_icon_png[] __attribute__((aligned(4))) = "skin/headphone-icon.png"; // 0x161f08
+extern const char lit_skin_icon_volume_02d_png[] __attribute__((aligned(4))) = "skin/icon-volume-%02d.png"; // 0x161f20
+extern const char lit_load_font_height_is_n[] __attribute__((aligned(4))) = "load font height is %d\n"; // 0x161f3c
+extern const char lit_free_background_p_n_x_n[] __attribute__((aligned(4))) = "free background %p %dx%d\n"; // 0x161f54
+extern const char lit_free_sfont_p[] __attribute__((aligned(4))) = "free sfont %p\n"; // 0x161f70
 
+// Opens a font: the theme's configured file (relative to the theme root, or absolute), or
+// fallbackFile in the theme root if none is configured; if that fails, fallbackFile in
+// fallbackRoot. Returns the TTF_Font, or NULL.
 void *openThemeFont(const std::string &root, std::string &configured,
                     const char *fallbackRoot, const char *fallbackFile, int size)
 {
@@ -173,65 +187,72 @@ void *openThemeFont(const std::string &root, std::string &configured,
         if (configured.at(0) != '/') path += configured;
         else path = configured;
     } else path += fallbackFile;
-    printf(theme_literal_161838, path.c_str(), size);
+    printf(lit_open_s_n, path.c_str(), size);
     void *font = TTF_OpenFont(path.c_str(), size);
     if (font) return font;
     path = fallbackRoot;
     path += fallbackFile;
-    printf(theme_literal_161844, path.c_str());
+    printf(lit_fail_try_open_s, path.c_str());
     return TTF_OpenFont(path.c_str(), size);
 }
+// Loads root/file, or fallback/file if that fails (despite the name, used for all kinds of
+// images). loadSkinImage is the variant most callers use.
 SDL_Surface *loadImeImage(const char *root, const char *fallback, const char *file)
 {
     std::string path(root);
     path += file;
     SDL_Surface *surface = IMG_Load(path.c_str());
     if (surface) {
-        printf(theme_literal_161858, root, file);
+        printf(lit_s_s_open_ok, root, file);
         return surface;
     }
     path = fallback;
     path += file;
-    printf(theme_literal_161868, root, file, fallback, file);
+    printf(lit_s_s_open_fail_use_s, root, file, fallback, file);
     return IMG_Load(path.c_str());
 }
+// Reopens the five fonts after a language change: English uses the theme's English fonts (or
+// the CJK font for the main and title text when it is installed), other languages use the
+// multi-language fonts, falling back to wqy-microhei.ttc.
 int changeLanguageFonts(Theme *theme, int *size)
 {
-    if (g_imeFont) { printf(theme_literal_161884, g_imeFont); TTF_CloseFont(g_imeFont); g_imeFont = NULL; }
-    if (g_iconFont) { printf(theme_literal_161884, g_iconFont); TTF_CloseFont(g_iconFont); g_iconFont = NULL; }
-    if (g_titleFont) { printf(theme_literal_161884, g_titleFont); TTF_CloseFont(g_titleFont); g_titleFont = NULL; }
-    if (g_smallFont) { printf(theme_literal_161884, g_smallFont); TTF_CloseFont(g_smallFont); g_smallFont = NULL; }
+    if (g_imeFont) { printf(lit_change_lang_font_close_p, g_imeFont); TTF_CloseFont(g_imeFont); g_imeFont = NULL; }
+    if (g_iconFont) { printf(lit_change_lang_font_close_p, g_iconFont); TTF_CloseFont(g_iconFont); g_iconFont = NULL; }
+    if (g_titleFont) { printf(lit_change_lang_font_close_p, g_titleFont); TTF_CloseFont(g_titleFont); g_titleFont = NULL; }
+    if (g_smallFont) { printf(lit_change_lang_font_close_p, g_smallFont); TTF_CloseFont(g_smallFont); g_smallFont = NULL; }
     if (g_labelFont) { TTF_CloseFont(g_labelFont); g_labelFont = NULL; }
     *size = theme->mainSize;
     bool available = languageFontExists();
-    if (available != true || strncmp(getLanguageFile(), theme_literal_1618a0, 7) == 0) {
+    if (available != true || strncmp(getLanguageFile(), lit_en_lang, 7) == 0) {
         if (available) {
-            g_imeFont = openThemeFont(theme->root, theme->mainFontMulti, theme_literal_1618bc, theme_literal_1618a8, theme->mainSize);
-            g_titleFont = openThemeFont(theme->root, theme->titleFontEnglish, theme_literal_1618bc, theme_literal_1618a8, theme->titleSize);
+            g_imeFont = openThemeFont(theme->root, theme->mainFontMulti, lit_here, lit_wqy_microhei_ttc, theme->mainSize);
+            g_titleFont = openThemeFont(theme->root, theme->titleFontEnglish, lit_here, lit_wqy_microhei_ttc, theme->titleSize);
         } else {
-            g_imeFont = openThemeFont(theme->root, theme->mainFontEnglish, theme_literal_1618bc, theme_literal_1618c0, theme->mainSize);
-            g_titleFont = openThemeFont(theme->root, theme->titleFontEnglish, theme_literal_1618bc, theme_literal_1618c0, theme->titleSize);
+            g_imeFont = openThemeFont(theme->root, theme->mainFontEnglish, lit_here, lit_henb_ttf, theme->mainSize);
+            g_titleFont = openThemeFont(theme->root, theme->titleFontEnglish, lit_here, lit_henb_ttf, theme->titleSize);
         }
         TTF_SetFontStyle(g_imeFont, 1);
-        g_iconFont = openThemeFont(theme->root, theme->iconFontEnglish, theme_literal_1618bc, theme_literal_1618c0, theme->iconSize);
+        g_iconFont = openThemeFont(theme->root, theme->iconFontEnglish, lit_here, lit_henb_ttf, theme->iconSize);
         TTF_SetFontStyle(g_iconFont, 1);
-        g_smallFont = openThemeFont(theme->root, theme->mainFontEnglish, theme_literal_1618bc, theme_literal_1618c0, theme->smallSize);
-        g_labelFont = openThemeFont(theme->root, theme->labelFontEnglish, theme_literal_1618bc, theme_literal_1618cc, theme->labelSize);
-        printf(theme_literal_1618e4, g_titleFont, g_iconFont, g_smallFont, g_labelFont);
+        g_smallFont = openThemeFont(theme->root, theme->mainFontEnglish, lit_here, lit_henb_ttf, theme->smallSize);
+        g_labelFont = openThemeFont(theme->root, theme->labelFontEnglish, lit_here, lit_exo_2_bold_italic_ttf, theme->labelSize);
+        printf(lit_change_lang_font_en_stitlefont_p, g_titleFont, g_iconFont, g_smallFont, g_labelFont);
     } else {
-        g_imeFont = openThemeFont(theme->root, theme->mainFontMulti, theme_literal_1618bc, theme_literal_1618a8, theme->mainSize);
+        g_imeFont = openThemeFont(theme->root, theme->mainFontMulti, lit_here, lit_wqy_microhei_ttc, theme->mainSize);
         TTF_SetFontStyle(g_imeFont, 1);
-        g_titleFont = openThemeFont(theme->root, theme->titleFontMulti, theme_literal_1618bc, theme_literal_1618a8, theme->titleSize);
-        g_iconFont = openThemeFont(theme->root, theme->iconFontMulti, theme_literal_1618bc, theme_literal_1618a8, theme->iconSize);
+        g_titleFont = openThemeFont(theme->root, theme->titleFontMulti, lit_here, lit_wqy_microhei_ttc, theme->titleSize);
+        g_iconFont = openThemeFont(theme->root, theme->iconFontMulti, lit_here, lit_wqy_microhei_ttc, theme->iconSize);
         TTF_SetFontStyle(g_iconFont, 1);
-        g_smallFont = openThemeFont(theme->root, theme->mainFontMulti, theme_literal_1618bc, theme_literal_1618a8, theme->smallSize);
-        g_labelFont = openThemeFont(theme->root, theme->labelFontMulti, theme_literal_1618bc, theme_literal_1618a8, theme->labelSize);
+        g_smallFont = openThemeFont(theme->root, theme->mainFontMulti, lit_here, lit_wqy_microhei_ttc, theme->smallSize);
+        g_labelFont = openThemeFont(theme->root, theme->labelFontMulti, lit_here, lit_wqy_microhei_ttc, theme->labelSize);
         TTF_SetFontStyle(g_labelFont, 2);
-        printf(theme_literal_161934, g_titleFont, g_iconFont, g_smallFont, g_labelFont);
+        printf(lit_change_lang_font_stitlefont_p_sfonticon, g_titleFont, g_iconFont, g_smallFont, g_labelFont);
     }
-    if (!g_iconFont) fprintf(stderr, theme_literal_161984, SDL_GetError());
+    if (!g_iconFont) fprintf(stderr, lit_change_font_bold_fail_s, SDL_GetError());
     return 0;
 }
+// A copy of image drawn over the matching (centred) part of the background, so translucent
+// skin parts can be blitted later without the background behind them. NULL if no image.
 SDL_Surface *compositeThemeImage(SDL_Surface *image, SDL_Surface *background)
 {
     if (image) {
@@ -251,10 +272,11 @@ SDL_Surface *compositeThemeImage(SDL_Surface *image, SDL_Surface *background)
     }
     return NULL;
 }
+// The built-in theme ("Default", in ./): font sizes and colours.
 void setDefaultTheme(Theme *theme)
 {
-    theme->name = theme_literal_1619a0;
-    theme->root = theme_literal_1618bc;
+    theme->name = lit_default;
+    theme->root = lit_here;
     theme->titleSize = 0x24;
     theme->titleColor.bytes = g_themeWhite;
     theme->hintSize = 0x18;
@@ -282,6 +304,8 @@ void setDefaultTheme(Theme *theme)
     theme->field140 = 0;
     theme->field148 = 0;
 }
+// Loads a theme into the globals (see the file header). Returns false if the background or the
+// main font could not be loaded; main then gives up.
 bool loadTheme(Theme *theme, int *unusedFontSize)
 {
     char filename[128];
@@ -304,163 +328,164 @@ bool loadTheme(Theme *theme, int *unusedFontSize)
     g_fixedColor.bytes.r = 0x68; g_fixedColor.bytes.g = 0x46; g_fixedColor.bytes.b = 0x18;
     g_grayColor.r = 0x68; g_grayColor.g = 0x68; g_grayColor.b = 0x68; g_grayColor.unused = 0;
     bool available = languageFontExists();
-    printf(theme_literal_1619a8, getLanguageFile(), theme->root.c_str(), available);
-    if (available != true || strncmp(getLanguageFile(), theme_literal_1618a0, 7) == 0) {
+    printf(lit_sys_lang_s_path_s_support, getLanguageFile(), theme->root.c_str(), available);
+    if (available != true || strncmp(getLanguageFile(), lit_en_lang, 7) == 0) {
         if (available) {
-            g_imeFont = openThemeFont(theme->root, theme->mainFontMulti, theme_literal_1618bc, theme_literal_1618a8, theme->mainSize);
-            g_titleFont = openThemeFont(theme->root, theme->titleFontEnglish, theme_literal_1618bc, theme_literal_1618a8, theme->titleSize);
+            g_imeFont = openThemeFont(theme->root, theme->mainFontMulti, lit_here, lit_wqy_microhei_ttc, theme->mainSize);
+            g_titleFont = openThemeFont(theme->root, theme->titleFontEnglish, lit_here, lit_wqy_microhei_ttc, theme->titleSize);
         } else {
-            g_imeFont = openThemeFont(theme->root, theme->mainFontEnglish, theme_literal_1618bc, theme_literal_1618c0, theme->mainSize);
-            g_titleFont = openThemeFont(theme->root, theme->titleFontEnglish, theme_literal_1618bc, theme_literal_1618c0, theme->titleSize);
+            g_imeFont = openThemeFont(theme->root, theme->mainFontEnglish, lit_here, lit_henb_ttf, theme->mainSize);
+            g_titleFont = openThemeFont(theme->root, theme->titleFontEnglish, lit_here, lit_henb_ttf, theme->titleSize);
         }
         TTF_SetFontStyle(g_imeFont, 1);
-        g_iconFont = openThemeFont(theme->root, theme->iconFontEnglish, theme_literal_1618bc, theme_literal_1618c0, theme->iconSize);
-        printf(theme_literal_1619d8, g_iconFont);
-        g_smallFont = openThemeFont(theme->root, theme->mainFontEnglish, theme_literal_1618bc, theme_literal_1618c0, theme->smallSize);
-        g_labelFont = openThemeFont(theme->root, theme->labelFontEnglish, theme_literal_1618bc, theme_literal_1618cc, theme->labelSize);
+        g_iconFont = openThemeFont(theme->root, theme->iconFontEnglish, lit_here, lit_henb_ttf, theme->iconSize);
+        printf(lit_sfonticon_p, g_iconFont);
+        g_smallFont = openThemeFont(theme->root, theme->mainFontEnglish, lit_here, lit_henb_ttf, theme->smallSize);
+        g_labelFont = openThemeFont(theme->root, theme->labelFontEnglish, lit_here, lit_exo_2_bold_italic_ttf, theme->labelSize);
 
     } else {
-        g_imeFont = openThemeFont(theme->root, theme->mainFontMulti, theme_literal_1618bc, theme_literal_1618a8, theme->mainSize);
+        g_imeFont = openThemeFont(theme->root, theme->mainFontMulti, lit_here, lit_wqy_microhei_ttc, theme->mainSize);
         TTF_SetFontStyle(g_imeFont, 1);
-        g_iconFont = openThemeFont(theme->root, theme->iconFontMulti, theme_literal_1618bc, theme_literal_1618a8, theme->iconSize);
+        g_iconFont = openThemeFont(theme->root, theme->iconFontMulti, lit_here, lit_wqy_microhei_ttc, theme->iconSize);
         TTF_SetFontStyle(g_iconFont, 1);
-        g_titleFont = openThemeFont(theme->root, theme->titleFontMulti, theme_literal_1618bc, theme_literal_1618a8, theme->titleSize);
-        g_smallFont = openThemeFont(theme->root, theme->mainFontMulti, theme_literal_1618bc, theme_literal_1618a8, theme->smallSize);
-        g_labelFont = openThemeFont(theme->root, theme->labelFontMulti, theme_literal_1618bc, theme_literal_1618a8, theme->labelSize);
+        g_titleFont = openThemeFont(theme->root, theme->titleFontMulti, lit_here, lit_wqy_microhei_ttc, theme->titleSize);
+        g_smallFont = openThemeFont(theme->root, theme->mainFontMulti, lit_here, lit_wqy_microhei_ttc, theme->smallSize);
+        g_labelFont = openThemeFont(theme->root, theme->labelFontMulti, lit_here, lit_wqy_microhei_ttc, theme->labelSize);
         TTF_SetFontStyle(g_labelFont, 2);
 
     }
-    printf(theme_literal_1619e8, g_imeFont, g_titleFont, g_iconFont, g_smallFont, g_labelFont);
-    if (!g_imeFont) fprintf(stderr, theme_literal_161a38, SDL_GetError());
-    if (!g_iconFont) fprintf(stderr, theme_literal_161a4c, SDL_GetError());
-    g_background = loadImeImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161a68);
+    printf(lit_init_skin_sfont_p_stitlefont_p, g_imeFont, g_titleFont, g_iconFont, g_smallFont, g_labelFont);
+    if (!g_imeFont) fprintf(stderr, lit_open_font_fail_s, SDL_GetError());
+    if (!g_iconFont) fprintf(stderr, lit_open_font_bold_fail_s, SDL_GetError());
+    g_background = loadImeImage(theme->root.c_str(), lit_here, lit_skin_background_png);
     if (g_background) {
         SDL_Surface *temp = SDL_CreateRGBSurface(1, g_background->w, g_background->h, 32, 0xff, 0xff00, 0xff0000, 0xff000000);
         SDL_UpperBlit(g_background, NULL, temp, NULL);
         SDL_FreeSurface(g_background);
         g_background = temp;
-    } else fprintf(stderr, theme_literal_161a7c, SDL_GetError());
-    g_listStripe = loadSkinImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161a98, g_backBuffer, 0);
+    } else fprintf(stderr, lit_open_background_fail_s, SDL_GetError());
+    g_listStripe = loadSkinImage(theme->root.c_str(), lit_here, lit_here_skin_div_line_h_png, g_backBuffer, 0);
     if (g_listStripe) {
         SDL_Surface *temp = compositeThemeImage(g_listStripe, g_background);
         SDL_FreeSurface(g_listStripe);
         g_listStripe = temp;
-    } else fprintf(stderr, theme_literal_161ab0, SDL_GetError());
-    g_vertLine = loadSkinImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161ad0, g_backBuffer, 0);
+    } else fprintf(stderr, lit_open_div_line_h_png_fail, SDL_GetError());
+    g_vertLine = loadSkinImage(theme->root.c_str(), lit_here, lit_here_skin_div_line_v_01_png, g_backBuffer, 0);
     if (g_vertLine) {
         SDL_Surface *temp = compositeThemeImage(g_vertLine, g_background);
         SDL_FreeSurface(g_vertLine);
         g_vertLine = temp;
-    } else fprintf(stderr, theme_literal_161aec, SDL_GetError());
+    } else fprintf(stderr, lit_open_bg_hline_fail_s, SDL_GetError());
     g_unusedIndicator = NULL;
-    g_dotActive = loadSkinImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161b04, g_backBuffer, 0);
-    if (!g_dotActive) fprintf(stderr, theme_literal_161b18, SDL_GetError());
-    g_dotNormal = loadSkinImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161b30, g_backBuffer, 0);
-    if (!g_dotNormal) fprintf(stderr, theme_literal_161b44, SDL_GetError());
+    g_dotActive = loadSkinImage(theme->root.c_str(), lit_here, lit_here_skin_dot_a_png, g_backBuffer, 0);
+    if (!g_dotActive) fprintf(stderr, lit_open_dot_a_fail_s, SDL_GetError());
+    g_dotNormal = loadSkinImage(theme->root.c_str(), lit_here, lit_here_skin_dot_n_png, g_backBuffer, 0);
+    if (!g_dotNormal) fprintf(stderr, lit_open_dot_n_fail_s, SDL_GetError());
     g_unusedStatus = NULL;
-    g_navItem = loadImeImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161b5c);
+    g_navItem = loadImeImage(theme->root.c_str(), lit_here, lit_skin_nav_bar_item_bg_png);
     if (g_navItem) {
         SDL_Surface *temp = SDL_CreateRGBSurface(1, g_navItem->w, g_navItem->h, 32, 0xff, 0xff00, 0xff0000, 0xff000000);
         SDL_UpperBlit(g_navItem, NULL, temp, NULL);
         SDL_FreeSurface(g_navItem);
         g_navItem = temp;
-    } else fprintf(stderr, theme_literal_161b78, SDL_GetError());
-    g_titleBar = loadSkinImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161b90, g_backBuffer, 1);
+    } else fprintf(stderr, lit_open_stat_bg_fail_s, SDL_GetError());
+    g_titleBar = loadSkinImage(theme->root.c_str(), lit_here, lit_here_skin_bg_title_png, g_backBuffer, 1);
     if (g_titleBar) {
         SDL_Surface *temp = compositeThemeImage(g_titleBar, g_background);
         SDL_FreeSurface(g_titleBar);
         g_titleBar = temp;
-    } else fprintf(stderr, theme_literal_161ba4, SDL_GetError());
-    g_keySettingFooter = loadSkinImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161bbc, g_backBuffer, 0);
+    } else fprintf(stderr, lit_open_bar_bg_fail_s, SDL_GetError());
+    g_keySettingFooter = loadSkinImage(theme->root.c_str(), lit_here, lit_here_skin_tips_bar_bg_png, g_backBuffer, 0);
     if (g_keySettingFooter) {
         SDL_Surface *temp = compositeThemeImage(g_keySettingFooter, g_background);
         SDL_FreeSurface(g_keySettingFooter);
         g_keySettingFooter = temp;
-    } else fprintf(stderr, theme_literal_161ba4, SDL_GetError());
-    g_miniLogo = loadSkinImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161bd4, g_backBuffer, 0);
-    if (!g_miniLogo) fprintf(stderr, theme_literal_161bec, SDL_GetError());
-    g_emptyImage = loadSkinImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161c08, g_backBuffer, 0);
-    if (!g_emptyImage) fprintf(stderr, theme_literal_161c1c, SDL_GetError());
-    g_listNumber = loadSkinImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161c38, g_backBuffer, 0);
-    if (!g_listNumber) fprintf(stderr, theme_literal_161c4c, SDL_GetError());
-    g_numberBg = loadSkinImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161c64, g_backBuffer, 0);
-    if (!g_numberBg) fprintf(stderr, theme_literal_161c78, SDL_GetError());
+    } else fprintf(stderr, lit_open_bar_bg_fail_s, SDL_GetError());
+    g_miniLogo = loadSkinImage(theme->root.c_str(), lit_here, lit_here_skin_miyoo_topbar_png, g_backBuffer, 0);
+    if (!g_miniLogo) fprintf(stderr, lit_open_mini_logo_fail_s, SDL_GetError());
+    g_emptyImage = loadSkinImage(theme->root.c_str(), lit_here, lit_here_skin_empty_png, g_backBuffer, 0);
+    if (!g_emptyImage) fprintf(stderr, lit_open_empty_png_fail_s, SDL_GetError());
+    g_listNumber = loadSkinImage(theme->root.c_str(), lit_here, lit_here_skin_list_num_png, g_backBuffer, 0);
+    if (!g_listNumber) fprintf(stderr, lit_open_list_num_fail_s, SDL_GetError());
+    g_numberBg = loadSkinImage(theme->root.c_str(), lit_here, lit_here_skin_num_bg_png, g_backBuffer, 0);
+    if (!g_numberBg) fprintf(stderr, lit_open_num_bg_fail_s, SDL_GetError());
     std::string path(theme->root);
-    path += theme_literal_161c90;
-    printf(theme_literal_161ca4, path.c_str());
-    g_changeSound = Mix_LoadWAV_RW(SDL_RWFromFile(path.c_str(), theme_literal_161cb4), 1);
+    path += lit_sound_change_wav;
+    printf(lit_load_music_s, path.c_str());
+    g_changeSound = Mix_LoadWAV_RW(SDL_RWFromFile(path.c_str(), lit_rb), 1);
     if (!g_changeSound) {
-        printf(theme_literal_161ccc, theme_literal_161cb8);
-        g_changeSound = Mix_LoadWAV_RW(SDL_RWFromFile(theme_literal_161cb8, theme_literal_161cb4), 1);
-        if (!g_changeSound) fprintf(stderr, theme_literal_161ce4, theme_literal_161cb8, SDL_GetError());
+        printf(lit_load_default_music_s, lit_here_sound_change_wav);
+        g_changeSound = Mix_LoadWAV_RW(SDL_RWFromFile(lit_here_sound_change_wav, lit_rb), 1);
+        if (!g_changeSound) fprintf(stderr, lit_load_music_s_fail_s, lit_here_sound_change_wav, SDL_GetError());
     }
     path = theme->root;
-    path += theme_literal_161cfc;
-    printf(theme_literal_161ca4, path.c_str());
-    g_enterSound = Mix_LoadWAV_RW(SDL_RWFromFile(path.c_str(), theme_literal_161cb4), 1);
+    path += lit_sound_enter_wav;
+    printf(lit_load_music_s, path.c_str());
+    g_enterSound = Mix_LoadWAV_RW(SDL_RWFromFile(path.c_str(), lit_rb), 1);
     if (!g_enterSound) {
-        printf(theme_literal_161ccc, theme_literal_161d0c);
-        g_enterSound = Mix_LoadWAV_RW(SDL_RWFromFile(theme_literal_161d0c, theme_literal_161cb4), 1);
-        if (!g_enterSound) fprintf(stderr, theme_literal_161ce4, theme_literal_161d0c, SDL_GetError());
+        printf(lit_load_default_music_s, lit_etc_enter_wav);
+        g_enterSound = Mix_LoadWAV_RW(SDL_RWFromFile(lit_etc_enter_wav, lit_rb), 1);
+        if (!g_enterSound) fprintf(stderr, lit_load_music_s_fail_s, lit_etc_enter_wav, SDL_GetError());
     }
     path = theme->root;
-    path += theme_literal_161d1c;
-    printf(theme_literal_161ca4, path.c_str());
+    path += lit_sound_bgm_mp3;
+    printf(lit_load_music_s, path.c_str());
     g_themeMusic = Mix_LoadMUS(path.c_str());
     if (!g_themeMusic) {
-        printf(theme_literal_161ccc, theme_literal_161d2c);
-        g_themeMusic = Mix_LoadMUS(theme_literal_161d2c);
-        if (!g_themeMusic) fprintf(stderr, theme_literal_161ce4, theme_literal_161d2c, SDL_GetError());
+        printf(lit_load_default_music_s, lit_here_sound_bgm_mp3);
+        g_themeMusic = Mix_LoadMUS(lit_here_sound_bgm_mp3);
+        if (!g_themeMusic) fprintf(stderr, lit_load_music_s_fail_s, lit_here_sound_bgm_mp3, SDL_GetError());
     }
-    g_gameFocused = loadImeImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161d3c);
+    g_gameFocused = loadImeImage(theme->root.c_str(), lit_here, lit_skin_bg_game_item_f_png);
     if (g_gameFocused) {
         SDL_Surface *temp = compositeThemeImage(g_gameFocused, g_background);
         SDL_FreeSurface(g_gameFocused);
         g_gameFocused = temp;
     }
-    g_gameNormal = loadImeImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161d54);
+    g_gameNormal = loadImeImage(theme->root.c_str(), lit_here, lit_skin_bg_game_item_n_png);
     if (g_gameNormal) {
         SDL_Surface *temp = compositeThemeImage(g_gameNormal, g_background);
         SDL_FreeSurface(g_gameNormal);
         g_gameNormal = temp;
     }
-    g_raRow = loadImeImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161d6c);
+    g_raRow = loadImeImage(theme->root.c_str(), lit_here, lit_skin_bg_ra_list_item_png);
     if (g_raRow) {
         SDL_Surface *temp = compositeThemeImage(g_raRow, NULL);
         SDL_FreeSurface(g_raRow);
         g_raRow = temp;
     }
-    g_iconA = loadSkinImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161d88, g_backBuffer, 0);
-    g_iconB = loadSkinImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161d9c, g_backBuffer, 0);
-    g_chargeIcon = loadSkinImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161db0, g_backBuffer, 0);
-    g_battery0 = loadSkinImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161dd0, g_backBuffer, 0);
-    g_battery1 = loadSkinImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161dec, g_backBuffer, 0);
-    g_battery2 = loadSkinImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161e04, g_backBuffer, 0);
-    g_battery3 = loadSkinImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161e1c, g_backBuffer, 0);
-    g_battery4 = loadSkinImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161e34, g_backBuffer, 0);
-    g_folderIcon = loadSkinImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161e4c, g_backBuffer, 0);
-    g_gameIcon = loadSkinImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161e64, g_backBuffer, 0);
-    g_previewBg = loadSkinImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161e78, g_backBuffer, 0);
-    g_hotspotIcon = loadSkinImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161e8c, g_backBuffer, 0);
-    g_wifi4 = loadSkinImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161ea8, g_backBuffer, 0);
-    g_wifi3 = loadSkinImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161ec8, g_backBuffer, 0);
-    g_wifi2 = loadSkinImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161ee8, g_backBuffer, 0);
-    g_headphoneIcon = loadSkinImage(theme->root.c_str(), theme_literal_1618bc, theme_literal_161f08, g_backBuffer, 0);
+    g_iconA = loadSkinImage(theme->root.c_str(), lit_here, lit_skin_icon_a_54_png, g_backBuffer, 0);
+    g_iconB = loadSkinImage(theme->root.c_str(), lit_here, lit_skin_icon_b_54_png, g_backBuffer, 0);
+    g_chargeIcon = loadSkinImage(theme->root.c_str(), lit_here, lit_skin_ic_power_charge_100_png, g_backBuffer, 0);
+    g_battery0 = loadSkinImage(theme->root.c_str(), lit_here, lit_battery0_path, g_backBuffer, 0);
+    g_battery1 = loadSkinImage(theme->root.c_str(), lit_here, lit_battery1_path, g_backBuffer, 0);
+    g_battery2 = loadSkinImage(theme->root.c_str(), lit_here, lit_battery2_path, g_backBuffer, 0);
+    g_battery3 = loadSkinImage(theme->root.c_str(), lit_here, lit_battery3_path, g_backBuffer, 0);
+    g_battery4 = loadSkinImage(theme->root.c_str(), lit_here, lit_battery4_path, g_backBuffer, 0);
+    g_folderIcon = loadSkinImage(theme->root.c_str(), lit_here, lit_skin_icon_folder_png, g_backBuffer, 0);
+    g_gameIcon = loadSkinImage(theme->root.c_str(), lit_here, lit_skin_icon_game_png, g_backBuffer, 0);
+    g_previewBg = loadSkinImage(theme->root.c_str(), lit_here, lit_skin_preview_bg_png, g_backBuffer, 0);
+    g_hotspotIcon = loadSkinImage(theme->root.c_str(), lit_here, lit_skin_icon_hotspot_wifi_png, g_backBuffer, 0);
+    g_wifi4 = loadSkinImage(theme->root.c_str(), lit_here, lit_skin_icon_wifi_signal_04_png, g_backBuffer, 0);
+    g_wifi3 = loadSkinImage(theme->root.c_str(), lit_here, lit_skin_icon_wifi_signal_03_png, g_backBuffer, 0);
+    g_wifi2 = loadSkinImage(theme->root.c_str(), lit_here, lit_skin_icon_wifi_signal_02_png, g_backBuffer, 0);
+    g_headphoneIcon = loadSkinImage(theme->root.c_str(), lit_here, lit_skin_headphone_icon_png, g_backBuffer, 0);
     for (int i = 0; i < 21; i++) {
-        snprintf(filename, 128, theme_literal_161f20, i);
-        g_volumeIcons[i] = loadSkinImage(theme->root.c_str(), theme_literal_1618bc, filename, g_backBuffer, 0);
+        snprintf(filename, 128, lit_skin_icon_volume_02d_png, i);
+        g_volumeIcons[i] = loadSkinImage(theme->root.c_str(), lit_here, filename, g_backBuffer, 0);
     }
     if (!g_background || !g_imeFont) return 0;
-    printf(theme_literal_161f3c, TTF_FontHeight(g_imeFont));
+    printf(lit_load_font_height_is_n, TTF_FontHeight(g_imeFont));
     return 1;
 }
+// Frees every font, image and sound loadTheme loaded.
 int freeTheme()
 {
     if (g_background) {
-        printf(theme_literal_161f54, g_background, g_background->w, g_background->h);
+        printf(lit_free_background_p_n_x_n, g_background, g_background->w, g_background->h);
         SDL_FreeSurface(g_background);
     }
-    if (g_imeFont) { printf(theme_literal_161f70, g_imeFont); TTF_CloseFont(g_imeFont); }
+    if (g_imeFont) { printf(lit_free_sfont_p, g_imeFont); TTF_CloseFont(g_imeFont); }
     if (g_iconFont) TTF_CloseFont(g_iconFont);
     if (g_titleFont) TTF_CloseFont(g_titleFont);
     if (g_smallFont) TTF_CloseFont(g_smallFont);

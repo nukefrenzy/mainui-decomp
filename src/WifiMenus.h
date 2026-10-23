@@ -1,6 +1,7 @@
 // Wi-Fi/hotspot menus and actions; inline definition order fixes the template tail.
 #pragma once
 #include "WifiMenuItems.h"
+#include "LangStrings.h"
 
 class WifiMenuDrawer : public ListMenu {
 public:
@@ -108,13 +109,13 @@ public:
     virtual int draw(SDL_Surface *dst, SDL_Rect *r, bool selected) {
         SDL_Rect rect = *r;
         rect.x += 20; rect.y += 5;
-        drawText(dst, g_imeFont, rect, languageString(0x86), selected ? g_wifiSelectedColor : g_imeTextColor, 3, false);
-        int on = getWifiConnected();
+        drawText(dst, g_imeFont, rect, languageString(STR_HOTSPOT), selected ? g_wifiSelectedColor : g_imeTextColor, 3, false);
+        int on = getHotspotOn();
         printf(g_hotspotSwitchFormat, on);
         rect.w = 200;
         rect.x = r->x + r->w - rect.w - (right ? right->w : 0) - 40;
-        if (on) drawText(dst, g_imeFont, rect, languageString(0x68), selected ? g_wifiSelectedColor : g_imeTextColor, 1, false);
-        else drawText(dst, g_imeFont, rect, languageString(0x69), selected ? g_wifiSelectedColor : g_imeTextColor, 1, false);
+        if (on) drawText(dst, g_imeFont, rect, languageString(STR_ON), selected ? g_wifiSelectedColor : g_imeTextColor, 1, false);
+        else drawText(dst, g_imeFont, rect, languageString(STR_OFF), selected ? g_wifiSelectedColor : g_imeTextColor, 1, false);
         if (left && right) {
             rect.y += (60 - left->h) / 2;
             rect.x = rect.x + rect.w - (right ? right->w : 0) - left->w - 240;
@@ -148,12 +149,12 @@ public:
 };
 class HotspotNameItem : public ItemDrawable {
 public:
-    HotspotNameItem() : ItemDrawable(NULL) { action = new HotspotImePopupAction(0x97, g_hotspotConfigPath, g_hotspotSsidKey); }
+    HotspotNameItem() : ItemDrawable(NULL) { action = new HotspotImePopupAction(STR_INPUT_SSID, g_hotspotConfigPath, g_hotspotSsidKey); }
     virtual ~HotspotNameItem() {}
     virtual int draw(SDL_Surface *dst, SDL_Rect *r, bool selected) {
         SDL_Rect rect = *r;
         rect.x += 20;
-        drawText(dst, g_imeFont, rect, languageString(135), g_imeTextColor, 0, selected);
+        drawText(dst, g_imeFont, rect, languageString(STR_SSID), g_imeTextColor, 0, selected);
         // Preserve the original temporary-string lifetime.
         const char *value = readConfigValue(g_hotspotConfigPath, g_hotspotSsidKey).c_str();
         int width = 0, height = 0;
@@ -166,12 +167,12 @@ public:
 };
 class HotspotPskItem : public ItemDrawable {
 public:
-    HotspotPskItem() : ItemDrawable(NULL) { action = new HotspotImePopupAction(0x98, g_hotspotConfigPath, g_hotspotPskKey); }
+    HotspotPskItem() : ItemDrawable(NULL) { action = new HotspotImePopupAction(STR_INPUT_PASSWORD, g_hotspotConfigPath, g_hotspotPskKey); }
     virtual ~HotspotPskItem() {}
     virtual int draw(SDL_Surface *dst, SDL_Rect *r, bool selected) {
         SDL_Rect rect = *r;
         rect.x += 20;
-        drawText(dst, g_imeFont, rect, languageString(136), g_imeTextColor, 0, selected);
+        drawText(dst, g_imeFont, rect, languageString(STR_PASSWORD), g_imeTextColor, 0, selected);
         // Preserve the original temporary-string lifetime.
         const char *value = readConfigValue(g_hotspotConfigPath, g_hotspotPskKey).c_str();
         int width = 0, height = 0;

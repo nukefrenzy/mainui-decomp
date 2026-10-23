@@ -482,7 +482,7 @@ void drawScreenFrame(SDL_Surface *dst, const char *title, int unusedArg, bool sh
         r.y = 60;
         SDL_BlitSurface(g_listStripe, NULL, dst, &r);
     }
-    drawFooter(dst, languageString(88), languageString(89));
+    drawFooter(dst, languageString(STR_OPEN_LABEL), languageString(STR_BACK));
 }
 
 extern const char g_powerOffCommand[32];
@@ -590,7 +590,7 @@ int handleGlobalInput(SDL_Event *out)
                 printf("SDLK_POWER down %d, sent %d\n", g_powerDownCount, g_powerSent);
                 if ((g_powerDownCount - 1) * 100 > 1000 && !g_powerSent) {
                     g_powerSent = true;
-                    TrimusWindow *w = new DialogWindow(86, 108, false,
+                    TrimusWindow *w = new DialogWindow(STR_POWER_OFF, STR_SHUT_DOWN_TEXT, false,
                                                        new GeneralAction(-1, powerOff, NULL));
                     pushWindow(w);
                     return EVENT_POWER_DIALOG;
@@ -650,7 +650,7 @@ int handleGlobalInput(SDL_Event *out)
                     Mix_PlayMusic(g_themeMusic, -1);
                 }
             } else if (event.user.code == EVENT_POWER_OFF) {
-                TrimusWindow *w = new CountDownWindow(87, powerOffNow, onUserActivity);
+                TrimusWindow *w = new CountDownWindow(STR_POWER_OFF_IN, powerOffNow, onUserActivity);
                 pushWindow(w);
             } else if (event.user.code == EVENT_VOLUME_SHOWN) {
                 g_volumeIndicatorVisible = true;
@@ -712,7 +712,7 @@ void showLaunchScreen(const char *cmd)
     r.w = 640;
     r.h = 360;
     drawBackground(g_backBuffer);
-    drawText(g_backBuffer, g_imeFont, r, languageString(75), g_wifiEmptyColor, 1, false);
+    drawText(g_backBuffer, g_imeFont, r, languageString(STR_LOADING_CAPS), g_wifiEmptyColor, 1, false);
     SDL_BlitSurface(g_backBuffer, NULL, g_screen, NULL);
     SDL_Flip(g_screen);
     SDL_BlitSurface(g_backBuffer, NULL, g_screen, NULL);
@@ -757,7 +757,7 @@ int launchRom(const char *label, EmuInfo *emu, const char *rompath, const char *
             encrypt_path(rompath, strlen(rompath));
             showLaunchScreen(g_launchCmd);
         } else {
-            ProgressDialog *d = new ProgressDialog(85, new GeneralAction(-1, enableSwapAction, NULL));
+            ProgressDialog *d = new ProgressDialog(STR_CREATE_CACHE, new GeneralAction(-1, enableSwapAction, NULL));
             d->onShow();
             g_windowStack->push_back(d);
             return -1;

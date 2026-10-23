@@ -1,10 +1,16 @@
-// Directory contents and bounded navigation cache used by FileBrowserMenu.
+// Directory contents and bounded navigation cache used by FileBrowserMenu (tu_12ce28.cpp).
 #pragma once
 #include <string>
 #include <vector>
 #include "Action.h"
 struct SDL_Surface;
 using FileFilter = bool (*)(const char *, const char *);
+// FileAction.kind: what a file-browser row stands for.
+enum FileKind {
+    FILE_KIND_FILE = 101,        // a file: launch it (or offer a TrimuiUpdate*.zip as an update)
+    FILE_KIND_DIRECTORY = 102,   // a folder: open it (EVENT_OPEN_DIRECTORY)
+};
+// The action behind one file-browser row: its full path and kind.
 // vtable 0x153ed8: slots 3/4 are Action's; dtors 0x3a1cc/0x3a218 are inline in tu_015b20's tail.
 class FileAction : public Action {
 public:
@@ -31,10 +37,14 @@ public:
     std::string str58;  // +0x58
     SDL_Surface *field70; // +0x70  0; thumbnail loaded from str58 by TextMenuDrawer::vfunc7 (p04)
 };
+// One directory's rows (TextItem*), as loaded.
 struct DirectoryItems {
     std::string path;
     std::vector<void *> *items;
 };
+// The file browser's navigation: the path from the starting folder to the current one, and the
+// rows of recently visited folders (most recent first) so going back is instant. When the cached
+// rows pass 40,000, the least recently visited folders are dropped.
 class FileBrowserCache {
 public:
     FileBrowserCache(FileFilter);
@@ -47,7 +57,7 @@ public:
     std::vector<void *> *open(const char *);
     std::vector<void *> *parent();
     std::vector<void *> *child(const char *);
-    std::vector<std::string> paths;
-    std::vector<DirectoryItems> directories;
-    FileFilter filter;
+    std::vector<std::string> paths;             // the folders entered, from the starting one
+    std::vector<DirectoryItems> directories;    // cached folders, most recently used first
+    FileFilter filter;                          // which files to list (fileBrowserFilter)
 };

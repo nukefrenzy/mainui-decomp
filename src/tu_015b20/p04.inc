@@ -489,7 +489,7 @@ void TextMenuDrawer::vfunc7(SDL_Surface *dst)
         sr.w = rect.w - 40;
         sr.h = field58;
         if (item == NULL) {
-            drawText(dst, font, sr, languageString(0x4c), color, 0, flagC0 ? i == cur : false);
+            drawText(dst, font, sr, languageString(STR_LOADING), color, 0, flagC0 ? i == cur : false);
         } else {
             if (!item->flag24) {
                 if (item->label.length() <= 48) {

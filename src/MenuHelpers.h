@@ -1,4 +1,7 @@
-// Cache and background worker queue shared by the menu classes.
+// The two helpers behind the menus' thumbnails and previews (implemented in tu_131e34.cpp):
+// an LRU cache of loaded images keyed by path, and a queue of background jobs (BGWorker)
+// that one worker thread runs, newest first. Formerly MenuHelper80/MenuHelper60 (their offsets
+// in MenuWindow).
 #pragma once
 #include <string>
 #include "BGWorker.h"
@@ -13,9 +16,11 @@ struct CacheEntry {
     std::string key;
     void *value;
 };
-struct MenuHelper80 { // 0x14 bytes
-    MenuHelper80(void (*freeFn)(SDL_Surface *));
-    ~MenuHelper80();
+// Thread-safe cache: most recently used entries at the front; beyond 1000 entries the oldest
+// are freed with freeFn. Values are SDL surfaces in practice.
+struct LruCache { // 0x14 bytes
+    LruCache(void (*freeFn)(SDL_Surface *));
+    ~LruCache();
     void clear();
     int put(std::string key, void *value);
     void *get(std::string key);
@@ -24,15 +29,17 @@ struct MenuHelper80 { // 0x14 bytes
     void (*freeFn)(SDL_Surface *);
     SDL_mutex *mutex;
 };
-struct MenuHelper60 { // 0x20 bytes
-    MenuHelper60(int n);
-    ~MenuHelper60();
+// A job queue with one worker thread. Holds at most `limit` waiting jobs (default 5): adding
+// one more drops the oldest waiting job, so a fast-scrolling menu only loads what is current.
+struct WorkerQueue { // 0x20 bytes
+    WorkerQueue(int n);
+    ~WorkerQueue();
     int addWorker(BGWorker *worker);
     BGWorker *takeWorker();
-    int limit;
-    SDL_mutex *mutex;
-    SDL_cond *condition;
-    std::list<BGWorker *> workers;
+    int limit;                      // most waiting jobs kept
+    SDL_mutex *mutex;               // guards workers and running
+    SDL_cond *condition;            // signalled when a job arrives or at shutdown
+    std::list<BGWorker *> workers;  // waiting jobs, newest first
     SDL_Thread *thread;
     bool running;
 };

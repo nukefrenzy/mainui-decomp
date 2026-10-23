@@ -1,5 +1,10 @@
-// Recovered streaming adaptation of stb's zlib decoder (original file: stb_zlib.cpp).
-// Proven 0x1302cc-0x131e34: 19 functions, 7,016 bytes, no template tail.
+// tu_1302cc (0x1302cc-0x131e34): a DEFLATE (zlib) decoder, adapted from stb_image's.
+//
+// The original file was stb_zlib.cpp (its assert messages name it). Unlike stb's, it decodes in
+// parts: readZlib fills as much of the caller's buffer as asked and keeps its place, reading the
+// compressed data from memory or straight from a file, so the zip reader (tu_14cb24.c) can
+// decompress an entry without loading it whole. Function names are stb's where stb has them.
+// 19 functions, 7,016 bytes, no template tail.
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -17,15 +22,18 @@ extern const char zlib_signature_parse_header[];
 static_assert(sizeof(zhuffman) == 0x7e4 && sizeof(zbuf) == 0x100c, "decoder layouts");
 extern int g_lengthBase[31], g_lengthExtra[31], g_distanceBase[32], g_distanceExtra[32];
 extern unsigned char g_codeLengthOrder[19];
-// Recovered DEFLATE tables (including unused zero entries).
+// The DEFLATE tables (RFC 1951): base and extra bits for length codes 257-285 and distance
+// codes, and the order in which code-length code lengths are sent (including unused zeros).
 int g_lengthBase[31] = {3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258, 0, 0}; // 0x17f9c0
 int g_lengthExtra[31] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0, 0, 0}; // 0x17fa3c
 int g_distanceBase[32] = {1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577, 0, 0}; // 0x17fab8
 int g_distanceExtra[32] = {0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 0, 0}; // 0x17fb38
 unsigned char g_codeLengthOrder[19] = {16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15}; // 0x17fbb8
 
+// Code lengths of the fixed Huffman codes (block type 1), built on first use.
 unsigned char g_defaultLength[288], g_defaultDistance[32];
 
+// Corrupt data: print the reason and exit the program (stb returns an error instead).
 int zerror(const char *message)
 {
     printf("GNZLIB Failure %s\n", message);
@@ -44,6 +52,8 @@ int bit_reverse(int v, int bits)
     CHECK(bits <= 16, 77, zlib_signature_bit_reverse);
     return bit_reverse16(v) >> (16 - bits);
 }
+// Builds a canonical Huffman decoding table from num code lengths, including a 9-bit fast
+// lookup. Returns 1 (malformed lengths exit through zerror).
 int zbuild_huffman(zhuffman *z, unsigned char *sizelist, int num)
 {
     int i, k = 0;
@@ -79,6 +89,7 @@ int zbuild_huffman(zhuffman *z, unsigned char *sizelist, int num)
     }
     return 1;
 }
+// Next input byte (0 past the end), from memory or the file.
 int zget8(zbuf *z)
 {
     if (z->inputPos >= z->inputLength) return 0;
@@ -99,6 +110,7 @@ void fill_bits(zbuf *z)
         z->num_bits += 8;
     } while (z->num_bits <= 24);
 }
+// Takes the next n bits (least significant first).
 unsigned int zreceive(zbuf *z, int n)
 {
     unsigned int k;
@@ -108,6 +120,7 @@ unsigned int zreceive(zbuf *z, int n)
     z->num_bits -= n;
     return k;
 }
+// Decodes one Huffman symbol: fast table for short codes, else a search by length; -1 if invalid.
 int zhuffman_decode(zbuf *a, zhuffman *z)
 {
     int b, s, k;
@@ -128,6 +141,7 @@ int zhuffman_decode(zbuf *a, zhuffman *z)
     a->num_bits -= s;
     return z->value[b];
 }
+// Reads a dynamic block's code tables (block type 2) into lengthTable and distanceTable.
 int compute_huffman_codes(zbuf *a)
 {
     zhuffman z;
@@ -177,6 +191,7 @@ void init_default_huffman()
     for (; i < 288; ++i) g_defaultLength[i] = 8;
     for (i = 0; i < 32; ++i) g_defaultDistance[i] = 5;
 }
+// The 32 KiB history ring: append a byte; read the byte `distance` bytes back.
 void historyWrite(zbuf *a, unsigned char value)
 {
     a->history[a->historyPos++] = value;
@@ -188,6 +203,8 @@ unsigned char historyRead(zbuf *a, int distance)
     if (index < 0) index += 32768;
     return a->history[index];
 }
+// Checks the 2-byte zlib header: valid checksum, no preset dictionary, method 8 (deflate).
+// (Zip entries have no such header, so the zip reader does not call this.)
 int parse_zlib_header(zbuf *a)
 {
     int cmf = zget8(a);
@@ -198,6 +215,8 @@ int parse_zlib_header(zbuf *a)
     if (compression != 8) return zerror("bad compression");
     return 1;
 }
+// Decodes a compressed block until count bytes are written or the block ends (blockType is
+// then -1). A back-reference cut short by count is finished on the next call.
 int parse_huffman_block(zbuf *a, int count)
 {
     int written = 0;
@@ -243,6 +262,7 @@ int parse_huffman_block(zbuf *a, int count)
         }
     }
 }
+// Copies up to count bytes of a stored block.
 int parse_uncompressed_block(zbuf *a, int count)
 {
     int written = a->remaining > count ? count : a->remaining;
@@ -264,6 +284,7 @@ int parse_uncompressed_block(zbuf *a, int count)
     if (a->remaining < 1) a->blockType = -1;
     return written;
 }
+// Starts a block: reads a stored block's length, or sets up the fixed or dynamic code tables.
 // The original int function falls through on successful blocks; its caller ignores the result.
 // Preserve that behavior (and GCC's return-type warning) for the instruction match.
 int parse_header(zbuf *a)
@@ -300,6 +321,9 @@ int parse_header(zbuf *a)
     case 3: return 0;
     }
 }
+// A decoder for size bytes of raw DEFLATE data from memory (input) or the file's current
+// position. Free it with free(z->history) and free(z) (zipCloseEntry does the first).
+// Original quirk, kept as-is: with neither input nor file it leaks and returns NULL.
 zbuf *openZlib(unsigned char *input, FILE *file, int size)
 {
     zbuf *a = (zbuf *)malloc(sizeof(zbuf));
@@ -318,6 +342,8 @@ zbuf *openZlib(unsigned char *input, FILE *file, int size)
     a->code_buffer = 0;
     return a;
 }
+// Decodes up to size bytes into output, continuing where the last call stopped. Returns the
+// count, or -1 once all input is consumed.
 int readZlib(zbuf *a, void *output, int size)
 {
     int count = 0;
@@ -345,6 +371,9 @@ int readZlib(zbuf *a, void *output, int size)
     }
     return written;
 }
+// stb's one-shot helper: decodes a zlib stream from memory into a new buffer. Unused here.
+// Original bug, kept as-is: every readZlib call writes to the start of the buffer, so only
+// the last part survives, although *outsize counts all of it.
 void *stbi_zlib_decode_malloc(unsigned char *input, int size, int *outsize)
 {
     zbuf *a = openZlib(input, NULL, size);
@@ -363,6 +392,7 @@ void *stbi_zlib_decode_malloc(unsigned char *input, int size, int *outsize)
     return output;
 }
 
+// The __PRETTY_FUNCTION__ strings of the asserting functions.
 const char zlib_signature_zbuild_huffman[] __attribute__((section(".rodata.function_names"),aligned(4))) = "int zbuild_huffman(zhuffman*, uint8*, int)";
 const char zlib_signature_bit_reverse[] __attribute__((section(".rodata.function_names"),aligned(4))) = "int bit_reverse(int, int)";
 const char zlib_signature_fill_bits[] __attribute__((section(".rodata.function_names"),aligned(4))) = "void fill_bits(zbuf*)";

@@ -18,6 +18,7 @@
 #include <poll.h>
 #include <linux/input.h>
 #include "KeySettingWindow.h"
+#include "LangStrings.h"
 #include "Input.h"
 
 struct SDL_Thread;
@@ -195,8 +196,8 @@ int waitMappingKey()
 // 44 bytes, longer than the text.
 extern const char g_keyEventReadFormat[44] = "read event type=%d, code=%d, value=%d\n";
 
-// Title: language string 0x6e; window id 0x19.
-KeySettingWindow::KeySettingWindow() : TrimusWindow(0x6e, 0x19)
+// Title "Key Setting"; window id 0x19.
+KeySettingWindow::KeySettingWindow() : TrimusWindow(STR_KEY_SETTING, 0x19)
 {
     menuIcon = NULL;
     highlight = NULL;
@@ -238,7 +239,7 @@ int KeySettingWindow::handleInput()
     if (selected > 7) selected = 0;
     return -1;
 }
-// Footer bar at y 420 with the MENU icon and its label (language string 0x70).
+// Footer bar at y 420 with the MENU icon and its label, "SAVE AND EXIT".
 void drawKeySettingFooter(SDL_Surface *dst, SDL_Surface *icon)
 {
     int y = 420;
@@ -249,7 +250,7 @@ void drawKeySettingFooter(SDL_Surface *dst, SDL_Surface *icon)
         source.w = g_keySettingFooter->w; source.h = g_keySettingFooter->h;
         SDL_UpperBlit(g_keySettingFooter, &source, dst, &dest);
     }
-    if (icon) drawIconLabel(dst, icon, x, y, 0, languageString(0x70));
+    if (icon) drawIconLabel(dst, icon, x, y, 0, languageString(STR_SAVE_AND_EXIT));
 }
 // Background, title, footer, the highlight behind the selected slot, then the eight button names.
 int KeySettingWindow::draw(SDL_Surface *dst)

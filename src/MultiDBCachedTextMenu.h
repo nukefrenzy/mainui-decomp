@@ -47,9 +47,9 @@ public:
     void fetchBackward();                                // 0x148f30
     void prepareBGWorkers(int index, int len);           // 0x149138
 
-    MenuHelper60         workers;     // +0xf8
-    MenuHelper80         items;       // +0x118  rows, freed with operator delete
-    MenuHelper80         data;        // +0x12c  freed with free()
+    WorkerQueue         workers;     // +0xf8   loads result rows in the background (10 waiting)
+    LruCache         items;       // +0x118  loaded rows (TextItem), freed with operator delete
+    LruCache         data;        // +0x12c  per-row data, freed with free()
     int                  total;       // +0x140  sum of DBEntry::count
     std::string          name;        // +0x144  "global_search", table prefix for workers
     char                 key[0x280];  // +0x15c

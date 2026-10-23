@@ -319,9 +319,9 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `TrimusWindow::getId()` | 0x394c8 | 40 | tu_015b20.cpp |
 | `onSIGTERM(int)` | 0x49c3c | 44 | tu_049c3c.cpp |
 | `appExit(int)` | 0x49c68 | 88 | tu_049c3c.cpp |
-| `pollStatusA_pushEvent()` | 0x49cc0 | 356 | tu_049c3c.cpp |
-| `pollStatusB_pushEvent()` | 0x49e24 | 256 | tu_049c3c.cpp |
-| `pollVolume_pushEvent()` | 0x49f24 | 300 | tu_049c3c.cpp |
+| `pollBatteryStatus()` | 0x49cc0 | 356 | tu_049c3c.cpp |
+| `pollWifiStatus()` | 0x49e24 | 256 | tu_049c3c.cpp |
+| `pollVolumeChange()` | 0x49f24 | 300 | tu_049c3c.cpp |
 | `statusPollThread(void*)` | 0x4a050 | 184 | tu_049c3c.cpp |
 | `pushHotplugEvent(int, int)` | 0x4a108 | 104 | tu_049c3c.cpp |
 | `hotplugThread(void*)` | 0x4a170 | 44 | tu_049c3c.cpp |
@@ -491,17 +491,17 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `openZlib(unsigned char*, FILE*, int)` | 0x131a68 | 252 | tu_1302cc.cpp |
 | `readZlib(zbuf*, void*, int)` | 0x131b64 | 388 | tu_1302cc.cpp |
 | `stbi_zlib_decode_malloc(unsigned char*, int, int*)` | 0x131ce8 | 332 | tu_1302cc.cpp |
-| `MenuHelper80::MenuHelper80(void (*)(SDL_Surface*))` | 0x131e34 | 96 | tu_131e34.cpp |
-| `MenuHelper80::~MenuHelper80()` | 0x131e94 | 68 | tu_131e34.cpp |
-| `MenuHelper80::clear()` | 0x131ed8 | 216 | tu_131e34.cpp |
-| `MenuHelper80::put(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, void*)` | 0x131fb0 | 300 | tu_131e34.cpp |
-| `MenuHelper80::get(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)` | 0x1320dc | 384 | tu_131e34.cpp |
-| `MenuHelper80::count()` | 0x13225c | 44 | tu_131e34.cpp |
+| `LruCache::LruCache(void (*)(SDL_Surface*))` | 0x131e34 | 96 | tu_131e34.cpp |
+| `LruCache::~LruCache()` | 0x131e94 | 68 | tu_131e34.cpp |
+| `LruCache::clear()` | 0x131ed8 | 216 | tu_131e34.cpp |
+| `LruCache::put(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, void*)` | 0x131fb0 | 300 | tu_131e34.cpp |
+| `LruCache::get(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)` | 0x1320dc | 384 | tu_131e34.cpp |
+| `LruCache::count()` | 0x13225c | 44 | tu_131e34.cpp |
 | `workerThread(void*)` | 0x132288 | 344 | tu_131e34.cpp |
-| `MenuHelper60::MenuHelper60(int)` | 0x1323e0 | 188 | tu_131e34.cpp |
-| `MenuHelper60::~MenuHelper60()` | 0x13249c | 308 | tu_131e34.cpp |
-| `MenuHelper60::addWorker(BGWorker*)` | 0x1325d0 | 240 | tu_131e34.cpp |
-| `MenuHelper60::takeWorker()` | 0x1326c0 | 160 | tu_131e34.cpp |
+| `WorkerQueue::WorkerQueue(int)` | 0x1323e0 | 188 | tu_131e34.cpp |
+| `WorkerQueue::~WorkerQueue()` | 0x13249c | 308 | tu_131e34.cpp |
+| `WorkerQueue::addWorker(BGWorker*)` | 0x1325d0 | 240 | tu_131e34.cpp |
+| `WorkerQueue::takeWorker()` | 0x1326c0 | 160 | tu_131e34.cpp |
 | `genShortLangFile(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)` | 0x134080 | 836 | tu_134080.cpp |
 | `createEnglishLangFile()` | 0x1343c4 | 420 | tu_134080.cpp |
 | `readLanguageFile(char const*, Language&)` | 0x134568 | 664 | tu_134080.cpp |
@@ -611,7 +611,7 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `MultiDBCachedTextMenu::vfunc6(int)` | 0x149824 | 816 | tu_1484d4.cpp |
 | `MultiDBCachedTextMenu::count()` | 0x149b54 | 40 | tu_1484d4.cpp |
 | `int stub_4acfc()` | 0x14acfc | 28 | tu_14acfc.c |
-| `int stub_4ad18()` | 0x14ad18 | 28 | tu_14acfc.c |
+| `int exitDeviceHook()` | 0x14ad18 | 28 | tu_14acfc.c |
 | `int stub_4ad34()` | 0x14ad34 | 28 | tu_14acfc.c |
 | `int setVolumeTinymix(int vol)` | 0x14ad50 | 152 | tu_14acfc.c |
 | `int stub_4ade8()` | 0x14ade8 | 28 | tu_14acfc.c |
@@ -620,7 +620,7 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `int setBacklight(int level)` | 0x14aed4 | 336 | tu_14acfc.c |
 | `int backlightOff()` | 0x14b024 | 40 | tu_14acfc.c |
 | `bool isBacklightOff()` | 0x14b04c | 176 | tu_14acfc.c |
-| `bool isPowerKeyReleased()` | 0x14b0fc | 156 | tu_14acfc.c |
+| `bool bootedByPowerKey()` | 0x14b0fc | 156 | tu_14acfc.c |
 | `int readAxpStatus(int *battery, int *voltage, int *charging)` | 0x14b198 | 476 | tu_14acfc.c |
 | `int fdList_find(int fd)` | 0x14b374 | 120 | tu_14acfc.c |
 | `int fdList_add(int fd)` | 0x14b3ec | 120 | tu_14acfc.c |
@@ -637,8 +637,8 @@ Each compiles with Arm GNU Toolchain 8.2-2018.08, `-O0 -fsigned-char`, to the sa
 | `void setupKeymap(const char *keymap)` | 0x14bb64 | 120 | tu_14b860.c |
 | `int getWifiOn()` | 0x14bbdc | 36 | tu_14b860.c |
 | `void setWifiOn(int on)` | 0x14bc00 | 84 | tu_14b860.c |
-| `int getWifiConnected()` | 0x14bc54 | 36 | tu_14b860.c |
-| `void setWifiConnected(int connected)` | 0x14bc78 | 48 | tu_14b860.c |
+| `int getHotspotOn()` | 0x14bc54 | 36 | tu_14b860.c |
+| `void setHotspotOn(int on)` | 0x14bc78 | 48 | tu_14b860.c |
 | `void loadSystemJson(void *shm, char **theme, int *fontSize)` | 0x14bca8 | 1976 | tu_14b860.c |
 | `void loadThemeAndFontSize(char **theme, int *fontSize)` | 0x14c460 | 412 | tu_14b860.c |
 | `void saveSystemJson(void *shm, const char *theme, int fontSize)` | 0x14c5fc | 1320 | tu_14b860.c |

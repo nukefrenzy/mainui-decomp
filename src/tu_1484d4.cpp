@@ -1,6 +1,11 @@
 // tu_1484d4: MultiDBCachedTextMenu, the global ROM search list (0x1484d4-0x149b54, then its template tail).
-// Opens every emulator's <name>_cache6.db that has rows matching the search string and pages the
-// results in through DBCacheWorker background jobs.
+//
+// A ROM search opens this list (MenuWindow::onShow). Every emulator and RetroArch-app folder keeps a
+// SQLite cache of its ROMs (<folder>/<name>_cache6.db, table <name>_roms); the menu opens each
+// one that has games whose name matches the search (by pinyin, or by Chinese pinyin with the
+// Chinese language), and shows all matches as one list, in folder order. Rows are not loaded up
+// front: as the cursor moves, DBCacheWorker jobs (tu_015b20) fetch the rows around it in the
+// background into the `items` cache, and getItem returns them once they are there.
 // Tail order: the C headers come first and define no inline functions, so the tail starts with
 // count() (defined in the class) and then follows first use in the bodies below; it matched as
 // written. The unit is 0x1484d4-0x14acfc: body to 0x149b54, then 60 COMDAT functions.
@@ -22,7 +27,7 @@ struct TextItem {
 class DBCacheWorker {           // a BGWorker, 0x284 bytes
 public:
     DBCacheWorker(sqlite3 *db, const std::string &dbName, const std::string &table, int offset, int len,
-                  int x, MenuHelper80 *items, MenuHelper80 *data, EmuInfo *emu, std::string *dir,
+                  int x, LruCache *items, LruCache *data, EmuInfo *emu, std::string *dir,
                   std::string *search, bool flag);   // 0x3a74c
     char raw[0x284];
 };
@@ -61,6 +66,7 @@ char *lastPathComponent(char *path)
     return path;
 }
 
+// Opens the caches with matches for `search` (see prepare); rows are 90 px high.
 MultiDBCachedTextMenu::MultiDBCachedTextMenu(std::string search)
     : TextMenuDrawer(0, 1, 4, "skin/bg-list-l.png"), workers(10), items(deleteTextItem), data(freeData)
 {
@@ -71,6 +77,7 @@ MultiDBCachedTextMenu::MultiDBCachedTextMenu(std::string search)
     field58 = 90;
 }
 
+// Closes the databases. Original bug, kept as-is: the loop index is never initialised.
 MultiDBCachedTextMenu::~MultiDBCachedTextMenu()
 {
     for (unsigned int i; i < dbs.size(); i++)   // sic: i is never initialised
@@ -98,7 +105,7 @@ int MultiDBCachedTextMenu::openCache(EmuInfo &emu, char *buf, size_t size)
             snprintf(buf, size, "SELECT COUNT(*) FROM %s_roms WHERE type=0 AND pinyin like '%%%s%%'", base, str18.c_str());
         sqlite3_stmt *stmt;
         if (sqlite3_prepare_v2(db, buf, -1, &stmt, NULL) == 0) {
-            if (sqlite3_step(stmt) == 100) {
+            if (sqlite3_step(stmt) == 100) {   // SQLITE_ROW
                 count = sqlite3_column_int(stmt, 0);
                 if (count > 0) {
                     entry.db = db;
@@ -155,7 +162,7 @@ void MultiDBCachedTextMenu::prepare()
     total = count;
 }
 
-// 0x148eac
+// 0x148eac: queue the rows from the cursor down (five, or to the end)
 void MultiDBCachedTextMenu::fetchForward()
 {
     int index = cur;
@@ -166,7 +173,7 @@ void MultiDBCachedTextMenu::fetchForward()
     prepareBGWorkers(index, len);
 }
 
-// 0x148f30
+// 0x148f30: queue the rows above the cursor (up to five, and the cursor row)
 void MultiDBCachedTextMenu::fetchBackward()
 {
     int index = cur - 5;
@@ -179,6 +186,8 @@ void MultiDBCachedTextMenu::fetchBackward()
     prepareBGWorkers(index, len);
 }
 
+// Cursor movement (TextMenuDrawer slots 9, 10, 16 and 17; probably down, up, page up and page
+// down): move as usual, then queue the rows that came into view.
 int MultiDBCachedTextMenu::vfunc16()
 {
     int r = TextMenuDrawer::vfunc16();
@@ -207,6 +216,7 @@ int MultiDBCachedTextMenu::vfunc10()
     return r;
 }
 
+// Returning to the list (e.g. after a game): restore the position and reload the visible page.
 void MultiDBCachedTextMenu::restorePosition(int a, int cur, int c)
 {
     TextMenuDrawer::restorePosition(a, cur, c);
@@ -248,6 +258,9 @@ void MultiDBCachedTextMenu::prepareBGWorkers(int index, int len)
     }
 }
 
+// The row at a list position if it has been loaded, else NULL (not loaded yet).
+// Rows are cached under "global_search_<db name>_<position in that db>".
+// Original quirk, kept as-is: a position past the last match indexes past the end of dbs.
 void *MultiDBCachedTextMenu::getItem(int index)
 {
     if (dbs.size() != 0) {
@@ -268,6 +281,7 @@ void *MultiDBCachedTextMenu::getItem(int index)
     return NULL;
 }
 
+// The same lookup in the `data` cache: the row's extra data, if loaded.
 void *MultiDBCachedTextMenu::vfunc6(int index)
 {
     if (dbs.size() != 0) {

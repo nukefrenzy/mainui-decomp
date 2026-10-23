@@ -143,8 +143,8 @@ window/menu ID).
 | 0x54 | bool | true at construction |
 | 0x58 | `SDL_Surface*` | freed in destructor |
 | 0x5c | emulator / RetroArch app entry | ROM lists (ids 5, 0x11); saved as `emuname`/`raname` |
-| 0x60 | 32-byte helper (`MenuHelper60`) | constructed with 2 |
-| 0x80 | 0x14-byte keyed cache (`MenuHelper80`, see src/MenuHelpers.h) | new entries and hits move to the front; evicts from back; free callback; +0x94 untouched |
+| 0x60 | 32-byte helper (`WorkerQueue`) | constructed with 2 |
+| 0x80 | 0x14-byte keyed cache (`LruCache`, see src/MenuHelpers.h) | new entries and hits move to the front; evicts from back; free callback; +0x94 untouched |
 | 0xb0 | `SDL_Surface *iconTF` | `skin/icon-TF.png` |
 | 0xb4 | `std::string` | used when building ROM lists |
 | 0xcc | `std::string path` | folder passed to `createMenu`; saved as `ppath` |
@@ -175,8 +175,10 @@ built with the same toolchain, are binary-compatible and can be handed to `pushW
 The Wi-Fi/Hotspot unit is proven at 0x138c50–0x13edfc. `ListMenu` is a 0x48-byte base;
 `WifiMenuDrawer` extends it to 0x5c bytes with an item-pointer vector at +0x48, highlight surface
 at +0x54, and row height at +0x58. `WifiMenu` is 0x22fc bytes, including 32 scan records of 0x114
-bytes each. The legacy `getWifiConnected`/`setWifiConnected` names in `tu_14b860.c`
-(0x14bc54/0x14bc78) refer to the hotspot/AP-mode flag, rather than station connection status.
+bytes each. The hotspot (access-point mode) switch is `getHotspotOn`/`setHotspotOn` in `tu_14b860.c`
+(0x14bc54/0x14bc78; formerly misnamed getWifiConnected). Commented source: `src/tu_138c50.cpp`
+(menus) and `src/tu_14e0cc.c` (the wpa_cli backend and monitor thread); Wi-Fi states, modes and
+events are named in `src/PlatformApi.h` and `src/Input.h`.
 
 The key-mapping screen is proven at 0x1376fc–0x138c50. `KeySettingWindow` (id 0x19)
 is 0x15c bytes: three surface pointers at +0x0c, selected index at +0x18, eight `std::string`
@@ -266,10 +268,10 @@ Language choices are restricted to English when neither font path exists. `.shor
 `/customer/app/lang` contain IDs 88–155. `Language.h` records the 60-byte language and 48-byte
 menu-choice layouts.
 
-The cache/worker unit is proven at 0x131e34–0x134080. `MenuHelper80` contains a 12-byte
+The cache/worker unit is proven at 0x131e34–0x134080. `LruCache` contains a 12-byte
 `std::list<CacheEntry>`, free callback at +0x0c, and mutex at +0x10. Entries contain a string key
 and pointer value. Hits move to the back; insertion removes entries from the back while the
-existing count exceeds 1,000. `MenuHelper60` contains a pending-work limit, mutex, condition,
+existing count exceeds 1,000. `WorkerQueue` contains a pending-work limit, mutex, condition,
 12-byte worker list, one SDL thread, and running flag. It inserts and takes work at the front,
 and drops the oldest pending work from the back when the limit is reached. `BGWorker` slots
 2 and 3 are run and completion callbacks; the worker is deleted afterward.
@@ -300,8 +302,9 @@ the original order without clearing the globals.
 ## Threads, events and launching
 
 - **statusPollThread** (0x4a050) wakes every second, polls shared settings and battery/Wi-Fi
-  state, and pushes **SDL user events** the window loop picks up. `pollVolume_pushEvent` also
-  writes volume changes back to shared memory.
+  state, and pushes **SDL user events** the window loop picks up. `pollVolumeChange` also
+  clears keymon's volume-changed flag in shared memory. Commented source: `src/tu_049c3c.cpp`
+  (main and both threads) and `src/tu_14acfc.c` (battery, backlight, volume, hotplug helpers).
 - **hotplugThread** (0x4a170) pushes an SDL event on device hotplug.
 - **Wi-Fi monitor** (`startWifiMonitor`, a pthread) runs `wifiStatusCallback` for udhcpc and wpa_supplicant.
 - **handleGlobalInput** (0x17744) is the shared key handler: it turns SDL key events into MainUI's button

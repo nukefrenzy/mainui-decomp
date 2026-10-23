@@ -137,12 +137,12 @@ void SettingMenu::vfunc7(SDL_Surface *dst) {
             } else if (type == 2)snprintf(text, 32, "%02d/%02d", GetKeyShm(g_keyShm, 5), 20);
             else if (type == 12) {
                 timeout = GetKeyShm(g_keyShm, 6);
-                if (timeout<5 || timeout>30)strncpy(text, languageString(114), 32);
-                else snprintf(text, 32, languageString(113), timeout);
+                if (timeout<5 || timeout>30)strncpy(text, languageString(STR_NEVER), 32);
+                else snprintf(text, 32, languageString(STR_N_MIN_LATER), timeout);
             } else if (type == 17) {
                 timeout = GetKeyShm(g_keyShm, 13);
-                if (timeout != 0)strncpy(text, languageString(104), 32);
-                else strncpy(text, languageString(105), 32);
+                if (timeout != 0)strncpy(text, languageString(STR_ON), 32);
+                else strncpy(text, languageString(STR_OFF), 32);
             }
             area.y += 2;
             drawText(dst, g_imeFont, area, text, color, 1, false);
@@ -600,15 +600,15 @@ void DeviceInfoMenu::loadInfo() {
         version = strstr(field104, "miyoo_version=");
         if (version)version += 14;
     }
-    addItem((TextItem*)new DeviceInfoItem(languageString(59), "MY354"));
-    addItem((TextItem*)new DeviceInfoItem(languageString(60), uuid));
-    addItem((TextItem*)new DeviceInfoItem(languageString(61), version?version:"202110071805"));
+    addItem((TextItem*)new DeviceInfoItem(languageString(STR_MODE), "MY354"));
+    addItem((TextItem*)new DeviceInfoItem(languageString(STR_SERIAL), uuid));
+    addItem((TextItem*)new DeviceInfoItem(languageString(STR_VERSION), version?version:"202110071805"));
     snprintf(buf, 16, "%dMHz", (int)maxCpuMHz());
-    addItem((TextItem*)new DeviceInfoItem(languageString(62), buf));
+    addItem((TextItem*)new DeviceInfoItem(languageString(STR_CPU), buf));
     snprintf(buf, 16, "%dM", memoryMB());
-    addItem((TextItem*)new DeviceInfoItem(languageString(64), buf));
-    addItem((TextItem*)new DeviceInfoItem(languageString(66), sdCardSpace().c_str()));
-    addItem((TextItem*)new DeviceInfoItem(languageString(155), "www.lomiyoo.com"));
+    addItem((TextItem*)new DeviceInfoItem(languageString(STR_MEMORY), buf));
+    addItem((TextItem*)new DeviceInfoItem(languageString(STR_SD_CARD), sdCardSpace().c_str()));
+    addItem((TextItem*)new DeviceInfoItem(languageString(STR_WEBSITE), "www.lomiyoo.com"));
 }
 
 // 0x2b504

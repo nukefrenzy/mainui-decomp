@@ -26,7 +26,7 @@ int drawText(SDL_Surface *, void *, SDL_Rect, const char *, SDL_Color, int, bool
 extern "C" int SDL_UpperBlit(SDL_Surface *, SDL_Rect *, SDL_Surface *, SDL_Rect *);
 extern "C" void SDL_FreeSurface(SDL_Surface *);
 extern "C" int TTF_SizeText(void *, const char *, int *, int *);
-extern "C" int getWifiConnected();
+extern "C" int getHotspotOn();
 std::string readConfigValue(const std::string &, const std::string &);
 class ItemDrawable {
 public:

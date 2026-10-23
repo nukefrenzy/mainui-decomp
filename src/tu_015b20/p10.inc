@@ -57,7 +57,7 @@ int PopUpWindow::draw(SDL_Surface *dst) {
             source.y = g_unusedIndicator->h-60;
             SDL_UpperBlit(g_unusedIndicator, &source, dst, &dest);
         }
-        drawFooter(dst, languageString(46), languageString(45));
+        drawFooter(dst, languageString(STR_OK), languageString(STR_CANCEL));
     }
     if (menu) {
         if (background) {
@@ -185,7 +185,7 @@ int NotifyWindow::draw(SDL_Surface *dst) {
     return 0;
 }
 // 0x33060
-CountDownWindow::CountDownWindow(int label, void (*timeout)(), void (*cancel)()) : NotifyWindow("", languageString(45), "skin/bg-button-f.png", timeout) {
+CountDownWindow::CountDownWindow(int label, void (*timeout)(), void (*cancel)()) : NotifyWindow("", languageString(STR_CANCEL), "skin/bg-button-f.png", timeout) {
     title = label;
     seconds = 10;
     field40 = NULL;
@@ -318,8 +318,8 @@ int DialogWindow::drawFallback(SDL_Surface *dst) {
                 source.h = r.h;
                 SDL_UpperBlit(surface20, &source, dst, &r);
             }
-            drawText(dst, g_titleFont, r, (i == 0 ? languageString(45) : languageString(46)), g_imeTextColor, 1, false);
-        } else drawText(dst, g_titleFont, r, (i == 0 ? languageString(45) : languageString(46)), g_imeTextColor, 1, false);
+            drawText(dst, g_titleFont, r, (i == 0 ? languageString(STR_CANCEL) : languageString(STR_OK)), g_imeTextColor, 1, false);
+        } else drawText(dst, g_titleFont, r, (i == 0 ? languageString(STR_CANCEL) : languageString(STR_OK)), g_imeTextColor, 1, false);
     }
     return 0;
 }
@@ -345,13 +345,13 @@ int DialogWindow::draw(SDL_Surface *dst) {
         SDL_UpperBlit(iconA, NULL, dst, &r);
         r.x = r.x+iconA->w+10;
         r.y += 5;
-        drawText(dst, g_titleFont, r, languageString(46), g_clearColor, 3, false);
+        drawText(dst, g_titleFont, r, languageString(STR_OK), g_clearColor, 3, false);
         r.x = (640-surface1c->w)/2+230;
         r.y = (480-surface1c->h)/2+iconA->h+170;
         SDL_UpperBlit(iconB, NULL, dst, &r);
         r.x = r.x+iconB->w+10;
         r.y += 5;
-        drawText(dst, g_titleFont, r, languageString(45), g_clearColor, 3, false);
+        drawText(dst, g_titleFont, r, languageString(STR_CANCEL), g_clearColor, 3, false);
     } else return drawFallback(dst);
     return 0;
 }
@@ -644,7 +644,7 @@ int GameDetailWindow::draw(SDL_Surface *dst) {
         r.x = r.x+field88->w+10;
         r.w = 630-r.x;
         r.h = 35;
-        drawText(dst, g_titleFont, r, languageString(44), g_imeTextColor, 0, false);
+        drawText(dst, g_titleFont, r, languageString(STR_FAVORITE_LOWER), g_imeTextColor, 0, false);
     }
     return 0;
 }

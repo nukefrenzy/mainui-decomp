@@ -421,7 +421,7 @@ void startBackgroundThread();                                   // 0x38868
 class DBCacheWorker : public BGWorker {
 public:
     DBCacheWorker(sqlite3 *db, const std::string &dbName, const std::string &table, int offset, int len,
-                  int x, MenuHelper80 *items, MenuHelper80 *data, EmuInfo *emu, std::string *dir,
+                  int x, LruCache *items, LruCache *data, EmuInfo *emu, std::string *dir,
                   std::string *search, bool flag)                // 0x3a74c
     {
         this->db = db;
@@ -450,8 +450,8 @@ public:
     int           offset;           // +0x26c
     int           len;              // +0x270
     int           x;                // +0x274
-    MenuHelper80 *items;            // +0x278
-    MenuHelper80 *data;             // +0x27c
+    LruCache *items;            // +0x278
+    LruCache *data;             // +0x27c
     EmuInfo      *emu;              // +0x280
 };
 
@@ -473,9 +473,9 @@ public:
     void prefetchPrevious();                                  // 0x242dc
     void setTotal(int n) { total = n; }                        // 0x3a9b0, inline; name unverified
     int  open(const char *path, const char *table, const char *folder); // 0x24834
-    MenuHelper60 workers;           // +0xf8   3 threads
-    MenuHelper80 items;             // +0x118  rows (free 0x24d28)
-    MenuHelper80 data;              // +0x12c  (free 0x24d6c)
+    WorkerQueue workers;           // +0xf8   3 threads
+    LruCache items;             // +0x118  rows (free 0x24d28)
+    LruCache data;              // +0x12c  (free 0x24d6c)
     sqlite3     *field140;          // +0x140  database connection
     std::string  name;              // +0x144
     std::string  str15c;            // +0x15c
@@ -818,12 +818,12 @@ struct BusyData {
 
 class LoadSurfaceWorker : public BGWorker {
 public:
-    inline LoadSurfaceWorker(std::string path, MenuHelper80 *cache); // 0x3af38
+    inline LoadSurfaceWorker(std::string path, LruCache *cache); // 0x3af38
     inline virtual ~LoadSurfaceWorker();                           // 0x3afd0
     virtual void run();                                        // 0x2e344
     virtual void finished();                                   // 0x2e3ec
     std::string   path;             // +0x04
-    MenuHelper80 *cache;            // +0x1c
+    LruCache *cache;            // +0x1c
     int           field20;          // +0x20  unverified
 };
 

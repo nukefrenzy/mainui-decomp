@@ -39,8 +39,8 @@ public:
     bool         field54;         // +0x54  initialised to true
     SDL_Surface *surface58;       // +0x58  freed in destructor
     void        *emuEntry;        // +0x5c  emulator / RetroArch app entry for ROM lists (ids 5, 0x11)
-    MenuHelper60 helper60;        // +0x60
-    MenuHelper80 helper80;        // +0x80
+    WorkerQueue helper60;        // +0x60
+    LruCache helper80;        // +0x80
     bool         field94;         // +0x94  toggle full ROM path in the header
     std::string  str98;           // +0x98  literal title for the path constructor
     SDL_Surface *iconTF;          // +0xb0  skin/icon-TF.png, freed in destructor

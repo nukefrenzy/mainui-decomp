@@ -1,4 +1,6 @@
-// Worker base; inline ctor/destructor order is shared by the UI and worker-queue units.
+// A background job for WorkerQueue (MenuHelpers.h): run() does the work on the worker thread,
+// finished() follows on the same thread, then the queue deletes the job.
+// Inline ctor/destructor order is shared by the UI and worker-queue units.
 #pragma once
 class BGWorker {
 public:

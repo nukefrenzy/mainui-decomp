@@ -181,7 +181,7 @@ int ColorMenu::vfunc3() {
         display_getlcd_1bea4(GetKeyShm(g_keyShm, 8), GetKeyShm(g_keyShm, 9), GetKeyShm(g_keyShm, 10), GetKeyShm(g_keyShm, 11));
         return 0;
     } else if (key == 1) {
-        NotifyWindow *window = new NotifyWindow(languageString(123), languageString(46), "skin/bg-button-f.png", NULL);
+        NotifyWindow *window = new NotifyWindow(languageString(STR_REBOOT_TO_APPLY_CHANGES), languageString(STR_OK), "skin/bg-button-f.png", NULL);
         pushWindow(window);
         return key;
     }
@@ -235,7 +235,7 @@ int LanguageMenu::vfunc4() {
 
 // 0x2cc14
 ThemeMenu::ThemeMenu() : TextMenu(false, true, 6, NULL) {
-    addItem(new TextItem(languageString(127), NULL, NULL, true));
+    addItem(new TextItem(languageString(STR_DEFAULT), NULL, NULL, true));
     for (int i = 0; i < g_themeList.size(); i++) addItem(new TextItem(g_themeList[i].name.c_str(), NULL, NULL, true));
 }
 
@@ -303,7 +303,7 @@ static int requestUpgrade(void *arg) {
 // 0x2d1bc
 int FileAction::execute(void *param) {
     TextItem *item = (TextItem*)param;
-    if (kind == 101) {
+    if (kind == FILE_KIND_FILE) {
         const char *suffix = strrchr(path.c_str(), '.');
         if (suffix == NULL) {
             printf("openfile_action no suffix %s\n", path.c_str());
@@ -317,8 +317,8 @@ int FileAction::execute(void *param) {
                 window->onShow();
                 g_windowStack->push_back((TrimusWindow*)window);
             } else {
-                snprintf(g_launchCmd, 0x800, languageString(58), freeMB);
-                NotifyWindow *window = new NotifyWindow(g_launchCmd, languageString(46), "skin/bg-button-f.png", NULL);
+                snprintf(g_launchCmd, 0x800, languageString(STR_SD_SPACE_LOW), freeMB);
+                NotifyWindow *window = new NotifyWindow(g_launchCmd, languageString(STR_OK), "skin/bg-button-f.png", NULL);
                 window->onShow();
                 g_windowStack->push_back((TrimusWindow*)window);
             }
@@ -326,14 +326,14 @@ int FileAction::execute(void *param) {
             int type = fileType_2cfc0(path.c_str());
             if (type >= 0 && (unsigned)type < g_romSourcesA.size()) return launchRom(item->label.c_str(), &g_romSourcesA[type], path.c_str(), NULL, 5);
         }
-    } else if (kind == 102) {
+    } else if (kind == FILE_KIND_DIRECTORY) {
         struct FileEvent {
             unsigned char type;
             int code;
             void *data1, *data2;
         } event;
-        event.type = 24;
-        event.code = 25;
+        event.type = SDL_USEREVENT;
+        event.code = EVENT_OPEN_DIRECTORY;
         event.data1 = (void*)path.c_str();
         if (SDL_PushEvent(&event) < 0) puts("Failed to push SDL event");
     }
@@ -511,7 +511,7 @@ void LoadSurfaceWorker::finished() {
 }
 
 // Inline definitions follow the record destructors first used by p03-p07.
-inline LoadSurfaceWorker::LoadSurfaceWorker(std::string path, MenuHelper80 *cache) {
+inline LoadSurfaceWorker::LoadSurfaceWorker(std::string path, LruCache *cache) {
     this->cache = cache;
     this->path = path;
 }

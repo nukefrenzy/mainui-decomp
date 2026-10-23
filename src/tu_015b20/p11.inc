@@ -42,13 +42,13 @@ int ADCInfoWindow::draw(SDL_Surface *dst) {
     int status = 2;
     const char *label = NULL;
     switch (status) {
-    case 0: label = languageString(40);
+    case 0: label = languageString(STR_CHARGING);
         break;
-    case 1: label = languageString(41);
+    case 1: label = languageString(STR_OTG);
         break;
-    case 2: label = languageString(42);
+    case 2: label = languageString(STR_DISCONNECTED);
         break;
-    case 3: label = languageString(43);
+    case 3: label = languageString(STR_ERROR);
         break;
     }
     SDL_Rect rect;
@@ -60,7 +60,7 @@ int ADCInfoWindow::draw(SDL_Surface *dst) {
     int voltage = 0;
     int charging = 0;
     readAxpStatus(&battery, &voltage, &charging);
-    snprintf(g_launchCmd, 0x800, "%s     %d\n%s  %s\n", languageString(39), battery, languageString(33), label);
+    snprintf(g_launchCmd, 0x800, "%s     %d\n%s  %s\n", languageString(STR_ADC), battery, languageString(STR_STATUS), label);
     drawTextLines(dst, g_imeFont, &rect, g_launchCmd, "\n", &g_imeTextColor, 1, false);
     return 0;
 }
@@ -197,18 +197,18 @@ void createRootWindow(std::vector<TrimusWindow *> *windows) {
 // 0x374bc
 const char *files_374bc(int id) {
     switch (id) {
-    case 1: return languageString(2);
-    case 2: return languageString(1);
-    case 3: return languageString(107);
-    case 4: return languageString(19);
-    case 6: return languageString(14);
-    case 7: return languageString(15);
-    case 8: return languageString(16);
-    case 9: return languageString(17);
-    case 12: return languageString(20);
-    case 13: return languageString(21);
-    case 10: return languageString(18);
-    case 24: return languageString(153);
+    case 1: return languageString(STR_GAME);
+    case 2: return languageString(STR_FAVORITE);
+    case 3: return languageString(STR_APP);
+    case 4: return languageString(STR_FILE);
+    case 6: return languageString(STR_OTHER);
+    case 7: return languageString(STR_SETTING);
+    case 8: return languageString(STR_GAME_INFO_TITLE);
+    case 9: return languageString(STR_DEVICE_INFO_TITLE);
+    case 12: return languageString(STR_ADC_INFO_TITLE);
+    case 13: return languageString(STR_ENCDEC_TEST);
+    case 10: return languageString(STR_RECENT);
+    case 24: return languageString(STR_SEARCH);
     default: return NULL;
     }
 }

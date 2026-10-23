@@ -1,6 +1,9 @@
-// FileBrowserMenu directory traversal and navigation cache, in binary address order.
-// Proven 0x12ce28-0x1302cc: 4,780 body bytes plus 105 inline/template functions.
-// The draft tu_12ef8c was part of this file's generated tail.
+// tu_12ce28 (0x12ce28-0x1302cc): reading folders for the file browser.
+//
+// loadDirectory lists one folder as TextItem rows (folders and the files the filter accepts),
+// sorted by name; FileBrowserCache (FileBrowserCache.h) keeps the folders already visited.
+// Body 4,780 bytes plus 105 inline/template functions; the draft tu_12ef8c was part of this
+// file's generated tail.
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -17,6 +20,7 @@ FileBrowserCache::~FileBrowserCache()
 {
     clear();
 }
+// Frees every cached folder.
 void FileBrowserCache::clear()
 {
     for (int i = 0; i < directories.size(); i++) {
@@ -26,12 +30,15 @@ void FileBrowserCache::clear()
     }
     directories.clear();
 }
+// Row order: by the action's result (descending), then by name. Every FileAction's result is
+// -1, so in practice rows sort by name alone, folders and files mixed.
 int compareFileItems(TextItem *left, TextItem *right)
 {
     if (right->action->result != left->action->result)
         return right->action->result - left->action->result;
     return strcmp(left->label.c_str(), right->label.c_str());
 }
+// Inserts a row in sorted position.
 void insertFileItem(std::vector<void *> *items, TextItem *item)
 {
     int i = 0;
@@ -42,6 +49,8 @@ void insertFileItem(std::vector<void *> *items, TextItem *item)
     if (i < items->size()) items->insert(items->begin() + i, (void *)item);
     else items->push_back((void *)item);
 }
+// Counts, recursively, the files the filter accepts plus every non-hidden folder that contains
+// some; buffer is scratch space for full paths.
 int countDirectory(std::string path, FileFilter filter, bool nested, char *buffer)
 {
     int count = 0;
@@ -69,6 +78,7 @@ int countDirectory(std::string path, FileFilter filter, bool nested, char *buffe
     }
     return count;
 }
+// countDirectory with its own scratch buffer; -1 if it cannot be allocated.
 int countDirectoryItems(std::string path, FileFilter filter)
 {
     int result = 0;
@@ -80,6 +90,8 @@ int countDirectoryItems(std::string path, FileFilter filter)
     }
     return result;
 }
+// Adds one sorted row per entry of path: every folder except hidden ones (".." too when parent
+// is set, to go up) and every file the filter accepts, at most limit rows. Returns the count.
 int loadDirectory(std::vector<void *> *items, const char *path, FileFilter filter, int limit, int parent)
 {
     int count = 0;
@@ -95,13 +107,13 @@ int loadDirectory(std::vector<void *> *items, const char *path, FileFilter filte
                 if (S_ISDIR(info.st_mode) && strlen(entry->d_name) != 0 &&
                     (entry->d_name[0] != '.' || (parent && strncmp(entry->d_name, "..", 2) == 0))) {
                     if (count >= limit) break;
-                    insertFileItem(items, new TextItem(entry->d_name, 0, new FileAction(buffer, 0x66), 1));
+                    insertFileItem(items, new TextItem(entry->d_name, 0, new FileAction(buffer, FILE_KIND_DIRECTORY), 1));
                     count++;
                 } else {
                     if (S_ISREG(info.st_mode)) {
                         if (filter(entry->d_name, buffer)) {
                             if (count >= limit) break;
-                            insertFileItem(items, new TextItem(entry->d_name, 0, new FileAction(buffer, 0x65), 1));
+                            insertFileItem(items, new TextItem(entry->d_name, 0, new FileAction(buffer, FILE_KIND_FILE), 1));
                             count++;
                         }
                     }
@@ -128,6 +140,8 @@ int FileBrowserCache::totalItems()
     for (int i = 0; i < directories.size(); i++) result += directories[i].items->size();
     return result;
 }
+// When more than one folder is cached, drops the least recently used ones while more than
+// 40,000 rows are cached. Original quirk, kept as-is: nothing stops it emptying the list.
 int FileBrowserCache::trim()
 {
     if (directories.size() > 1) {
@@ -143,6 +157,7 @@ int FileBrowserCache::trim()
     }
     return 0;
 }
+// The cached rows of path (moving it to the front), or NULL.
 std::vector<void *> *FileBrowserCache::find(const char *path)
 {
     DirectoryItems entry;
@@ -157,6 +172,7 @@ std::vector<void *> *FileBrowserCache::find(const char *path)
     }
     return NULL;
 }
+// Starts browsing at path: forgets everything and loads it (up to 20,000 rows).
 std::vector<void *> *FileBrowserCache::open(const char *path)
 {
     clear();
@@ -169,6 +185,7 @@ std::vector<void *> *FileBrowserCache::open(const char *path)
     directories.push_back(entry);
     return entry.items;
 }
+// Goes up one folder: from the cache if possible, else loads it.
 std::vector<void *> *FileBrowserCache::parent()
 {
     if (paths.size() > 1) paths.pop_back();
@@ -187,6 +204,7 @@ std::vector<void *> *FileBrowserCache::parent()
     }
     return items;
 }
+// Enters a subfolder: from the cache if possible, else loads it (with a ".." row).
 std::vector<void *> *FileBrowserCache::child(const char *path)
 {
     paths.push_back(std::string(path));

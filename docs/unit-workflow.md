@@ -287,7 +287,7 @@ are needed, and the NOP words themselves now participate in the code proof.
 
 Equal caller instructions can still select different template operations. FileBrowserCache's two
 row lookups require vector::at rather than operator[]; switching to at restores exception-table
-sizes too. MenuHelper80's insertion wrapper calls begin, proving push_front rather than push_back
+sizes too. LruCache's insertion wrapper calls begin, proving push_front rather than push_back
 for both put and cache hits. Inspect calls inside generated wrappers as well as handwritten bodies;
 actual linked raw-call comparison catches these differences. No manual template instantiation or
 linker alias is needed.

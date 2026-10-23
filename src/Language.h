@@ -2,6 +2,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include "LangStrings.h"
 struct Language {
     std::string file, name;
     std::vector<std::string> strings;

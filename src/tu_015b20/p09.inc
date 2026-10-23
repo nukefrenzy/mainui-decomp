@@ -251,20 +251,20 @@ int MenuWindow::handleInput() {
                     if (canOperate) {
                         rows = 2;
                         TextMenu *options = new TextMenu(false, false, 6, NULL);
-                        if (id == 3) options->addItem(new TextItem(languageString(51), NULL, item->action, false));
-                        else options->addItem(new TextItem(languageString(51), NULL, item->action, false));
-                        options->addItem(new TextItem(languageString(55), NULL, new AddFavoriteAction(item, id), true));
+                        if (id == 3) options->addItem(new TextItem(languageString(STR_OPEN), NULL, item->action, false));
+                        else options->addItem(new TextItem(languageString(STR_OPEN), NULL, item->action, false));
+                        options->addItem(new TextItem(languageString(STR_ADD_FAVORITE), NULL, new AddFavoriteAction(item, id), true));
                         if (id == 5 || id == 17) {
                             DeleteRomAction *remove = new DeleteRomAction(menu, id);
                             remove->field0c = menu->getCur();
                             Action *confirm = new PopupDialogAction(116, 117, true, remove);
-                            options->addItem(new TextItem(languageString(128), NULL, confirm, true));
+                            options->addItem(new TextItem(languageString(STR_DELETE), NULL, confirm, true));
                             rows++;
                             std::string search = menu->getSearch();
                             printf("popup menu search str is %s\n", search.c_str());
                             if (search.length() == 0) {
                                 Action *searchAction = new PopupSearchIME(menu, id, emuEntry);
-                                options->addItem(new TextItem(languageString(153), NULL, searchAction, true));
+                                options->addItem(new TextItem(languageString(STR_SEARCH), NULL, searchAction, true));
                                 rows++;
                             }
                         }
@@ -282,7 +282,7 @@ int MenuWindow::handleInput() {
                             if (search.length() == 0) {
                                 TextMenu *options = new TextMenu(false, true, 6, NULL);
                                 Action *searchAction = new PopupSearchIME(menu, id, emuEntry);
-                                options->addItem(new TextItem(languageString(153), NULL, searchAction, true));
+                                options->addItem(new TextItem(languageString(STR_SEARCH), NULL, searchAction, true));
                                 options->setFlag5c(false);
                                 PopUpWindow *window = NULL;
                                 window = new PopUpWindow(1, options, "skin/bg-pop-menu-1.png");
@@ -296,7 +296,7 @@ int MenuWindow::handleInput() {
                 TextMenu *options = new TextMenu(false, false, 6, NULL);
                 Action *reset = new GeneralAction(-1, resetEmulatorSettings, NULL);
                 Action *progress = new PopupProgressAction(53, reset);
-                options->addItem(new TextItem(languageString(54), NULL, progress, true));
+                options->addItem(new TextItem(languageString(STR_REFRESH_ROMS_2), NULL, progress, true));
                 options->setFlag5c(false);
                 PopUpWindow *window = new PopUpWindow(53, options, "skin/bg-pop-menu-1.png");
                 window->onShow();
@@ -305,15 +305,15 @@ int MenuWindow::handleInput() {
                 TextItem *item = (TextItem*)menu->getItem(menu->getCur());
                 if (item) {
                     TextMenu *options = new TextMenu(false, false, 6, NULL);
-                    if (item->action->result == 3) options->addItem(new TextItem(languageString(51), NULL, item->action, false));
-                    else options->addItem(new TextItem(languageString(51), NULL, item->action, false));
+                    if (item->action->result == 3) options->addItem(new TextItem(languageString(STR_OPEN), NULL, item->action, false));
+                    else options->addItem(new TextItem(languageString(STR_OPEN), NULL, item->action, false));
                     RemoveFavoriteAction *remove = new RemoveFavoriteAction(item, id);
                     Action *confirm = new PopupDialogAction(81, 82, true, remove);
                     printf("item->theaction->mWinType=%d, mitem = %p, menuitem = %p\n", item->action->result, remove, item);
-                    options->addItem(new TextItem(languageString(52), NULL, confirm, true));
+                    options->addItem(new TextItem(languageString(STR_REMOVE), NULL, confirm, true));
                     ClearFavoriteAction *clear = new ClearFavoriteAction(menu, id);
                     Action *clearConfirm = new PopupDialogAction(79, 80, true, clear);
-                    options->addItem(new TextItem(languageString(50), NULL, clearConfirm, true));
+                    options->addItem(new TextItem(languageString(STR_CLEAR), NULL, clearConfirm, true));
                     options->setFlag5c(false);
                     PopUpWindow *window = new PopUpWindow(1, options, "skin/bg-pop-menu-3.png");
                     window->onShow();
@@ -323,11 +323,11 @@ int MenuWindow::handleInput() {
                 TextItem *item = (TextItem*)menu->getItem(menu->getCur());
                 if (item) {
                     TextMenu *options = new TextMenu(false, false, 6, NULL);
-                    if (id == 3) options->addItem(new TextItem(languageString(51), NULL, item->action, false));
-                    else options->addItem(new TextItem(languageString(51), NULL, item->action, false));
+                    if (id == 3) options->addItem(new TextItem(languageString(STR_OPEN), NULL, item->action, false));
+                    else options->addItem(new TextItem(languageString(STR_OPEN), NULL, item->action, false));
                     ClearRecentAction *clear = new ClearRecentAction(menu, id);
                     Action *confirm = new PopupDialogAction(77, 78, true, clear);
-                    options->addItem(new TextItem(languageString(50), NULL, confirm, true));
+                    options->addItem(new TextItem(languageString(STR_CLEAR), NULL, confirm, true));
                     options->setFlag5c(false);
                     PopUpWindow *window = new PopUpWindow(49, options, "skin/bg-pop-menu-2.png");
                     window->onShow();
@@ -441,7 +441,7 @@ int MenuWindow::draw(SDL_Surface *dst) {
         area.h = 60;
         if (id != 5 && id != 17) {
             if (path.length() != 0) {
-                std::string label(languageString(153));
+                std::string label(languageString(STR_SEARCH));
                 label += std::string(":")+path;
                 drawText(dst, g_titleFont, area, label.c_str(), g_wifiEmptyColor, 1, true);
             } else drawText(dst, g_titleFont, area, files_374bc(id), g_wifiEmptyColor, 1, true);

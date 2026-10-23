@@ -1,17 +1,25 @@
-// tu_14acfc: device helpers: tinymix volume, backlight PWM, power key, AXP battery, USB sound
-// card hotplug (0x14acfc-0x14b860). Ends before setupKeymap's second copy of "w" (0x163bac);
-// the exact cut inside 0x14b198-0x14bb64 is by subsystem.
+// tu_14acfc (0x14acfc-0x14b860): low-level device helpers.
+//
+// Speaker volume (through the tinymix tool), the LCD backlight (PWM in sysfs), the power key's
+// sysfs value, the battery/charger state (from the AXP power chip, via /customer/app/axp_test),
+// and a polling loop that notices a second sound card (/dev/dsp1, e.g. USB audio) appearing or
+// disappearing. main and the status thread (tu_049c3c.cpp) are the main users.
+//
+// Ends before setupKeymap's second copy of "w" (0x163bac); the exact cut inside
+// 0x14b198-0x14bb64 is by subsystem.
 // Compiled as C (call results are stored straight from r0), so there is no template tail.
 // The C units 0x14acfc-0x14f730 are split where .rodata proves a new file: GCC merges identical
 // string literals within one file even at -O0, and "w", "r" and "%d" each appear more than once.
 // Onion patches: the PWM period write in initBacklightPwm is a NOP, and the duty_cycle path
-// is "/dev/null" (the strings below are the patched ones).
+// is "/dev/null" (the strings below are the patched ones), so on Onion MainUI's own backlight
+// writes go nowhere (Onion presumably drives the backlight elsewhere, e.g. from keymon).
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdbool.h>
 
+// cJSON 1.7.10 (compiled into MainUI).
 typedef struct cJSON {
     struct cJSON *next, *prev, *child;
     int type;
@@ -37,25 +45,29 @@ void SDL_DestroyCond(SDL_cond *cond);
 
 // File-local statics go to .bss in declaration order (GCC 8 C, -O0); this is the original order.
 static int s_unrefBss_1824b4;   // 0x1824b4: unreferenced storage at this address in the Onion and stock builds; size and position proven, name, type and partition unknown
-static char g_pwrKeyBuf[64];    // 0x1824b8
-static char g_axpBuf[64];       // 0x1824f8
-static char g_tinymixCmd[64];   // 0x182538
+static char g_pwrKeyBuf[64];    // 0x1824b8: last line read from pwrkeyval
+static char g_axpBuf[64];       // 0x1824f8: last line read from axp_test
+static char g_tinymixCmd[64];   // 0x182538: last tinymix command
 
+// The sound cards hotplugLoop currently considers present (only card 2, /dev/dsp1, is ever
+// tracked). Named after its original use, it holds card numbers rather than file descriptors.
 struct FdList {                 // 0x182580
     int fd[12];
     int count;
 };
-static SDL_mutex *g_hotplugMutex;   // 0x182578
-static SDL_cond *g_hotplugCond;     // 0x18257c
+static SDL_mutex *g_hotplugMutex;   // 0x182578: guards g_hotplugRunning
+static SDL_cond *g_hotplugCond;     // 0x18257c: the loop's 100 ms wait
 static struct FdList g_fds;         // 0x182580
 static int g_hotplugRunning;        // 0x1825b4
 
+// Four empty device hooks, probably left over from other hardware. Only exitDeviceHook is called
+// (at the end of main); the original names are unknown.
 int stub_4acfc()                // 0x14acfc
 {
     return 0;
 }
 
-int stub_4ad18()                // 0x14ad18
+int exitDeviceHook()            // 0x14ad18
 {
     return 0;
 }
@@ -65,6 +77,7 @@ int stub_4ad34()                // 0x14ad34
     return 0;
 }
 
+// Sets the speaker volume: MainUI's 0-20 scale maps to mixer control 6's range 40-103.
 int setVolumeTinymix(int vol)   // 0x14ad50
 {
     if (vol < 0)
@@ -81,6 +94,7 @@ int stub_4ade8()                // 0x14ade8
     return 2;
 }
 
+// Writes text to a file (used for sysfs values). Returns 0, or -1 if it cannot be opened.
 int writeFile(const char *path, const char *text)   // 0x14ae04
 {
     FILE *f = fopen(path, "w");
@@ -123,6 +137,8 @@ __asm__(
     "    .endif\n"
     ".endm\n"
 );
+// Sets up the backlight PWM channel: export it, period 800, duty 100%, enable. (The period
+// write is patched out and the duty path is /dev/null; see the file header.)
 void initBacklightPwm()         // 0x14ae74
 {
     writeFile(g_pwmExportPath, g_pwmZero);
@@ -138,6 +154,7 @@ __asm__(
     ".endif\n"
 );
 
+// Sets the backlight brightness: level 0-10 becomes a PWM duty of 6% (never fully dark) to 100%.
 int setBacklight(int level)     // 0x14aed4
 {
     char buf[32] = {0};
@@ -164,12 +181,14 @@ int setBacklight(int level)     // 0x14aed4
     return 0;
 }
 
+// Turns the backlight off (duty 0).
 int backlightOff()              // 0x14b024
 {
     writeFile(g_pwmDutyPath, g_pwmZero);
     return 0;
 }
 
+// True if the backlight duty reads 0 (it was turned off for sleep).
 bool isBacklightOff()           // 0x14b04c
 {
     char buf[32] = "1";
@@ -183,7 +202,10 @@ bool isBacklightOff()           // 0x14b04c
     return atoi(buf) == 0;
 }
 
-bool isPowerKeyReleased()       // 0x14b0fc
+// Reads the power key's sysfs value; true if it is nonzero or cannot be read. main shows the
+// charging screen only when this is false and a charger is connected, so a nonzero value
+// probably means the power key started the device (as opposed to plugging in a charger).
+bool bootedByPowerKey()         // 0x14b0fc
 {
     FILE *f = fopen("/sys/devices/soc0/soc/soc:gpio_keys/pwrkeyval", "r");
     if (f) {
@@ -196,6 +218,9 @@ bool isPowerKeyReleased()       // 0x14b0fc
     return true;
 }
 
+// Runs axp_test, which prints the power chip's state as one line of JSON with the numbers
+// "battery", "voltage" and "charging". Fills battery (probably percent), voltage and charging
+// (2 or 3 = a charger is connected) for each key present; returns true only if all three were.
 int readAxpStatus(int *battery, int *voltage, int *charging)   // 0x14b198
 {
     int haveBattery = 0;
@@ -232,6 +257,7 @@ int readAxpStatus(int *battery, int *voltage, int *charging)   // 0x14b198
     return haveBattery && haveVoltage && haveCharging;
 }
 
+// g_fds as a small set: index of an entry or -1, add (fails when full), remove (keeps order).
 int fdList_find(int fd)         // 0x14b374
 {
     for (int i = 0; i < g_fds.count; i++)
@@ -265,12 +291,15 @@ int fdList_remove(int fd)       // 0x14b464
     return 0;
 }
 
+// True if card 2's device, /dev/dsp1 (a second sound card such as USB audio), is present.
 int hasDsp1(int card)          // 0x14b53c
 {
     return card == 2 && access("/dev/dsp1", R_OK) == 0;
 }
 
-// Polls for the USB sound card (/dev/dsp1) every 100 ms and reports plug/unplug to cb.
+// Hotplug thread body: checks for /dev/dsp1 every 100 ms until stopHotplug, and calls
+// cb(2, 1) when it appears and cb(2, 0) when it disappears. Returns -1 if the mutex or condition
+// cannot be created. (On a normal stop `ret` is never set; the caller ignores it.)
 int hotplugLoop(void (*cb)(int, int))   // 0x14b58c
 {
     int ret;
@@ -325,6 +354,7 @@ done:
     return ret;
 }
 
+// Asks hotplugLoop to stop; it notices within 100 ms.
 int stopHotplug()               // 0x14b814
 {
     SDL_mutexP(g_hotplugMutex);

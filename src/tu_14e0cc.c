@@ -1,15 +1,24 @@
-// tu_14e0cc: Wi-Fi through wpa_cli (0x14e0cc-0x14f730): connect, scan, status and the monitor
-// thread that refreshes them. The scan_results/status parsing reads /tmp files written by wpa_cli.
+// tu_14e0cc (0x14e0cc-0x14f730): the Wi-Fi client backend, driving wpa_supplicant through the
+// wpa_cli command-line tool.
+//
+// A monitor thread (started from main) runs every 3 seconds: it refreshes the connection status
+// (wpa_cli status + signal_poll, parsed from /tmp/wpa_status.txt) and hands it to main's
+// wifiStatusCallback; while the Wi-Fi menu wants a scan it also scans (wpa_cli scan +
+// scan_result, parsed from /tmp/wpa_scan.txt into g_aps) and posts EVENT_WIFI_SCAN_DONE; and
+// after a connect it runs the DHCP client. Connecting replaces all saved networks with the one
+// chosen. The menus that use this are in tu_138c50.cpp.
 // Compiled as C (call results are stored straight from r0), so there is no template tail.
 // The C units 0x14acfc-0x14f730 are split where .rodata proves a new file: GCC merges identical
 // string literals within one file even at -O0, and "w", "r" and "%d" each appear more than once.
 #include "PlatformApi.h"
+#include "Input.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <pthread.h>
 
+// Logs the process and thread id (called when the monitor thread starts).
 void printThreadInfo(const char *name)  // 0x14e0cc
 {
     pid_t pid = getpid();
@@ -17,6 +26,7 @@ void printThreadInfo(const char *name)  // 0x14e0cc
     printf("%s pid %u tid %u (0x%x)\n", name, (unsigned int)pid, (unsigned int)tid, (unsigned int)tid);
 }
 
+// Signal strength in dBm to bars: 1 below -80, 2 below -70, else 3; 0 if out of range.
 int wifiSignalLevel(int rssi)   // 0x14e118
 {
     if (rssi < -126 || rssi > 127)
@@ -28,6 +38,7 @@ int wifiSignalLevel(int rssi)   // 0x14e118
     return 3;
 }
 
+// Reads a whole file into buf (which must be large enough); returns the bytes read, 0 on error.
 int readFileTo(const char *path, void *buf)     // 0x14e184
 {
     FILE *f = fopen(path, "r");
@@ -43,16 +54,18 @@ int readFileTo(const char *path, void *buf)     // 0x14e184
 
 // File-local statics go to .bss in declaration order (GCC 8 C, -O0); this is the original order.
 struct WifiStatus;
-static int g_apCount;               // 0x182644
-static int g_wifiBusy;              // 0x182648
-static pthread_mutex_t g_apMutex;   // 0x18264c
-static int g_wifiScanEnable;        // 0x182664
-static int g_wifiConnecting;        // 0x182668
+static int g_apCount;               // 0x182644: networks in g_aps
+static int g_wifiBusy;              // 0x182648: a connect or DHCP run is in progress (set, never read)
+static pthread_mutex_t g_apMutex;   // 0x18264c: guards g_aps while a scan rewrites it
+static int g_wifiScanEnable;        // 0x182664: the monitor thread scans while set
+static int g_wifiConnecting;        // 0x182668: the monitor thread runs DHCP once, then clears it
 static pthread_t g_monitorThread;   // 0x18266c
 static int s_unrefBss_182670;       // 0x182670: unreferenced storage at this address in the Onion and stock builds; size and position proven, name, type and partition unknown
 static int g_monitorRunning;        // 0x182674
-static void (*g_statusCallback)(struct WifiStatus *); // 0x182678
+static void (*g_statusCallback)(struct WifiStatus *); // 0x182678: main's wifiStatusCallback
 
+// Turns scanning in the monitor thread on or off. (Original name: rx_wifi_scan_enable, as logged.)
+// Original quirk, kept as-is: declared int but returns nothing.
 int setWifiScanEnable(int on)   // 0x14e220
 {
     g_wifiScanEnable = on;
@@ -60,6 +73,8 @@ int setWifiScanEnable(int on)   // 0x14e220
 }
 
 
+// Joins an open network: removes saved networks 0-15, adds network 0 with this SSID and no
+// password, selects and enables it, saves the configuration, then waits one second.
 int wifiConnectOpen(const char *ssid)   // 0x14e260
 {
     int i;
@@ -85,6 +100,7 @@ int wifiConnectOpen(const char *ssid)   // 0x14e260
     return 0;
 }
 
+// The same for a WPA network with a password (psk).
 int wifiConnectPsk(const char *ssid, const char *psk)  // 0x14e39c
 {
     int i;
@@ -110,6 +126,7 @@ int wifiConnectPsk(const char *ssid, const char *psk)  // 0x14e39c
     return 0;
 }
 
+// Gives the connection 5 s to settle, then asks for an IP address (DHCP).
 void runUdhcpc()                // 0x14e4e0
 {
     g_wifiBusy = 1;
@@ -118,6 +135,7 @@ void runUdhcpc()                // 0x14e4e0
     g_wifiBusy = 0;
 }
 
+// Asks the monitor thread to run DHCP on its next pass.
 int wifiStartConnect()          // 0x14e528
 {
     g_wifiConnecting = 1;
@@ -129,19 +147,19 @@ int wifiStartConnect()          // 0x14e528
 typedef struct WifiAP {         // 0x114 bytes
     char raw0[8];
     char ssid[0x58];            // +0x08
-    int rssi;                   // +0x60
+    int rssi;                   // +0x60: signal in dBm
     char raw64[8];
-    int freq;                   // +0x6c
+    int freq;                   // +0x6c: MHz
     char raw70[4];
-    char bssid[0x18];           // +0x74
-    char flags[0x80];           // +0x8c
-    int secured;                // +0x10c
-    int current;                // +0x110
+    char bssid[0x18];           // +0x74: access point MAC address
+    char flags[0x80];           // +0x8c: e.g. [WPA2-PSK-CCMP][ESS]
+    int secured;                // +0x10c: flags mention WPA or WEP
+    int current;                // +0x110: the network we are connected to
 } WifiAP;
 
 // The current connection (wpa_cli status), 0x74 bytes.
 typedef struct WifiStatus {
-    int state;                  // 4 COMPLETED, 0 DISABLED, 1 INACTIVE, 2 SCANNING, 6 4WAY_HANDSHAKE
+    int state;                  // WifiState (PlatformApi.h)
     char raw4[4];
     char ssid[0x40];            // +0x08
     char ip[0x18];              // +0x48
@@ -154,11 +172,13 @@ typedef struct WifiStatus {
 
 WifiStatus g_connStatus;        // 0x1889b0, COMMON; name chosen so ld's within-file COMMON (hash) order matches the original; the original name is stripped
 
+// The status the monitor thread last read.
 WifiStatus *getWifiStatus()     // 0x14e564
 {
     return &g_connStatus;
 }
 
+// 0-15 to '0'-'9'/'A'-'F'; anything else gives 0xff. (Unused.)
 unsigned char hexDigit(unsigned char v)     // 0x14e584
 {
     if (v <= 9)
@@ -170,6 +190,7 @@ unsigned char hexDigit(unsigned char v)     // 0x14e584
     return v;
 }
 
+// A hex digit character to its value 0-15; anything else gives 0xff.
 unsigned char hexValue(unsigned char c)     // 0x14e5f8
 {
     if (c >= '0' && c <= '9')
@@ -210,7 +231,8 @@ void unescapeSsid(char *s, int len)     // 0x14e6a0
     strcpy(s, buf);
 }
 
-// Splits one scan_results line (bssid, freq, signal, flags, ssid) into ap.
+// Splits one tab-separated scan_result line (bssid, frequency, signal, flags, ssid) into ap,
+// marking it secured and/or current. Returns the number of non-empty fields.
 int parseScanLine(const char *text, WifiAP *ap)     // 0x14e824
 {
     int field;
@@ -264,6 +286,7 @@ int parseScanLine(const char *text, WifiAP *ap)     // 0x14e824
 
 volatile WifiAP g_aps[32];          // 0x182730, COMMON, filled by the monitor thread
 
+// True if g_aps already lists a network with this SSID (used to drop duplicates).
 int isScannedSsid(const char *ssid)     // 0x14eacc
 {
     int i;
@@ -278,6 +301,7 @@ int isScannedSsid(const char *ssid)     // 0x14eacc
     return 0;
 }
 
+// Copies up to max scanned networks to out, under the lock; returns how many.
 int copyScanResults(WifiAP *out, int max)  // 0x14eb9c
 {
     pthread_mutex_lock(&g_apMutex);
@@ -303,7 +327,7 @@ void parseScanResults()         // 0x14ec28
     char *tok;
     int n;
     int fields;
-    char unused[0x4000];
+    char unused[0x4000];   // never used; kept for the original stack frame
     g_connStatus = queryWifiStatus();
     printf("parse current wifi [%s]: ip:[%s] rssi:%d\n", g_connStatus.ssid, g_connStatus.ip, g_connStatus.rssi);
     g_apCount = 0;
@@ -344,6 +368,8 @@ typedef union SDL_Event {       // SDL 1.2
 int SDL_PushEvent(SDL_Event *event);
 char *SDL_GetError(void);
 
+// One scan (original name, as logged): start it, give it 2.5 s, save the results, parse them
+// into g_aps and post EVENT_WIFI_SCAN_DONE.
 void rx_wifi_do_scan()          // 0x14eeac
 {
     char cmd[128];
@@ -356,13 +382,15 @@ void rx_wifi_do_scan()          // 0x14eeac
     pthread_mutex_lock(&g_apMutex);
     parseScanResults();
     pthread_mutex_unlock(&g_apMutex);
-    ev.type = 24;               // SDL_USEREVENT
-    ev.user.code = 28;
+    ev.type = SDL_USEREVENT;
+    ev.user.code = EVENT_WIFI_SCAN_DONE;
     printf("rx_wifi_do_scan %d\n", g_apCount);
     if (SDL_PushEvent(&ev) < 0)
         printf("%s %d Failed to push SDL event %s\n", __func__, 437, SDL_GetError());
 }
 
+// Reads the current connection from wpa_cli status and signal_poll: state, IP address, SSID,
+// network id, signal (RSSI), noise, link speed and frequency. Missing values stay 0.
 WifiStatus queryWifiStatus()    // 0x14ef98
 {
     char *p = NULL;
@@ -382,15 +410,15 @@ WifiStatus queryWifiStatus()    // 0x14ef98
     p = strstr(text, "wpa_state=");
     if (p && sscanf(p, "wpa_state=%s\n", word) == 1) {
         if (strcmp("COMPLETED", word) == 0)
-            st.state = 4;
+            st.state = WIFI_STATE_COMPLETED;
         else if (strcmp("DISABLED", word) == 0)
-            st.state = 0;
+            st.state = WIFI_STATE_DISABLED;
         else if (strcmp("INACTIVE", word) == 0)
-            st.state = 1;
+            st.state = WIFI_STATE_INACTIVE;
         else if (strcmp("SCANNING", word) == 0)
-            st.state = 2;
+            st.state = WIFI_STATE_SCANNING;
         else if (strcmp("4WAY_HANDSHAKE", word) == 0)
-            st.state = 6;
+            st.state = WIFI_STATE_4WAY_HANDSHAKE;
     }
     p = strstr(text, "ip_address=");
     if (p && sscanf(p, "ip_address=%s\n", word) == 1)
@@ -420,6 +448,8 @@ WifiStatus queryWifiStatus()    // 0x14ef98
 
 int findProcess(const char *name, int flags);  // at 0x123d28
 
+// The monitor thread (see the file header). Status is only read while wpa_supplicant runs.
+// Original quirk, kept as-is: declared to return a pointer but returns nothing.
 void *wifiMonitorThread(void *arg)  // 0x14f530
 {
     printThreadInfo("new thread_wifi_monitor:");
@@ -440,6 +470,7 @@ void *wifiMonitorThread(void *arg)  // 0x14f530
     }
 }
 
+// Starts the monitor thread once (detached); later calls only replace the callback.
 void startWifiMonitor(void (*callback)(WifiStatus *))  // 0x14f634
 {
     memset(&g_connStatus, 0, sizeof(g_connStatus));
@@ -455,6 +486,7 @@ void startWifiMonitor(void (*callback)(WifiStatus *))  // 0x14f634
     pthread_detach(g_monitorThread);
 }
 
+// Asks the monitor thread to stop and waits half a second (it may still be sleeping).
 void stopWifiMonitor()          // 0x14f6f4
 {
     g_monitorRunning = 0;

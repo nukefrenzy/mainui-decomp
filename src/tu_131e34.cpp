@@ -1,5 +1,8 @@
-// Mutex-protected keyed cache and single-threaded background worker queue.
-// Proven 0x131e34-0x134080: 2,348 body bytes plus 110 generated functions.
+// tu_131e34 (0x131e34-0x134080): LruCache and WorkerQueue (declared in MenuHelpers.h).
+//
+// Menus load thumbnails and previews in the background: they queue a job on a WorkerQueue,
+// whose thread runs it, and the job stores the image in an LruCache keyed by its path, where
+// drawing code looks it up. Body 2,348 bytes plus 110 generated functions.
 #include "MenuHelpers.h"
 extern "C" {
 SDL_mutex *SDL_CreateMutex(); void SDL_DestroyMutex(SDL_mutex *);
@@ -9,18 +12,20 @@ int SDL_CondSignal(SDL_cond *); int SDL_CondWait(SDL_cond *, SDL_mutex *);
 SDL_Thread *SDL_CreateThread(int (*)(void *), void *);
 void SDL_WaitThread(SDL_Thread *, int *);
 }
-static_assert(sizeof(MenuHelper80) == 0x14 && sizeof(MenuHelper60) == 0x20, "helper layouts");
-MenuHelper80::MenuHelper80(void (*callback)(SDL_Surface *))
+static_assert(sizeof(LruCache) == 0x14 && sizeof(WorkerQueue) == 0x20, "helper layouts");
+LruCache::LruCache(void (*callback)(SDL_Surface *))
 {
     freeFn = callback;
     mutex = SDL_CreateMutex();
 }
-MenuHelper80::~MenuHelper80()
+LruCache::~LruCache()
 {
     clear();
     SDL_DestroyMutex(mutex);
 }
-void MenuHelper80::clear()
+// Frees every value (with freeFn, if set) and empties the cache.
+// Original quirk, kept as-is: the list itself is cleared outside the lock.
+void LruCache::clear()
 {
     if (freeFn) {
         SDL_mutexP(mutex);
@@ -29,7 +34,9 @@ void MenuHelper80::clear()
     }
     entries.clear();
 }
-int MenuHelper80::put(std::string key, void *value)
+// Adds an entry at the front, first freeing the oldest while there are more than 1000.
+// Does not check for an existing entry with the same key.
+int LruCache::put(std::string key, void *value)
 {
     CacheEntry entry;
     SDL_mutexP(mutex);
@@ -46,7 +53,8 @@ int MenuHelper80::put(std::string key, void *value)
     SDL_mutexV(mutex);
     return 0;
 }
-void *MenuHelper80::get(std::string key)
+// The value for key (moving its entry to the front), or NULL.
+void *LruCache::get(std::string key)
 {
     CacheEntry entry;
     SDL_mutexP(mutex);
@@ -63,13 +71,15 @@ void *MenuHelper80::get(std::string key)
     SDL_mutexV(mutex);
     return NULL;
 }
-unsigned int MenuHelper80::count()
+unsigned int LruCache::count()
 {
     return entries.size();
 }
+// The worker thread: sleeps until a job is queued, runs it (run, finished, delete) and repeats
+// until the queue is destroyed.
 int workerThread(void *data)
 {
-    MenuHelper60 *queue = (MenuHelper60 *)data;
+    WorkerQueue *queue = (WorkerQueue *)data;
     BGWorker *worker = NULL;
     if (queue) {
         while (true) {
@@ -92,7 +102,8 @@ int workerThread(void *data)
     }
     return 0;
 }
-MenuHelper60::MenuHelper60(int n)
+// Starts the worker thread; n is the most waiting jobs to keep (5 if n < 1).
+WorkerQueue::WorkerQueue(int n)
 {
     running = true;
     mutex = SDL_CreateMutex();
@@ -101,7 +112,8 @@ MenuHelper60::MenuHelper60(int n)
     limit = n;
     if (limit < 1) limit = 5;
 }
-MenuHelper60::~MenuHelper60()
+// Stops the thread (after its current job) and deletes the jobs still waiting.
+WorkerQueue::~WorkerQueue()
 {
     SDL_mutexP(mutex);
     running = false;
@@ -112,7 +124,8 @@ MenuHelper60::~MenuHelper60()
     SDL_DestroyCond(condition);
     for (auto it = workers.begin(); it != workers.end(); it++) delete *it;
 }
-int MenuHelper60::addWorker(BGWorker *worker)
+// Queues a job at the front; if the queue is full, the oldest waiting job is deleted unrun.
+int WorkerQueue::addWorker(BGWorker *worker)
 {
     SDL_mutexP(mutex);
     if (workers.size() >= limit) {
@@ -125,7 +138,8 @@ int MenuHelper60::addWorker(BGWorker *worker)
     SDL_mutexV(mutex);
     return 0;
 }
-BGWorker *MenuHelper60::takeWorker()
+// Takes the newest waiting job, or NULL.
+BGWorker *WorkerQueue::takeWorker()
 {
     BGWorker *worker = NULL;
     SDL_mutexP(mutex);

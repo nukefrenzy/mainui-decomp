@@ -3,8 +3,8 @@
 // /mnt/SDCARD/system.json holds the user's settings (volume, brightness, display colour, theme,
 // language, button keymap, Wi-Fi switch, ...). loadSystemJson copies them into the memory that
 // MainUI shares with the keymon daemon (see ShmVar.h), which applies them to the hardware;
-// saveSystemJson writes the shared values back. The language, keymap and Wi-Fi switch are kept
-// here in file-local variables with small get/set functions.
+// saveSystemJson writes the shared values back. The language, keymap and the Wi-Fi and hotspot
+// switches are kept here in file-local variables with small get/set functions.
 //
 // Compiled as C (call results are stored straight from r0), so there is no template tail.
 // The C units 0x14acfc-0x14f730 are split where .rodata proves a new file: GCC merges identical
@@ -46,7 +46,7 @@ int GetKeyShm(void *shm, int key);
 static char g_language[64];         // 0x1825b8: language file name, "" = default
 static char g_keymap[64];           // 0x1825f8: button keymap string, "" = default
 static int g_wifiOn;                // 0x182638: Wi-Fi switch from system.json
-static int g_wifiConnected;         // 0x18263c
+static int g_hotspotOn;             // 0x18263c: hotspot (access-point mode) switch; not saved
 
 // Size of an open file in bytes; leaves the position at the start.
 long fileSize(FILE *f)          // 0x14b860
@@ -132,22 +132,23 @@ int getWifiOn()                 // 0x14bbdc
     return g_wifiOn;
 }
 
-// Turning Wi-Fi on starts out disconnected.
+// Wi-Fi (client) and hotspot exclude each other: turning Wi-Fi on turns the hotspot off.
 void setWifiOn(int on)          // 0x14bc00
 {
     g_wifiOn = on;
     if (g_wifiOn)
-        g_wifiConnected = 0;
+        g_hotspotOn = 0;
 }
 
-int getWifiConnected()          // 0x14bc54
+// The hotspot switch (HotspotMenu, tu_138c50.cpp).
+int getHotspotOn()              // 0x14bc54
 {
-    return g_wifiConnected;
+    return g_hotspotOn;
 }
 
-void setWifiConnected(int connected)    // 0x14bc78
+void setHotspotOn(int on)       // 0x14bc78
 {
-    g_wifiConnected = connected;
+    g_hotspotOn = on;
 }
 
 // Loads /mnt/SDCARD/system.json into the shared settings. A missing or invalid key gets its
