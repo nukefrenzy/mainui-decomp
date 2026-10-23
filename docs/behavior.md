@@ -2,7 +2,7 @@
 
 What the original MainUI (Onion build `MainUI-354-clean`) does, written for people who need to
 reproduce or check its behavior without reading all of the source, for example the
-[open-mainui](https://github.com/robcodedev/onionos-mainui-opensource) clean-room rewrite or
+[Open MainUI](https://github.com/robcodedev/onionos-mainui-opensource) clean-room rewrite or
 Onion developers changing MainUI.
 
 Every statement here comes from the recovered source, which compiles to a byte-identical copy of
@@ -338,6 +338,32 @@ disappears.
 The rebuild must produce the same bytes, so the source keeps all of these. A rewrite may want to
 fix them, but should know they exist.
 
+### Security, memory and logic errors
+
+Found in a review of the recovered source, worst first.
+
+| Severity | Behavior | Where |
+| --- | --- | --- |
+| High | **A Wi-Fi network name can run shell commands as root.** Connecting builds `wpa_cli set_network 0 ssid \"<ssid>\"` and runs it with `system()`. The SSID (from the scan list, so chosen by whoever runs the access point) ends up outside shell quotes, so `;`, `$(…)` or backticks in it run as commands once the user selects that network. The same applies to the password and hotspot settings typed on the device. | `wifiConnectOpen`, `wifiConnectPsk`, [Wifi.c:88](../src/Wifi.c:88), [Wifi.c:114](../src/Wifi.c:114) |
+| High | **More than 32 visible networks overflow the scan table.** `parseScanResults` stores every unique network in `g_aps[32]` without a limit. The 33rd overwrites `g_scanBuffer`, the text still being parsed, and later entries run on into other globals. | [Wifi.c:346](../src/Wifi.c:346) |
+| High | **Leaving a list while a page or thumbnail is loading can use freed memory.** `~DBCachedTextMenu` closes the database in its body, and its caches are destroyed before the `WorkerQueue` member waits for its running job. `MenuWindow` likewise destroys `thumbnailCache` before `thumbnailLoader` waits. A job that finishes afterwards writes into freed caches or uses a closed connection. | [MainUI.cpp:3409](../src/MainUI.cpp:3409), [MainUI.cpp:5804](../src/MainUI.cpp:5804) |
+| Medium | **Every opened ROM list leaks a database connection.** When the cache already has rows, `prepareRomCache` jumps past `sqlite3_finalize`. `sqlite3_close` then fails with `SQLITE_BUSY`, and the connection and its file descriptor stay open. A failed first `sqlite3_open` also leaks its handle. | [MainUI.cpp:3047](../src/MainUI.cpp:3047) |
+| Medium | **The Recent list reads freed memory on start-up.** `loadRecentList` keeps `rompath`/`imgpath` from the previous line, which point into that line's already freed cJSON object. Any entry without them, such as an app, gets garbage or a crash. | `loadRecentList`, [Config.cpp:771](../src/Config.cpp:771) |
+| Medium | **Long paths overflow heap buffers.** `countDirectory` and `scanRomDir` allocate the top folder's path length + 256 bytes, then reuse the buffer for deeper subfolder paths with `sprintf`. A subfolder name plus file name over about 255 characters writes past it. | [FileBrowser.cpp:64](../src/FileBrowser.cpp:64), [MainUI.cpp:2843](../src/MainUI.cpp:2843) |
+| Medium | **Long or escaped SSIDs overflow fixed fields.** `wpa_cli` prints non-printable SSID bytes as `\xNN`, up to 128 characters, but they are copied with `strcpy` into `ssid[88]` (scan rows) and `ssid[64]` (status). `sscanf("%s")` into `word[128]` is also unbounded, and `readFileTo` reads a whole file into a fixed buffer without checking its size (16 KB for scan results). | [Wifi.c:252](../src/Wifi.c:252), [Wifi.c:427](../src/Wifi.c:427), [Wifi.c:42](../src/Wifi.c:42) |
+| Medium | **The keyboard's text buffer has no end.** X adds a space with no limit; after 128 presses it overwrites `length` and then the key list. Typing exactly 128 characters with A leaves the text without a terminating NUL. | `ImeWindow::handleInput`, [ImeWindow.cpp:214](../src/ImeWindow.cpp:214) |
+| Medium | **Folder names with an apostrophe break ROM lists.** Inserts use bound parameters, but the queries put folder names, ROM paths and search text inside `'…'` unescaped. A folder like `Sega's Best` returns no rows (and the empty result triggers a full rescan), deleting such a ROM leaves its database row, and a search containing `'` fails. | [MainUI.cpp:3129](../src/MainUI.cpp:3129), [MainUI.cpp:3316](../src/MainUI.cpp:3316), `prepareRomCache` |
+| Medium | **Deleting a ROM removes other favorites too.** `removeFavorite` matches labels by prefix, so deleting "Mario" also removes "Mario Kart" and same-named games from other systems. It also never frees the parsed JSON of each line. | [MainUI.cpp:1314](../src/MainUI.cpp:1314) |
+| Medium | **The file browser can open a ROM in the wrong emulator.** Extensions are compared as prefixes, so `gb` matches `.gba`; emulators are sorted by label, so "GB" is tried before "GBA". The ROM-list filter has the same prefix test. | [MainUI.cpp:5473](../src/MainUI.cpp:5473), [MainUI.cpp:2795](../src/MainUI.cpp:2795) |
+| Low | **App paths with spaces don't launch.** The app command `cd %s; chmod a+x %s; …` doesn't quote the folder or file. ROM commands quote their paths, but a name containing `"`, `$` or a backtick still breaks them. | [MainUI.cpp:861](../src/MainUI.cpp:861), [MainUI.cpp:791](../src/MainUI.cpp:791) |
+| Low | **Hotspot settings with `/`, `&` or `'` corrupt the config.** `writeConfigValue` puts the value into a `sed` command unescaped. | [WifiMenus.cpp:700](../src/WifiMenus.cpp:700) |
+| Low | **Apps are never de-duplicated in Recent.** `addRecent` removes an existing entry only when `rompath` is set, so launching the same app repeatedly adds copies. | [Config.cpp:734](../src/Config.cpp:734) |
+| Low | **The Wi-Fi status is read while being rewritten.** `getWifiStatus` returns a pointer to the struct the monitor thread overwrites every 3 s without the lock, so readers can see a half-copied SSID or IP. | [Wifi.c:178](../src/Wifi.c:178) |
+| Low | **Long names lose their terminating NUL.** `strncpy` into a full-size buffer leaves no NUL for ROM file names of 127+ characters and for `language`/`keymap` values of 64+ characters. | [MainUI.cpp:2847](../src/MainUI.cpp:2847), [Settings.c:93](../src/Settings.c:93) |
+| Low | **Small leaks.** Global search leaks a copied path per emulator per search, and `loadLanguages` never closes its directory handle. | [GlobalSearch.cpp:97](../src/GlobalSearch.cpp:97), [Language.cpp:180](../src/Language.cpp:180) |
+
+### Other quirks
+
 | Behavior | Where |
 | --- | --- |
 | The `mute` setting is read from the `vol` value: any nonzero volume loads as muted when `mute` exists. A file with `mute` but no `vol` crashes (NULL dereference). | `loadSystemJson`, [Settings.c](../src/Settings.c) |
@@ -349,7 +375,7 @@ fix them, but should know they exist.
 | The global search menu's destructor loops with an uninitialized index. | `~MultiDBCachedTextMenu`, [GlobalSearch.cpp](../src/GlobalSearch.cpp) |
 | In global search, a position past the last match reads past the end of the database list. | `MultiDBCachedTextMenu::getItem`, GlobalSearch.cpp |
 | The connected network's signal bars use different thresholds from the other networks. | `WifiMenu::onUnhandledEvent`, [WifiMenus.cpp](../src/WifiMenus.cpp) |
-| On the keyboard screen, X adds a space without checking the 128-byte limit, and A on a key returns 0 instead of -1. | `ImeWindow::handleInput`, [ImeWindow.cpp](../src/ImeWindow.cpp) |
+| On the keyboard screen, A on a key returns 0 instead of -1 (the X overflow is listed above). | `ImeWindow::handleInput`, [ImeWindow.cpp](../src/ImeWindow.cpp) |
 | The ADC info screen always says "Disconnected". | `ADCInfoWindow::draw`, [MainUI.cpp](../src/MainUI.cpp) |
 | `loadSkinImage` prints "open ok" for absolute names even when loading failed, and `loadImage` "converts" to the image's own format (a copy). | [Config.cpp](../src/Config.cpp) |
 | The file-browser cache trim can empty the list it is trimming. | `FileBrowserCache::trim`, [FileBrowser.cpp](../src/FileBrowser.cpp) |

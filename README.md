@@ -20,7 +20,7 @@ and the rebuilt binary has been run on a Miyoo Mini Plus.
 ## Who this is for
 
 - **Onion developers** who want to fix or extend MainUI: see [modifying.md](docs/modifying.md).
-- **The [open-mainui](https://github.com/robcodedev/onionos-mainui-opensource) project** and
+- **The [Open MainUI](https://github.com/robcodedev/onionos-mainui-opensource) project** and
   anyone else checking how the original behaves: see [behavior.md](docs/behavior.md).
 - **Anyone curious** how the launcher works, or how a byte-exact decompilation is done.
 
